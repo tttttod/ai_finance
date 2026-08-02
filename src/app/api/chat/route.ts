@@ -51,17 +51,33 @@ const SYSTEM_PROMPT = `你是一位专业的 A 股市场投研顾问，名叫"�
 3. 必须附带风险提示
 4. 不要给出具体的买卖点位或保证收益
 5. 用中文回答
-6. 如果用户问的问题超出你的专业范围，礼貌引导回金融话题`;
+6. 如果用户问的问题超出你的专业范围，礼貌引导回金融话题
+7. 当用户在分析工作台中时，根据当前步骤提供有针对性的指导`;
+
+function buildAnalysisContext(context?: Record<string, unknown>): string {
+  if (!context?.currentStep) return "";
+  return `\n\n## 当前分析会话状态
+- 当前步骤: ${context.currentStep}
+- 用户投资风格: ${(context.investmentStyle as string[] || []).join("、") || "未设定"}
+- 风险承受: ${context.riskTolerance || "未设定"}
+- 持仓周期: ${context.holdingPeriod || "未设定"}
+- 已选观点: ${(context.selectedViewpoints as string[] || []).length} 个
+- 已选行业: ${(context.selectedIndustries as string[] || []).length} 个
+
+请根据当前分析步骤和用户偏好来回答，帮助用户完成基本面分析流程。`;
+}
 
 export async function POST(request: NextRequest) {
-  const { messages } = await request.json();
+  const { messages, context } = await request.json();
   const customHeaders = HeaderUtils.extractForwardHeaders(request.headers);
+
+  const fullSystemPrompt = SYSTEM_PROMPT + buildAnalysisContext(context);
 
   const config = new Config();
   const client = new LLMClient(config, customHeaders);
 
   const chatMessages = [
-    { role: "system" as const, content: SYSTEM_PROMPT },
+    { role: "system" as const, content: fullSystemPrompt },
     ...messages.map((m: { role: string; content: string }) => ({
       role: m.role as "user" | "assistant",
       content: m.content,
