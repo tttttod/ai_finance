@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { AIChat } from '@/components/ai-chat';
 
 export const metadata: Metadata = {
   title: 'A股板块追踪 - 主力资金流向日报',
@@ -42,6 +43,7 @@ export default function RootLayout({
             数据来源：Tushare | 仅供参考，不构成投资建议
           </div>
         </footer>
+        <AIChat />
         <script
           dangerouslySetInnerHTML={{
             __html: `document.getElementById('update-time').textContent = new Date().toLocaleString('zh-CN', { hour12: false });`,
