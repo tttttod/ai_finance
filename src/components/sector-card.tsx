@@ -33,6 +33,16 @@ export function SectorCard({ sector, index, onClick }: Props) {
           <span className={`text-sm font-data font-medium ${changeColor}`}>
             {isUp ? '+' : ''}{sector.changePercent.toFixed(2)}%
           </span>
+          {sector.flowType === 'today_only' && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-medium">
+              仅今日
+            </span>
+          )}
+          {sector.flowType === 'continuous' && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-50 text-[#dc2626] font-medium">
+              连续2日
+            </span>
+          )}
         </div>
         <div className="text-right">
           <p className="text-xs text-[#78716c]">主力净流入</p>

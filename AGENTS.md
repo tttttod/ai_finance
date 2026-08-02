@@ -18,37 +18,39 @@ A股板块追踪 Web 应用 — 每日追踪 A 股行业板块主力资金流向
 src/
 ├── app/
 │   ├── api/
-│   │   ├── report/route.ts       # GET /api/report - 获取每日完整报告
+│   │   ├── report/route.ts       # GET /api/report - 获取每日完整报告（含全部模块）
 │   │   ├── sectors/route.ts      # GET /api/sectors - 获取所有板块列表
 │   │   └── sectors/[id]/route.ts # GET /api/sectors/:id - 获取单个板块详情
 │   ├── layout.tsx                # 根布局（Header + Footer）
-│   ├── page.tsx                  # 首页仪表盘
+│   ├── page.tsx                  # 首页仪表盘（Tab 切换 5 大模块）
 │   └── globals.css               # 全局样式 + 金融主题色
 ├── components/
 │   ├── ui/                       # shadcn/ui 组件库
 │   ├── market-overview.tsx       # 市场概览条（指数、成交额、板块统计）
 │   ├── sector-card.tsx           # 板块卡片（列表展示用）
-│   └── sector-detail.tsx         # 板块详情（含涨幅/市值排行表）
+│   ├── sector-detail.tsx         # 板块详情（含涨幅/市值排行表）
+│   ├── macro-brief.tsx           # 宏观分析（财经热点快照）
+│   ├── fundamental-section.tsx   # 基本面分析（机构研报共识）
+│   ├── technical-section.tsx     # 技术面分析（均线/支撑压力/趋势）
+│   ├── stock-tracking.tsx        # 荐股追踪（历史荐股累计表现）
+│   └── change-log.tsx            # 变更日志（相对上一版变化）
 └── lib/
-    ├── types.ts                  # 数据类型定义
+    ├── types.ts                  # 数据类型定义（含全部 5 模块类型）
     ├── mock-data.ts              # 模拟数据层（后续可替换为真实 API）
     └── utils.ts                  # 通用工具函数
 ```
 
-## 开发命令
+## 功能模块
 
-```bash
-pnpm dev          # 启动开发服务器
-pnpm build        # 构建生产版本
-pnpm start        # 启动生产服务器
-pnpm ts-check     # TypeScript 类型检查
-pnpm lint         # ESLint 检查
-pnpm lint:style   # Stylelint 检查
-```
+1. **板块分析** — 主力资金净流入行业板块，区分"连续2日流入"与"仅今日流入"，展示领涨股、涨跌比、成分股排行
+2. **宏观分析** — 中外财经热点快照，按 A 股相关性筛选，附市场含义解读
+3. **基本面分析** — 机构研报共识（覆盖机构数、评级、目标价、关键观点）
+4. **技术面分析** — MA20/MA60 均线、20日支撑/压力位、趋势判断、分析师目标价空间
+5. **荐股追踪** — 历史荐股累计涨跌幅表现，按日期分组，含胜率统计
 
 ## 数据说明
 
-当前使用 `src/lib/mock-data.ts` 提供模拟数据，包含 8 个热门板块（电子、AI算力、新能源车、半导体、医药生物、国防军工、白酒、机器人）的完整数据。后续可替换为真实 Tushare API 调用。
+当前使用 `src/lib/mock-data.ts` 提供模拟数据，包含 8 个热门板块（传媒、计算机、食品饮料、汽车、家用电器、农林牧渔、商贸零售、社会服务）及宏观/基本面/技术面/荐股追踪的完整数据。后续可替换为真实 Tushare API 调用。
 
 ## 设计规范
 
