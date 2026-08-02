@@ -56,40 +56,6 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -134,33 +100,36 @@
 
 body {
   @apply font-sans;
-  background-color: #fafaf9;
+  background-color: #0a0e1a;
 }
 
-/* Financial data colors */
+/* Financial data colors - adapted for dark theme */
 .text-stock-up {
-  color: #dc2626;
+  color: #ef4444;
 }
 .text-stock-down {
-  color: #0d9488;
+  color: #2dd4a8;
 }
 .text-stock-flat {
-  color: #78716c;
-}
-.bg-stock-up {
-  background-color: #dc2626;
-}
-.bg-stock-down {
-  background-color: #0d9488;
+  color: #94a3b8;
 }
 
-/* Card hover effect */
+.bg-stock-up {
+  background-color: #ef4444;
+}
+.bg-stock-down {
+  background-color: #2dd4a8;
+}
+
+/* Tech card hover effect */
 .card-hover {
-  transition: transform 200ms ease-out, box-shadow 200ms ease-out;
+  transition: transform 200ms ease-out, box-shadow 200ms ease-out, border-color 200ms ease-out;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.2);
 }
 
 /* Fade in animation */
@@ -178,6 +147,14 @@ body {
   animation: fadeInUp 400ms ease-out forwards;
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fadeIn 300ms ease-out forwards;
+}
+
 /* Staggered animation delays */
 .stagger-1 { animation-delay: 50ms; }
 .stagger-2 { animation-delay: 100ms; }
@@ -192,4 +169,68 @@ body {
 .font-data {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
   font-variant-numeric: tabular-nums;
+}
+
+/* Tech background grid */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Slow pulse animations */
+@keyframes pulseSlow {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+.animate-pulse-slow {
+  animation: pulseSlow 8s ease-in-out infinite;
+}
+.animate-pulse-slow-reverse {
+  animation: pulseSlow 8s ease-in-out infinite reverse;
+}
+
+/* Spin reverse */
+@keyframes spinReverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+.animate-spin-reverse {
+  animation: spinReverse 1s linear infinite;
+}
+
+/* Glow effect */
+.glow-blue {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15), 0 0 40px rgba(59, 130, 246, 0.05);
+}
+.glow-red {
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.2);
+}
+.glow-green {
+  box-shadow: 0 0 12px rgba(45, 212, 168, 0.2);
+}
+
+/* Tech border */
+.tech-border {
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.03), rgba(6, 182, 212, 0.03));
+}
+
+/* Scanning line effect */
+@keyframes scanLine {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+.animate-scan {
+  animation: scanLine 3s linear infinite;
+}
+
+/* Typing cursor */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.animate-blink {
+  animation: blink 1s step-end infinite;
 }

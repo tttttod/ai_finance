@@ -14,7 +14,7 @@ function ChangeBadge({ value }: { value: number }) {
   const isUp = value > 0;
   const isDown = value < 0;
   const color = isUp ? 'text-stock-up' : isDown ? 'text-stock-down' : 'text-stock-flat';
-  const bg = isUp ? 'bg-red-50' : isDown ? 'bg-teal-50' : 'bg-stone-50';
+  const bg = isUp ? 'bg-red-500/10' : isDown ? 'bg-emerald-500/10' : 'bg-slate-500/10';
   const prefix = isUp ? '+' : '';
 
   return (
@@ -27,63 +27,68 @@ function ChangeBadge({ value }: { value: number }) {
 export function MarketOverviewBar({ overview }: Props) {
   return (
     <div className="animate-fade-in-up opacity-0">
-      <div className="bg-white rounded-lg border border-[#e7e5e4] p-4 sm:p-5 shadow-xs">
+      <div className="tech-border rounded-lg p-4 sm:p-5 glow-blue">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
           {/* Date */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-[#78716c]">日期</span>
-            <span className="text-sm font-data text-[#1c1917] font-medium">{overview.date}</span>
+            <span className="text-xs text-slate-500">日期</span>
+            <span className="text-sm font-data text-slate-200 font-medium">{overview.date}</span>
           </div>
 
           {/* Separator */}
-          <div className="hidden sm:block w-px h-6 bg-[#e7e5e4]" />
+          <div className="hidden sm:block w-px h-6 bg-white/10" />
 
           {/* Shanghai Index */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-[#78716c]">上证</span>
-            <span className="text-sm font-data text-[#1c1917] font-medium">
+            <span className="text-xs text-slate-500">上证</span>
+            <span className="text-sm font-data text-slate-200 font-medium">
               {formatNumber(overview.shIndex)}
             </span>
             <ChangeBadge value={overview.shChange} />
           </div>
 
           {/* Separator */}
-          <div className="hidden sm:block w-px h-6 bg-[#e7e5e4]" />
+          <div className="hidden sm:block w-px h-6 bg-white/10" />
 
           {/* Shenzhen Index */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-[#78716c]">深证</span>
-            <span className="text-sm font-data text-[#1c1917] font-medium">
+            <span className="text-xs text-slate-500">深证</span>
+            <span className="text-sm font-data text-slate-200 font-medium">
               {formatNumber(overview.szIndex)}
             </span>
             <ChangeBadge value={overview.szChange} />
           </div>
 
           {/* Separator */}
-          <div className="hidden sm:block w-px h-6 bg-[#e7e5e4]" />
+          <div className="hidden sm:block w-px h-6 bg-white/10" />
 
           {/* Volume */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-[#78716c]">成交额</span>
-            <span className="text-sm font-data text-[#1c1917] font-medium">
+            <span className="text-xs text-slate-500">成交额</span>
+            <span className="text-sm font-data text-slate-200 font-medium">
               {overview.totalVolume.toLocaleString()}亿
             </span>
           </div>
 
           {/* Separator */}
-          <div className="hidden sm:block w-px h-6 bg-[#e7e5e4]" />
+          <div className="hidden sm:block w-px h-6 bg-white/10" />
 
           {/* Sector Stats */}
           <div className="flex items-center gap-3">
-            <span className="text-xs text-[#78716c]">板块</span>
+            <span className="text-xs text-slate-500">板块</span>
             <span className="text-xs font-data">
               <span className="text-stock-up font-medium">{overview.upSectors}</span>
-              <span className="text-[#78716c] mx-0.5">/</span>
+              <span className="text-slate-600 mx-1">/</span>
               <span className="text-stock-down font-medium">{overview.downSectors}</span>
+              <span className="text-slate-600 mx-0.5">涨/跌</span>
             </span>
-            <span className="text-xs text-[#78716c]">
-              热门 <span className="text-[#dc2626] font-medium font-data">{overview.hotSectorsCount}</span>
-            </span>
+          </div>
+
+          {/* Hot sectors count */}
+          <div className="hidden sm:flex items-center gap-2 ml-auto">
+            <span className="text-xs text-slate-500">热门板块</span>
+            <span className="text-sm font-data text-blue-400 font-bold">{overview.hotSectorsCount}</span>
+            <span className="text-xs text-slate-500">个</span>
           </div>
         </div>
       </div>

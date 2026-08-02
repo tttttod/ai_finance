@@ -1,32 +1,27 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { DailyReport, Sector } from '@/lib/types';
+import type { DailyReport } from '@/lib/types';
 import { MarketOverviewBar } from '@/components/market-overview';
-import { SectorCard } from '@/components/sector-card';
-import { SectorDetail } from '@/components/sector-detail';
 import { MacroBriefSection } from '@/components/macro-brief';
 import { MacroSummarySection } from '@/components/macro-summary';
 import { FundamentalSection } from '@/components/fundamental-section';
 import { TechnicalSection } from '@/components/technical-section';
 import { StockTrackingSection } from '@/components/stock-tracking';
 import { ResearchSummarySection } from '@/components/research-summary';
-import { ChangeLogSection } from '@/components/change-log';
 
-type TabId = 'research-summary' | 'macro' | 'fundamental' | 'technical' | 'tracking' | 'sectors';
+type TabId = 'research-summary' | 'macro' | 'fundamental' | 'technical' | 'tracking';
 
-const tabs: { id: TabId; label: string }[] = [
-  { id: 'research-summary', label: '研报观点总结' },
-  { id: 'macro', label: '宏观分析' },
-  { id: 'fundamental', label: '基本面' },
-  { id: 'technical', label: '技术面' },
-  { id: 'tracking', label: '荐股追踪' },
-  { id: 'sectors', label: '板块资金' },
+const tabs: { id: TabId; label: string; icon: string }[] = [
+  { id: 'research-summary', label: '研报观点', icon: '📊' },
+  { id: 'macro', label: '宏观分析', icon: '🌐' },
+  { id: 'fundamental', label: '基本面', icon: '📈' },
+  { id: 'technical', label: '技术面', icon: '📉' },
+  { id: 'tracking', label: '荐股追踪', icon: '🎯' },
 ];
 
 export default function Home() {
   const [report, setReport] = useState<DailyReport | null>(null);
-  const [selectedSector, setSelectedSector] = useState<Sector | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>('research-summary');
   const [loading, setLoading] = useState(true);
 
@@ -46,8 +41,12 @@ export default function Home() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-[#dc2626] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-[#78716c]">正在加载数据...</p>
+          <div className="relative w-12 h-12 mx-auto mb-4">
+            <div className="absolute inset-0 border-2 border-blue-500/20 rounded-full" />
+            <div className="absolute inset-0 border-2 border-transparent border-t-blue-400 rounded-full animate-spin" />
+            <div className="absolute inset-2 border-2 border-transparent border-t-cyan-400 rounded-full animate-spin-reverse" />
+          </div>
+          <p className="text-sm text-slate-500">AI 正在分析市场数据...</p>
         </div>
       </div>
     );
@@ -56,7 +55,7 @@ export default function Home() {
   if (!report) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-[#78716c]">数据加载失败，请刷新重试</p>
+        <p className="text-slate-500">数据加载失败，请刷新重试</p>
       </div>
     );
   }
@@ -66,25 +65,23 @@ export default function Home() {
       {/* Market Overview */}
       <MarketOverviewBar overview={report.overview} />
 
-      {/* Change Log */}
-      <ChangeLogSection data={report.changeLog} />
-
       {/* Tab Navigation */}
-      <div className="border-b border-[#e7e5e4]">
-        <nav className="flex gap-0 -mb-px overflow-x-auto">
+      <div className="border-b border-white/5">
+        <nav className="flex gap-1 overflow-x-auto pb-0">
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id);
-                setSelectedSector(null);
-              }}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              onClick={() => setActiveTab(tab.id)}
+              className={`relative px-4 py-2.5 text-sm font-medium transition-all whitespace-nowrap rounded-t-lg ${
                 activeTab === tab.id
-                  ? 'border-[#dc2626] text-[#dc2626]'
-                  : 'border-transparent text-[#78716c] hover:text-[#1c1917] hover:border-[#d6d3d1]'
+                  ? 'text-blue-400 bg-white/5'
+                  : 'text-slate-500 hover:text-slate-300 hover:bg-white/[0.02]'
               }`}
             >
+              {activeTab === tab.id && (
+                <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full" />
+              )}
+              <span className="mr-1.5">{tab.icon}</span>
               {tab.label}
             </button>
           ))}
@@ -92,70 +89,30 @@ export default function Home() {
       </div>
 
       {/* Tab Content */}
-      {activeTab === 'research-summary' && (
-        <ResearchSummarySection data={report.researchSummary} />
-      )}
+      <div className="animate-fade-in">
+        {activeTab === 'research-summary' && (
+          <ResearchSummarySection data={report.researchSummary} />
+        )}
 
-      {activeTab === 'macro' && (
-        <div className="space-y-4">
-          <MacroSummarySection data={report.macroSummary} />
-          <MacroBriefSection data={report.macroBrief} />
-        </div>
-      )}
+        {activeTab === 'macro' && (
+          <div className="space-y-4">
+            <MacroSummarySection data={report.macroSummary} />
+            <MacroBriefSection data={report.macroBrief} />
+          </div>
+        )}
 
-      {activeTab === 'fundamental' && (
-        <FundamentalSection data={report.fundamental} />
-      )}
+        {activeTab === 'fundamental' && (
+          <FundamentalSection data={report.fundamental} />
+        )}
 
-      {activeTab === 'technical' && (
-        <TechnicalSection data={report.technical} />
-      )}
+        {activeTab === 'technical' && (
+          <TechnicalSection data={report.technical} />
+        )}
 
-      {activeTab === 'tracking' && (
-        <StockTrackingSection data={report.stockTracking} />
-      )}
-
-      {activeTab === 'sectors' && (
-        <>
-          {selectedSector ? (
-            <SectorDetail
-              sector={selectedSector}
-              onBack={() => setSelectedSector(null)}
-            />
-          ) : (
-            <>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-[#1c1917]">热门板块</h2>
-                  <p className="text-sm text-[#78716c]">
-                    主力资金净流入的行业板块
-                  </p>
-                </div>
-                <div className="flex items-center gap-3 text-xs text-[#78716c]">
-                  <span className="inline-flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-[#dc2626]" />
-                    连续2日流入
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-amber-500" />
-                    仅今日流入
-                  </span>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {report.hotSectors.map((sector, index) => (
-                  <SectorCard
-                    key={sector.id}
-                    sector={sector}
-                    index={index}
-                    onClick={() => setSelectedSector(sector)}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-        </>
-      )}
+        {activeTab === 'tracking' && (
+          <StockTrackingSection data={report.stockTracking} />
+        )}
+      </div>
     </div>
   );
 }
