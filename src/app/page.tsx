@@ -6,25 +6,28 @@ import { MarketOverviewBar } from '@/components/market-overview';
 import { SectorCard } from '@/components/sector-card';
 import { SectorDetail } from '@/components/sector-detail';
 import { MacroBriefSection } from '@/components/macro-brief';
+import { MacroSummarySection } from '@/components/macro-summary';
 import { FundamentalSection } from '@/components/fundamental-section';
 import { TechnicalSection } from '@/components/technical-section';
 import { StockTrackingSection } from '@/components/stock-tracking';
+import { ResearchSummarySection } from '@/components/research-summary';
 import { ChangeLogSection } from '@/components/change-log';
 
-type TabId = 'sectors' | 'macro' | 'fundamental' | 'technical' | 'tracking';
+type TabId = 'research-summary' | 'macro' | 'fundamental' | 'technical' | 'tracking' | 'sectors';
 
 const tabs: { id: TabId; label: string }[] = [
-  { id: 'sectors', label: '板块分析' },
+  { id: 'research-summary', label: '研报观点总结' },
   { id: 'macro', label: '宏观分析' },
   { id: 'fundamental', label: '基本面' },
   { id: 'technical', label: '技术面' },
   { id: 'tracking', label: '荐股追踪' },
+  { id: 'sectors', label: '板块资金' },
 ];
 
 export default function Home() {
   const [report, setReport] = useState<DailyReport | null>(null);
   const [selectedSector, setSelectedSector] = useState<Sector | null>(null);
-  const [activeTab, setActiveTab] = useState<TabId>('sectors');
+  const [activeTab, setActiveTab] = useState<TabId>('research-summary');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -89,6 +92,29 @@ export default function Home() {
       </div>
 
       {/* Tab Content */}
+      {activeTab === 'research-summary' && (
+        <ResearchSummarySection data={report.researchSummary} />
+      )}
+
+      {activeTab === 'macro' && (
+        <div className="space-y-4">
+          <MacroSummarySection data={report.macroSummary} />
+          <MacroBriefSection data={report.macroBrief} />
+        </div>
+      )}
+
+      {activeTab === 'fundamental' && (
+        <FundamentalSection data={report.fundamental} />
+      )}
+
+      {activeTab === 'technical' && (
+        <TechnicalSection data={report.technical} />
+      )}
+
+      {activeTab === 'tracking' && (
+        <StockTrackingSection data={report.stockTracking} />
+      )}
+
       {activeTab === 'sectors' && (
         <>
           {selectedSector ? (
@@ -129,22 +155,6 @@ export default function Home() {
             </>
           )}
         </>
-      )}
-
-      {activeTab === 'macro' && (
-        <MacroBriefSection data={report.macroBrief} />
-      )}
-
-      {activeTab === 'fundamental' && (
-        <FundamentalSection data={report.fundamental} />
-      )}
-
-      {activeTab === 'technical' && (
-        <TechnicalSection data={report.technical} />
-      )}
-
-      {activeTab === 'tracking' && (
-        <StockTrackingSection data={report.stockTracking} />
       )}
     </div>
   );

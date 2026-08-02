@@ -1,7 +1,7 @@
 import type {
   DailyReport, Sector, Stock, MarketOverview,
   MacroBrief, FundamentalAnalysis, TechnicalAnalysis,
-  StockTracking, ChangeLog,
+  StockTracking, ChangeLog, ResearchSummary, MacroSummary,
 } from './types';
 
 function makeStock(
@@ -366,6 +366,71 @@ const stockTracking: StockTracking = {
   ],
 };
 
+// ========== 研报观点总结 ==========
+const researchSummary: ResearchSummary = {
+  overallView: '当前市场主线围绕"业绩兑现+景气上行"双逻辑展开。机构集中看好保险板块的利润弹性与投资端改善，化工长丝赛道受益于景气持续上行，食品饮料则迎来需求改善新周期。技术面上，中国人寿均线结构偏强且距目标价仍有24%空间，桐昆股份虽短期回撤但潜在空间超50%，安井食品处于反弹修复阶段。板块资金面上，传媒与食品饮料连续两日获主力大额净流入，计算机板块今日异军突起但前一日流出较大，需关注持续性。',
+  keyThemes: [
+    {
+      theme: '保险板块：业绩兑现期到来',
+      detail: '中国人寿获11家机构集中覆盖，利润增速超预期成为最核心共识。技术面均线多头排列，收盘价站稳MA20/MA60上方，目标价48.40元对应24%上行空间。',
+      relatedStocks: ['中国人寿'],
+      sentiment: 'bullish',
+    },
+    {
+      theme: '化工长丝：景气上行持续验证',
+      detail: '桐昆股份4家机构覆盖，长丝高景气持续、炼化价差同比回暖。短期虽处高位回撤，但目标价30.50元对应50%潜在空间，性价比突出。',
+      relatedStocks: ['桐昆股份'],
+      sentiment: 'bullish',
+    },
+    {
+      theme: '食品饮料：需求改善新周期',
+      detail: '安井食品获3家机构买入评级，食品饮料行业迎来需求改善信号。板块连续两日获主力净流入55.57亿元，资金面与基本面共振。',
+      relatedStocks: ['安井食品'],
+      sentiment: 'bullish',
+    },
+    {
+      theme: '传媒板块：资金持续涌入',
+      detail: '传媒板块连续两日主力净流入合计64.84亿元，居所有板块之首。电声股份领涨10%，分众传媒等龙头获资金追捧。',
+      relatedStocks: ['电声股份', '分众传媒'],
+      sentiment: 'bullish',
+    },
+  ],
+  riskAlerts: [
+    '美联储"零容忍"高通胀立场或压制全球成长风格风险偏好，关注北向资金波动',
+    '原油价格剧烈波动（2020年以来最大涨幅）可能扰动A股能源链和成本敏感行业',
+    '计算机板块仅今日单日流入，前一日大幅流出20亿，资金持续性存疑',
+    '桐昆股份MA20走平回落，短期技术面偏弱，需等待企稳信号',
+  ],
+  opportunityHighlights: [
+    '中国人寿：均线多头+目标价24%空间，基本面与技术面共振，当前性价比突出',
+    '桐昆股份：50%潜在空间为本期最大，若长丝景气持续验证，回撤即机会',
+    '传媒板块：连续两日资金大幅流入，关注龙头分众传媒、三七互娱的持续性',
+    '食品饮料板块：需求改善预期+资金连续流入，安井食品距目标价仅8%',
+  ],
+};
+
+// ========== 宏观观点总结 ==========
+const macroSummary: MacroSummary = {
+  overallView: '海外宏观环境偏紧，对A股形成多重扰动。美联储新任主席候选人Warsh明确表态"零容忍高通胀"，强化紧缩预期，直接压制成长风格估值和北向资金风险偏好。中东地缘局势升级推动原油创2020年以来最大涨幅，若霍尔木兹海峡通航持续受限，将推升全球通胀预期并冲击能源成本敏感行业。中美在伊朗问题上的博弈则影响出口制造和人民币资产定价，外资对中国资产的风险偏好可能受到扰动。整体而言，外部不确定性上升，A股短期需关注利率敏感板块的回调压力和能源链的结构性机会。',
+  keyTakeaways: [
+    {
+      point: '美联储紧缩预期升温',
+      impact: 'negative',
+      detail: 'Warsh "零容忍高通胀"表态强化利率高位持续预期，全球成长股估值承压，A股科技/消费等长久期板块首当其冲，北向资金流入节奏或放缓。',
+    },
+    {
+      point: '原油价格剧烈波动',
+      impact: 'negative',
+      detail: '霍尔木兹海峡通航风险推升油价，利好中国石油/中国石化等上游企业，但航空、化工下游、交运等成本敏感行业利润空间将被压缩。',
+    },
+    {
+      point: '中美博弈影响出口预期',
+      impact: 'neutral',
+      detail: '伊朗问题上的中美角力影响出口制造和人民币定价，顺周期板块（家电、汽车出口链）和外资持仓较重的标的可能出现波动。',
+    },
+  ],
+};
+
 // ========== 变更日志 ==========
 const changeLog: ChangeLog = {
   macroUpdateFrom: '2026-07-15',
@@ -382,9 +447,11 @@ export function getDailyReport(): DailyReport {
     overview,
     hotSectors: sectors,
     macroBrief,
+    macroSummary,
     fundamental,
     technical,
     stockTracking,
+    researchSummary,
     changeLog,
     generatedAt: new Date().toISOString(),
   };

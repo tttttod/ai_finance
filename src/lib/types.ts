@@ -137,6 +137,29 @@ export interface StockTracking {
   groups: RecommendGroup[];
 }
 
+// ---- 研报观点总结 ----
+export interface ResearchSummary {
+  overallView: string; // 整体观点
+  keyThemes: {
+    theme: string;
+    detail: string;
+    relatedStocks: string[];
+    sentiment: 'bullish' | 'neutral' | 'bearish';
+  }[];
+  riskAlerts: string[];
+  opportunityHighlights: string[];
+}
+
+// ---- 宏观观点总结 ----
+export interface MacroSummary {
+  overallView: string;
+  keyTakeaways: {
+    point: string;
+    impact: 'positive' | 'negative' | 'neutral';
+    detail: string;
+  }[];
+}
+
 // ---- 组合报告 ----
 export interface ChangeLog {
   macroUpdateFrom: string;
@@ -151,9 +174,11 @@ export interface DailyReport {
   overview: MarketOverview;
   hotSectors: Sector[];
   macroBrief: MacroBrief;
+  macroSummary: MacroSummary;
   fundamental: FundamentalAnalysis;
   technical: TechnicalAnalysis;
   stockTracking: StockTracking;
+  researchSummary: ResearchSummary;
   changeLog: ChangeLog;
   generatedAt: string;
 }
