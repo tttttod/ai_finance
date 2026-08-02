@@ -1,35 +1,90 @@
-import type { Metadata } from 'next';
-import Image from 'next/image';
+'use client';
 
-export const metadata: Metadata = {
-  title: '扣子编程 - AI 开发伙伴',
-  description: '扣子编程，你的 AI 开发伙伴已就位',
-};
+import { useEffect, useState } from 'react';
+import type { DailyReport, Sector } from '@/lib/types';
+import { MarketOverviewBar } from '@/components/market-overview';
+import { SectorCard } from '@/components/sector-card';
+import { SectorDetail } from '@/components/sector-detail';
 
 export default function Home() {
-  return (
-    <div className="flex h-full items-center justify-center bg-background text-foreground transition-colors duration-300 dark:bg-background dark:text-foreground overflow-hidden min-h-screen">
-      {/* 主容器 */}
-      <main className="flex w-full h-full max-w-3xl flex-col items-center justify-center px-16 py-32 sm:items-center">
-        <div className="flex flex-col items-center justify-between gap-4">
-           <Image
-            src="https://lf-coze-web-cdn.coze.cn/obj/eden-cn/lm-lgvj/ljhwZthlaukjlkulzlp/coze-coding/icon/coze-coding.gif"
-            alt="扣子编程 Logo"
-            width={156}
-            height={130}
-          />
-          <div>
-            <div className="flex flex-col items-center gap-2 text-center sm:items-center sm:text-center">
-              <h1 className="max-w-xl text-base font-semibold leading-tight tracking-tight text-foreground dark:text-foreground">
-                应用开发中
-              </h1>
-              <p className="max-w-2xl text-sm leading-8 text-muted-foreground dark:text-muted-foreground">
-                请稍后，页面即将呈现
-              </p>
-            </div>
-          </div>
+  const [report, setReport] = useState<DailyReport | null>(null);
+  const [selectedSector, setSelectedSector] = useState<Sector | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/report')
+      .then((res) => res.json())
+      .then((data: { success: boolean; data: DailyReport }) => {
+        if (data.success) {
+          setReport(data.data);
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-[#dc2626] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-[#78716c]">正在加载数据...</p>
         </div>
-      </main>
+      </div>
+    );
+  }
+
+  if (!report) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <p className="text-[#78716c]">数据加载失败，请刷新重试</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Market Overview */}
+      <MarketOverviewBar overview={report.overview} />
+
+      {/* Hot Sectors Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-[#1c1917]">热门板块</h2>
+          <p className="text-sm text-[#78716c]">
+            连续两个交易日主力资金净流入的行业板块
+          </p>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-[#78716c]">
+          <span className="inline-flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-[#dc2626]" />
+            资金流入
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-[#0d9488]" />
+            资金流出
+          </span>
+        </div>
+      </div>
+
+      {/* Sector Detail or Grid */}
+      {selectedSector ? (
+        <SectorDetail
+          sector={selectedSector}
+          onBack={() => setSelectedSector(null)}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {report.hotSectors.map((sector, index) => (
+            <SectorCard
+              key={sector.id}
+              sector={sector}
+              index={index}
+              onClick={() => setSelectedSector(sector)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

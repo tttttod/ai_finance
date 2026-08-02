@@ -1,59 +1,10 @@
 import type { Metadata } from 'next';
-import { Inspector } from 'react-dev-inspector';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: {
-    default: '新应用 | 扣子编程',
-    template: '%s | 扣子编程',
-  },
-  description:
-    '扣子编程是一款一站式云端 Vibe Coding 开发平台。通过对话轻松构建智能体、工作流和网站，实现从创意到上线的无缝衔接。',
-  keywords: [
-    '扣子编程',
-    'Coze Code',
-    'Vibe Coding',
-    'AI 编程',
-    '智能体搭建',
-    '工作流搭建',
-    '网站搭建',
-    '网站部署',
-    '全栈开发',
-    'AI 工程师',
-  ],
-  authors: [{ name: 'Coze Code Team', url: 'https://code.coze.cn' }],
-  generator: 'Coze Code',
-  // icons: {
-  //   icon: '',
-  // },
-  openGraph: {
-    title: '扣子编程 | 你的 AI 工程师已就位',
-    description:
-      '我正在使用扣子编程 Vibe Coding，让创意瞬间上线。告别拖拽，拥抱心流。',
-    url: 'https://code.coze.cn',
-    siteName: '扣子编程',
-    locale: 'zh_CN',
-    type: 'website',
-    // images: [
-    //   {
-    //     url: '',
-    //     width: 1200,
-    //     height: 630,
-    //     alt: '扣子编程 - 你的 AI 工程师',
-    //   },
-    // ],
-  },
-  // twitter: {
-  //   card: 'summary_large_image',
-  //   title: 'Coze Code | Your AI Engineer is Here',
-  //   description:
-  //     'Build and deploy full-stack applications through AI conversation. No env setup, just flow.',
-  //   // images: [''],
-  // },
-  robots: {
-    index: true,
-    follow: true,
-  },
+  title: 'A股板块追踪 - 主力资金流向日报',
+  description: '每日追踪A股行业板块主力资金流向，筛选连续净流入的热门板块，展示板块内涨幅靠前和市值靠前的个股。',
+  keywords: ['A股', '板块追踪', '主力资金', '行业板块', '资金流向'],
 };
 
 export default function RootLayout({
@@ -61,13 +12,41 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const isDev = process.env.COZE_PROJECT_ENV === 'DEV';
-
   return (
-    <html lang="en">
-      <body className={`antialiased`}>
-        {isDev && <Inspector />}
-        {children}
+    <html lang="zh-CN">
+      <body className="antialiased min-h-screen bg-[#fafaf9]">
+        <header className="border-b border-[#e7e5e4] bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-md bg-[#dc2626] flex items-center justify-center">
+                <span className="text-white font-bold text-sm">A</span>
+              </div>
+              <div>
+                <h1 className="text-lg font-semibold text-[#1c1917]">A股板块追踪</h1>
+                <p className="text-xs text-[#78716c]">主力资金流向日报</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-[#78716c]">数据更新时间</p>
+              <p className="text-sm font-data text-[#1c1917]" id="update-time">
+                --
+              </p>
+            </div>
+          </div>
+        </header>
+        <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+          {children}
+        </main>
+        <footer className="border-t border-[#e7e5e4] bg-white/50 mt-12">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 text-center text-xs text-[#78716c]">
+            数据来源：Tushare | 仅供参考，不构成投资建议
+          </div>
+        </footer>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.getElementById('update-time').textContent = new Date().toLocaleString('zh-CN', { hour12: false });`,
+          }}
+        />
       </body>
     </html>
   );
