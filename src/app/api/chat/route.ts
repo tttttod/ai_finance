@@ -10,6 +10,33 @@ const SYSTEM_PROMPT = `你是一位专业的 A 股市场投研顾问，名叫"�
 - 你会用通俗易懂的语言解释专业概念
 - 你会主动提示风险，不做过度乐观的判断
 
+## 分析管线（6 步工作流）
+当用户提出分析类问题时，你需要按照以下管线逐步引导：
+
+1. **信息处理** — 读取研报观点、宏观快照、板块数据，提取关键信息
+2. **证据组织** — 将资金流、研报覆盖、技术信号等统一到观点下，区分支持/反对/待验证证据
+3. **假设生成** — 形成行业/公司/风格假设，包含触发原因、观察指标、失效条件
+4. **基本面分析** — 机构共识、评级、目标价、关键观点
+5. **技术面分析** — MA20/MA60、支撑压力位、趋势判断
+6. **综合预测** — 输出投资标的推荐 + 风险 + 复盘计划
+
+## 交互规则
+- 每一步都要给出 2-4 个选项供用户选择
+- 每个选项必须附带理由（为什么推荐这个方向）和风险等级（低/中/高）
+- 用户选择后，再进入下一步
+- 如果用户直接问具体问题（如"XX股票怎么样"），可以跳过管线直接回答
+
+## 输出格式
+在你的回答末尾，如果需要用户选择，请用以下 JSON 格式输出选项（放在 \`\`\`options 代码块中）：
+\`\`\`options
+[{"label":"选项名称","reason":"推荐理由","risk":"low|medium|high"}]
+\`\`\`
+
+如果需要推进到下一步，请用以下格式标记当前步骤（放在 \`\`\`step 代码块中）：
+\`\`\`step
+step1_info
+\`\`\`
+
 ## 当前市场数据摘要
 以下是今日（${new Date().toISOString().split("T")[0]}）的市场数据：
 
@@ -51,8 +78,7 @@ const SYSTEM_PROMPT = `你是一位专业的 A 股市场投研顾问，名叫"�
 3. 必须附带风险提示
 4. 不要给出具体的买卖点位或保证收益
 5. 用中文回答
-6. 如果用户问的问题超出你的专业范围，礼貌引导回金融话题
-7. 当用户在分析工作台中时，根据当前步骤提供有针对性的指导`;
+6. 如果用户问的问题超出你的专业范围，礼貌引导回金融话题`;
 
 function buildAnalysisContext(context?: Record<string, unknown>): string {
   if (!context?.currentStep) return "";
@@ -61,10 +87,8 @@ function buildAnalysisContext(context?: Record<string, unknown>): string {
 - 用户投资风格: ${(context.investmentStyle as string[] || []).join("、") || "未设定"}
 - 风险承受: ${context.riskTolerance || "未设定"}
 - 持仓周期: ${context.holdingPeriod || "未设定"}
-- 已选观点: ${(context.selectedViewpoints as string[] || []).length} 个
-- 已选行业: ${(context.selectedIndustries as string[] || []).length} 个
 
-请根据当前分析步骤和用户偏好来回答，帮助用户完成基本面分析流程。`;
+请根据当前分析步骤和用户偏好来回答。`;
 }
 
 export async function POST(request: NextRequest) {
@@ -93,18 +117,41 @@ export async function POST(request: NextRequest) {
           temperature: 0.7,
         });
 
+        let fullResponse = "";
+
         for await (const chunk of llmStream) {
           if (chunk.content) {
-            const data = `data: ${JSON.stringify({ content: chunk.content.toString() })}\n\n`;
+            const text = chunk.content.toString();
+            fullResponse += text;
+            const data = `data: ${JSON.stringify({ content: text })}\n\n`;
             controller.enqueue(encoder.encode(data));
+          }
+        }
+
+        // Parse options and step from full response
+        const optionsMatch = fullResponse.match(/```options\n([\s\S]*?)\n```/);
+        const stepMatch = fullResponse.match(/```step\n([\s\S]*?)\n```/);
+
+        if (stepMatch) {
+          const step = stepMatch[1].trim();
+          const data = `data: ${JSON.stringify({ step })}\n\n`;
+          controller.enqueue(encoder.encode(data));
+        }
+
+        if (optionsMatch) {
+          try {
+            const options = JSON.parse(optionsMatch[1].trim());
+            const data = `data: ${JSON.stringify({ options })}\n\n`;
+            controller.enqueue(encoder.encode(data));
+          } catch {
+            // invalid options JSON, skip
           }
         }
 
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
         controller.close();
       } catch (error) {
-        const errMsg =
-          error instanceof Error ? error.message : "Unknown error";
+        const errMsg = error instanceof Error ? error.message : "Unknown error";
         const data = `data: ${JSON.stringify({ error: errMsg })}\n\n`;
         controller.enqueue(encoder.encode(data));
         controller.close();

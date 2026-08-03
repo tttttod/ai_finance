@@ -1,6 +1,6 @@
 // AI 基本面分析 Agent 工作流类型定义
 
-export type AnalysisStep =
+export type AnalysisWorkflowStep =
   | "idle"
   | "step1_strategy"
   | "step1_confirm"
@@ -112,7 +112,7 @@ export interface AnalysisSession {
   id: string;
   createdAt: string;
   updatedAt: string;
-  currentStep: AnalysisStep;
+  currentStep: AnalysisWorkflowStep;
   userPreferences: {
     investmentStyle: string[]; // 成长/价值/红利/周期
     riskTolerance: "conservative" | "moderate" | "aggressive";
@@ -131,15 +131,15 @@ export interface AnalysisSession {
     hypotheses: AnalysisHypothesis[];
     risks: RiskFactor[];
   };
-  messages: ChatMessage[];
+  messages: WorkflowChatMessage[];
 }
 
-export interface ChatMessage {
+export interface WorkflowChatMessage {
   id: string;
   role: "user" | "assistant" | "system";
   content: string;
   timestamp: string;
-  step?: AnalysisStep;
+  step?: AnalysisWorkflowStep;
   metadata?: {
     action?: string;
     data?: unknown;
@@ -153,4 +153,55 @@ export interface KnowledgeBaseItem {
   description: string;
   framework: string[];
   examples: string[];
+}
+
+// ===== Chat Pipeline Types =====
+
+export type StepStatus = "pending" | "active" | "completed";
+
+export type AnalysisStep =
+  | "idle"
+  | "step1_info"
+  | "step2_evidence"
+  | "step3_hypothesis"
+  | "step4_fundamental"
+  | "step5_technical"
+  | "step6_prediction";
+
+export interface ChatOption {
+  id: string;
+  label: string;
+  reason: string;
+  risk?: string;
+  data?: Record<string, unknown>;
+}
+
+export interface PipelineStep {
+  id: AnalysisStep;
+  title: string;
+  description: string;
+  status: StepStatus;
+  result?: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  timestamp: string;
+  step?: AnalysisStep;
+  options?: ChatOption[];
+  metadata?: {
+    action?: string;
+    data?: unknown;
+  };
+}
+
+export interface ChatSession {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  currentStep: AnalysisStep | null;
+  pipeline: PipelineStep[];
+  messages: ChatMessage[];
 }

@@ -22,13 +22,13 @@ import {
   User,
 } from "lucide-react";
 import type {
-  AnalysisStep,
+  AnalysisWorkflowStep,
   StrategyViewpoint,
   IndustryCandidate,
   StockCandidate,
   AnalysisHypothesis,
   RiskFactor,
-  ChatMessage,
+  WorkflowChatMessage,
 } from "@/lib/analysis-types";
 import {
   mockStrategyViewpoints,
@@ -38,7 +38,7 @@ import {
   mockRisks,
 } from "@/lib/analysis-data";
 
-const STEP_LABELS: { step: AnalysisStep; label: string; icon: React.ReactNode }[] = [
+const STEP_LABELS: { step: AnalysisWorkflowStep; label: string; icon: React.ReactNode }[] = [
   { step: "step1_strategy", label: "策略观点", icon: <Lightbulb className="w-4 h-4" /> },
   { step: "step2_industry", label: "行业筛选", icon: <Building2 className="w-4 h-4" /> },
   { step: "step3_data", label: "深度分析", icon: <BarChart3 className="w-4 h-4" /> },
@@ -70,8 +70,8 @@ function saveSession(data: unknown) {
 }
 
 export default function AnalysisPage() {
-  const [currentStep, setCurrentStep] = useState<AnalysisStep>("idle");
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [currentStep, setCurrentStep] = useState<AnalysisWorkflowStep>("idle");
+  const [messages, setMessages] = useState<WorkflowChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedViewpoints, setSelectedViewpoints] = useState<string[]>([]);
@@ -121,8 +121,8 @@ export default function AnalysisPage() {
   }, [messages, streamingContent]);
 
   const addAssistantMessage = useCallback(
-    (content: string, step?: AnalysisStep) => {
-      const msg: ChatMessage = {
+    (content: string, step?: AnalysisWorkflowStep) => {
+      const msg: WorkflowChatMessage = {
         id: generateId(),
         role: "assistant",
         content,
@@ -193,7 +193,7 @@ export default function AnalysisPage() {
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
-    const userMsg: ChatMessage = {
+    const userMsg: WorkflowChatMessage = {
       id: generateId(),
       role: "user",
       content: inputValue.trim(),
@@ -245,7 +245,7 @@ export default function AnalysisPage() {
       }
 
       setStreamingContent("");
-      const assistantMsg: ChatMessage = {
+      const assistantMsg: WorkflowChatMessage = {
         id: generateId(),
         role: "assistant",
         content: fullContent,

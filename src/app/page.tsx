@@ -10,7 +10,7 @@ import { TechnicalSection } from '@/components/technical-section';
 import { StockTrackingSection } from '@/components/stock-tracking';
 import { ResearchSummarySection } from '@/components/research-summary';
 import Link from 'next/link';
-import { Sparkles, BookOpen } from 'lucide-react';
+import { Sparkles, BookOpen, MessageSquare } from 'lucide-react';
 
 type TabId = 'research-summary' | 'macro' | 'fundamental' | 'technical' | 'tracking';
 
@@ -67,11 +67,18 @@ export default function Home() {
       {/* Navigation Links */}
       <div className="flex items-center gap-3">
         <Link
-          href="/analysis"
+          href="/chat"
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500/20 to-cyan-400/20 border border-blue-500/30 text-sm font-medium text-blue-400 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300"
         >
+          <MessageSquare className="w-4 h-4" />
+          AI 对话分析
+        </Link>
+        <Link
+          href="/analysis"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm font-medium text-slate-400 hover:border-blue-500/20 hover:text-slate-300 transition-all duration-300"
+        >
           <Sparkles className="w-4 h-4" />
-          AI 分析工作台
+          分析工作台
         </Link>
         <Link
           href="/knowledge"
