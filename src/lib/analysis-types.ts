@@ -205,3 +205,27 @@ export interface ChatSession {
   pipeline: PipelineStep[];
   messages: ChatMessage[];
 }
+
+// ===== News Feed Types =====
+
+export type NewsCategory = "flash" | "research" | "macro" | "announcement";
+
+export interface NewsItem {
+  id: string;
+  category: NewsCategory;
+  title: string;
+  summary: string;
+  source: string;
+  publishTime: string;
+  relatedStocks?: string[];
+  relatedSectors?: string[];
+  importance?: "high" | "medium" | "low";
+  url?: string;
+}
+
+export interface NewsFeedData {
+  flashes: NewsItem[];
+  research: NewsItem[];
+  macro: NewsItem[];
+  announcements: NewsItem[];
+}
