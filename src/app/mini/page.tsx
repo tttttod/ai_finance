@@ -1337,21 +1337,32 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
 
         {/* 世界地图 */}
         <div className="relative bg-slate-900 h-[280px] overflow-hidden">
-          {/* 简化世界地图背景 */}
-          <svg viewBox="0 0 360 180" className="w-full h-full opacity-30">
-            {/* 简化的大陆轮廓 */}
-            <path d="M30,40 Q50,30 80,35 T120,45 T150,60 T130,80 T100,90 T60,85 T30,70 Z" fill="#475569" stroke="#64748b" strokeWidth="0.5" />
-            <path d="M140,30 Q170,25 200,30 T240,40 T260,55 T250,75 T220,85 T180,80 T150,70 Z" fill="#475569" stroke="#64748b" strokeWidth="0.5" />
-            <path d="M200,90 Q220,85 250,90 T290,100 T310,120 T300,140 T270,150 T230,145 T200,130 Z" fill="#475569" stroke="#64748b" strokeWidth="0.5" />
-            <path d="M260,30 Q280,25 310,30 T340,40 T350,55 T340,70 T310,75 T280,70 T260,60 Z" fill="#475569" stroke="#64748b" strokeWidth="0.5" />
-            <path d="M100,100 Q120,95 140,100 T160,110 T150,130 T120,135 T90,130 T80,115 Z" fill="#475569" stroke="#64748b" strokeWidth="0.5" />
+          {/* 真实世界地图背景 */}
+          <svg viewBox="0 0 360 180" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+            {/* 大陆轮廓 - 使用简化的真实地图路径 */}
+            <g fill="#334155" stroke="#475569" strokeWidth="0.3" opacity="0.8">
+              {/* 北美洲 */}
+              <path d="M20,25 L25,20 L35,18 L45,20 L55,22 L65,25 L75,28 L80,32 L82,38 L80,45 L75,50 L70,55 L65,58 L58,60 L50,62 L42,60 L35,58 L28,55 L22,50 L18,45 L15,40 L12,35 L10,30 L12,28 Z" />
+              {/* 南美洲 */}
+              <path d="M75,70 L80,68 L85,70 L88,75 L90,82 L88,90 L85,98 L82,105 L78,112 L74,118 L70,122 L66,125 L62,122 L58,118 L56,112 L55,105 L56,98 L58,90 L62,82 L66,76 L70,72 Z" />
+              {/* 欧洲 */}
+              <path d="M160,22 L165,20 L172,20 L178,22 L182,25 L185,28 L186,32 L185,36 L182,40 L178,42 L172,44 L166,44 L160,42 L156,40 L154,36 L154,32 L155,28 L157,25 Z" />
+              {/* 非洲 */}
+              <path d="M165,50 L172,48 L180,50 L186,54 L190,60 L192,68 L192,78 L190,88 L186,96 L180,102 L174,106 L168,108 L162,106 L158,102 L154,96 L152,88 L152,78 L154,68 L158,60 L162,54 Z" />
+              {/* 亚洲 */}
+              <path d="M190,18 L200,15 L215,14 L230,16 L245,20 L260,25 L275,30 L288,36 L298,42 L305,48 L310,55 L312,62 L310,70 L305,76 L298,80 L290,82 L280,82 L270,80 L260,76 L250,72 L240,68 L230,65 L220,62 L210,60 L200,58 L192,55 L186,50 L184,44 L184,38 L186,32 L188,26 Z" />
+              {/* 大洋洲 */}
+              <path d="M280,100 L290,98 L300,100 L308,104 L314,110 L316,118 L314,126 L310,132 L304,136 L296,138 L288,136 L282,132 L278,126 L276,118 L278,110 L280,104 Z" />
+              {/* 南极洲 */}
+              <path d="M40,160 L80,158 L120,158 L160,160 L200,160 L240,158 L280,158 L320,160 L320,175 L280,175 L240,175 L200,175 L160,175 L120,175 L80,175 L40,175 Z" />
+            </g>
           </svg>
 
           {/* 闪光点 */}
           {MOCK_GLOBAL_NEWS.map((event) => {
-            // 将经纬度转换为地图坐标 (简化映射)
-            const x = ((event.lng + 180) / 360) * 100;
-            const y = ((90 - event.lat) / 180) * 100;
+            // 将经纬度转换为地图坐标 (匹配新的SVG viewBox 360x180)
+            const x = ((event.lng + 180) / 360) * 360;
+            const y = ((90 - event.lat) / 180) * 180;
             const isSelected = selectedCountry === event.country;
             const isDimmed = selectedCountry && !isSelected;
 
@@ -1369,7 +1380,7 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
               <button
                 key={event.country_code}
                 className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${isDimmed ? "opacity-30" : "opacity-100"}`}
-                style={{ left: `${x}%`, top: `${y}%` }}
+                style={{ left: `${(x / 360) * 100}%`, top: `${(y / 180) * 100}%` }}
                 onClick={() => handleSelectEvent(event.country)}
               >
                 {/* 脉冲动画 */}
