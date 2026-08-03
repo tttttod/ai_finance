@@ -694,10 +694,24 @@ function generateSampleStockResult(
 }
 
 // 生成通用预测模型数据
-export function generateGeneralPredictionModel(selectedFactors: string[] = DEFAULT_SELECTED_FACTORS): GeneralPredictionModel {
-  // 随机抽取10只股票
-  const shuffled = [...SAMPLE_STOCK_POOL].sort(() => Math.random() - 0.5);
-  const sampleStocks = shuffled.slice(0, 10);
+export function generateGeneralPredictionModel(
+  selectedFactors: string[] = DEFAULT_SELECTED_FACTORS,
+  customStockNames?: string[]
+): GeneralPredictionModel {
+  let sampleStocks: { name: string; code: string; industry: string }[];
+
+  if (customStockNames && customStockNames.length > 0) {
+    // 使用自定义股票
+    sampleStocks = customStockNames.map((name, index) => ({
+      name,
+      code: `${600000 + index}`,
+      industry: "未知",
+    }));
+  } else {
+    // 随机抽取10只股票
+    const shuffled = [...SAMPLE_STOCK_POOL].sort(() => Math.random() - 0.5);
+    sampleStocks = shuffled.slice(0, 10);
+  }
 
   // 生成每只股票的结果
   const sampleResults = sampleStocks.map((stock) => generateSampleStockResult(stock, selectedFactors));

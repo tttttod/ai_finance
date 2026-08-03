@@ -555,10 +555,23 @@ function ModelTab() {
   const [expandedStock, setExpandedStock] = useState<string | null>(null);
   const [expandedFactorGroup, setExpandedFactorGroup] = useState<string | null>(null);
 
+  // 选股模式：random = 随机股票，custom = 指定股票
+  const [stockMode, setStockMode] = useState<"random" | "custom">("random");
+  // 自定义股票输入
+  const [customStocks, setCustomStocks] = useState<string>("");
+  // 解析后的自定义股票列表
+  const [parsedCustomStocks, setParsedCustomStocks] = useState<{ name: string; code: string }[]>([]);
+
   const handleStartTest = () => {
     setIsTesting(true);
     setTimeout(() => {
-      setModelData(generateGeneralPredictionModel(selectedFactors));
+      if (stockMode === "custom" && parsedCustomStocks.length > 0) {
+        // 使用自定义股票
+        setModelData(generateGeneralPredictionModel(selectedFactors, parsedCustomStocks.map((s) => s.name)));
+      } else {
+        // 使用随机股票
+        setModelData(generateGeneralPredictionModel(selectedFactors));
+      }
       setIsTesting(false);
     }, 1500);
   };
@@ -566,7 +579,11 @@ function ModelTab() {
   const handleResample = () => {
     setIsTesting(true);
     setTimeout(() => {
-      setModelData(generateGeneralPredictionModel(selectedFactors));
+      if (stockMode === "custom" && parsedCustomStocks.length > 0) {
+        setModelData(generateGeneralPredictionModel(selectedFactors, parsedCustomStocks.map((s) => s.name)));
+      } else {
+        setModelData(generateGeneralPredictionModel(selectedFactors));
+      }
       setIsTesting(false);
     }, 1000);
   };
@@ -582,6 +599,22 @@ function ModelTab() {
   };
 
   const isFactorSelected = (factor: string) => selectedFactors.includes(factor);
+
+  // 解析自定义股票输入
+  const handleCustomStocksChange = (value: string) => {
+    setCustomStocks(value);
+    const lines = value.split("\n").filter((line) => line.trim());
+    const stocks = lines.map((line) => {
+      const parts = line.trim().split(/[\s,，]+/);
+      if (parts.length >= 2) {
+        return { name: parts[0], code: parts[1] };
+      } else if (parts.length === 1) {
+        return { name: parts[0], code: "" };
+      }
+      return null;
+    }).filter(Boolean) as { name: string; code: string }[];
+    setParsedCustomStocks(stocks);
+  };
 
   const getScoreColor = (score: number) => {
     if (score >= 85) return "text-emerald-600";
@@ -683,9 +716,70 @@ function ModelTab() {
             onClick={handleStartTest}
             disabled={isTesting || selectedFactors.length === 0}
           >
-            {isTesting ? "测试中..." : "开始随机拟合测试"}
+            {isTesting ? "测试中..." : "开始拟合测试"}
           </button>
         </div>
+      </div>
+
+      {/* 选股模式选择 */}
+      <div className="bg-white rounded-lg p-4 border border-slate-100">
+        <h3 className="text-sm font-semibold text-slate-800 mb-3">选股方式</h3>
+        <p className="text-[10px] text-slate-500 mb-3 leading-relaxed">
+          选择随机股票或输入你关注的股票，系统会将选定的因子应用到这些股票上进行拟合测试。
+        </p>
+
+        <div className="flex gap-2 mb-3">
+          <button
+            className={`flex-1 text-[10px] py-2 rounded-lg border transition-colors ${
+              stockMode === "random"
+                ? "bg-blue-50 border-blue-200 text-blue-700"
+                : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+            }`}
+            onClick={() => setStockMode("random")}
+          >
+            随机股票（10只）
+          </button>
+          <button
+            className={`flex-1 text-[10px] py-2 rounded-lg border transition-colors ${
+              stockMode === "custom"
+                ? "bg-blue-50 border-blue-200 text-blue-700"
+                : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+            }`}
+            onClick={() => setStockMode("custom")}
+          >
+            指定股票
+          </button>
+        </div>
+
+        {stockMode === "custom" && (
+          <div>
+            <label className="text-[10px] text-slate-600 mb-1 block">
+              输入股票（每行一只，格式：股票名称 代码）
+            </label>
+            <textarea
+              className="w-full text-xs p-3 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-300 resize-none"
+              rows={5}
+              placeholder={"贵州茅台 600519\n宁德时代 300750\n比亚迪 002594\n招商银行 600036"}
+              value={customStocks}
+              onChange={(e) => handleCustomStocksChange(e.target.value)}
+            />
+            {parsedCustomStocks.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {parsedCustomStocks.map((stock, index) => (
+                  <span
+                    key={index}
+                    className="text-[10px] px-2 py-1 bg-blue-50 text-blue-700 rounded-full"
+                  >
+                    {stock.name} {stock.code && `(${stock.code})`}
+                  </span>
+                ))}
+              </div>
+            )}
+            <p className="text-[10px] text-slate-500 mt-2">
+              已识别 {parsedCustomStocks.length} 只股票
+            </p>
+          </div>
+        )}
       </div>
 
       {/* 测试结果 */}
@@ -699,7 +793,7 @@ function ModelTab() {
                 className="text-[10px] text-blue-600 hover:text-blue-700"
                 onClick={handleResample}
               >
-                重新抽样10只股票
+                {stockMode === "custom" ? "重新测试" : "重新抽样10只股票"}
               </button>
             </div>
             <div className="grid grid-cols-3 gap-3">
@@ -740,7 +834,14 @@ function ModelTab() {
 
           {/* 样本股票结果列表 */}
           <div className="bg-white rounded-lg p-4 border border-slate-100">
-            <h3 className="text-sm font-semibold text-slate-800 mb-3">十只样本股票结果</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-slate-800">
+                {stockMode === "custom" ? "指定股票结果" : "十只样本股票结果"}
+              </h3>
+              <span className="text-[10px] text-slate-500">
+                {modelData.sample_results.length} 只股票
+              </span>
+            </div>
             <div className="space-y-3">
               {modelData.sample_results.map((stock) => (
                 <div key={stock.code} className="border border-slate-100 rounded-lg overflow-hidden">
