@@ -30,17 +30,20 @@ src/
 ├── app/
 │   ├── api/
 │   │   ├── chat/route.ts         # POST /api/chat - AI对话（SSE流式）
+│   │   ├── news/route.ts         # GET /api/news - 资讯数据
 │   │   ├── report/route.ts       # GET /api/report - 获取每日完整报告
 │   │   ├── sectors/route.ts      # GET /api/sectors - 获取所有板块列表
 │   │   └── sectors/[id]/route.ts # GET /api/sectors/:id - 获取单个板块详情
-│   ├── analysis/page.tsx         # AI分析工作台（左右分栏+4步工作流）
+│   ├── page.tsx                  # 主页面：小程序MVP（4Tab：市场/研究/复盘/我的）
+│   ├── mini/page.tsx             # 小程序MVP（备用路由）
+│   ├── chat/page.tsx             # AI投研对话（万德/Choice风格）
 │   ├── knowledge/page.tsx        # 知识库（Agent分析逻辑框架）
-│   ├── layout.tsx                # 根布局（Header + Footer + AI浮动按钮）
-│   ├── page.tsx                  # 首页仪表盘（Tab切换5大模块）
-│   └── globals.css               # 全局样式 + 深色科技主题
-── components/
+│   ├── layout.tsx                # 根布局（浅灰背景，小程序风格）
+│   └── globals.css               # 全局样式
+├── components/
 │   ├── ui/                       # shadcn/ui 组件库
 │   ├── ai-chat.tsx               # 全局AI对话浮动组件
+│   ├── news-feed.tsx             # 资讯组件
 │   ├── market-overview.tsx       # 市场概览条
 │   ├── research-summary.tsx      # 研报观点总结
 │   ├── macro-summary.tsx         # 宏观观点总结
@@ -52,6 +55,9 @@ src/
 │   └── sector-detail.tsx         # 板块详情
 └── lib/
     ├── types.ts                  # 数据类型定义
+    ├── mini-types.ts             # 小程序类型定义（16步工作流、12Agent团队）
+    ├── mini-mock.ts              # 小程序Mock数据生成器
+    ├── coze-adapter.ts           # Coze API适配器（预留）
     ├── analysis-types.ts         # 分析工作台类型定义
     ├── analysis-data.ts          # 分析工作台模拟数据
     ├── mock-data.ts              # 每日报告模拟数据
