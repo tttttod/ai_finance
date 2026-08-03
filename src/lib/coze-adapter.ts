@@ -34,7 +34,7 @@ export class CozeAdapter {
     throw new Error("Coze API 未配置，当前使用 Mock 模式");
   }
 
-  async sendChatMessage(messages: any[], context?: any): Promise<ReadableStream> {
+  async sendChatMessage(_messages: unknown[], _context?: unknown): Promise<ReadableStream> {
     // TODO: 实现真实 Coze 流式对话
     throw new Error("Coze API 未配置，当前使用 Mock 模式");
   }

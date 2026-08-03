@@ -9,13 +9,10 @@ import {
   InvestmentStyle,
   WorkflowStep,
   FACTOR_WEIGHTS,
+  RecommendedTarget,
+  ReplayCurveFit,
+  ReviewDetail,
 } from "./mini-types";
-
-// 模拟研究目标
-const MOCK_TARGETS = {
-  stock: { name: "北方华创", code: "002371.SZ", type: "stock" as const },
-  sector: { name: "电子", type: "sector" as const },
-};
 
 // 生成因子评分
 function generateFactorScores(style: InvestmentStyle): FactorScore[] {
@@ -252,8 +249,8 @@ export function generateAgentResponse(
     step8_technical: "股价站上 MA20 和 MA60，均线多头排列，近 5 日资金净流入 8.5 亿元。",
     step9_sentiment: "近期公告利好（业绩预增），机构调研频次增加，市场情绪偏多。",
     step10_scoring: "多因子评分完成，综合得分 78 分（满分 100）。",
-    step11_bull: "正方观点：行业景气度上行 + 国产替代加速 + 技术突破，看多逻辑清晰。",
-    step12_bear: "反方观点：估值高位 + 竞争加剧 + 地缘风险，需警惕回调风险。",
+    step11_bull: "看多观点：行业景气度上行 + 国产替代加速 + 技术突破，看多逻辑清晰。",
+    step12_bear: "看空观点：估值高位 + 竞争加剧 + 地缘风险，需警惕回调风险。",
     step13_risk: "风险检查完成：估值风险（高）、流动性风险（中）、财务风险（中），整体可控。",
     step14_scenario: "三情景预测：乐观 +25%，中性 -2%，悲观 -15%。",
     step15_conclusion: "研究结论生成完成，请查看完整研究报告。",
@@ -273,7 +270,7 @@ export function generateAgentResponse(
   return {
     step,
     stepId,
-    agent: agentMap[stepId] as any,
+    agent: agentMap[stepId] as AgentResponse["agent"],
     content: contentMap[stepId] || "分析进行中...",
     data: dataMap[stepId],
     metadata: { source: "mock", timestamp: new Date().toISOString() },
@@ -356,4 +353,109 @@ export const mockReviewData = {
     { style: "波段", studies: 10, accuracy: 65, avgReturn: 5.2 },
     { style: "长期", studies: 6, accuracy: 60, avgReturn: 8.5 },
   ],
+};
+
+// ===== 新增：今日AI推荐研究标的 =====
+export const mockRecommendedTargets: RecommendedTarget[] = [
+  {
+    name: "北方华创",
+    code: "002371",
+    industry: "半导体",
+    recommended_style: "swing",
+    default_horizon: "20日",
+    opportunity_score: 82,
+    risk_level: "中",
+    reason: "半导体板块热度提升，资金流入增强，技术趋势保持强势。",
+    main_risk: "估值偏高，板块短期拥挤度上升。",
+    trigger_source: ["板块热度", "资金流", "技术趋势"],
+    is_demo_data: true,
+  },
+  {
+    name: "中芯国际",
+    code: "688981",
+    industry: "半导体制造",
+    recommended_style: "long",
+    default_horizon: "12个月",
+    opportunity_score: 78,
+    risk_level: "中",
+    reason: "国产替代逻辑长期成立，14nm技术突破打开成长空间。",
+    main_risk: "地缘政治风险，行业竞争加剧。",
+    trigger_source: ["政策催化", "技术突破", "基本面改善"],
+    is_demo_data: true,
+  },
+  {
+    name: "比亚迪",
+    code: "002594",
+    industry: "新能源汽车",
+    recommended_style: "swing",
+    default_horizon: "20日",
+    opportunity_score: 75,
+    risk_level: "低",
+    reason: "销量持续创新高，海外扩张加速，行业景气度上行。",
+    main_risk: "行业竞争加剧，原材料价格波动。",
+    trigger_source: ["基本面改善", "板块热度", "资金流"],
+    is_demo_data: true,
+  },
+  {
+    name: "海光信息",
+    code: "688041",
+    industry: "AI芯片",
+    recommended_style: "short",
+    default_horizon: "5日",
+    opportunity_score: 85,
+    risk_level: "高",
+    reason: "AI算力需求爆发，短期资金大幅流入，技术面突破关键阻力位。",
+    main_risk: "估值处于历史高位，短期涨幅较大存在回调风险。",
+    trigger_source: ["板块热度", "资金流", "事件催化"],
+    is_demo_data: true,
+  },
+];
+
+// ===== 新增：复盘曲线拟合数据 =====
+export const mockReplayCurveFit: ReplayCurveFit = {
+  model_name: "多因子回归拟合模型（演示版）",
+  features: ["历史收益率", "历史波动率", "市场指数收益", "行业指数收益", "因子评分", "新闻情绪"],
+  dates: ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "D10", "D11", "D12", "D13", "D14", "D15", "D16", "D17", "D18", "D19", "D20"],
+  actual_price: [285.6, 288.2, 291.5, 289.8, 293.2, 296.5, 298.1, 302.5, 305.8, 308.2, 312.5, 315.8, 318.2, 320.5, 322.8, 325.2, 328.5, 330.2, 332.8, 335.5],
+  agent_forecast_mid: [285.6, 287.5, 289.8, 292.0, 294.2, 296.5, 298.8, 301.0, 303.2, 305.5, 307.8, 310.0, 312.2, 314.5, 316.8, 319.0, 321.2, 323.5, 325.8, 328.0],
+  agent_forecast_upper: [285.6, 291.0, 295.5, 299.8, 304.2, 308.5, 312.8, 317.2, 321.5, 325.8, 330.2, 334.5, 338.8, 343.2, 347.5, 351.8, 356.2, 360.5, 364.8, 369.2],
+  agent_forecast_lower: [285.6, 284.0, 282.5, 281.0, 279.5, 278.0, 276.5, 275.0, 273.5, 272.0, 270.5, 269.0, 267.5, 266.0, 264.5, 263.0, 261.5, 260.0, 258.5, 257.0],
+  ml_fitted_price: [285.6, 287.8, 290.2, 289.5, 292.8, 295.8, 297.5, 301.8, 304.5, 307.2, 311.8, 314.5, 317.5, 319.8, 322.2, 324.5, 327.8, 329.5, 332.2, 334.8],
+  prediction_error: [0, 0.4, -1.3, -0.3, 0.4, -0.7, 0.6, 0.7, 1.3, 1.0, 0.7, 1.3, 0.7, 0.7, 0.6, 0.7, 0.7, 0.7, 0.6, 0.7],
+  metrics: {
+    direction_accuracy: 85,
+    interval_hit_rate: 72,
+    mae: 2.35,
+    rmse: 3.12,
+    max_drawdown: -4.5,
+    max_positive_deviation: 7.5,
+    max_negative_deviation: -3.2,
+    relative_hs300_return: 8.5,
+    relative_industry_return: 3.2,
+    r2: 0.94,
+  },
+  review_summary: "本次复盘显示，实际价格大部分时间位于预测区间内，区间命中率为72%。机器学习拟合曲线与实际走势方向基本一致，但在第8个交易日后低估了上涨斜率，说明模型对资金加速流入的反应不足。",
+};
+
+// ===== 新增：单次复盘详情 =====
+export const mockReviewDetail: ReviewDetail = {
+  id: "r1",
+  target: "北方华创 002371",
+  style: "short",
+  createdAt: "2026-07-15",
+  reviewDate: "2026-07-22",
+  conclusion: "短期偏多，建议关注回调买入机会",
+  predicted_range: { upper: 320.5, lower: 265.0 },
+  curve_fit: mockReplayCurveFit,
+  what_went_right: [
+    "准确判断行业景气度上行趋势",
+    "国产替代逻辑持续验证",
+    "资金流入方向判断正确",
+  ],
+  what_went_wrong: [
+    "低估了短期上涨斜率",
+    "对估值风险的权重设置偏低",
+    "未充分考虑到中期业绩预增的催化作用",
+  ],
+  model_adjustment: "后续将提高资金流因子的权重，并增加业绩催化事件的实时响应机制。",
 };

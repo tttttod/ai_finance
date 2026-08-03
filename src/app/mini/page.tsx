@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import {
   InvestmentStyle,
-  WorkflowStep,
   StepStatus,
   WorkflowStepInfo,
   FactorScore,
@@ -11,22 +10,68 @@ import {
   DebatePoint,
   RiskCheck,
   ResearchReport,
-  ReviewTask,
   AgentResponse,
+  RecommendedTarget,
+  UserProfileSurvey,
+  ReplayCurveFit,
+  ReviewDetail,
   WORKFLOW_STEPS,
   AGENT_TEAM,
-  FACTOR_WEIGHTS,
+  SURVEY_QUESTIONS,
 } from "@/lib/mini-types";
 import {
   generateAgentResponse,
   mockMarketData,
   mockReviewData,
+  mockRecommendedTargets,
+  mockReplayCurveFit,
+  mockReviewDetail,
 } from "@/lib/mini-mock";
 
 type TabId = "market" | "research" | "review" | "profile";
 
 export default function MiniProgramPage() {
   const [activeTab, setActiveTab] = useState<TabId>("market");
+  const [surveyCompleted, setSurveyCompleted] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfileSurvey>({
+    completed: false,
+    recommended_style: "",
+    default_horizon: "",
+    risk_tolerance: "",
+    holding_period: "",
+    focus_preference: "",
+    experience_level: "",
+  });
+  const [selectedResearchTarget, setSelectedResearchTarget] = useState<RecommendedTarget | null>(null);
+
+  // 检查是否已完成问卷
+  useEffect(() => {
+    const saved = localStorage.getItem("user_profile_survey");
+    if (saved) {
+      const profile = JSON.parse(saved);
+      setUserProfile(profile);
+      setSurveyCompleted(profile.completed);
+    }
+  }, []);
+
+  // 完成问卷
+  const completeSurvey = (style: InvestmentStyle) => {
+    const horizon = style === "short" ? "5日" : style === "swing" ? "20日" : "12个月";
+    const newProfile: UserProfileSurvey = {
+      ...userProfile,
+      completed: true,
+      recommended_style: style,
+      default_horizon: horizon,
+    };
+    setUserProfile(newProfile);
+    setSurveyCompleted(true);
+    localStorage.setItem("user_profile_survey", JSON.stringify(newProfile));
+  };
+
+  // 未做问卷时显示问卷
+  if (!surveyCompleted) {
+    return <InvestmentSurvey onComplete={completeSurvey} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] flex flex-col max-w-md mx-auto relative">
@@ -39,10 +84,23 @@ export default function MiniProgramPage() {
 
       {/* 主内容区 */}
       <div className="flex-1 overflow-y-auto pb-16">
-        {activeTab === "market" && <MarketTab />}
-        {activeTab === "research" && <ResearchTab />}
+        {activeTab === "market" && (
+          <MarketTab
+            onFillResearch={(target) => {
+              setSelectedResearchTarget(target);
+              setActiveTab("research");
+            }}
+          />
+        )}
+        {activeTab === "research" && (
+          <ResearchTab
+            defaultStyle={(userProfile.recommended_style as InvestmentStyle) || "swing"}
+            prefilledTarget={selectedResearchTarget}
+            onClearPrefilled={() => setSelectedResearchTarget(null)}
+          />
+        )}
         {activeTab === "review" && <ReviewTab />}
-        {activeTab === "profile" && <ProfileTab />}
+        {activeTab === "profile" && <ProfileTab profile={userProfile} onRetakeSurvey={() => setSurveyCompleted(false)} />}
       </div>
 
       {/* 底部 Tab 栏 */}
@@ -69,86 +127,64 @@ export default function MiniProgramPage() {
   );
 }
 
-// ===== 市场 Tab =====
-function MarketTab() {
+// ===== 投资风格问卷 =====
+function InvestmentSurvey({ onComplete }: { onComplete: (style: InvestmentStyle) => void }) {
+  const [currentQ, setCurrentQ] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+
+  const handleAnswer = (questionId: string, value: string, style: InvestmentStyle) => {
+    const newAnswers = { ...answers, [questionId]: value };
+    setAnswers(newAnswers);
+
+    if (currentQ < SURVEY_QUESTIONS.length - 1) {
+      setCurrentQ(currentQ + 1);
+    } else {
+      // 计算推荐风格
+      const styleCounts: Record<InvestmentStyle, number> = { short: 0, swing: 0, long: 0 };
+      Object.values(newAnswers).forEach((v) => {
+        const q = SURVEY_QUESTIONS.find((q) => q.options.some((o) => o.value === v));
+        const opt = q?.options.find((o) => o.value === v);
+        if (opt) styleCounts[opt.style]++;
+      });
+      const recommended = Object.entries(styleCounts).sort((a, b) => b[1] - a[1])[0][0] as InvestmentStyle;
+      onComplete(recommended);
+    }
+  };
+
+  const question = SURVEY_QUESTIONS[currentQ];
+
   return (
-    <div className="p-4 space-y-4">
-      {/* AI 摘要 */}
-      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-4 text-white">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-lg">🤖</span>
-          <span className="text-sm font-semibold">今日市场 AI 摘要</span>
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex flex-col max-w-md mx-auto">
+      <div className="flex-1 p-6 flex flex-col justify-center">
+        <div className="mb-8">
+          <h1 className="text-xl font-bold text-slate-800 mb-2">先了解你的投资风格</h1>
+          <p className="text-sm text-slate-500">
+            我会根据你的风险承受能力、持有周期和研究习惯，自动推荐默认投研风格。之后你仍然可以在研究页手动切换。
+          </p>
         </div>
-        <p className="text-xs leading-relaxed opacity-90">{mockMarketData.summary}</p>
-      </div>
 
-      {/* 指数卡片 */}
-      <div className="grid grid-cols-2 gap-2">
-        {mockMarketData.indices.map((idx) => (
-          <div key={idx.code} className="bg-white rounded-lg p-3 border border-slate-100">
-            <div className="text-xs text-slate-500 mb-1">{idx.name}</div>
-            <div className="text-lg font-mono font-bold text-slate-800">{idx.price.toFixed(2)}</div>
-            <div className={`text-xs font-mono ${idx.change >= 0 ? "text-red-600" : "text-emerald-600"}`}>
-              {idx.change >= 0 ? "+" : ""}{idx.change}%
-            </div>
+        <div className="mb-6">
+          <div className="flex gap-1 mb-4">
+            {SURVEY_QUESTIONS.map((_, i) => (
+              <div
+                key={i}
+                className={`flex-1 h-1 rounded-full ${i <= currentQ ? "bg-blue-500" : "bg-slate-200"}`}
+              />
+            ))}
           </div>
-        ))}
-      </div>
-
-      {/* 板块热度榜 */}
-      <div className="bg-white rounded-lg p-4 border border-slate-100">
-        <h3 className="text-sm font-semibold text-slate-800 mb-3">板块热度榜</h3>
-        <div className="space-y-2">
-          {mockMarketData.hotSectors.map((sector, i) => (
-            <div key={sector.name} className="flex items-center gap-3">
-              <span className="text-xs text-slate-400 w-4">{i + 1}</span>
-              <span className="text-xs font-medium text-slate-700 flex-1">{sector.name}</span>
-              <div className="flex items-center gap-2">
-                <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-red-500 rounded-full" style={{ width: `${sector.heat}%` }} />
-                </div>
-                <span className="text-xs font-mono text-red-600">+{sector.change}%</span>
-              </div>
-            </div>
-          ))}
+          <p className="text-xs text-slate-400">问题 {currentQ + 1} / {SURVEY_QUESTIONS.length}</p>
         </div>
-      </div>
 
-      {/* 个股异动榜 */}
-      <div className="bg-white rounded-lg p-4 border border-slate-100">
-        <h3 className="text-sm font-semibold text-slate-800 mb-3">个股异动榜</h3>
-        <div className="space-y-2">
-          {mockMarketData.activeStocks.map((stock) => (
-            <div key={stock.code} className="flex items-center gap-3 py-1.5 border-b border-slate-50 last:border-0">
-              <div className="flex-1">
-                <div className="text-xs font-medium text-slate-700">{stock.name}</div>
-                <div className="text-[10px] text-slate-400">{stock.reason}</div>
-              </div>
-              <div className="text-right">
-                <div className="text-xs font-mono text-slate-700">{stock.price}</div>
-                <div className="text-xs font-mono text-red-600">+{stock.change}%</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 事件时间轴 */}
-      <div className="bg-white rounded-lg p-4 border border-slate-100">
-        <h3 className="text-sm font-semibold text-slate-800 mb-3">重要事件</h3>
         <div className="space-y-3">
-          {mockMarketData.events.map((event, i) => (
-            <div key={i} className="flex gap-3">
-              <div className="text-xs text-slate-400 w-10 font-mono">{event.time}</div>
-              <div className="flex-1">
-                <div className="text-xs text-slate-700">{event.title}</div>
-                <span className={`inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded ${
-                  event.impact === "positive" ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"
-                }`}>
-                  {event.impact === "positive" ? "利好" : "利空"}
-                </span>
-              </div>
-            </div>
+          <h2 className="text-base font-semibold text-slate-700">{question.title}</h2>
+          {question.options.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => handleAnswer(question.id, opt.value, opt.style)}
+              className="w-full p-4 text-left text-sm bg-white rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50 transition-all"
+            >
+              {opt.label}
+            </button>
           ))}
         </div>
       </div>
@@ -157,10 +193,18 @@ function MarketTab() {
 }
 
 // ===== 研究 Tab =====
-function ResearchTab() {
+function ResearchTab({
+  defaultStyle,
+  prefilledTarget,
+  onClearPrefilled,
+}: {
+  defaultStyle: InvestmentStyle;
+  prefilledTarget: RecommendedTarget | null;
+  onClearPrefilled: () => void;
+}) {
   const [started, setStarted] = useState(false);
   const [target, setTarget] = useState("");
-  const [style, setStyle] = useState<InvestmentStyle>("short");
+  const [style, setStyle] = useState<InvestmentStyle>(defaultStyle);
   const [period, setPeriod] = useState<string>("short");
   const [currentStep, setCurrentStep] = useState(0);
   const [steps, setSteps] = useState<WorkflowStepInfo[]>([]);
@@ -168,12 +212,23 @@ function ResearchTab() {
   const [isRunning, setIsRunning] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // 处理预填充
+  useEffect(() => {
+    if (prefilledTarget) {
+      setTarget(`${prefilledTarget.name} ${prefilledTarget.code}`);
+      setStyle(prefilledTarget.recommended_style);
+      const periodMap = { short: "short", swing: "medium", long: "long" };
+      setPeriod(periodMap[prefilledTarget.recommended_style]);
+    }
+  }, [prefilledTarget]);
+
   const startResearch = () => {
     if (!target.trim()) return;
     setStarted(true);
     setIsRunning(true);
     setCurrentStep(0);
     setResponses([]);
+    onClearPrefilled();
 
     const initialSteps = WORKFLOW_STEPS.map((s) => ({
       ...s,
@@ -181,7 +236,6 @@ function ResearchTab() {
     }));
     setSteps(initialSteps);
 
-    // 模拟逐步执行
     let step = 0;
     timerRef.current = setInterval(() => {
       if (step >= WORKFLOW_STEPS.length) {
@@ -226,6 +280,11 @@ function ResearchTab() {
                 placeholder="输入股票代码或名称"
                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500"
               />
+              {prefilledTarget && (
+                <p className="text-[10px] text-blue-600 mt-1">
+                  已从今日AI推荐研究标的填入：{prefilledTarget.name} {prefilledTarget.code}
+                </p>
+              )}
             </div>
             <div>
               <label className="text-xs text-slate-500 mb-1 block">投资风格</label>
@@ -395,17 +454,20 @@ function AgentCard({ response }: { response: AgentResponse }) {
         </div>
       ) : null}
 
-      {/* 辩论观点 */}
+      {/* 多空观点对比 */}
       {response.data?.points ? (
-        <div className="mt-3 space-y-2">
-          {(response.data.points as DebatePoint[]).map((point) => (
-            <div key={point.id} className="p-2 rounded-lg bg-slate-50 border border-slate-100">
-              <div className="text-xs font-medium text-slate-700 mb-1">{point.title}</div>
-              <div className="text-[10px] text-slate-500 mb-1">{point.content}</div>
-              <div className="text-[10px] text-blue-600">证据：{point.evidence}</div>
-              <div className="text-[10px] text-slate-400 mt-1">置信度：{point.confidence}%</div>
-            </div>
-          ))}
+        <div className="mt-3">
+          <div className="text-xs font-medium text-slate-700 mb-2">多空观点对比</div>
+          <div className="space-y-2">
+            {(response.data.points as DebatePoint[]).map((point) => (
+              <div key={point.id} className="p-2 rounded-lg bg-slate-50 border border-slate-100">
+                <div className="text-xs font-medium text-slate-700 mb-1">{point.title}</div>
+                <div className="text-[10px] text-slate-500 mb-1">{point.content}</div>
+                <div className="text-[10px] text-blue-600">证据：{point.evidence}</div>
+                <div className="text-[10px] text-slate-400 mt-1">置信度：{point.confidence}%</div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : null}
 
@@ -482,6 +544,12 @@ function AgentCard({ response }: { response: AgentResponse }) {
 
 // ===== 复盘 Tab =====
 function ReviewTab() {
+  const [selectedReview, setSelectedReview] = useState<ReviewDetail | null>(null);
+
+  if (selectedReview) {
+    return <ReviewDetailPage review={selectedReview} onBack={() => setSelectedReview(null)} />;
+  }
+
   return (
     <div className="p-4 space-y-4">
       {/* 统计概览 */}
@@ -501,6 +569,28 @@ function ReviewTab() {
             <div className="text-[10px] text-slate-500">相对沪深300</div>
           </div>
         </div>
+      </div>
+
+      {/* 预测曲线拟合 */}
+      <div className="bg-white rounded-lg p-4 border border-slate-100">
+        <h3 className="text-sm font-semibold text-slate-800 mb-2">预测曲线拟合</h3>
+        <p className="text-[10px] text-slate-500 mb-3">{mockReplayCurveFit.model_name}</p>
+        <CurveFitChart data={mockReplayCurveFit} />
+        <div className="grid grid-cols-3 gap-2 mt-3">
+          <div className="text-center p-2 bg-slate-50 rounded">
+            <div className="text-xs font-mono font-bold text-slate-700">{mockReplayCurveFit.metrics.mae}</div>
+            <div className="text-[9px] text-slate-500">MAE</div>
+          </div>
+          <div className="text-center p-2 bg-slate-50 rounded">
+            <div className="text-xs font-mono font-bold text-slate-700">{mockReplayCurveFit.metrics.rmse}</div>
+            <div className="text-[9px] text-slate-500">RMSE</div>
+          </div>
+          <div className="text-center p-2 bg-slate-50 rounded">
+            <div className="text-xs font-mono font-bold text-blue-600">{mockReplayCurveFit.metrics.r2}</div>
+            <div className="text-[9px] text-slate-500">R²</div>
+          </div>
+        </div>
+        <p className="text-[10px] text-slate-500 mt-3 leading-relaxed">{mockReplayCurveFit.review_summary}</p>
       </div>
 
       {/* 风格表现对比 */}
@@ -525,7 +615,11 @@ function ReviewTab() {
         <h3 className="text-sm font-semibold text-slate-800 mb-3">历史研究</h3>
         <div className="space-y-3">
           {mockReviewData.history.map((item) => (
-            <div key={item.id} className="p-3 rounded-lg bg-slate-50 border border-slate-100">
+            <div
+              key={item.id}
+              className="p-3 rounded-lg bg-slate-50 border border-slate-100 cursor-pointer hover:bg-slate-100 transition-colors"
+              onClick={() => setSelectedReview(mockReviewDetail)}
+            >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-slate-700">{item.target}</span>
                 <span className={`text-[10px] px-1.5 py-0.5 rounded ${
@@ -558,8 +652,153 @@ function ReviewTab() {
   );
 }
 
+// 曲线拟合图组件
+function CurveFitChart({ data }: { data: ReplayCurveFit }) {
+  const width = 300;
+  const height = 150;
+  const padding = 20;
+
+  const allPrices = [
+    ...data.actual_price,
+    ...data.agent_forecast_mid,
+    ...data.agent_forecast_upper,
+    ...data.agent_forecast_lower,
+    ...data.ml_fitted_price,
+  ];
+  const minPrice = Math.min(...allPrices) * 0.98;
+  const maxPrice = Math.max(...allPrices) * 1.02;
+
+  const scaleX = (i: number) => padding + (i / (data.dates.length - 1)) * (width - 2 * padding);
+  const scaleY = (price: number) => height - padding - ((price - minPrice) / (maxPrice - minPrice)) * (height - 2 * padding);
+
+  const createPath = (values: number[]) => {
+    return values.map((v, i) => `${i === 0 ? "M" : "L"} ${scaleX(i)} ${scaleY(v)}`).join(" ");
+  };
+
+  const bandPath = data.agent_forecast_upper
+    .map((v, i) => `${i === 0 ? "M" : "L"} ${scaleX(i)} ${scaleY(v)}`)
+    .join(" ");
+  const bandPathReverse = data.agent_forecast_lower
+    .slice()
+    .reverse()
+    .map((v, i) => `L ${scaleX(data.dates.length - 1 - i)} ${scaleY(v)}`)
+    .join(" ");
+
+  return (
+    <div className="w-full overflow-x-auto">
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
+        {/* 预测区间带 */}
+        <path d={`${bandPath} ${bandPathReverse} Z`} fill="rgba(59, 130, 246, 0.1)" />
+        {/* 预测中位线 */}
+        <path d={createPath(data.agent_forecast_mid)} fill="none" stroke="#3b82f6" strokeWidth="1" strokeDasharray="3,3" />
+        {/* ML拟合线 */}
+        <path d={createPath(data.ml_fitted_price)} fill="none" stroke="#f97316" strokeWidth="1.5" />
+        {/* 实际价格线 */}
+        <path d={createPath(data.actual_price)} fill="none" stroke="#1e293b" strokeWidth="2" />
+      </svg>
+      <div className="flex items-center justify-center gap-4 mt-2">
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-0.5 bg-slate-800" />
+          <span className="text-[9px] text-slate-500">实际价格</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-0.5 bg-blue-500 border-dashed" />
+          <span className="text-[9px] text-slate-500">预测中位线</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-0.5 bg-orange-500" />
+          <span className="text-[9px] text-slate-500">ML拟合</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-2 bg-blue-500/10" />
+          <span className="text-[9px] text-slate-500">预测区间</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 复盘详情页
+function ReviewDetailPage({ review, onBack }: { review: ReviewDetail; onBack: () => void }) {
+  return (
+    <div className="p-4 space-y-4">
+      <button onClick={onBack} className="text-sm text-blue-600 flex items-center gap-1">
+        ← 返回复盘列表
+      </button>
+
+      <div className="bg-white rounded-lg p-4 border border-slate-100">
+        <h3 className="text-sm font-semibold text-slate-800 mb-3">{review.target}</h3>
+        <div className="grid grid-cols-2 gap-3 text-xs">
+          <div><span className="text-slate-500">投资风格：</span>{review.style === "short" ? "短线" : review.style === "swing" ? "波段" : "长期"}</div>
+          <div><span className="text-slate-500">创建日期：</span>{review.createdAt}</div>
+          <div><span className="text-slate-500">复盘日期：</span>{review.reviewDate}</div>
+          <div><span className="text-slate-500">研究结论：</span>{review.conclusion}</div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg p-4 border border-slate-100">
+        <h3 className="text-sm font-semibold text-slate-800 mb-3">预测曲线拟合</h3>
+        <CurveFitChart data={review.curve_fit} />
+      </div>
+
+      <div className="bg-white rounded-lg p-4 border border-slate-100">
+        <h3 className="text-sm font-semibold text-slate-800 mb-3">复盘指标</h3>
+        <div className="grid grid-cols-3 gap-2">
+          <div className="text-center p-2 bg-slate-50 rounded">
+            <div className="text-xs font-mono font-bold text-blue-600">{review.curve_fit.metrics.direction_accuracy}%</div>
+            <div className="text-[9px] text-slate-500">方向准确率</div>
+          </div>
+          <div className="text-center p-2 bg-slate-50 rounded">
+            <div className="text-xs font-mono font-bold text-emerald-600">{review.curve_fit.metrics.interval_hit_rate}%</div>
+            <div className="text-[9px] text-slate-500">区间命中率</div>
+          </div>
+          <div className="text-center p-2 bg-slate-50 rounded">
+            <div className="text-xs font-mono font-bold text-slate-700">{review.curve_fit.metrics.r2}</div>
+            <div className="text-[9px] text-slate-500">R²</div>
+          </div>
+          <div className="text-center p-2 bg-slate-50 rounded">
+            <div className="text-xs font-mono font-bold text-slate-700">{review.curve_fit.metrics.mae}</div>
+            <div className="text-[9px] text-slate-500">MAE</div>
+          </div>
+          <div className="text-center p-2 bg-slate-50 rounded">
+            <div className="text-xs font-mono font-bold text-slate-700">{review.curve_fit.metrics.rmse}</div>
+            <div className="text-[9px] text-slate-500">RMSE</div>
+          </div>
+          <div className="text-center p-2 bg-slate-50 rounded">
+            <div className="text-xs font-mono font-bold text-red-600">{review.curve_fit.metrics.max_drawdown}%</div>
+            <div className="text-[9px] text-slate-500">最大回撤</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg p-4 border border-slate-100">
+        <h3 className="text-sm font-semibold text-emerald-700 mb-2">✅ 看对了什么</h3>
+        <ul className="text-xs text-slate-600 space-y-1">
+          {review.what_went_right.map((item, i) => (
+            <li key={i}>• {item}</li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="bg-white rounded-lg p-4 border border-slate-100">
+        <h3 className="text-sm font-semibold text-red-700 mb-2">❌ 看错了什么</h3>
+        <ul className="text-xs text-slate-600 space-y-1">
+          {review.what_went_wrong.map((item, i) => (
+            <li key={i}>• {item}</li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+        <h3 className="text-sm font-semibold text-blue-800 mb-2">🔄 模型调整方向</h3>
+        <p className="text-xs text-slate-700">{review.model_adjustment}</p>
+      </div>
+    </div>
+  );
+}
+
 // ===== 我的 Tab =====
-function ProfileTab() {
+function ProfileTab({ profile, onRetakeSurvey }: { profile: UserProfileSurvey; onRetakeSurvey: () => void }) {
   return (
     <div className="p-4 space-y-4">
       {/* 用户信息 */}
@@ -570,9 +809,25 @@ function ProfileTab() {
           </div>
           <div>
             <div className="text-sm font-semibold text-slate-800">投资者</div>
-            <div className="text-xs text-slate-500">默认风格：短线</div>
+            <div className="text-xs text-slate-500">
+              默认风格：{profile.recommended_style === "short" ? "短线" : profile.recommended_style === "swing" ? "波段" : "长期"}
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* 投资风格测评 */}
+      <div className="bg-white rounded-lg p-4 border border-slate-100">
+        <h3 className="text-sm font-semibold text-slate-800 mb-2">投资风格测评</h3>
+        <p className="text-xs text-slate-600 mb-3">
+          推荐风格：{profile.recommended_style === "short" ? "短线" : profile.recommended_style === "swing" ? "波段" : "长期"}
+        </p>
+        <button
+          onClick={onRetakeSurvey}
+          className="w-full py-2 text-xs text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+        >
+          重新测评
+        </button>
       </div>
 
       {/* 关注股票 */}
@@ -637,6 +892,150 @@ function ProfileTab() {
           所有研究结论仅供研究参考，不构成投资建议。<br />
           用户应独立做出投资决策，并承担相应风险。
         </p>
+      </div>
+    </div>
+  );
+}
+
+// ===== 市场 Tab =====
+function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTarget) => void }) {
+  return (
+    <div className="p-4 space-y-4">
+      {/* AI 摘要 */}
+      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-4 text-white">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-lg">🤖</span>
+          <span className="text-sm font-semibold">今日市场 AI 摘要</span>
+        </div>
+        <p className="text-xs leading-relaxed opacity-90">{mockMarketData.summary}</p>
+      </div>
+
+      {/* 指数卡片 */}
+      <div className="grid grid-cols-2 gap-2">
+        {mockMarketData.indices.map((idx) => (
+          <div key={idx.code} className="bg-white rounded-lg p-3 border border-slate-100">
+            <div className="text-xs text-slate-500 mb-1">{idx.name}</div>
+            <div className="text-lg font-mono font-bold text-slate-800">{idx.price.toFixed(2)}</div>
+            <div className={`text-xs font-mono ${idx.change >= 0 ? "text-red-600" : "text-emerald-600"}`}>
+              {idx.change >= 0 ? "+" : ""}{idx.change}%
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 板块热度榜 */}
+      <div className="bg-white rounded-lg p-4 border border-slate-100">
+        <h3 className="text-sm font-semibold text-slate-800 mb-3">板块热度榜</h3>
+        <div className="space-y-2">
+          {mockMarketData.hotSectors.map((sector, i) => (
+            <div key={sector.name} className="flex items-center gap-3">
+              <span className="text-xs text-slate-400 w-4">{i + 1}</span>
+              <span className="text-xs font-medium text-slate-700 flex-1">{sector.name}</span>
+              <div className="flex items-center gap-2">
+                <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-red-500 rounded-full" style={{ width: `${sector.heat}%` }} />
+                </div>
+                <span className="text-xs font-mono text-red-600">+{sector.change}%</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 个股异动榜 */}
+      <div className="bg-white rounded-lg p-4 border border-slate-100">
+        <h3 className="text-sm font-semibold text-slate-800 mb-3">个股异动榜</h3>
+        <div className="space-y-2">
+          {mockMarketData.activeStocks.map((stock) => (
+            <div key={stock.code} className="flex items-center gap-3 py-1.5 border-b border-slate-50 last:border-0">
+              <div className="flex-1">
+                <div className="text-xs font-medium text-slate-700">{stock.name}</div>
+                <div className="text-[10px] text-slate-400">{stock.reason}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xs font-mono text-slate-700">{stock.price}</div>
+                <div className="text-xs font-mono text-red-600">+{stock.change}%</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 今日AI推荐研究标的 */}
+      <div className="bg-white rounded-lg p-4 border border-slate-100">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-slate-800">今日AI推荐研究标的</h3>
+          <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded">Demo数据</span>
+        </div>
+        <div className="space-y-3">
+          {mockRecommendedTargets.map((target) => (
+            <div key={target.code} className="p-3 rounded-lg bg-slate-50 border border-slate-100">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <span className="text-sm font-semibold text-slate-800">{target.name}</span>
+                  <span className="text-xs text-slate-500 ml-2">{target.code}</span>
+                </div>
+                <span className={`text-[10px] px-2 py-0.5 rounded ${
+                  target.recommended_style === "short" ? "bg-red-50 text-red-600" :
+                  target.recommended_style === "swing" ? "bg-blue-50 text-blue-600" :
+                  "bg-purple-50 text-purple-600"
+                }`}>
+                  {target.recommended_style === "short" ? "短线" : target.recommended_style === "swing" ? "波段" : "长期"}
+                </span>
+              </div>
+              <div className="flex items-center gap-4 mb-2">
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-slate-500">机会评分</span>
+                  <span className="text-sm font-mono font-bold text-blue-600">{target.opportunity_score}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-slate-500">风险</span>
+                  <span className={`text-xs ${
+                    target.risk_level === "高" ? "text-red-600" :
+                    target.risk_level === "中" ? "text-amber-600" : "text-emerald-600"
+                  }`}>{target.risk_level}</span>
+                </div>
+                <span className="text-[10px] text-slate-400">{target.industry}</span>
+              </div>
+              <p className="text-xs text-slate-600 mb-1">{target.reason}</p>
+              <p className="text-[10px] text-red-500 mb-2">风险：{target.main_risk}</p>
+              <div className="flex flex-wrap gap-1 mb-2">
+                {target.trigger_source.map((src) => (
+                  <span key={src} className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded">{src}</span>
+                ))}
+              </div>
+              <button
+                onClick={() => onFillResearch(target)}
+                className="w-full py-2 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                填入研究
+              </button>
+            </div>
+          ))}
+        </div>
+        <p className="text-[10px] text-slate-400 mt-3 text-center">
+          Demo数据，仅用于产品演示，不代表实时行情。
+        </p>
+      </div>
+
+      {/* 事件时间轴 */}
+      <div className="bg-white rounded-lg p-4 border border-slate-100">
+        <h3 className="text-sm font-semibold text-slate-800 mb-3">重要事件</h3>
+        <div className="space-y-3">
+          {mockMarketData.events.map((event, i) => (
+            <div key={i} className="flex gap-3">
+              <div className="text-xs text-slate-400 w-10 font-mono">{event.time}</div>
+              <div className="flex-1">
+                <div className="text-xs text-slate-700">{event.title}</div>
+                <span className={`inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded ${
+                  event.impact === "positive" ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"
+                }`}>
+                  {event.impact === "positive" ? "利好" : "利空"}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
