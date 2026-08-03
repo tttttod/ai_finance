@@ -2,6 +2,7 @@
 
 > **工作流规则**：所有功能改动必须先更新本 Spec 文档，经确认后再按 Spec 修改代码。
 > 最后更新：2026-08-03
+> 本次变更：重构 AI 对话页，将分析工作流融入对话，左侧边栏显示管线进度
 
 ---
 
@@ -29,7 +30,8 @@
 | 路由 | 页面名称 | 功能定位 | 状态 |
 |------|---------|---------|------|
 | `/` | 每日研报看板 | 展示每日市场数据和研报摘要 | ✅ 已完成 |
-| `/analysis` | AI 分析工作台 | AI Agent 引导的结构化基本面分析 | ✅ 已完成 |
+| `/chat` | AI 对话分析页 | Agent 对话 + 左侧工作流管线，逐步引导分析 |  重构中 |
+| `/analysis` | AI 分析工作台 | AI Agent 引导的结构化基本面分析（左右分栏） | ✅ 已完成（待后续整合） |
 | `/knowledge` | 知识库 | 展示 Agent 分析逻辑框架 | ✅ 已完成 |
 
 ### 2.2 全局布局
@@ -92,7 +94,105 @@
 
 ---
 
-### 3.2 AI 分析工作台 (`/analysis`)
+### 3.2 AI 对话分析页 (`/chat`)
+
+**布局**：左侧边栏 + 右侧对话区
+- **左侧边栏**（~280px）：Agent 分析管线进度，显示 6 个步骤的完成状态
+- **右侧对话区**（剩余宽度）：AI Agent 对话，包含结构化选项卡片和分析结果
+
+#### Agent 分析管线（6 步）
+
+| 步骤 | 标识 | 触发条件 | Agent 行为 | 用户交互 |
+|------|------|---------|-----------|---------|
+| ① 信息处理 | `info_processing` | 用户提问或点击"开始分析" | 读取研报/新闻/宏观快照，提取关键信息 | 查看信息摘要，可补充关注方向 |
+| ② 证据组织 | `evidence_org` | 信息处理完成 | 构建支持/反对/待验证证据链 | 确认证据链，可补充或质疑 |
+| ③ 假设生成 | `hypothesis` | 证据组织完成 | 生成行业/公司/风格/事件假设 | 选择感兴趣的假设方向 |
+| ④ 基本面分析 | `fundamental` | 假设确认 | 分析机构共识、评级、目标价、关键观点 | 查看基本面数据，可深入个股 |
+| ⑤ 技术面分析 | `technical` | 基本面完成 | 分析均线、支撑压力、趋势、目标价空间 | 查看技术面结论，可调整关注点 |
+| ⑥ 综合预测 | `prediction` | 技术面完成 | 输出投资标的推荐 + 风险 + 复盘计划 | 查看完整报告，可重新开始 |
+
+#### 左侧边栏设计
+
+```
+┌─────────────────────┐
+│  AI 投研平台         │
+│  ─────────────────  │
+│                     │
+│  分析管线            │
+│                     │
+│  ● ① 信息处理  ✓    │  ← 已完成（绿色勾）
+│  ● ② 证据组织  ✓    │
+│  ● ③ 假设生成  →    │  ← 当前步骤（蓝色脉冲）
+│  ○ ④ 基本面分析      │  ← 待执行（灰色）
+│  ○ ⑤ 技术面分析      │
+│  ○ ⑥ 综合预测        │
+│                     │
+│  ─────────────────  │
+│  投资偏好            │
+│  风格: 成长 价值     │
+│  风险: 稳健          │
+│  周期: 中线          │
+│                     │
+│  ─────────────────  │
+│  已选方向            │
+│  · 传媒              │
+│  · 电子              │
+│                     │
+│  [重新开始分析]      │
+└─────────────────────┘
+```
+
+#### 对话区交互模式
+
+**每个步骤中，Agent 在对话中展示结构化选项卡片：**
+
+```
+Agent: 根据策略研报，以下行业近期被重点看好：
+
+┌──────────────────────────────────────────────┐
+│ 选项 A: 传媒                                  │
+│ 理由: 连续2日主力资金净流入64.84亿，领涨股...   │
+│ 风险: 估值偏高，机构观点拥挤                   │
+│                    [选择] [跳过]               │
+├──────────────────────────────────────────────┤
+│ 选项 B: 电子                                  │
+│ 理由: 半导体景气上行，北方华创涨停...           │
+│ 风险: 技术面高位回撤                           │
+│                    [选择] [跳过]               │
+├──────────────────────────────────────────────┤
+│ 选项 C: 医药生物                               │
+│ 理由: 创新药政策利好，机构覆盖提升...           │
+│ 风险: 行业景气逻辑尚未被业绩验证               │
+│                    [选择] [跳过]               │
+└──────────────────────────────────────────────┘
+```
+
+- 用户点击 **[选择]** → Agent 将该选项纳入分析，进入下一步
+- 用户点击 **[跳过]** → Agent 排除该选项，继续展示其他候选
+- 用户可**自由输入**补充条件（如"我只看成长股"）
+
+**分析结果以结构化卡片展示在对话流中：**
+- 行业数据卡片（资金流/机构覆盖/景气度/技术信号）
+- 证据链卡片（支持/反对/待验证）
+- 投资假设卡片（触发/观察/失效/复盘）
+- 个股推荐卡片（现价/目标价/潜在空间/理由/风险）
+
+#### 两种使用入口
+
+1. **自由提问**：用户直接问"哪些行业好？" → Agent 判断意图，从对应步骤开始分析
+2. **完整分析**：用户点击"开始完整分析" → Agent 从第  步逐步引导
+
+#### 会话持久化
+
+- **存储方式**：localStorage（key: `ai-chat-session`）
+- **保存内容**：当前步骤、对话历史、投资偏好、已选行业/股票、管线进度
+- **恢复逻辑**：页面加载时自动恢复上次会话
+
+---
+
+### 3.3 AI 分析工作台 (`/analysis`)
+
+> 注：此页面为早期版本，后续将整合到 `/chat` 页面中。当前保留可用。
 
 **布局**：左右分栏
 - **左侧面板**（~55% 宽度）：根据分析步骤动态展示交互内容
@@ -108,33 +208,9 @@
 | Step 3 | `step3_data` | 行业深度数据 + 证据链 + 投资假设 + 风险评估 | 查看数据 → 确认逻辑 | 展示分析结果 → 询问是否认同 |
 | Step 4 | `step4_stock` | 推荐标的详情 + 复盘计划 | 查看报告 → 可重新开始 | 输出完整分析报告 |
 
-#### 左侧面板组件
-
-| 组件 | 触发步骤 | 功能 |
-|------|---------|------|
-| `IdlePanel` | idle | 欢迎页，介绍平台功能 |
-| `StrategyPanel` | step1_strategy | 展示策略观点卡片，支持多选 |
-| `IndustryPanel` | step2_industry | 投资偏好设置（风格/风险/周期）+ 行业候选列表 |
-| `DataPanel` | step3_data | 行业深度数据网格 + 证据链 + 投资假设 + 风险评估 |
-| `StockPanel` | step4_stock | 推荐标的卡片 + 复盘计划 |
-
-#### 右侧 AI 对话
-
-- **流式输出**：SSE 协议，打字机效果逐字渲染
-- **上下文注入**：每次请求携带当前步骤、投资偏好、已选行业/股票等上下文
-- **多轮对话**：保留完整对话历史
-- **快捷操作**：每个步骤提供快捷确认按钮
-- **步骤指示器**：顶部显示 4 步进度条
-
-#### 会话持久化
-
-- **存储方式**：localStorage（key: `ai-analysis-session`）
-- **保存内容**：当前步骤、对话历史、投资偏好、已选行业/股票
-- **恢复逻辑**：页面加载时自动恢复上次会话
-
 ---
 
-### 3.3 知识库 (`/knowledge`)
+### 3.4 知识库 (`/knowledge`)
 
 **展示内容**：Agent 分析逻辑框架的 5 个维度
 
@@ -150,7 +226,9 @@
 
 ---
 
-### 3.4 全局 AI 对话（浮动）
+### 3.5 全局 AI 对话（浮动）
+
+> 注：此浮动对话为轻量快捷入口，完整分析功能请使用 `/chat` 页面。
 
 - **入口**：右下角浮动按钮（蓝青渐变圆形）
 - **面板**：400x560px 聊天窗口
@@ -177,12 +255,27 @@
 {
   "messages": [{ "role": "user" | "assistant", "content": "..." }],
   "context": {
-    "currentStep": "step1_strategy" | "step2_industry" | "step3_data" | "step4_stock",
+    "currentStep": "info_processing" | "evidence_org" | "hypothesis" | "fundamental" | "technical" | "prediction",
+    "pipelineProgress": {
+      "info_processing": "completed" | "current" | "pending",
+      "evidence_org": "completed" | "current" | "pending",
+      "hypothesis": "completed" | "current" | "pending",
+      "fundamental": "completed" | "current" | "pending",
+      "technical": "completed" | "current" | "pending",
+      "prediction": "completed" | "current" | "pending"
+    },
     "investmentStyle": ["成长", "价值"],
     "riskTolerance": "conservative" | "moderate" | "aggressive",
     "holdingPeriod": "short" | "medium" | "long",
     "selectedIndustries": ["电子", "AI算力"],
-    "selectedStocks": ["北方华创"]
+    "selectedStocks": ["北方华创"],
+    "selectedViewpoints": ["科技创新"],
+    "evidenceChain": {
+      "supporting": ["..."],
+      "opposing": ["..."],
+      "pending": ["..."]
+    },
+    "hypotheses": [{ "type": "industry", "title": "...", "description": "..." }]
   }
 }
 ```
@@ -242,6 +335,39 @@ AnalysisHypothesis { type, title, description, trigger, evidenceChain, observer,
 RiskFactor { type, title, description }
 ```
 
+### 5.3 AI 对话管线类型（`/chat` 页面用）
+
+```
+ChatSession
+├── currentStep: PipelineStep          // 当前管线步骤
+├── pipelineProgress: Record<PipelineStep, StepStatus>  // 每步状态
+├── messages: ChatMessage[]            // 对话历史
+├── investmentStyle: string[]          // 投资风格
+── riskTolerance: string              // 风险承受
+├── holdingPeriod: string              // 持仓周期
+├── selectedViewpoints: string[]       // 已选观点方向
+├── selectedIndustries: string[]       // 已选行业
+├── selectedStocks: string[]           // 已选个股
+├── evidenceChain: EvidenceChain       // 证据链
+└── hypotheses: AnalysisHypothesis[]   // 生成的假设
+
+PipelineStep = "info_processing" | "evidence_org" | "hypothesis" | "fundamental" | "technical" | "prediction"
+StepStatus = "completed" | "current" | "pending"
+
+EvidenceChain
+├── supporting: string[]    // 支持证据
+├── opposing: string[]      // 反对证据
+└── pending: string[]       // 待验证证据
+
+ChatOption                          // 对话中的可选项
+├── id: string
+├── label: string                   // 选项名称
+├── reason: string                  // 推荐理由
+├── risk: string                    // 风险说明
+├── data?: object                   // 附加结构化数据
+└── action: "select" | "skip"       // 用户操作类型
+```
+
 ---
 
 ## 6. 设计规范
@@ -280,3 +406,4 @@ RiskFactor { type, title, description }
 | 2026-08-03 | 升级为科技感深色主题，标题改为 AI 投研平台 |
 | 2026-08-03 | 新增 AI 分析工作台（4 步工作流 + 会话持久化）和知识库页面 |
 | 2026-08-03 | 建立 Spec → Code 工作流规范 |
+| 2026-08-03 | 重构 AI 对话页：左侧边栏工作流进度 + 对话内嵌选项交互 + 6 步分析管线 |
