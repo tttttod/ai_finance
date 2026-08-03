@@ -394,3 +394,55 @@ export interface GeneralPredictionModel {
   };
   sample_results: SampleStockResult[];
 }
+
+// 全球新闻雷达类型
+export type NewsCategory =
+  | '宏观经济'
+  | '央行利率'
+  | '汇率'
+  | '地缘政治'
+  | '能源商品'
+  | 'AI科技'
+  | '半导体'
+  | '新能源'
+  | '医药监管'
+  | '贸易政策'
+  | '供应链'
+  | '消费需求';
+
+export type NewsImportance = '高' | '中' | '低';
+export type NewsSentiment = 'positive' | 'negative' | 'neutral' | 'mixed';
+export type PulseColor = 'red' | 'blue' | 'orange' | 'green' | 'purple';
+
+export interface GlobalNewsEvent {
+  country: string;
+  country_code: string;
+  lat: number;
+  lng: number;
+  title: string;
+  category: NewsCategory;
+  importance: NewsImportance;
+  sentiment: NewsSentiment;
+  time: string;
+  summary: string;
+  related_a_share_sectors: string[];
+  impact_logic: string;
+  risk_note: string;
+  pulse_color: PulseColor;
+  importance_score?: number;
+}
+
+export interface ResearchClue {
+  source: string;
+  country: string;
+  title: string;
+  related_a_share_sectors: string[];
+  created_at: string;
+}
+
+export interface GlobalNewsRadar {
+  is_demo_data: boolean;
+  selected_country: string | null;
+  events: GlobalNewsEvent[];
+  research_clues: ResearchClue[];
+}

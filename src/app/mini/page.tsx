@@ -17,6 +17,8 @@ import {
   ReviewDetail,
   GeneralPredictionModel,
   SampleStockResult,
+  GlobalNewsEvent,
+  ResearchClue,
   WORKFLOW_STEPS,
   AGENT_TEAM,
   SURVEY_QUESTIONS,
@@ -31,6 +33,7 @@ import {
   FACTOR_LIBRARY,
   DEFAULT_SELECTED_FACTORS,
   generateGeneralPredictionModel,
+  MOCK_GLOBAL_NEWS,
 } from "@/lib/mini-mock";
 
 type TabId = "market" | "research" | "review" | "profile";
@@ -1291,6 +1294,26 @@ function ProfileTab({ profile, onRetakeSurvey }: { profile: UserProfileSurvey; o
 
 // ===== 市场 Tab =====
 function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTarget) => void }) {
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const [researchClues, setResearchClues] = useState<ResearchClue[]>([]);
+
+  const handleSelectEvent = (country: string) => {
+    setSelectedCountry(country);
+  };
+
+  const handleAddClue = (event: GlobalNewsEvent) => {
+    const clue: ResearchClue = {
+      source: "全球新闻雷达",
+      country: event.country,
+      title: event.title,
+      related_a_share_sectors: event.related_a_share_sectors,
+      created_at: event.time,
+    };
+    setResearchClues((prev) => [...prev, clue]);
+  };
+
+  const selectedEvent = selectedCountry ? MOCK_GLOBAL_NEWS.find((e) => e.country === selectedCountry) : null;
+
   return (
     <div className="p-4 space-y-4">
       {/* AI 摘要 */}
@@ -1301,6 +1324,188 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
         </div>
         <p className="text-xs leading-relaxed opacity-90">{mockMarketData.summary}</p>
       </div>
+
+      {/* 全球新闻雷达 */}
+      <div className="bg-white rounded-lg border border-slate-100 overflow-hidden">
+        <div className="p-3 border-b border-slate-100">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-sm font-semibold text-slate-800">全球新闻雷达</span>
+            <span className="text-[10px] text-slate-400">Demo 数据，仅用于产品演示，不代表实时新闻。</span>
+          </div>
+          <p className="text-[10px] text-slate-500">追踪全球宏观、政策、科技、商品与地缘事件对A股的潜在影响</p>
+        </div>
+
+        {/* 世界地图 */}
+        <div className="relative bg-slate-900 h-[280px] overflow-hidden">
+          {/* 简化世界地图背景 */}
+          <svg viewBox="0 0 360 180" className="w-full h-full opacity-30">
+            {/* 简化的大陆轮廓 */}
+            <path d="M30,40 Q50,30 80,35 T120,45 T150,60 T130,80 T100,90 T60,85 T30,70 Z" fill="#475569" stroke="#64748b" strokeWidth="0.5" />
+            <path d="M140,30 Q170,25 200,30 T240,40 T260,55 T250,75 T220,85 T180,80 T150,70 Z" fill="#475569" stroke="#64748b" strokeWidth="0.5" />
+            <path d="M200,90 Q220,85 250,90 T290,100 T310,120 T300,140 T270,150 T230,145 T200,130 Z" fill="#475569" stroke="#64748b" strokeWidth="0.5" />
+            <path d="M260,30 Q280,25 310,30 T340,40 T350,55 T340,70 T310,75 T280,70 T260,60 Z" fill="#475569" stroke="#64748b" strokeWidth="0.5" />
+            <path d="M100,100 Q120,95 140,100 T160,110 T150,130 T120,135 T90,130 T80,115 Z" fill="#475569" stroke="#64748b" strokeWidth="0.5" />
+          </svg>
+
+          {/* 闪光点 */}
+          {MOCK_GLOBAL_NEWS.map((event) => {
+            // 将经纬度转换为地图坐标 (简化映射)
+            const x = ((event.lng + 180) / 360) * 100;
+            const y = ((90 - event.lat) / 180) * 100;
+            const isSelected = selectedCountry === event.country;
+            const isDimmed = selectedCountry && !isSelected;
+
+            const colorMap: Record<string, string> = {
+              red: "#DC2626",
+              blue: "#3B82F6",
+              orange: "#F59E0B",
+              green: "#10B981",
+              purple: "#8B5CF6",
+            };
+            const dotColor = colorMap[event.pulse_color] || "#3B82F6";
+            const dotSize = event.importance === "高" ? 12 : event.importance === "中" ? 8 : 6;
+
+            return (
+              <button
+                key={event.country_code}
+                className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${isDimmed ? "opacity-30" : "opacity-100"}`}
+                style={{ left: `${x}%`, top: `${y}%` }}
+                onClick={() => handleSelectEvent(event.country)}
+              >
+                {/* 脉冲动画 */}
+                <span
+                  className={`absolute inset-0 rounded-full ${isSelected ? "animate-ping" : "animate-pulse"}`}
+                  style={{
+                    backgroundColor: dotColor,
+                    width: dotSize * 2,
+                    height: dotSize * 2,
+                    marginLeft: -(dotSize * 2 - dotSize) / 2,
+                    marginTop: -(dotSize * 2 - dotSize) / 2,
+                    opacity: 0.4,
+                  }}
+                />
+                {/* 中心点 */}
+                <span
+                  className="relative block rounded-full border-2 border-white shadow-lg"
+                  style={{
+                    backgroundColor: dotColor,
+                    width: dotSize,
+                    height: dotSize,
+                  }}
+                />
+              </button>
+            );
+          })}
+
+          {/* 选中国家标签 */}
+          {selectedEvent && (
+            <div className="absolute top-2 left-2 bg-slate-800/90 backdrop-blur-sm rounded px-2 py-1 text-[10px] text-white">
+              {selectedEvent.country} · {selectedEvent.category}
+            </div>
+          )}
+        </div>
+
+        {/* 新闻卡片 */}
+        {selectedEvent && (
+          <div className="p-3 border-t border-slate-100 bg-slate-50">
+            <div className="flex items-start gap-2 mb-2">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs font-semibold text-slate-800">{selectedEvent.country}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-600">{selectedEvent.category}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                    selectedEvent.importance === "高" ? "bg-red-100 text-red-700" :
+                    selectedEvent.importance === "中" ? "bg-amber-100 text-amber-700" :
+                    "bg-slate-100 text-slate-600"
+                  }`}>{selectedEvent.importance}</span>
+                </div>
+                <h4 className="text-xs font-medium text-slate-800 mb-1">{selectedEvent.title}</h4>
+                <p className="text-[10px] text-slate-600 leading-relaxed mb-2">{selectedEvent.summary}</p>
+              </div>
+            </div>
+
+            <div className="space-y-1.5 mb-2">
+              <div>
+                <span className="text-[10px] text-slate-500">可能影响A股：</span>
+                <div className="flex flex-wrap gap-1 mt-0.5">
+                  {selectedEvent.related_a_share_sectors.map((sector) => (
+                    <span key={sector} className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">{sector}</span>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-500">影响逻辑：</span>
+                <span className="text-[10px] text-slate-700">{selectedEvent.impact_logic}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-amber-600">风险提示：</span>
+                <span className="text-[10px] text-slate-700">{selectedEvent.risk_note}</span>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button className="flex-1 text-[10px] py-1.5 rounded bg-blue-500 text-white font-medium hover:bg-blue-600 transition-colors">
+                查看影响板块
+              </button>
+              <button
+                className="flex-1 text-[10px] py-1.5 rounded bg-slate-200 text-slate-700 font-medium hover:bg-slate-300 transition-colors"
+                onClick={() => handleAddClue(selectedEvent)}
+              >
+                加入研究线索
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 今日全球事件列表 */}
+        <div className="p-3 border-t border-slate-100">
+          <h4 className="text-[10px] font-semibold text-slate-600 mb-2">今日全球事件</h4>
+          <div className="space-y-1.5">
+            {MOCK_GLOBAL_NEWS.map((event) => (
+              <button
+                key={event.country_code}
+                className={`w-full text-left p-2 rounded border transition-colors ${
+                  selectedCountry === event.country
+                    ? "border-blue-300 bg-blue-50"
+                    : "border-slate-100 hover:bg-slate-50"
+                }`}
+                onClick={() => handleSelectEvent(event.country)}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-medium text-slate-700">{event.country}</span>
+                  <span className="text-[10px] text-slate-500">|</span>
+                  <span className="text-[10px] text-slate-600 truncate flex-1">{event.title}</span>
+                </div>
+                <div className="text-[10px] text-slate-500 mt-0.5">
+                  影响：{event.related_a_share_sectors.slice(0, 3).join("、")}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 研究线索 */}
+      {researchClues.length > 0 && (
+        <div className="bg-white rounded-lg p-4 border border-slate-100">
+          <h3 className="text-sm font-semibold text-slate-800 mb-3">今日研究线索 ({researchClues.length})</h3>
+          <div className="space-y-2">
+            {researchClues.map((clue, i) => (
+              <div key={i} className="p-2 rounded bg-blue-50 border border-blue-100">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] font-medium text-blue-700">{clue.country}</span>
+                  <span className="text-[10px] text-blue-500">{clue.title}</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {clue.related_a_share_sectors.map((sector) => (
+                    <span key={sector} className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">{sector}</span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 指数卡片 */}
       <div className="grid grid-cols-2 gap-2">
