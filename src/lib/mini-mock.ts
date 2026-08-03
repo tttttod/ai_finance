@@ -459,3 +459,285 @@ export const mockReviewDetail: ReviewDetail = {
   ],
   model_adjustment: "后续将提高资金流因子的权重，并增加业绩催化事件的实时响应机制。",
 };
+
+// ===== 通用股票预测模型 Mock 数据 =====
+import type {
+  FactorGroup,
+  GeneralPredictionModel,
+  SampleStockResult,
+} from "./mini-types";
+
+// 因子库
+export const FACTOR_LIBRARY: FactorGroup[] = [
+  {
+    group: "动量因子",
+    description: "股票过去一段时间的涨跌趋势",
+    metrics: ["5日收益率", "20日收益率", "60日收益率", "120日收益率", "价格相对20日均线偏离率", "价格相对60日均线偏离率"],
+  },
+  {
+    group: "反转因子",
+    description: "短期涨太多或跌太多后，可能出现均值回归",
+    metrics: ["5日涨跌幅极值", "RSI", "KDJ超买超卖", "价格偏离布林带上轨/下轨"],
+  },
+  {
+    group: "价值因子",
+    description: "衡量股票估值是否便宜或偏贵",
+    metrics: ["PE", "PB", "PS", "PEG", "股息率", "PE历史分位", "PB历史分位"],
+  },
+  {
+    group: "质量因子",
+    description: "衡量公司盈利质量和财务稳健性",
+    metrics: ["ROE", "ROA", "毛利率", "净利率", "经营现金流/净利润", "资产负债率", "应收账款周转率"],
+  },
+  {
+    group: "成长因子",
+    description: "衡量公司收入和利润增长",
+    metrics: ["营收同比增速", "净利润同比增速", "扣非净利润增速", "未来一致预期净利润增速", "EPS增速"],
+  },
+  {
+    group: "规模因子",
+    description: "衡量公司市值大小和风格暴露",
+    metrics: ["总市值", "流通市值", "自由流通市值", "市值分位数"],
+  },
+  {
+    group: "波动率因子",
+    description: "衡量股票价格波动和风险",
+    metrics: ["20日年化波动率", "60日年化波动率", "最大回撤", "Beta", "下行波动率"],
+  },
+  {
+    group: "流动性因子",
+    description: "衡量交易是否活跃，是否容易出现冲击成本",
+    metrics: ["日均成交额", "日均换手率", "量比", "买卖价差", "Amihud非流动性指标"],
+  },
+  {
+    group: "资金流因子",
+    description: "衡量主力资金、北向资金或大单资金方向",
+    metrics: ["主力净流入", "北向资金净流入", "大单净流入", "资金流连续性", "龙虎榜机构净买入"],
+  },
+  {
+    group: "情绪/事件因子",
+    description: "衡量新闻、公告、研报和市场舆情影响",
+    metrics: ["新闻情绪分数", "公告情绪分数", "研报评级变化", "研报目标价变化", "热搜/舆情热度", "事件催化强度"],
+  },
+  {
+    group: "行业/市场因子",
+    description: "衡量个股所在行业和大盘环境",
+    metrics: ["行业指数20日收益率", "行业资金流", "行业估值分位", "沪深300收益率", "市场成交额变化", "上涨家数占比"],
+  },
+  {
+    group: "拥挤度因子",
+    description: "衡量交易是否过热，是否存在短期拥挤风险",
+    metrics: ["成交额历史分位", "换手率历史分位", "融资余额变化", "机构持仓集中度", "涨停/连板热度"],
+  },
+];
+
+// 默认推荐因子
+export const DEFAULT_SELECTED_FACTORS = [
+  "20日收益率",
+  "60日收益率",
+  "PE历史分位",
+  "ROE",
+  "净利润同比增速",
+  "20日波动率",
+  "主力资金净流入",
+  "新闻情绪分数",
+  "行业指数20日收益率",
+  "沪深300收益率",
+];
+
+// 样本股票池
+const SAMPLE_STOCK_POOL = [
+  { name: "北方华创", code: "002371", industry: "半导体" },
+  { name: "宁德时代", code: "300750", industry: "新能源" },
+  { name: "贵州茅台", code: "600519", industry: "白酒" },
+  { name: "比亚迪", code: "002594", industry: "汽车" },
+  { name: "药明康德", code: "603259", industry: "医药" },
+  { name: "招商银行", code: "600036", industry: "银行" },
+  { name: "中国平安", code: "601318", industry: "保险" },
+  { name: "隆基绿能", code: "601012", industry: "光伏" },
+  { name: "中芯国际", code: "688981", industry: "半导体" },
+  { name: "海康威视", code: "002415", industry: "安防" },
+  { name: "万科A", code: "000002", industry: "房地产" },
+  { name: "美的集团", code: "000333", industry: "家电" },
+  { name: "格力电器", code: "000651", industry: "家电" },
+  { name: "腾讯控股", code: "00700", industry: "互联网" },
+  { name: "阿里巴巴", code: "09988", industry: "互联网" },
+];
+
+// 生成随机曲线数据
+function generateCurveData(basePrice: number, days: number): {
+  dates: string[];
+  actual_price: number[];
+  forecast_mid: number[];
+  ml_fitted_price: number[];
+  monte_carlo_p10: number[];
+  monte_carlo_p50: number[];
+  monte_carlo_p90: number[];
+  prediction_error: number[];
+} {
+  const dates: string[] = [];
+  const actual_price: number[] = [];
+  const forecast_mid: number[] = [];
+  const ml_fitted_price: number[] = [];
+  const monte_carlo_p10: number[] = [];
+  const monte_carlo_p50: number[] = [];
+  const monte_carlo_p90: number[] = [];
+  const prediction_error: number[] = [];
+
+  const startDate = new Date("2026-07-01");
+  let currentPrice = basePrice;
+  const trend = (Math.random() - 0.5) * 0.02;
+
+  for (let i = 0; i < days; i++) {
+    const date = new Date(startDate);
+    date.setDate(date.getDate() + i);
+    dates.push(date.toISOString().split("T")[0]);
+
+    // 实际价格：带随机波动
+    const noise = (Math.random() - 0.5) * basePrice * 0.03;
+    currentPrice = currentPrice * (1 + trend) + noise;
+    actual_price.push(Math.round(currentPrice * 100) / 100);
+
+    // 预测中位线：略滞后于实际
+    const forecastLag = currentPrice * (1 + (Math.random() - 0.5) * 0.02);
+    forecast_mid.push(Math.round(forecastLag * 100) / 100);
+
+    // ML拟合线：更平滑
+    const mlSmooth = basePrice + (currentPrice - basePrice) * 0.85 + (Math.random() - 0.5) * basePrice * 0.01;
+    ml_fitted_price.push(Math.round(mlSmooth * 100) / 100);
+
+    // 蒙特卡洛区间
+    const volatility = basePrice * 0.05;
+    monte_carlo_p10.push(Math.round((currentPrice - volatility * 1.5) * 100) / 100);
+    monte_carlo_p50.push(Math.round(currentPrice * 100) / 100);
+    monte_carlo_p90.push(Math.round((currentPrice + volatility * 1.5) * 100) / 100);
+
+    // 预测误差
+    prediction_error.push(Math.round((currentPrice - forecastLag) * 100) / 100);
+  }
+
+  return { dates, actual_price, forecast_mid, ml_fitted_price, monte_carlo_p10, monte_carlo_p50, monte_carlo_p90, prediction_error };
+}
+
+// 生成单只股票的拟合结果
+function generateSampleStockResult(
+  stock: { name: string; code: string; industry: string },
+  factors: string[],
+  days: number = 20
+): SampleStockResult {
+  const basePrice = 50 + Math.random() * 200;
+  const curveData = generateCurveData(basePrice, days);
+
+  // 生成不太完美的指标
+  const r2 = 0.45 + Math.random() * 0.45; // 0.45 - 0.90
+  const mae = 1.5 + Math.random() * 4;
+  const rmse = 2 + Math.random() * 5;
+  const directionCorrect = Math.random() > 0.3; // 70% 正确
+  const intervalHit = Math.random() > 0.35; // 65% 命中
+
+  // 模型评分
+  const modelScore = Math.round(
+    (directionCorrect ? 0.7 : 0.3) * 30 +
+    (intervalHit ? 0.65 : 0.35) * 25 +
+    r2 * 25 -
+    (rmse / 10) * 20
+  );
+
+  // 因子贡献
+  const factorContributions = factors.slice(0, 3 + Math.floor(Math.random() * 3)).map((factor) => ({
+    factor,
+    contribution: Math.round((0.1 + Math.random() * 0.25) * 100) / 100,
+  }));
+
+  // 归一化因子贡献
+  const totalContribution = factorContributions.reduce((sum, f) => sum + f.contribution, 0);
+  factorContributions.forEach((f) => {
+    f.contribution = Math.round((f.contribution / totalContribution) * 100) / 100;
+  });
+
+  // 误差原因
+  const errorReasons = [
+    "资金流加速，模型低估上涨斜率",
+    "突发政策消息导致价格偏离",
+    "行业轮动速度快于预期",
+    "估值修复速度超预期",
+    "市场情绪波动导致短期偏离",
+    "北向资金流向与预期相反",
+    "业绩预增/预减公告影响",
+    "技术面突破关键位后加速",
+  ];
+
+  // 蒙特卡洛结果
+  const upProbability = 0.4 + Math.random() * 0.3;
+  const monteCarloResult = {
+    up_probability: Math.round(upProbability * 100) / 100,
+    down_probability: Math.round((1 - upProbability) * 100) / 100,
+    risk_line_break_probability: Math.round((0.1 + Math.random() * 0.25) * 100) / 100,
+    final_return_distribution: Array.from({ length: 20 }, () => Math.round((Math.random() - 0.5) * 20 * 100) / 100),
+  };
+
+  return {
+    name: stock.name,
+    code: stock.code,
+    industry: stock.industry,
+    model_score: Math.max(55, Math.min(90, modelScore)),
+    direction_correct: directionCorrect,
+    interval_hit: intervalHit,
+    mae: Math.round(mae * 100) / 100,
+    rmse: Math.round(rmse * 100) / 100,
+    r2: Math.round(r2 * 100) / 100,
+    error_reason: errorReasons[Math.floor(Math.random() * errorReasons.length)],
+    factor_contributions: factorContributions,
+    curve_data: curveData,
+    monte_carlo_result: monteCarloResult,
+  };
+}
+
+// 生成通用预测模型数据
+export function generateGeneralPredictionModel(selectedFactors: string[] = DEFAULT_SELECTED_FACTORS): GeneralPredictionModel {
+  // 随机抽取10只股票
+  const shuffled = [...SAMPLE_STOCK_POOL].sort(() => Math.random() - 0.5);
+  const sampleStocks = shuffled.slice(0, 10);
+
+  // 生成每只股票的结果
+  const sampleResults = sampleStocks.map((stock) => generateSampleStockResult(stock, selectedFactors));
+
+  // 计算汇总指标
+  const avgScore = Math.round(sampleResults.reduce((sum, r) => sum + r.model_score, 0) / sampleResults.length);
+  const avgDirectionAccuracy = Math.round((sampleResults.filter((r) => r.direction_correct).length / sampleResults.length) * 100) / 100;
+  const avgIntervalHitRate = Math.round((sampleResults.filter((r) => r.interval_hit).length / sampleResults.length) * 100) / 100;
+  const avgMae = Math.round((sampleResults.reduce((sum, r) => sum + r.mae, 0) / sampleResults.length) * 100) / 100;
+  const avgRmse = Math.round((sampleResults.reduce((sum, r) => sum + r.rmse, 0) / sampleResults.length) * 100) / 100;
+  const avgR2 = Math.round((sampleResults.reduce((sum, r) => sum + r.r2, 0) / sampleResults.length) * 100) / 100;
+
+  const bestStock = sampleResults.reduce((best, r) => (r.model_score > best.model_score ? r : best), sampleResults[0]);
+  const worstStock = sampleResults.reduce((worst, r) => (r.model_score < worst.model_score ? r : worst), sampleResults[0]);
+
+  return {
+    model_name: "通用股票预测模型",
+    model_type: "多因子回归 + 机器学习拟合 + 蒙特卡洛模拟",
+    is_demo_data: true,
+    factor_library: FACTOR_LIBRARY,
+    selected_factors: selectedFactors,
+    sample_size: 10,
+    model_summary: {
+      average_score: avgScore,
+      average_direction_accuracy: avgDirectionAccuracy,
+      average_interval_hit_rate: avgIntervalHitRate,
+      average_mae: avgMae,
+      average_rmse: avgRmse,
+      average_r2: avgR2,
+      best_stock: `${bestStock.name} ${bestStock.code}`,
+      worst_stock: `${worstStock.name} ${worstStock.code}`,
+      top_contributing_factors: selectedFactors.slice(0, 3),
+      noisy_factors: selectedFactors.slice(3, 5),
+      overfitting_risk: selectedFactors.length > 12 ? "高" : selectedFactors.length > 8 ? "中" : "低",
+    },
+    monte_carlo_settings: {
+      simulation_paths: 100,
+      horizon_days: 20,
+      percentiles: ["P10", "P50", "P90"],
+    },
+    sample_results: sampleResults,
+  };
+}

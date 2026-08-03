@@ -15,6 +15,8 @@ import {
   UserProfileSurvey,
   ReplayCurveFit,
   ReviewDetail,
+  GeneralPredictionModel,
+  SampleStockResult,
   WORKFLOW_STEPS,
   AGENT_TEAM,
   SURVEY_QUESTIONS,
@@ -26,6 +28,9 @@ import {
   mockRecommendedTargets,
   mockReplayCurveFit,
   mockReviewDetail,
+  FACTOR_LIBRARY,
+  DEFAULT_SELECTED_FACTORS,
+  generateGeneralPredictionModel,
 } from "@/lib/mini-mock";
 
 type TabId = "market" | "research" | "review" | "profile";
@@ -99,7 +104,7 @@ export default function MiniProgramPage() {
             onClearPrefilled={() => setSelectedResearchTarget(null)}
           />
         )}
-        {activeTab === "review" && <ReviewTab />}
+        {activeTab === "review" && <ModelTab />}
         {activeTab === "profile" && <ProfileTab profile={userProfile} onRetakeSurvey={() => setSurveyCompleted(false)} />}
       </div>
 
@@ -108,7 +113,7 @@ export default function MiniProgramPage() {
         {[
           { id: "market" as TabId, label: "市场", icon: "📊" },
           { id: "research" as TabId, label: "研究", icon: "🔬" },
-          { id: "review" as TabId, label: "复盘", icon: "📋" },
+          { id: "review" as TabId, label: "模型", icon: "📊" },
           { id: "profile" as TabId, label: "我的", icon: "👤" },
         ].map((tab) => (
           <button
@@ -542,111 +547,397 @@ function AgentCard({ response }: { response: AgentResponse }) {
   );
 }
 
-// ===== 复盘 Tab =====
-function ReviewTab() {
-  const [selectedReview, setSelectedReview] = useState<ReviewDetail | null>(null);
+// ===== 模型 Tab（通用股票预测模型） =====
+function ModelTab() {
+  const [selectedFactors, setSelectedFactors] = useState<string[]>(DEFAULT_SELECTED_FACTORS);
+  const [modelData, setModelData] = useState<GeneralPredictionModel | null>(null);
+  const [isTesting, setIsTesting] = useState(false);
+  const [expandedStock, setExpandedStock] = useState<string | null>(null);
+  const [expandedFactorGroup, setExpandedFactorGroup] = useState<string | null>(null);
 
-  if (selectedReview) {
-    return <ReviewDetailPage review={selectedReview} onBack={() => setSelectedReview(null)} />;
-  }
+  const handleStartTest = () => {
+    setIsTesting(true);
+    setTimeout(() => {
+      setModelData(generateGeneralPredictionModel(selectedFactors));
+      setIsTesting(false);
+    }, 1500);
+  };
+
+  const handleResample = () => {
+    setIsTesting(true);
+    setTimeout(() => {
+      setModelData(generateGeneralPredictionModel(selectedFactors));
+      setIsTesting(false);
+    }, 1000);
+  };
+
+  const handleUseRecommended = () => {
+    setSelectedFactors(DEFAULT_SELECTED_FACTORS);
+  };
+
+  const toggleFactor = (factor: string) => {
+    setSelectedFactors((prev) =>
+      prev.includes(factor) ? prev.filter((f) => f !== factor) : [...prev, factor]
+    );
+  };
+
+  const isFactorSelected = (factor: string) => selectedFactors.includes(factor);
+
+  const getScoreColor = (score: number) => {
+    if (score >= 85) return "text-emerald-600";
+    if (score >= 70) return "text-blue-600";
+    if (score >= 60) return "text-amber-600";
+    return "text-red-600";
+  };
+
+  const getScoreLabel = (score: number) => {
+    if (score >= 85) return "拟合较好";
+    if (score >= 70) return "拟合可用";
+    if (score >= 60) return "拟合一般";
+    return "拟合较差";
+  };
 
   return (
     <div className="p-4 space-y-4">
-      {/* 统计概览 */}
+      {/* 模型总览 */}
       <div className="bg-white rounded-lg p-4 border border-slate-100">
-        <h3 className="text-sm font-semibold text-slate-800 mb-3">复盘统计</h3>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="text-center">
-            <div className="text-lg font-mono font-bold text-blue-600">{mockReviewData.stats.directionAccuracy}%</div>
-            <div className="text-[10px] text-slate-500">方向准确率</div>
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
           </div>
-          <div className="text-center">
-            <div className="text-lg font-mono font-bold text-emerald-600">{mockReviewData.stats.rangeHitRate}%</div>
-            <div className="text-[10px] text-slate-500">区间命中率</div>
-          </div>
-          <div className="text-center">
-            <div className="text-lg font-mono font-bold text-amber-600">+{mockReviewData.stats.vsHS300}%</div>
-            <div className="text-[10px] text-slate-500">相对沪深300</div>
+          <div>
+            <h2 className="text-sm font-bold text-slate-800">通用股票预测模型</h2>
+            <p className="text-[10px] text-slate-500">多因子回归 + 机器学习拟合 + 蒙特卡洛模拟</p>
           </div>
         </div>
+        <p className="text-[10px] text-amber-600 bg-amber-50 px-2 py-1 rounded mt-2">
+          Demo数据，仅用于产品演示，不代表实时行情。
+        </p>
       </div>
 
-      {/* 预测曲线拟合 */}
+      {/* 因子选择区 */}
       <div className="bg-white rounded-lg p-4 border border-slate-100">
-        <h3 className="text-sm font-semibold text-slate-800 mb-2">预测曲线拟合</h3>
-        <p className="text-[10px] text-slate-500 mb-3">{mockReplayCurveFit.model_name}</p>
-        <CurveFitChart data={mockReplayCurveFit} />
-        <div className="grid grid-cols-3 gap-2 mt-3">
-          <div className="text-center p-2 bg-slate-50 rounded">
-            <div className="text-xs font-mono font-bold text-slate-700">{mockReplayCurveFit.metrics.mae}</div>
-            <div className="text-[10px] text-slate-600">MAE</div>
-          </div>
-          <div className="text-center p-2 bg-slate-50 rounded">
-            <div className="text-xs font-mono font-bold text-slate-700">{mockReplayCurveFit.metrics.rmse}</div>
-            <div className="text-[10px] text-slate-600">RMSE</div>
-          </div>
-          <div className="text-center p-2 bg-slate-50 rounded">
-            <div className="text-xs font-mono font-bold text-blue-600">{mockReplayCurveFit.metrics.r2}</div>
-            <div className="text-[10px] text-slate-600">R²</div>
-          </div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-slate-800">因子选择</h3>
+          <span className="text-[10px] text-slate-500">已选 {selectedFactors.length} 个</span>
         </div>
-        <p className="text-[10px] text-slate-500 mt-3 leading-relaxed">{mockReplayCurveFit.review_summary}</p>
-      </div>
+        <p className="text-[10px] text-slate-500 mb-3 leading-relaxed">
+          你可以选择自己信任的因子，系统会随机抽取10只股票进行拟合测试。因子越多不一定越好，过多因子可能导致过拟合。
+        </p>
 
-      {/* 风格表现对比 */}
-      <div className="bg-white rounded-lg p-4 border border-slate-100">
-        <h3 className="text-sm font-semibold text-slate-800 mb-3">风格表现对比</h3>
         <div className="space-y-2">
-          {mockReviewData.stylePerformance.map((perf) => (
-            <div key={perf.style} className="flex items-center gap-3">
-              <span className="text-xs text-slate-600 w-12">{perf.style}</span>
-              <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-500 rounded-full" style={{ width: `${perf.accuracy}%` }} />
-              </div>
-              <span className="text-xs font-mono text-slate-700 w-10">{perf.accuracy}%</span>
-              <span className="text-xs font-mono text-red-600 w-12">+{perf.avgReturn}%</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 历史研究列表 */}
-      <div className="bg-white rounded-lg p-4 border border-slate-100">
-        <h3 className="text-sm font-semibold text-slate-800 mb-3">历史研究</h3>
-        <div className="space-y-3">
-          {mockReviewData.history.map((item) => (
-            <div
-              key={item.id}
-              className="p-3 rounded-lg bg-slate-50 border border-slate-100 cursor-pointer hover:bg-slate-100 transition-colors"
-              onClick={() => setSelectedReview(mockReviewDetail)}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-slate-700">{item.target}</span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                  item.style === "short" ? "bg-red-50 text-red-600" :
-                  item.style === "swing" ? "bg-blue-50 text-blue-600" :
-                  "bg-purple-50 text-purple-600"
-                }`}>
-                  {item.style === "short" ? "短线" : item.style === "swing" ? "波段" : "长期"}
-                </span>
-              </div>
-              <div className="flex items-center gap-4 text-[10px] text-slate-500">
-                <span>创建：{item.createdAt}</span>
-                <span>复盘：{item.reviewDate}</span>
-              </div>
-              {item.actualResult && (
-                <div className="mt-2 flex items-center gap-4 text-[10px]">
-                  <span className={item.actualResult.priceChange >= 0 ? "text-red-600" : "text-emerald-600"}>
-                    实际：{item.actualResult.priceChange > 0 ? "+" : ""}{item.actualResult.priceChange}%
-                  </span>
-                  <span className={item.actualResult.directionCorrect ? "text-emerald-600" : "text-red-600"}>
-                    {item.actualResult.directionCorrect ? "✅ 方向正确" : "❌ 方向错误"}
-                  </span>
+          {FACTOR_LIBRARY.map((group) => (
+            <div key={group.group} className="border border-slate-100 rounded-lg overflow-hidden">
+              <button
+                className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 transition-colors"
+                onClick={() => setExpandedFactorGroup(expandedFactorGroup === group.group ? null : group.group)}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-slate-700">{group.group}</span>
+                  <span className="text-[10px] text-slate-500">{group.metrics.length}个指标</span>
+                </div>
+                <svg
+                  className={`w-3 h-3 text-slate-400 transition-transform ${expandedFactorGroup === group.group ? "rotate-180" : ""}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {expandedFactorGroup === group.group && (
+                <div className="p-3 space-y-2 bg-white">
+                  <p className="text-[10px] text-slate-500 mb-2">{group.description}</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {group.metrics.map((metric) => (
+                      <button
+                        key={metric}
+                        className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
+                          isFactorSelected(metric)
+                            ? "bg-blue-50 border-blue-200 text-blue-700"
+                            : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                        }`}
+                        onClick={() => toggleFactor(metric)}
+                      >
+                        {isFactorSelected(metric) ? "✓ " : ""}{metric}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
           ))}
         </div>
+
+        <div className="flex gap-2 mt-4">
+          <button
+            className="flex-1 text-[10px] py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+            onClick={handleUseRecommended}
+          >
+            使用推荐因子组合
+          </button>
+          <button
+            className="flex-1 text-[10px] py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
+            onClick={handleStartTest}
+            disabled={isTesting || selectedFactors.length === 0}
+          >
+            {isTesting ? "测试中..." : "开始随机拟合测试"}
+          </button>
+        </div>
+      </div>
+
+      {/* 测试结果 */}
+      {modelData && (
+        <>
+          {/* 总体评分 */}
+          <div className="bg-white rounded-lg p-4 border border-slate-100">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-slate-800">本次测试总体评分</h3>
+              <button
+                className="text-[10px] text-blue-600 hover:text-blue-700"
+                onClick={handleResample}
+              >
+                重新抽样10只股票
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="text-center p-2 bg-slate-50 rounded">
+                <div className={`text-lg font-mono font-bold ${getScoreColor(modelData.model_summary.average_score)}`}>
+                  {modelData.model_summary.average_score}
+                </div>
+                <div className="text-[10px] text-slate-600">平均评分</div>
+              </div>
+              <div className="text-center p-2 bg-slate-50 rounded">
+                <div className="text-lg font-mono font-bold text-blue-600">
+                  {Math.round(modelData.model_summary.average_direction_accuracy * 100)}%
+                </div>
+                <div className="text-[10px] text-slate-600">方向准确率</div>
+              </div>
+              <div className="text-center p-2 bg-slate-50 rounded">
+                <div className="text-lg font-mono font-bold text-emerald-600">
+                  {Math.round(modelData.model_summary.average_interval_hit_rate * 100)}%
+                </div>
+                <div className="text-[10px] text-slate-600">区间命中率</div>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 mt-3">
+              <div className="text-center p-2 bg-slate-50 rounded">
+                <div className="text-xs font-mono font-bold text-slate-700">{modelData.model_summary.average_mae}</div>
+                <div className="text-[10px] text-slate-600">MAE</div>
+              </div>
+              <div className="text-center p-2 bg-slate-50 rounded">
+                <div className="text-xs font-mono font-bold text-slate-700">{modelData.model_summary.average_rmse}</div>
+                <div className="text-[10px] text-slate-600">RMSE</div>
+              </div>
+              <div className="text-center p-2 bg-slate-50 rounded">
+                <div className="text-xs font-mono font-bold text-blue-600">{modelData.model_summary.average_r2}</div>
+                <div className="text-[10px] text-slate-600">R²</div>
+              </div>
+            </div>
+          </div>
+
+          {/* 样本股票结果列表 */}
+          <div className="bg-white rounded-lg p-4 border border-slate-100">
+            <h3 className="text-sm font-semibold text-slate-800 mb-3">十只样本股票结果</h3>
+            <div className="space-y-3">
+              {modelData.sample_results.map((stock) => (
+                <div key={stock.code} className="border border-slate-100 rounded-lg overflow-hidden">
+                  <div
+                    className="p-3 cursor-pointer hover:bg-slate-50 transition-colors"
+                    onClick={() => setExpandedStock(expandedStock === stock.code ? null : stock.code)}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <span className="text-xs font-medium text-slate-700">{stock.name}</span>
+                        <span className="text-[10px] text-slate-500 ml-2">{stock.code}</span>
+                      </div>
+                      <span className={`text-xs font-mono font-bold ${getScoreColor(stock.model_score)}`}>
+                        {stock.model_score}分
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 text-[10px]">
+                      <span className="text-slate-500">{stock.industry}</span>
+                      <span className={stock.direction_correct ? "text-emerald-600" : "text-red-600"}>
+                        {stock.direction_correct ? "✅ 方向正确" : "❌ 方向错误"}
+                      </span>
+                      <span className={stock.interval_hit ? "text-emerald-600" : "text-amber-600"}>
+                        {stock.interval_hit ? "✅ 区间命中" : "⚠️ 区间偏离"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 mt-1 text-[10px] text-slate-500">
+                      <span>R²: {stock.r2}</span>
+                      <span>MAE: {stock.mae}</span>
+                      <span>RMSE: {stock.rmse}</span>
+                    </div>
+                  </div>
+                  {expandedStock === stock.code && (
+                    <div className="p-3 border-t border-slate-100 bg-slate-50 space-y-3">
+                      {/* 因子贡献 */}
+                      <div>
+                        <p className="text-[10px] font-medium text-slate-700 mb-2">因子贡献</p>
+                        <div className="space-y-1">
+                          {stock.factor_contributions.map((fc) => (
+                            <div key={fc.factor} className="flex items-center gap-2">
+                              <span className="text-[10px] text-slate-600 w-20 truncate">{fc.factor}</span>
+                              <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-blue-500 rounded-full"
+                                  style={{ width: `${fc.contribution * 100}%` }}
+                                />
+                              </div>
+                              <span className="text-[10px] font-mono text-slate-700 w-8">
+                                {Math.round(fc.contribution * 100)}%
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      {/* 价格拟合图 */}
+                      <div>
+                        <p className="text-[10px] font-medium text-slate-700 mb-2">价格拟合图</p>
+                        <StockCurveChart stock={stock} />
+                      </div>
+                      {/* 蒙特卡洛结果 */}
+                      <div>
+                        <p className="text-[10px] font-medium text-slate-700 mb-2">蒙特卡洛模拟</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="text-center p-2 bg-white rounded">
+                            <div className="text-xs font-mono font-bold text-red-600">
+                              {Math.round(stock.monte_carlo_result.up_probability * 100)}%
+                            </div>
+                            <div className="text-[10px] text-slate-600">上涨概率</div>
+                          </div>
+                          <div className="text-center p-2 bg-white rounded">
+                            <div className="text-xs font-mono font-bold text-emerald-600">
+                              {Math.round(stock.monte_carlo_result.down_probability * 100)}%
+                            </div>
+                            <div className="text-[10px] text-slate-600">下跌概率</div>
+                          </div>
+                          <div className="text-center p-2 bg-white rounded">
+                            <div className="text-xs font-mono font-bold text-amber-600">
+                              {Math.round(stock.monte_carlo_result.risk_line_break_probability * 100)}%
+                            </div>
+                            <div className="text-[10px] text-slate-600">跌破风险线</div>
+                          </div>
+                        </div>
+                      </div>
+                      {/* 误差原因 */}
+                      <div>
+                        <p className="text-[10px] font-medium text-slate-700 mb-1">误差原因</p>
+                        <p className="text-[10px] text-slate-600 leading-relaxed">{stock.error_reason}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 模型总结汇总 */}
+          <div className="bg-white rounded-lg p-4 border border-slate-100">
+            <h3 className="text-sm font-semibold text-slate-800 mb-3">本次模型测试总结</h3>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-2 bg-slate-50 rounded">
+                  <div className="text-[10px] text-slate-500">使用因子数量</div>
+                  <div className="text-sm font-mono font-bold text-slate-700">{modelData.selected_factors.length}</div>
+                </div>
+                <div className="p-2 bg-slate-50 rounded">
+                  <div className="text-[10px] text-slate-500">样本股票数量</div>
+                  <div className="text-sm font-mono font-bold text-slate-700">{modelData.sample_size}</div>
+                </div>
+              </div>
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <p className="text-[10px] text-slate-700 leading-relaxed">
+                  本次随机抽取{modelData.sample_size}只股票进行拟合测试，平均模型评分为{modelData.model_summary.average_score}分，
+                  方向准确率为{Math.round(modelData.model_summary.average_direction_accuracy * 100)}%，
+                  区间命中率为{Math.round(modelData.model_summary.average_interval_hit_rate * 100)}%。
+                  {modelData.model_summary.top_contributing_factors.join("、")}贡献较高，
+                  {modelData.model_summary.noisy_factors.join("、")}在短周期预测中的解释力较弱。
+                  表现最好的股票是{modelData.model_summary.best_stock}，
+                  表现最差的是{modelData.model_summary.worst_stock}。
+                  过拟合风险：{modelData.model_summary.overfitting_risk}。
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* 免责声明 */}
+          <div className="bg-amber-50 rounded-lg p-3 border border-amber-100">
+            <p className="text-[10px] text-amber-700 leading-relaxed">
+              以上模型结果仅用于研究和演示，不构成投资建议。股票市场存在风险，历史拟合不代表未来表现。
+              本页展示的是模型测试过程，不是股票买卖建议。拟合效果好不代表未来一定准确。
+            </p>
+          </div>
+        </>
+      )}
+
+      {/* 未测试时的提示 */}
+      {!modelData && !isTesting && (
+        <div className="bg-slate-50 rounded-lg p-6 border border-slate-100 text-center">
+          <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-slate-100 flex items-center justify-center">
+            <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <p className="text-xs text-slate-600 mb-1">选择因子后开始测试</p>
+          <p className="text-[10px] text-slate-500">系统会随机抽取10只股票进行拟合测试</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 股票曲线图组件
+function StockCurveChart({ stock }: { stock: SampleStockResult }) {
+  const width = 280;
+  const height = 120;
+  const padding = 15;
+
+  const allPrices = [
+    ...stock.curve_data.actual_price,
+    ...stock.curve_data.forecast_mid,
+    ...stock.curve_data.monte_carlo_p10,
+    ...stock.curve_data.monte_carlo_p90,
+  ];
+  const minPrice = Math.min(...allPrices) * 0.98;
+  const maxPrice = Math.max(...allPrices) * 1.02;
+
+  const scaleX = (i: number) => padding + (i / (stock.curve_data.dates.length - 1)) * (width - 2 * padding);
+  const scaleY = (price: number) => height - padding - ((price - minPrice) / (maxPrice - minPrice)) * (height - 2 * padding);
+
+  const createPath = (values: number[]) =>
+    values.map((v, i) => `${i === 0 ? "M" : "L"} ${scaleX(i)} ${scaleY(v)}`).join(" ");
+
+  const bandPath = stock.curve_data.monte_carlo_p90
+    .map((v, i) => `${i === 0 ? "M" : "L"} ${scaleX(i)} ${scaleY(v)}`)
+    .join(" ");
+  const bandPathReverse = stock.curve_data.monte_carlo_p10
+    .slice()
+    .reverse()
+    .map((v, i) => `L ${scaleX(stock.curve_data.dates.length - 1 - i)} ${scaleY(v)}`)
+    .join(" ");
+
+  return (
+    <div className="w-full overflow-x-auto">
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
+        <path d={`${bandPath} ${bandPathReverse} Z`} fill="rgba(59, 130, 246, 0.1)" />
+        <path d={createPath(stock.curve_data.forecast_mid)} fill="none" stroke="#3b82f6" strokeWidth="1" strokeDasharray="3,3" />
+        <path d={createPath(stock.curve_data.ml_fitted_price)} fill="none" stroke="#f59e0b" strokeWidth="1.5" />
+        <path d={createPath(stock.curve_data.actual_price)} fill="none" stroke="#1e293b" strokeWidth="1.5" />
+      </svg>
+      <div className="flex items-center justify-center gap-3 mt-1">
+        <span className="flex items-center gap-1 text-[9px] text-slate-500">
+          <span className="w-3 h-0.5 bg-slate-800 inline-block" /> 实际价格
+        </span>
+        <span className="flex items-center gap-1 text-[9px] text-slate-500">
+          <span className="w-3 h-0.5 bg-blue-500 inline-block border-dashed" style={{ borderTop: "1px dashed #3b82f6" }} /> 预测中位
+        </span>
+        <span className="flex items-center gap-1 text-[9px] text-slate-500">
+          <span className="w-3 h-0.5 bg-amber-500 inline-block" /> ML拟合
+        </span>
       </div>
     </div>
   );

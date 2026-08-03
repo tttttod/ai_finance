@@ -318,3 +318,79 @@ export interface ReviewDetail {
   what_went_wrong: string[];
   model_adjustment: string;
 }
+
+// ===== 通用股票预测模型类型 =====
+export interface FactorGroup {
+  group: string;
+  description: string;
+  metrics: string[];
+}
+
+export interface FactorContribution {
+  factor: string;
+  contribution: number;
+}
+
+export interface CurveData {
+  dates: string[];
+  actual_price: number[];
+  forecast_mid: number[];
+  ml_fitted_price: number[];
+  monte_carlo_p10: number[];
+  monte_carlo_p50: number[];
+  monte_carlo_p90: number[];
+  prediction_error: number[];
+}
+
+export interface MonteCarloResult {
+  up_probability: number;
+  down_probability: number;
+  risk_line_break_probability: number;
+  final_return_distribution: number[];
+}
+
+export interface SampleStockResult {
+  name: string;
+  code: string;
+  industry: string;
+  model_score: number;
+  direction_correct: boolean;
+  interval_hit: boolean;
+  mae: number;
+  rmse: number;
+  r2: number;
+  error_reason: string;
+  factor_contributions: FactorContribution[];
+  curve_data: CurveData;
+  monte_carlo_result: MonteCarloResult;
+}
+
+export interface ModelSummary {
+  average_score: number;
+  average_direction_accuracy: number;
+  average_interval_hit_rate: number;
+  average_mae: number;
+  average_rmse: number;
+  average_r2: number;
+  best_stock: string;
+  worst_stock: string;
+  top_contributing_factors: string[];
+  noisy_factors: string[];
+  overfitting_risk: string;
+}
+
+export interface GeneralPredictionModel {
+  model_name: string;
+  model_type: string;
+  is_demo_data: boolean;
+  factor_library: FactorGroup[];
+  selected_factors: string[];
+  sample_size: number;
+  model_summary: ModelSummary;
+  monte_carlo_settings: {
+    simulation_paths: number;
+    horizon_days: number;
+    percentiles: string[];
+  };
+  sample_results: SampleStockResult[];
+}
