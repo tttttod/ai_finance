@@ -1399,19 +1399,46 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
           <p className="text-[10px] text-slate-500">追踪全球宏观、政策、科技、商品与地缘事件对A股的潜在影响</p>
         </div>
 
-        {/* 世界地图 */}
-        <div className="relative bg-slate-900 h-[280px] overflow-hidden">
-          {/* 真实世界地图背景 */}
-          <svg viewBox="0 0 360 180" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
-            {/* 大陆轮廓 - 使用真实GeoJSON数据转换 */}
-            <g fill="#334155" stroke="#475569" strokeWidth="0.3" opacity="0.7">
-              {WORLD_MAP_PATHS.map((path, i) => (
-                <path key={i} d={path} />
-              ))}
-            </g>
-          </svg>
+      {/* 世界地图 - 未来感网格风格 */}
+      <div className="relative bg-slate-950 h-[280px] overflow-hidden">
+        {/* 网格背景 */}
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(59,130,246,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.3) 1px, transparent 1px)",
+            backgroundSize: "20px 20px",
+          }}
+        />
 
-          {/* 闪光点 */}
+        {/* 真实世界地图轮廓 - 网格线风格 */}
+        <svg viewBox="0 0 360 180" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="1" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          <g fill="none" stroke="#3B82F6" strokeWidth="0.5" opacity="0.6" filter="url(#glow)">
+            {WORLD_MAP_PATHS.map((path, i) => (
+              <path key={i} d={path} />
+            ))}
+          </g>
+        </svg>
+
+        {/* 扫描线动画 */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: "linear-gradient(180deg, transparent 0%, rgba(59,130,246,0.1) 50%, transparent 100%)",
+            animation: "scan 3s linear infinite",
+          }}
+        />
+
+          {/* 闪光点 - 脉冲动画 */}
           {MOCK_GLOBAL_NEWS.map((event) => {
             // 将经纬度转换为地图坐标 (匹配新的SVG viewBox 360x180)
             const x = ((event.lng + 180) / 360) * 360;
