@@ -163,7 +163,7 @@ function InvestmentSurvey({ onComplete }: { onComplete: (style: InvestmentStyle)
   const question = SURVEY_QUESTIONS[currentQ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex flex-col max-w-md mx-auto">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex flex-col max-w-md mx-auto">
       <div className="flex-1 p-6 flex flex-col justify-center">
         <div className="mb-8">
           <h1 className="text-xl font-bold text-slate-800 mb-2">先了解你的投资风格</h1>
@@ -172,16 +172,27 @@ function InvestmentSurvey({ onComplete }: { onComplete: (style: InvestmentStyle)
           </p>
         </div>
 
+        {/* 进度条 - 带流动光效 */}
         <div className="mb-6">
           <div className="flex gap-1 mb-4">
             {SURVEY_QUESTIONS.map((_, i) => (
               <div
                 key={i}
-                className={`flex-1 h-1 rounded-full ${i <= currentQ ? "bg-blue-500" : "bg-slate-200"}`}
-              />
+                className={`flex-1 h-1 rounded-full overflow-hidden ${i <= currentQ ? "bg-blue-500/20" : "bg-slate-200"}`}
+              >
+                {i <= currentQ && (
+                  <div
+                    className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full"
+                    style={{
+                      animation: "shimmer 2s infinite",
+                      backgroundSize: "200% 100%",
+                    }}
+                  />
+                )}
+              </div>
             ))}
           </div>
-          <p className="text-xs text-slate-500">问题 {currentQ + 1} / {SURVEY_QUESTIONS.length}</p>
+          <p className="text-xs text-slate-500 font-medium">问题 {currentQ + 1} / {SURVEY_QUESTIONS.length}</p>
         </div>
 
         <div className="space-y-3">
@@ -190,7 +201,7 @@ function InvestmentSurvey({ onComplete }: { onComplete: (style: InvestmentStyle)
             <button
               key={opt.value}
               onClick={() => handleAnswer(question.id, opt.value, opt.style)}
-              className="w-full p-4 text-left text-sm text-slate-800 bg-white rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50 transition-all font-medium"
+              className="w-full p-4 text-left text-sm text-slate-800 bg-white rounded-lg border border-slate-200 hover:border-blue-400 hover:bg-blue-50/50 hover:shadow-[0_0_0_1px_rgba(59,130,246,0.15)] transition-all font-medium"
             >
               {opt.label}
             </button>
@@ -345,16 +356,16 @@ function ResearchTab({
           </div>
         </div>
 
-        {/* Agent 团队展示 */}
+        {/* Agent 团队展示 - 未来感升级 */}
         <div className="bg-white rounded-lg p-4 border border-slate-100">
           <h3 className="text-sm font-semibold text-slate-800 mb-3">Agent 研究团队</h3>
           <div className="grid grid-cols-3 gap-2">
             {AGENT_TEAM.map((agent) => (
-              <div key={agent.role} className="flex items-center gap-2 p-2 rounded-lg bg-slate-50">
+              <div key={agent.role} className="flex items-center gap-2 p-2 rounded-lg bg-slate-900 border border-slate-700">
                 <span className="text-lg">{agent.icon}</span>
                 <div>
-                  <div className="text-[10px] font-medium text-slate-700">{agent.name}</div>
-                  <div className="text-[10px] text-slate-700 font-medium">{agent.title}</div>
+                  <div className="text-[10px] font-medium text-blue-400">{agent.name}</div>
+                  <div className="text-[10px] text-slate-300 font-medium">{agent.title}</div>
                 </div>
               </div>
             ))}
@@ -366,16 +377,24 @@ function ResearchTab({
 
   return (
     <div className="p-4 space-y-4">
-      {/* 16 步进度条 */}
+      {/* 16 步进度条 - 未来感升级 */}
       <div className="bg-white rounded-lg p-4 border border-slate-100">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-semibold text-slate-800">研究进度</h3>
           <span className="text-xs text-slate-500">{currentStep}/16</span>
         </div>
-        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+        {/* 进度条 - 网格线风格 */}
+        <div className="relative w-full h-2 bg-slate-900 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-500"
+            className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-500"
             style={{ width: `${(currentStep / 16) * 100}%` }}
+          />
+          {/* 网格线 */}
+          <div
+            className="absolute inset-0 opacity-30"
+            style={{
+              backgroundImage: "repeating-linear-gradient(90deg, transparent, transparent 6.25%, rgba(255,255,255,0.3) 6.25%, rgba(255,255,255,0.3) 6.5%)",
+            }}
           />
         </div>
         <div className="mt-3 grid grid-cols-4 gap-1">
@@ -636,7 +655,7 @@ function ModelTab() {
 
   return (
     <div className="p-4 space-y-4">
-      {/* 模型总览 */}
+      {/* 模型总览 - 未来感升级 */}
       <div className="bg-white rounded-lg p-4 border border-slate-100">
         <div className="flex items-center gap-2 mb-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
@@ -652,6 +671,50 @@ function ModelTab() {
         <p className="text-[10px] text-amber-600 bg-amber-50 px-2 py-1 rounded mt-2">
           Demo数据，仅用于产品演示，不代表实时行情。
         </p>
+      </div>
+
+      {/* 因子库 - 未来感网格风格 */}
+      <div className="bg-white rounded-lg p-4 border border-slate-100">
+        <h3 className="text-sm font-semibold text-slate-800 mb-3">因子库</h3>
+        <div className="space-y-2">
+          {FACTOR_LIBRARY.map((group) => (
+            <div key={group.group} className="border border-slate-100 rounded-lg overflow-hidden">
+              <button
+                onClick={() => setExpandedFactorGroup(expandedFactorGroup === group.group ? null : group.group)}
+                className="w-full flex items-center justify-between p-2 bg-slate-50 hover:bg-slate-100 transition-colors"
+              >
+                <span className="text-xs font-medium text-slate-700">{group.group}</span>
+                <svg
+                  className={`w-3 h-3 text-slate-400 transition-transform ${expandedFactorGroup === group.group ? 'rotate-180' : ''}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {expandedFactorGroup === group.group && (
+                <div className="p-2 bg-slate-900 border-t border-slate-700">
+                  <div className="grid grid-cols-2 gap-1">
+                    {group.metrics.map((factor) => (
+                      <button
+                        key={factor}
+                        onClick={() => toggleFactor(factor)}
+                        className={`text-[10px] px-2 py-1 rounded transition-colors ${
+                          isFactorSelected(factor)
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                        }`}
+                      >
+                        {factor}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* 因子选择区 */}
