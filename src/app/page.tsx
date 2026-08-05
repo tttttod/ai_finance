@@ -46,27 +46,30 @@ type TabId = "market" | "research" | "review" | "profile";
 
 export default function MiniProgramPage() {
   const [activeTab, setActiveTab] = useState<TabId>("market");
-  const [surveyCompleted, setSurveyCompleted] = useState(false);
-  const [userProfile, setUserProfile] = useState<UserProfileSurvey>({
-    completed: false,
-    recommended_style: "",
-    default_horizon: "",
-    risk_tolerance: "",
-    holding_period: "",
-    focus_preference: "",
-    experience_level: "",
+  const [surveyCompleted, setSurveyCompleted] = useState(() => {
+    if (typeof window !== "undefined") {
+      return !!localStorage.getItem("user_profile_survey");
+    }
+    return false;
+  });
+  const [userProfile, setUserProfile] = useState<UserProfileSurvey>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("user_profile_survey");
+      if (saved) {
+        try { return JSON.parse(saved); } catch { /* ignore */ }
+      }
+    }
+    return {
+      completed: false,
+      recommended_style: "",
+      default_horizon: "",
+      risk_tolerance: "",
+      holding_period: "",
+      focus_preference: "",
+      experience_level: "",
+    };
   });
   const [selectedResearchTarget, setSelectedResearchTarget] = useState<RecommendedTarget | null>(null);
-
-  // 检查是否已完成问卷
-  useEffect(() => {
-    const saved = localStorage.getItem("user_profile_survey");
-    if (saved) {
-      const profile = JSON.parse(saved);
-      setUserProfile(profile);
-      setSurveyCompleted(profile.completed);
-    }
-  }, []);
 
   // 完成问卷
   const completeSurvey = (style: InvestmentStyle) => {
