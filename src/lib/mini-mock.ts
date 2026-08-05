@@ -13,6 +13,10 @@ import {
   ReplayCurveFit,
   ReviewDetail,
   GlobalNewsEvent,
+  SBTIQuestion,
+  SBTIDimension,
+  SBTIPersonality,
+  SBTIResult,
 } from "./mini-types";
 
 // 生成因子评分
@@ -845,3 +849,124 @@ export const MOCK_GLOBAL_NEWS: GlobalNewsEvent[] = [
     importance_score: 68,
   },
 ];
+
+// SBTI 交易风格测试 - 多巴胺风格题库
+export const MOCK_SBTI_QUESTIONS: SBTIQuestion[] = [
+  {
+    id: 1,
+    question_text: "当你看到K线涨了5%，你的第一反应是？",
+    dimension: SBTIDimension.S,
+    options: [
+      { text: "看一眼均线和成交量，画根趋势线再说", score_value: 1 },
+      { text: "卧槽！追！晚了拍大腿！", score_value: -1 },
+    ],
+  },
+  {
+    id: 2,
+    question_text: "你设置了止盈，到点位你会？",
+    dimension: SBTIDimension.S,
+    options: [
+      { text: "手起刀落，严格执行，绝不留恋", score_value: 1 },
+      { text: "等一等，感觉还能涨，再拿一会儿", score_value: -1 },
+    ],
+  },
+  {
+    id: 3,
+    question_text: "股票跳水5%，你会？",
+    dimension: SBTIDimension.B,
+    options: [
+      { text: "卧槽！心态炸了！立刻割肉！", score_value: 1 },
+      { text: "看一下基本面有没有变，设好止损等反弹", score_value: -1 },
+    ],
+  },
+  {
+    id: 4,
+    question_text: "你的交易账户最像什么？",
+    dimension: SBTIDimension.B,
+    options: [
+      { text: "过山车V型曲线，上蹿下跳每天坐过山车", score_value: 1 },
+      { text: "蜗牛爬坡，慢是慢但每天都在新高", score_value: -1 },
+    ],
+  },
+  {
+    id: 5,
+    question_text: "打开交易软件，你最可能先看什么？",
+    dimension: SBTIDimension.T,
+    options: [
+      { text: "实时分时，挂单盘口，5 分钟线", score_value: 1 },
+      { text: "周线月线，画个大趋势，躺平等结果", score_value: -1 },
+    ],
+  },
+  {
+    id: 6,
+    question_text: "一只股票你最多拿多久？",
+    dimension: SBTIDimension.T,
+    options: [
+      { text: "半天，不隔夜！", score_value: 1 },
+      { text: "至少拿它几个月，等风来", score_value: -1 },
+    ],
+  },
+  {
+    id: 7,
+    question_text: "让你满仓一只股，你最信什么？",
+    dimension: SBTIDimension.I,
+    options: [
+      { text: "K线走成多头趋势，量价配合图形太完美了", score_value: 1 },
+      { text: "PE 10倍，ROE 25%，行业龙头没人比它便宜", score_value: -1 },
+    ],
+  },
+  {
+    id: 8,
+    question_text: "晚上复盘你最爱刷什么？",
+    dimension: SBTIDimension.I,
+    options: [
+      { text: "财经大 V 直播、股吧热帖、群内消息", score_value: 1 },
+      { text: "财报PDF、券商研报、行业数据", score_value: -1 },
+    ],
+  },
+];
+
+// SBTI 结果集 - 多巴胺配色 + 金融圈幽默梗
+export const MOCK_SBTI_RESULTS: Record<SBTIPersonality, SBTIResult> = {
+  [SBTIPersonality.THE_CONTROLLER]: {
+    personality: SBTIPersonality.THE_CONTROLLER,
+    personality_name: "拿捏者 S",
+    emoji: "🎮",
+    color_hex: "#FF6B6B",
+    description: "你是A股罕见的战略级狙击手，严格执行策略绝不情绪化，别人在追高时你画趋势线，别人在恐慌割肉时你算支撑位，你的每一笔下单都像狙击手扣扳机一样冷静。但要小心——太喜欢定规则，容易错过游资制造的暴力行情！",
+    trading_style_tip: "你最适合波段量化、网格交易、ETF轮动，把规则写死，让情绪无孔可入。",
+    recommendation: ["网格交易 ETF", "波段行业轮动", "量化趋势跟踪"],
+    avoid: ["追涨停打板", "全仓单只小票", "T+0 高频"],
+    style_map_to_real_investment: "band",
+  },
+  [SBTIPersonality.THE_DRINKER]: { personality_name: "酒鬼 T",
+    personality: SBTIPersonality.THE_DRINKER,
+    emoji: "🍺",
+    color_hex: "#4ECDC4",
+    description: "你是市场中的真实醉汉，涨一点就嗨全仓冲，跌一点就炸毛割肉，账户曲线像过山车一样上蹿下跳，每天都在为券商贡献手续费。情绪是你的最大敌人，也是你交易生涯的第一关。",
+    trading_style_tip: "先做模拟盘练手，把胜率练到>55%再实盘上，设严格止损线。",
+    recommendation: ["模拟盘训练", "ETF定投", "大盘宽基"],
+    avoid: ["杠杆融资", "日内T+0", "高波动妖股"],
+    style_map_to_real_investment: "long",
+  },
+  [SBTIPersonality.THE_WANDERER]: { personality_name: "行者 B",
+    personality: SBTIPersonality.THE_WANDERER,
+    emoji: "🌪️",
+    color_hex: "#FFE66D",
+    description: "你是A股的行者，5分钟线和实时盘口是你的圣经，超短线、打板、隔夜跑是你的日常。你交易的频率高到券商都想给你 VIP 服务，但跑得快不等于赚得多，小心手续费吃掉利润。",
+    trading_style_tip: "你适合短线游资打法，把胜率和盈亏比算清楚，快进快出绝不恋战。",
+    recommendation: ["热点题材短线", "龙头战法", "资金流打板"],
+    avoid: ["长线死扛", "越套越补", "深度价值"],
+    style_map_to_real_investment: "short",
+  },
+  [SBTIPersonality.THE_ORPHAN]: { personality_name: "孤儿 I",
+    personality: SBTIPersonality.THE_ORPHAN,
+    emoji: "🧙‍♂️",
+    color_hex: "#A8E6CF",
+    description: "你是市场中的孤儿，不看K线不看群，只看财报ROE和行业景气度，拿股几个月不闻不问，价值投资大师胚子。但要小心——景气反转时，你可能最后一个知道。",
+    trading_style_tip: "你适合长期价投+产业趋势，选ROE>20%的公司躺平。",
+    recommendation: ["基本面价值", "赛道长坡厚雪", "指数长期持有"],
+    avoid: ["炒概念追热点", "技术分析做T", "游资短线"],
+    style_map_to_real_investment: "long",
+  },
+};

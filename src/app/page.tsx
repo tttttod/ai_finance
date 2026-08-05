@@ -20,6 +20,9 @@ import {
   SampleStockResult,
   GlobalNewsEvent,
   ResearchClue,
+  SBTIDimension,
+  SBTIPersonality,
+  SBTIResult,
   WORKFLOW_STEPS,
   AGENT_TEAM,
   SURVEY_QUESTIONS,
@@ -35,6 +38,8 @@ import {
   DEFAULT_SELECTED_FACTORS,
   generateGeneralPredictionModel,
   MOCK_GLOBAL_NEWS,
+  MOCK_SBTI_QUESTIONS,
+  MOCK_SBTI_RESULTS,
 } from "@/lib/mini-mock";
 
 type TabId = "market" | "research" | "review" | "profile";

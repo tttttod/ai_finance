@@ -446,3 +446,40 @@ export interface GlobalNewsRadar {
   events: GlobalNewsEvent[];
   research_clues: ResearchClue[];
 }
+
+// ================= SBTI 交易风格测试 (ShaoBo Trading Big Five) =================
+export enum SBTIDimension {
+  S = "S", // 策略导向：系统化交易
+  B = "B", // 情绪化交易：知行合一难度
+  T = "T", // 时间框架：短线 / 波段 / 长期
+  I = "I", // 信息偏好：K线派 vs 基本面派
+}
+
+export enum SBTIPersonality {
+  THE_CONTROLLER = "THE_CONTROLLER",     // 拿捏者 S
+  THE_DRINKER = "THE_DRINKER",           // 酒鬼 B
+  THE_WANDERER = "THE_WANDERER",         // 行者 T
+  THE_ORPHAN = "THE_ORPHAN",             // 孤儿 I
+}
+
+export interface SBTIQuestion {
+  id: number;
+  question_text: string;
+  dimension: SBTIDimension;
+  options: {
+    text: string;
+    score_value: number; // -1~+1
+  }[];
+}
+
+export interface SBTIResult {
+  personality: SBTIPersonality;
+  personality_name: string; // 中文名：拿捏者 / 酒鬼 / 行者 / 孤儿
+  emoji: string;
+  color_hex: string;
+  description: string; // 幽默描述
+  trading_style_tip: string; // 交易风格指导
+  recommendation: string[]; // 适合你的策略
+  avoid: string[]; // 千万别碰
+  style_map_to_real_investment: "short" | "band" | "long";
+}
