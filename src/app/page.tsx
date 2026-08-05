@@ -160,32 +160,43 @@ function SBTISurvey({ onComplete }: { onComplete: (style: InvestmentStyle) => vo
   const [scores, setScores] = useState({ S: 0, B: 0, T: 0, I: 0 });
   const [isCalculating, setIsCalculating] = useState(false);
   const [result, setResult] = useState<SBTIResult | null>(null);
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const handleAnswer = (dimension: SBTIDimension, delta: number) => {
+  const handleAnswer = (dimension: SBTIDimension, delta: number, idx: number) => {
+    if (isTransitioning) return;
     const newScores = { ...scores, [dimension]: scores[dimension] + delta };
     setScores(newScores);
+    setSelectedOption(idx);
+    setIsTransitioning(true);
 
-    if (currentQ < MOCK_SBTI_QUESTIONS.length - 1) {
-      setCurrentQ(currentQ + 1);
-    } else {
-      setIsCalculating(true);
-      setTimeout(() => {
-        const diffSB = newScores.S - newScores.B;
-        const diffTI = newScores.T - newScores.I;
-        let res: SBTIResult;
-        if (diffSB >= 0 && diffTI >= 0) {
-          res = MOCK_SBTI_RESULTS[SBTIPersonality.THE_CONTROLLER];
-        } else if (diffSB < 0 && diffTI >= 0) {
-          res = MOCK_SBTI_RESULTS[SBTIPersonality.THE_WANDERER];
-        } else if (diffSB >= 0 && diffTI < 0) {
-          res = MOCK_SBTI_RESULTS[SBTIPersonality.THE_ORPHAN];
-        } else {
-          res = MOCK_SBTI_RESULTS[SBTIPersonality.THE_DRINKER];
-        }
-        setResult(res);
-        setIsCalculating(false);
-      }, 2000);
-    }
+    setTimeout(() => {
+      if (currentQ < MOCK_SBTI_QUESTIONS.length - 1) {
+        setCurrentQ(currentQ + 1);
+        setSelectedOption(null);
+        setIsTransitioning(false);
+      } else {
+        setIsCalculating(true);
+        setSelectedOption(null);
+        setIsTransitioning(false);
+        setTimeout(() => {
+          const diffSB = newScores.S - newScores.B;
+          const diffTI = newScores.T - newScores.I;
+          let res: SBTIResult;
+          if (diffSB >= 0 && diffTI >= 0) {
+            res = MOCK_SBTI_RESULTS[SBTIPersonality.THE_CONTROLLER];
+          } else if (diffSB < 0 && diffTI >= 0) {
+            res = MOCK_SBTI_RESULTS[SBTIPersonality.THE_WANDERER];
+          } else if (diffSB >= 0 && diffTI < 0) {
+            res = MOCK_SBTI_RESULTS[SBTIPersonality.THE_ORPHAN];
+          } else {
+            res = MOCK_SBTI_RESULTS[SBTIPersonality.THE_DRINKER];
+          }
+          setResult(res);
+          setIsCalculating(false);
+        }, 2000);
+      }
+    }, 500);
   };
 
   const handleFinish = () => {
@@ -299,19 +310,37 @@ function SBTISurvey({ onComplete }: { onComplete: (style: InvestmentStyle) => vo
 
         <div className="space-y-3">
           <h2 className="text-base font-bold text-slate-800 mb-4">{question.question_text}</h2>
-          {question.options.map((opt, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleAnswer(question.dimension, opt.score_value)}
-              className="w-full p-4 text-left rounded-2xl border-2 transition-all hover:scale-[1.02] hover:-translate-y-0.5 active:scale-95"
-              style={{
-                background: `linear-gradient(135deg, ${colors[idx % 4]}15, #fff)`,
-                borderColor: colors[idx % 4],
-              }}
-            >
-              <span className="text-sm font-bold text-slate-800">{opt.text}</span>
-            </button>
-          ))}
+          {question.options.map((opt, idx) => {
+            const isSelected = selectedOption === idx;
+            return (
+              <button
+                key={idx}
+                onClick={() => handleAnswer(question.dimension, opt.score_value, idx)}
+                disabled={isTransitioning}
+                className={`w-full p-4 text-left rounded-2xl border-2 transition-all duration-300 ${
+                  isTransitioning && !isSelected ? "opacity-40 scale-[0.98]" : ""
+                } ${
+                  isSelected
+                    ? "scale-[1.03] shadow-lg"
+                    : "hover:scale-[1.02] hover:-translate-y-0.5 active:scale-95"
+                }`}
+                style={{
+                  background: isSelected
+                    ? `linear-gradient(135deg, ${colors[idx % 4]}40, ${colors[idx % 4]}15)`
+                    : `linear-gradient(135deg, ${colors[idx % 4]}15, #fff)`,
+                  borderColor: isSelected ? colors[idx % 4] : colors[idx % 4],
+                  borderWidth: isSelected ? "3px" : "2px",
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  {isSelected && (
+                    <span className="text-lg animate-bounce">👆</span>
+                  )}
+                  <span className="text-sm font-bold text-slate-800">{opt.text}</span>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
