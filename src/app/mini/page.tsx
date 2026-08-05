@@ -80,11 +80,14 @@ export default function MiniProgramPage() {
     setUserProfile(newProfile);
     setSurveyCompleted(true);
     localStorage.setItem("user_profile_survey", JSON.stringify(newProfile));
+    localStorage.setItem("sbti_result_v2", JSON.stringify(style));
+    localStorage.setItem("investment_style", style);
+    localStorage.setItem("completed_sbti_test", "true");
   };
 
-  // 未做问卷时显示问卷
+  // 未做问卷时显示 SBTI 多巴胺测试
   if (!surveyCompleted) {
-    return <InvestmentSurvey onComplete={completeSurvey} />;
+    return <SBTISurvey onComplete={completeSurvey} />;
   }
 
   return (
@@ -114,7 +117,13 @@ export default function MiniProgramPage() {
           />
         )}
         {activeTab === "review" && <ModelTab />}
-        {activeTab === "profile" && <ProfileTab profile={userProfile} onRetakeSurvey={() => setSurveyCompleted(false)} />}
+        {activeTab === "profile" && <ProfileTab profile={userProfile} onRetakeSurvey={() => {
+              localStorage.removeItem("user_profile_survey");
+              localStorage.removeItem("sbti_result_v2");
+              localStorage.removeItem("investment_style");
+              localStorage.removeItem("completed_sbti_test");
+              setSurveyCompleted(false);
+            }} />}
       </div>
 
       {/* 底部 Tab 栏 */}
@@ -142,52 +151,135 @@ export default function MiniProgramPage() {
 }
 
 // ===== 投资风格问卷 =====
-function InvestmentSurvey({ onComplete }: { onComplete: (style: InvestmentStyle) => void }) {
+// ===== SBTI 交易风格测试（多巴胺风格）=====
+function SBTISurvey({ onComplete }: { onComplete: (style: InvestmentStyle) => void }) {
   const [currentQ, setCurrentQ] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [scores, setScores] = useState({ S: 0, B: 0, T: 0, I: 0 });
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [result, setResult] = useState<SBTIResult | null>(null);
 
-  const handleAnswer = (questionId: string, value: string, style: InvestmentStyle) => {
-    const newAnswers = { ...answers, [questionId]: value };
-    setAnswers(newAnswers);
+  const handleAnswer = (dimension: SBTIDimension, delta: number) => {
+    const newScores = { ...scores, [dimension]: scores[dimension] + delta };
+    setScores(newScores);
 
-    if (currentQ < SURVEY_QUESTIONS.length - 1) {
+    if (currentQ < MOCK_SBTI_QUESTIONS.length - 1) {
       setCurrentQ(currentQ + 1);
     } else {
-      // 计算推荐风格
-      const styleCounts: Record<InvestmentStyle, number> = { short: 0, swing: 0, long: 0 };
-      Object.values(newAnswers).forEach((v) => {
-        const q = SURVEY_QUESTIONS.find((q) => q.options.some((o) => o.value === v));
-        const opt = q?.options.find((o) => o.value === v);
-        if (opt) styleCounts[opt.style]++;
-      });
-      const recommended = Object.entries(styleCounts).sort((a, b) => b[1] - a[1])[0][0] as InvestmentStyle;
-      onComplete(recommended);
+      setIsCalculating(true);
+      setTimeout(() => {
+        const diffSB = newScores.S - newScores.B;
+        const diffTI = newScores.T - newScores.I;
+        let res: SBTIResult;
+        if (diffSB >= 0 && diffTI >= 0) {
+          res = MOCK_SBTI_RESULTS[SBTIPersonality.THE_CONTROLLER];
+        } else if (diffSB < 0 && diffTI >= 0) {
+          res = MOCK_SBTI_RESULTS[SBTIPersonality.THE_WANDERER];
+        } else if (diffSB >= 0 && diffTI < 0) {
+          res = MOCK_SBTI_RESULTS[SBTIPersonality.THE_ORPHAN];
+        } else {
+          res = MOCK_SBTI_RESULTS[SBTIPersonality.THE_DRINKER];
+        }
+        setResult(res);
+        setIsCalculating(false);
+      }, 2000);
     }
   };
 
-  const question = SURVEY_QUESTIONS[currentQ];
+  const handleFinish = () => {
+    if (result) {
+      localStorage.setItem("sbti_personality", JSON.stringify(result));
+      const style = (result.style_map_to_real_investment === "short" ? "short" : result.style_map_to_real_investment === "band" ? "swing" : "long") as InvestmentStyle;
+      onComplete(style);
+    }
+  };
+
+  if (isCalculating) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#FFF8E1] to-white flex flex-col max-w-md mx-auto">
+        <div className="flex-1 p-6 flex flex-col items-center justify-center">
+          <div className="relative w-16 h-16 mx-auto mb-6">
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FF6B6B] via-[#FFE66D] to-[#4ECDC4] animate-spin" />
+            <div className="absolute inset-1.5 rounded-full bg-white flex items-center justify-center text-3xl">🎭</div>
+          </div>
+          <p className="text-base font-bold bg-gradient-to-r from-[#FF6B6B] to-[#4ECDC4] bg-clip-text text-transparent text-center">
+            多巴胺人格正在生成你的交易灵魂...
+          </p>
+          <p className="text-xs text-slate-400 mt-2">别急，好的人格需要时间酝酿</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (result) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#FFF8E1] to-white flex flex-col max-w-md mx-auto">
+        <div className="flex-1 p-6 overflow-auto">
+          <div className="text-center mb-4">
+            <div className="text-6xl mb-3 animate-bounce">{result.emoji}</div>
+            <h2 className="text-2xl font-black mb-2" style={{ color: result.color_hex }}>
+              {result.personality_name}
+            </h2>
+            <p className="text-sm text-slate-600 leading-relaxed text-left">{result.description}</p>
+          </div>
+
+          <div className="bg-slate-50 rounded-2xl p-4 mb-3">
+            <p className="text-xs font-bold text-slate-600 mb-2">🎯 最适合你的玩法</p>
+            <div className="flex flex-wrap gap-1.5">
+              {result.recommendation.map((tag: string, i: number) => (
+                <span key={i} className="text-xs px-2.5 py-1 rounded-full text-white font-bold"
+                  style={{ backgroundColor: result.color_hex }}>{tag}</span>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-red-50 rounded-2xl p-4 mb-4">
+            <p className="text-xs font-bold text-red-600 mb-2">⚠️ 绝对不能碰</p>
+            <div className="flex flex-wrap gap-1.5">
+              {result.avoid.map((tag: string, i: number) => (
+                <span key={i} className="text-xs px-2.5 py-1 rounded-full text-red-700 bg-red-100 font-bold">{tag}</span>
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={handleFinish}
+            className="w-full py-3.5 rounded-2xl font-black text-white text-base transition-all hover:scale-[1.02] active:scale-95"
+            style={{ background: `linear-gradient(135deg, ${result.color_hex}, ${result.color_hex}cc)` }}
+          >
+            进入多巴胺投研平台 🚀
+          </button>
+
+          <p className="text-[10px] text-slate-400 text-center mt-4">
+            以上内容仅供娱乐参考，不构成投资建议。SBTI 人格测试仅为交互体验，不代表真实交易性格评估。
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const question = MOCK_SBTI_QUESTIONS[currentQ];
+  const colors = ["#FF6B6B", "#FFE66D", "#4ECDC4", "#A8E6CF"];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex flex-col max-w-md mx-auto">
+    <div className="min-h-screen bg-gradient-to-b from-[#FFF8E1] to-white flex flex-col max-w-md mx-auto">
       <div className="flex-1 p-6 flex flex-col justify-center">
         <div className="mb-8">
-          <h1 className="text-xl font-bold text-slate-800 mb-2">先了解你的投资风格</h1>
-          <p className="text-sm text-slate-500">
-            我会根据你的风险承受能力、持有周期和研究习惯，自动推荐默认投研风格。之后你仍然可以在研究页手动切换。
+          <h1 className="text-2xl font-black mb-2 bg-gradient-to-r from-[#FF6B6B] via-[#FFE66D] to-[#4ECDC4] bg-clip-text text-transparent">
+            🎭 SBTI 交易风格大揭秘
+          </h1>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            多巴胺风格！不是严肃人格测试，是金融圈老股民都懂的幽默镜像。找到你的交易灵魂人格。
           </p>
         </div>
 
-        {/* 进度条 - 带流动光效 */}
+        {/* 多巴胺彩虹进度条 */}
         <div className="mb-6">
           <div className="flex gap-1 mb-4">
-            {SURVEY_QUESTIONS.map((_, i) => (
-              <div
-                key={i}
-                className={`flex-1 h-1 rounded-full overflow-hidden ${i <= currentQ ? "bg-blue-500/20" : "bg-slate-200"}`}
-              >
+            {MOCK_SBTI_QUESTIONS.map((_, i) => (
+              <div key={i} className={`flex-1 h-1.5 rounded-full overflow-hidden ${i <= currentQ ? "bg-slate-200" : "bg-slate-100"}`}>
                 {i <= currentQ && (
                   <div
-                    className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full"
+                    className="h-full bg-gradient-to-r from-[#FF6B6B] via-[#FFE66D] to-[#4ECDC4] rounded-full"
                     style={{
                       animation: "shimmer 2s infinite",
                       backgroundSize: "200% 100%",
@@ -197,18 +289,24 @@ function InvestmentSurvey({ onComplete }: { onComplete: (style: InvestmentStyle)
               </div>
             ))}
           </div>
-          <p className="text-xs text-slate-500 font-medium">问题 {currentQ + 1} / {SURVEY_QUESTIONS.length}</p>
+          <p className="text-xs text-slate-500 font-bold">
+            问题 {currentQ + 1} / {MOCK_SBTI_QUESTIONS.length} · 维度: {question.dimension}
+          </p>
         </div>
 
         <div className="space-y-3">
-          <h2 className="text-base font-semibold text-slate-700">{question.title}</h2>
-          {question.options.map((opt) => (
+          <h2 className="text-base font-bold text-slate-800 mb-4">{question.question_text}</h2>
+          {question.options.map((opt, idx) => (
             <button
-              key={opt.value}
-              onClick={() => handleAnswer(question.id, opt.value, opt.style)}
-              className="w-full p-4 text-left text-sm text-slate-800 bg-white rounded-lg border border-slate-200 hover:border-blue-400 hover:bg-blue-50/50 hover:shadow-[0_0_0_1px_rgba(59,130,246,0.15)] transition-all font-medium"
+              key={idx}
+              onClick={() => handleAnswer(question.dimension, opt.score_value)}
+              className="w-full p-4 text-left rounded-2xl border-2 transition-all hover:scale-[1.02] hover:-translate-y-0.5 active:scale-95"
+              style={{
+                background: `linear-gradient(135deg, ${colors[idx % 4]}15, #fff)`,
+                borderColor: colors[idx % 4],
+              }}
             >
-              {opt.label}
+              <span className="text-sm font-bold text-slate-800">{opt.text}</span>
             </button>
           ))}
         </div>
