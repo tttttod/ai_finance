@@ -46,29 +46,32 @@ type TabId = "market" | "research" | "review" | "profile";
 
 export default function MiniProgramPage() {
   const [activeTab, setActiveTab] = useState<TabId>("market");
-  const [surveyCompleted, setSurveyCompleted] = useState(() => {
-    if (typeof window !== "undefined") {
-      return !!localStorage.getItem("user_profile_survey");
-    }
-    return false;
+  const [surveyCompleted, setSurveyCompleted] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [userProfile, setUserProfile] = useState<UserProfileSurvey>({
+    completed: false,
+    recommended_style: "",
+    default_horizon: "",
+    risk_tolerance: "",
+    holding_period: "",
+    focus_preference: "",
+    experience_level: "",
   });
-  const [userProfile, setUserProfile] = useState<UserProfileSurvey>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("user_profile_survey");
-      if (saved) {
-        try { return JSON.parse(saved); } catch { /* ignore */ }
-      }
+
+  // 水合安全：在 useEffect 中读取 localStorage，避免 SSR/CSR 不一致导致问卷闪现消失
+  useEffect(() => {
+    const saved = localStorage.getItem("user_profile_survey");
+    if (saved) {
+      try {
+        const profile = JSON.parse(saved);
+        setUserProfile(profile);
+        if (profile.completed) {
+          setSurveyCompleted(true);
+        }
+      } catch { /* ignore */ }
     }
-    return {
-      completed: false,
-      recommended_style: "",
-      default_horizon: "",
-      risk_tolerance: "",
-      holding_period: "",
-      focus_preference: "",
-      experience_level: "",
-    };
-  });
+    setIsLoadingProfile(false);
+  }, []);
   const [selectedResearchTarget, setSelectedResearchTarget] = useState<RecommendedTarget | null>(null);
 
   // 完成问卷
@@ -88,8 +91,13 @@ export default function MiniProgramPage() {
     localStorage.setItem("completed_sbti_test", "true");
   };
 
-  // 未做问卷时显示 SBTI 多巴胺测试
-  if (!surveyCompleted) {
+  // 未做问卷时显示 SBTI 多巴胺测试（加载中默认显示问卷，避免闪烁）
+  if (!surveyCompleted && !isLoadingProfile) {
+    return <SBTISurvey onComplete={completeSurvey} />;
+  }
+
+  // 加载中显示问卷骨架
+  if (isLoadingProfile) {
     return <SBTISurvey onComplete={completeSurvey} />;
   }
 

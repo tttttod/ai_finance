@@ -47,6 +47,7 @@ type TabId = "market" | "research" | "review" | "profile";
 export default function MiniProgramPage() {
   const [activeTab, setActiveTab] = useState<TabId>("market");
   const [surveyCompleted, setSurveyCompleted] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfileSurvey>({
     completed: false,
     recommended_style: "",
@@ -58,14 +59,19 @@ export default function MiniProgramPage() {
   });
   const [selectedResearchTarget, setSelectedResearchTarget] = useState<RecommendedTarget | null>(null);
 
-  // 检查是否已完成问卷
+  // 水合安全：在 useEffect 中读取 localStorage
   useEffect(() => {
     const saved = localStorage.getItem("user_profile_survey");
     if (saved) {
-      const profile = JSON.parse(saved);
-      setUserProfile(profile);
-      setSurveyCompleted(profile.completed);
+      try {
+        const profile = JSON.parse(saved);
+        setUserProfile(profile);
+        if (profile.completed) {
+          setSurveyCompleted(true);
+        }
+      } catch { /* ignore */ }
     }
+    setIsLoadingProfile(false);
   }, []);
 
   // 完成问卷
@@ -85,8 +91,13 @@ export default function MiniProgramPage() {
     localStorage.setItem("completed_sbti_test", "true");
   };
 
-  // 未做问卷时显示 SBTI 多巴胺测试
-  if (!surveyCompleted) {
+  // 未做问卷时显示 SBTI 多巴胺测试（加载中默认显示问卷，避免闪烁）
+  if (!surveyCompleted && !isLoadingProfile) {
+    return <SBTISurvey onComplete={completeSurvey} />;
+  }
+
+  // 加载中显示问卷
+  if (isLoadingProfile) {
     return <SBTISurvey onComplete={completeSurvey} />;
   }
 
