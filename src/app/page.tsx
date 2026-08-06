@@ -968,110 +968,123 @@ function ModelTab() {
         </p>
       </div>
 
-      {/* 因子库 - 未来感网格风格 */}
+      {/* 因子库 - 浏览+选择因子 */}
       <div className="bg-white rounded-lg p-4 border border-slate-100">
-        <h3 className="text-sm font-semibold text-slate-800 mb-3">因子库</h3>
-        <div className="space-y-2">
-          {FACTOR_LIBRARY.map((group) => (
-            <div key={group.group} className="border border-slate-100 rounded-lg overflow-hidden">
-              <button
-                onClick={() => setExpandedFactorGroup(expandedFactorGroup === group.group ? null : group.group)}
-                className="w-full flex items-center justify-between p-2 bg-slate-50 hover:bg-slate-100 transition-colors"
-              >
-                <span className="text-xs font-medium text-slate-700">{group.group}</span>
-                <svg
-                  className={`w-3 h-3 text-slate-400 transition-transform ${expandedFactorGroup === group.group ? 'rotate-180' : ''}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-slate-800">因子库</h3>
+          <span className="text-[10px] text-slate-400">点击因子名称选择/取消</span>
+        </div>
+        <p className="text-[10px] text-slate-500 mb-3 leading-relaxed">
+          浏览因子说明，选择你认为有效的因子加入下方「已选因子」，系统将用它们进行拟合测试。
+        </p>
+        <div className="space-y-1.5">
+          {FACTOR_LIBRARY.map((group) => {
+            const selectedInGroup = group.metrics.filter((m) => selectedFactors.includes(m));
+            const isExpanded = expandedFactorGroup === group.group;
+            return (
+              <div key={group.group} className="border border-slate-100 rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setExpandedFactorGroup(isExpanded ? null : group.group)}
+                  className="w-full flex items-center justify-between p-2.5 bg-slate-50 hover:bg-slate-100 transition-colors"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {expandedFactorGroup === group.group && (
-                <div className="p-2 bg-slate-900 border-t border-slate-700">
-                  <div className="grid grid-cols-2 gap-1">
-                    {group.metrics.map((factor) => (
-                      <button
-                        key={factor}
-                        onClick={() => toggleFactor(factor)}
-                        className={`text-[10px] px-2 py-1 rounded transition-colors ${
-                          isFactorSelected(factor)
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                        }`}
-                      >
-                        {factor}
-                      </button>
-                    ))}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-slate-700">{group.group}</span>
+                    {selectedInGroup.length > 0 && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">
+                        {selectedInGroup.length}/{group.metrics.length}
+                      </span>
+                    )}
                   </div>
-                </div>
-              )}
-            </div>
-          ))}
+                  <svg
+                    className={`w-3 h-3 text-slate-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {isExpanded && (
+                  <div className="p-2.5 bg-white">
+                    <p className="text-[10px] text-slate-400 mb-2">{group.description}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {group.metrics.map((metric) => {
+                        const selected = isFactorSelected(metric);
+                        return (
+                          <button
+                            key={metric}
+                            onClick={() => toggleFactor(metric)}
+                            className={`text-[10px] px-2.5 py-1 rounded-full border transition-all ${
+                              selected
+                                ? "bg-blue-600 border-blue-600 text-white shadow-sm"
+                                : "bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600"
+                            }`}
+                          >
+                            {selected ? "✓ " : "+ "}{metric}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* 因子选择区 */}
+      {/* 已选因子汇总 - 紧凑展示 */}
       <div className="bg-white rounded-lg p-4 border border-slate-100">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-slate-800">因子选择</h3>
-          <span className="text-[10px] text-slate-500">已选 {selectedFactors.length} 个</span>
-        </div>
-        <p className="text-[10px] text-slate-500 mb-3 leading-relaxed">
-          你可以选择自己信任的因子，系统会随机抽取10只股票进行拟合测试。因子越多不一定越好，过多因子可能导致过拟合。
-        </p>
-
-        <div className="space-y-2">
-          {FACTOR_LIBRARY.map((group) => (
-            <div key={group.group} className="border border-slate-100 rounded-lg overflow-hidden">
+          <h3 className="text-sm font-semibold text-slate-800">已选因子</h3>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-slate-500">共 {selectedFactors.length} 个</span>
+            {selectedFactors.length > 0 && (
               <button
-                className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 transition-colors"
-                onClick={() => setExpandedFactorGroup(expandedFactorGroup === group.group ? null : group.group)}
+                onClick={() => setSelectedFactors([])}
+                className="text-[10px] text-slate-400 hover:text-red-500 transition-colors"
               >
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-slate-700">{group.group}</span>
-                  <span className="text-[10px] text-slate-500">{group.metrics.length}个指标</span>
-                </div>
-                <svg
-                  className={`w-3 h-3 text-slate-400 transition-transform ${expandedFactorGroup === group.group ? "rotate-180" : ""}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                清空
               </button>
-              {expandedFactorGroup === group.group && (
-                <div className="p-3 space-y-2 bg-white">
-                  <p className="text-[10px] text-slate-500 mb-2">{group.description}</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {group.metrics.map((metric) => (
+            )}
+          </div>
+        </div>
+
+        {selectedFactors.length === 0 ? (
+          <div className="text-center py-6 text-[10px] text-slate-400">
+            <p>尚未选择因子</p>
+            <p className="mt-1">在上方「因子库」中点击因子即可添加</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {FACTOR_LIBRARY.map((group) => {
+              const selectedInGroup = group.metrics.filter((m) => selectedFactors.includes(m));
+              if (selectedInGroup.length === 0) return null;
+              return (
+                <div key={group.group} className="flex items-start gap-2 text-[10px]">
+                  <span className="text-slate-400 whitespace-nowrap mt-0.5 min-w-[48px]">{group.group}</span>
+                  <div className="flex flex-wrap gap-1">
+                    {selectedInGroup.map((metric) => (
                       <button
                         key={metric}
-                        className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
-                          isFactorSelected(metric)
-                            ? "bg-blue-50 border-blue-200 text-blue-700"
-                            : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
-                        }`}
                         onClick={() => toggleFactor(metric)}
+                        className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 hover:bg-red-50 hover:text-red-500 transition-colors"
+                        title="点击移除"
                       >
-                        {isFactorSelected(metric) ? "✓ " : ""}{metric}
+                        {metric} ×
                       </button>
                     ))}
                   </div>
                 </div>
-              )}
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-2 mt-4 pt-3 border-t border-slate-100">
           <button
             className="flex-1 text-[10px] py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
             onClick={handleUseRecommended}
           >
-            使用推荐因子组合
+            使用推荐因子
           </button>
           <button
             className="flex-1 text-[10px] py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
