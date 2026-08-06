@@ -481,13 +481,12 @@ export interface TradeTIQuestion {
   question_text: string;
   options: {
     text: string;
-    personality: TradeTIPersonalityId;
+    type: "pass" | TradeTIPersonalityId; // "pass"=通关分, 其他=人格标签
   }[];
 }
 
-/** tradeTI 计分状态 */
+/** tradeTI 非通关人格计分（不含 wall_street，wall_street 由 passScore 单独统计） */
 export interface TradeTIScores {
-  wall_street: number;
   old_money: number;
   qin_shihuang: number;
   kline_shaman: number;
@@ -506,8 +505,9 @@ export interface TradeTIResult {
   color: string;
   description: string;
   is_unlocked: boolean;
-  scores: TradeTIScores;
+  pass_score: number;
   total_questions: number;
+  scores: TradeTIScores;
 }
 
 /** tradeTI 完整状态（持久化到 localStorage） */
@@ -515,8 +515,9 @@ export interface TradeTIState {
   completed: boolean;
   is_unlocked: boolean;
   result_type: TradeTIPersonalityId | "";
+  pass_score: number;
   scores: TradeTIScores;
-  answers: { question_id: number; chosen: TradeTIPersonalityId }[];
+  answers: { question_id: number; type: "pass" | TradeTIPersonalityId }[];
   completed_at?: string;
 }
 
@@ -626,13 +627,12 @@ export const TRADETI_PERSONALITIES: Record<TradeTIPersonalityId, TradeTIPersonal
 
 /** tradeTI 判定优先级（并列时按此顺序，越低越优先） */
 export const TRADETI_PRIORITY: TradeTIPersonalityId[] = [
-  "qin_shihuang",
   "all_in_warrior",
+  "qin_shihuang",
   "fomo_chaser",
   "breakeven_master",
   "kline_shaman",
   "monte_carlo_poet",
   "report_archaeologist",
   "old_money",
-  "wall_street",
 ];

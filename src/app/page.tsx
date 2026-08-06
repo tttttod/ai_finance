@@ -195,18 +195,19 @@ type TradeTIScreen = "intro" | "questions" | "result" | "blocked";
 function TradeTITest({ onComplete }: { onComplete: () => void }) {
   const [screen, setScreen] = useState<TradeTIScreen>("intro");
   const [currentQ, setCurrentQ] = useState(0);
-  const [answers, setAnswers] = useState<{ question_id: number; chosen: TradeTIPersonalityId }[]>([]);
+  const [answers, setAnswers] = useState<{ question_id: number; type: "pass" | TradeTIPersonalityId }[]>([]);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [resultPersonality, setResultPersonality] = useState<TradeTIPersonalityId | null>(null);
+  const [resultPassScore, setResultPassScore] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
   const [blockBtnClicked, setBlockBtnClicked] = useState<number | null>(null);
 
   const handleStart = () => setScreen("questions");
 
-  const handleAnswer = (personality: TradeTIPersonalityId, idx: number) => {
+  const handleAnswer = (optionType: "pass" | TradeTIPersonalityId, idx: number) => {
     if (isTransitioning) return;
-    const newAnswers = [...answers, { question_id: currentQ + 1, chosen: personality }];
+    const newAnswers = [...answers, { question_id: currentQ + 1, type: optionType }];
     setAnswers(newAnswers);
     setSelectedOption(idx);
     setIsTransitioning(true);
@@ -222,22 +223,22 @@ function TradeTITest({ onComplete }: { onComplete: () => void }) {
         setIsTransitioning(false);
         setTimeout(() => {
           const result = calculateTradeTIResult(newAnswers);
-          setResultPersonality(result);
+          setResultPersonality(result.personality_id);
+          setResultPassScore(result.pass_score);
           setIsCalculating(false);
-          const personality = TRADETI_PERSONALITIES[result];
+          const personality = TRADETI_PERSONALITIES[result.personality_id];
           if (personality.is_unlock) {
             setScreen("result");
           } else {
             setScreen("blocked");
           }
           // 保存结果
-          const scores = { wall_street: 0, old_money: 0, qin_shihuang: 0, kline_shaman: 0, all_in_warrior: 0, breakeven_master: 0, fomo_chaser: 0, report_archaeologist: 0, monte_carlo_poet: 0 };
-          for (const a of newAnswers) scores[a.chosen]++;
           const state: TradeTIState = {
             completed: true,
-            is_unlocked: personality.is_unlock,
-            result_type: result,
-            scores,
+            is_unlocked: result.is_unlocked,
+            result_type: result.personality_id,
+            pass_score: result.pass_score,
+            scores: result.scores,
             answers: newAnswers,
             completed_at: new Date().toISOString(),
           };
@@ -330,6 +331,9 @@ function TradeTITest({ onComplete }: { onComplete: () => void }) {
             <div className="bg-[#0D9488]/10 rounded-2xl p-4 mb-4 border-2 border-[#0D9488]/20">
               <p className="text-sm text-slate-700 leading-relaxed">{p.description}</p>
             </div>
+            <div className="inline-flex items-center gap-2 bg-[#0D9488] text-white px-4 py-2 rounded-full text-sm font-bold mb-3">
+              通关分：{resultPassScore}/12
+            </div>
             <p className="text-xs text-[#0D9488] font-bold">
               交易所门口没有你的通缉令，但市场已经注意到你了。
             </p>
@@ -369,8 +373,12 @@ function TradeTITest({ onComplete }: { onComplete: () => void }) {
               <p className="text-sm text-slate-700 leading-relaxed font-bold">{p.description}</p>
             </div>
             <div className="bg-red-50 rounded-2xl p-4 border-2 border-red-200">
+              <div className="inline-flex items-center gap-2 bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold mb-2">
+                通关分：{resultPassScore}/12
+              </div>
               <p className="text-xs text-red-600 font-bold mb-1">系统判断：当前暂不建议解锁完整投研功能。</p>
               <p className="text-xs text-red-500">{p.block_reason}</p>
+              <p className="text-xs text-slate-400 mt-2">你可以返回重测，尝试做出更接近「逻辑、概率、纪律、复盘」的选择。</p>
             </div>
           </div>
 
@@ -465,7 +473,7 @@ function TradeTITest({ onComplete }: { onComplete: () => void }) {
             return (
               <button
                 key={idx}
-                onClick={() => handleAnswer(opt.personality, idx)}
+                onClick={() => handleAnswer(opt.type, idx)}
                 disabled={isTransitioning}
                 className={`w-full p-4 text-left rounded-2xl border-2 transition-all duration-300 ${
                   isTransitioning && !isSelected ? "opacity-40 scale-[0.98]" : ""

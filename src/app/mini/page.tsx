@@ -183,18 +183,19 @@ type TradeTIScreen = "intro" | "questions" | "result" | "blocked";
 function TradeTITest({ onComplete }: { onComplete: () => void }) {
   const [screen, setScreen] = useState<TradeTIScreen>("intro");
   const [currentQ, setCurrentQ] = useState(0);
-  const [answers, setAnswers] = useState<{ question_id: number; chosen: TradeTIPersonalityId }[]>([]);
+  const [answers, setAnswers] = useState<{ question_id: number; type: "pass" | TradeTIPersonalityId }[]>([]);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [resultPersonality, setResultPersonality] = useState<TradeTIPersonalityId | null>(null);
+  const [resultPassScore, setResultPassScore] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
   const [blockBtnClicked, setBlockBtnClicked] = useState<number | null>(null);
 
   const handleStart = () => setScreen("questions");
 
-  const handleAnswer = (personality: TradeTIPersonalityId, idx: number) => {
+  const handleAnswer = (type: "pass" | TradeTIPersonalityId, idx: number) => {
     if (isTransitioning) return;
-    const newAnswers = [...answers, { question_id: currentQ + 1, chosen: personality }];
+    const newAnswers = [...answers, { question_id: currentQ + 1, type }];
     setAnswers(newAnswers);
     setSelectedOption(idx);
     setIsTransitioning(true);
@@ -210,25 +211,26 @@ function TradeTITest({ onComplete }: { onComplete: () => void }) {
         setIsTransitioning(false);
         setTimeout(() => {
           const result = calculateTradeTIResult(newAnswers);
-          setResultPersonality(result);
           setIsCalculating(false);
-          const personality = TRADETI_PERSONALITIES[result];
-          if (personality.is_unlock) {
-            setScreen("result");
-          } else {
-            setScreen("blocked");
-          }
-          const scores = { wall_street: 0, old_money: 0, qin_shihuang: 0, kline_shaman: 0, all_in_warrior: 0, breakeven_master: 0, fomo_chaser: 0, report_archaeologist: 0, monte_carlo_poet: 0 };
-          for (const a of newAnswers) scores[a.chosen]++;
           const state: TradeTIState = {
             completed: true,
-            is_unlocked: personality.is_unlock,
-            result_type: result,
-            scores,
+            is_unlocked: result.is_unlocked,
+            result_type: result.personality_id,
+            pass_score: result.pass_score,
+            scores: result.scores,
             answers: newAnswers,
             completed_at: new Date().toISOString(),
           };
           localStorage.setItem("tradeti_state", JSON.stringify(state));
+          if (result.is_unlocked) {
+            setResultPersonality(result.personality_id);
+            setResultPassScore(result.pass_score);
+            setScreen("result");
+          } else {
+            setResultPersonality(result.personality_id);
+            setResultPassScore(result.pass_score);
+            setScreen("blocked");
+          }
         }, 2000);
       }
     }, 500);
@@ -355,7 +357,7 @@ function TradeTITest({ onComplete }: { onComplete: () => void }) {
             const isSelected = selectedOption === idx;
             const color = dopamineColors[idx % 4];
             return (
-              <button key={idx} onClick={() => handleAnswer(opt.personality, idx)} disabled={isTransitioning}
+              <button key={idx} onClick={() => handleAnswer(opt.type, idx)} disabled={isTransitioning}
                 className={`w-full p-4 text-left rounded-2xl border-2 transition-all duration-300 ${isTransitioning && !isSelected ? "opacity-40 scale-[0.98]" : ""} ${isSelected ? "scale-[1.03] shadow-lg" : "hover:scale-[1.02] hover:-translate-y-0.5 active:scale-95"}`}
                 style={{ background: isSelected ? `${color}20` : `${color}08`, borderColor: isSelected ? color : `${color}40`, borderWidth: isSelected ? "3px" : "2px" }}>
                 <div className="flex items-center gap-2">{isSelected && <span className="text-lg animate-bounce">👆</span>}<span className="text-sm font-bold text-slate-800">{opt.text}</span></div>
