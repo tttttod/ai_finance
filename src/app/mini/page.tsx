@@ -60,7 +60,19 @@ export default function MiniProgramPage() {
   const [selectedResearchTarget, setSelectedResearchTarget] = useState<RecommendedTarget | null>(null);
 
   // 水合安全：在 useEffect 中读取 localStorage
+  // 支持 ?retake=1 URL 参数强制重置问卷，方便测试
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("retake") === "1") {
+      localStorage.removeItem("user_profile_survey");
+      localStorage.removeItem("sbti_result_v2");
+      localStorage.removeItem("investment_style");
+      localStorage.removeItem("completed_sbti_test");
+      localStorage.removeItem("sbti_personality");
+      setIsLoadingProfile(false);
+      return;
+    }
+
     const saved = localStorage.getItem("user_profile_survey");
     if (saved) {
       try {

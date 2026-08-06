@@ -59,7 +59,19 @@ export default function MiniProgramPage() {
   });
 
   // 水合安全：在 useEffect 中读取 localStorage，避免 SSR/CSR 不一致导致问卷闪现消失
+  // 支持 ?retake=1 URL 参数强制重置问卷，方便测试
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("retake") === "1") {
+      localStorage.removeItem("user_profile_survey");
+      localStorage.removeItem("sbti_result_v2");
+      localStorage.removeItem("investment_style");
+      localStorage.removeItem("completed_sbti_test");
+      localStorage.removeItem("sbti_personality");
+      setIsLoadingProfile(false);
+      return;
+    }
+
     const saved = localStorage.getItem("user_profile_survey");
     if (saved) {
       try {
@@ -102,12 +114,12 @@ export default function MiniProgramPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] flex flex-col max-w-md mx-auto relative">
-      {/* 状态栏模拟 */}
-      <div className="bg-white px-4 py-2 flex items-center justify-between text-xs text-slate-500 border-b border-slate-100">
-        <span>9:41</span>
-        <span className="font-semibold text-sm text-slate-800">A股可视化投研Agent</span>
-        <span>📶 </span>
+    <div className="min-h-screen bg-gradient-to-b from-[#FFF8E1] via-[#FFF3CD] to-white flex flex-col max-w-md mx-auto relative">
+      {/* 状态栏模拟 - 多巴胺风格 */}
+      <div className="bg-gradient-to-r from-[#FF6B6B] via-[#FFE66D] to-[#4ECDC4] px-4 py-2 flex items-center justify-between text-xs text-white shadow-md">
+        <span className="font-black">9:41</span>
+        <span className="font-black text-sm drop-shadow-sm">🦄 多巴胺投研</span>
+        <span className="font-black">📶</span>
       </div>
 
       {/* 主内容区 */}
@@ -137,23 +149,31 @@ export default function MiniProgramPage() {
             }} />}
       </div>
 
-      {/* 底部 Tab 栏 */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t border-slate-200 flex">
+      {/* 底部 Tab 栏 - 多巴胺风格 */}
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/90 backdrop-blur-sm border-t-2 border-[#FFE66D] flex rounded-t-3xl shadow-[0_-4px_20px_rgba(255,107,107,0.15)]">
         {[
-          { id: "market" as TabId, label: "市场", icon: "📊" },
-          { id: "research" as TabId, label: "研究", icon: "🔬" },
-          { id: "review" as TabId, label: "模型", icon: "📊" },
-          { id: "profile" as TabId, label: "我的", icon: "👤" },
+          { id: "market" as TabId, label: "市场", icon: "📊", color: "#FF6B6B" },
+          { id: "research" as TabId, label: "研究", icon: "🔬", color: "#FFD93D" },
+          { id: "review" as TabId, label: "模型", icon: "📊", color: "#4ECDC4" },
+          { id: "profile" as TabId, label: "我的", icon: "👤", color: "#FF6B35" },
         ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-2.5 flex flex-col items-center gap-0.5 transition-colors ${
-              activeTab === tab.id ? "text-blue-600" : "text-slate-500"
-            }`}
+            className="flex-1 py-2.5 flex flex-col items-center gap-0.5 transition-all duration-300"
+            style={{
+              color: activeTab === tab.id ? tab.color : "#94A3B8",
+            }}
           >
-            <span className="text-lg">{tab.icon}</span>
-            <span className="text-[10px] font-medium">{tab.label}</span>
+            <span className={`text-lg transition-transform duration-300 ${activeTab === tab.id ? "scale-125" : ""}`}>
+              {tab.icon}
+            </span>
+            <span className={`text-[11px] transition-all duration-300 ${activeTab === tab.id ? "font-black" : "font-medium"}`}>
+              {tab.label}
+            </span>
+            {activeTab === tab.id && (
+              <div className="h-1 w-6 rounded-full mt-0.5" style={{ backgroundColor: tab.color }} />
+            )}
           </button>
         ))}
       </div>
@@ -431,44 +451,44 @@ function ResearchTab({
   if (!started) {
     return (
       <div className="p-4 space-y-4">
-        <div className="bg-white rounded-lg p-4 border border-slate-100">
-          <h3 className="text-sm font-semibold text-slate-800 mb-3">开始研究</h3>
+        <div className="bg-white rounded-3xl p-4 border-2 border-[#FFD93D] shadow-md">
+          <h3 className="text-sm font-black mb-3 bg-gradient-to-r from-[#FFD93D] to-[#FF6B35] bg-clip-text text-transparent">🔬 开始研究</h3>
           <div className="space-y-3">
             <div>
-              <label className="text-xs text-slate-500 mb-1 block">股票/板块</label>
+              <label className="text-xs font-bold text-slate-600 mb-1 block">股票/板块</label>
               <input
                 type="text"
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
                 placeholder="输入股票代码或名称"
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2.5 text-sm border-2 border-slate-200 rounded-2xl focus:outline-none focus:border-[#FFD93D] font-bold transition-colors"
               />
               {prefilledTarget && (
-                <p className="text-[10px] text-blue-600 mt-1">
-                  已从今日AI推荐研究标的填入：{prefilledTarget.name} {prefilledTarget.code}
+                <p className="text-[10px] text-[#FF6B35] mt-1 font-bold">
+                  🎯 已从今日AI推荐研究标的填入：{prefilledTarget.name} {prefilledTarget.code}
                 </p>
               )}
             </div>
             <div>
-              <label className="text-xs text-slate-500 mb-1 block">投资风格</label>
+              <label className="text-xs font-bold text-slate-600 mb-1 block">投资风格</label>
               <div className="flex gap-2">
                 {(["short", "swing", "long"] as InvestmentStyle[]).map((s) => (
                   <button
                     key={s}
                     onClick={() => setStyle(s)}
-                    className={`flex-1 py-2 text-xs rounded-lg border transition-colors ${
+                    className={`flex-1 py-2.5 text-xs rounded-2xl border-2 font-black transition-all active:scale-95 ${
                       style === s
-                        ? "bg-blue-50 border-blue-500 text-blue-600"
-                        : "border-slate-200 text-slate-600"
+                        ? "bg-[#FFE0E0] border-[#FF4444] text-[#FF4444]"
+                        : "border-slate-200 text-slate-500 hover:border-slate-300"
                     }`}
                   >
-                    {s === "short" ? "短线" : s === "swing" ? "波段" : "长期"}
+                    {s === "short" ? "⚡ 短线" : s === "swing" ? "🎯 波段" : "💎 长期"}
                   </button>
                 ))}
               </div>
             </div>
             <div>
-              <label className="text-xs text-slate-500 mb-1 block">研究周期</label>
+              <label className="text-xs font-bold text-slate-600 mb-1 block">研究周期</label>
               <div className="flex gap-2">
                 {[
                   { value: "short", label: style === "short" ? "5日" : style === "swing" ? "2周" : "6月" },
@@ -478,10 +498,10 @@ function ResearchTab({
                   <button
                     key={p.value}
                     onClick={() => setPeriod(p.value)}
-                    className={`flex-1 py-2 text-xs rounded-lg border transition-colors ${
+                    className={`flex-1 py-2.5 text-xs rounded-2xl border-2 font-black transition-all active:scale-95 ${
                       period === p.value
-                        ? "bg-blue-50 border-blue-500 text-blue-600"
-                        : "border-slate-200 text-slate-600"
+                        ? "bg-[#E0F0FF] border-[#3B82F6] text-[#3B82F6]"
+                        : "border-slate-200 text-slate-500 hover:border-slate-300"
                     }`}
                   >
                     {p.label}
@@ -492,26 +512,30 @@ function ResearchTab({
             <button
               onClick={startResearch}
               disabled={!target.trim()}
-              className="w-full py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-gradient-to-r from-[#FF6B6B] via-[#FFD93D] to-[#4ECDC4] text-white text-sm font-black rounded-2xl disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-[#FF6B6B]/20 transition-all hover:scale-[1.02] active:scale-95"
             >
-              开始研究
+              🚀 开始研究
             </button>
           </div>
         </div>
 
-        {/* Agent 团队展示 - 未来感升级 */}
-        <div className="bg-white rounded-lg p-4 border border-slate-100">
-          <h3 className="text-sm font-semibold text-slate-800 mb-3">Agent 研究团队</h3>
+        {/* Agent 团队展示 - 多巴胺风格 */}
+        <div className="bg-white rounded-3xl p-4 border-2 border-[#FF6B6B] shadow-md">
+          <h3 className="text-sm font-black mb-3 bg-gradient-to-r from-[#FF6B6B] to-[#FFD93D] bg-clip-text text-transparent">🦸 Agent 研究团队</h3>
           <div className="grid grid-cols-3 gap-2">
-            {AGENT_TEAM.map((agent) => (
-              <div key={agent.role} className="flex items-center gap-2 p-2 rounded-lg bg-slate-900 border border-slate-700">
-                <span className="text-lg">{agent.icon}</span>
-                <div>
-                  <div className="text-[10px] font-medium text-blue-400">{agent.name}</div>
-                  <div className="text-[10px] text-slate-300 font-medium">{agent.title}</div>
+            {AGENT_TEAM.map((agent, i) => {
+              const agentColors = ["#FF6B6B", "#FFD93D", "#4ECDC4", "#FF6B35"];
+              const ac = agentColors[i % 4];
+              return (
+                <div key={agent.role} className="flex items-center gap-2 p-2 rounded-2xl border-2 transition-all hover:scale-[1.05]" style={{ backgroundColor: `${ac}10`, borderColor: `${ac}30` }}>
+                  <span className="text-lg">{agent.icon}</span>
+                  <div>
+                    <div className="text-[10px] font-black" style={{ color: ac }}>{agent.name}</div>
+                    <div className="text-[10px] text-slate-500 font-bold">{agent.title}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
@@ -521,22 +545,22 @@ function ResearchTab({
   return (
     <div className="p-4 space-y-4">
       {/* 16 步进度条 - 未来感升级 */}
-      <div className="bg-white rounded-lg p-4 border border-slate-100">
+      <div className="bg-white rounded-3xl p-4 border-2 border-[#4ECDC4] shadow-md">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-semibold text-slate-800">研究进度</h3>
-          <span className="text-xs text-slate-500">{currentStep}/16</span>
+          <h3 className="text-sm font-black bg-gradient-to-r from-[#4ECDC4] to-[#FFD93D] bg-clip-text text-transparent">📊 研究进度</h3>
+          <span className="text-xs font-black text-[#FF6B6B]">{currentStep}/16</span>
         </div>
-        {/* 进度条 - 网格线风格 */}
-        <div className="relative w-full h-2 bg-slate-900 rounded-full overflow-hidden">
+        {/* 进度条 - 彩虹糖风格 */}
+        <div className="relative w-full h-4 bg-slate-100 rounded-full overflow-hidden">
           <div
-            className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-500"
+            className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#FF6B6B] via-[#FFD93D] to-[#4ECDC4] rounded-full transition-all duration-500"
             style={{ width: `${(currentStep / 16) * 100}%` }}
           />
-          {/* 网格线 */}
+          {/* 闪光粒子 */}
           <div
             className="absolute inset-0 opacity-30"
             style={{
-              backgroundImage: "repeating-linear-gradient(90deg, transparent, transparent 6.25%, rgba(255,255,255,0.3) 6.25%, rgba(255,255,255,0.3) 6.5%)",
+              backgroundImage: "repeating-linear-gradient(90deg, transparent, transparent 6.25%, rgba(255,255,255,0.5) 6.25%, rgba(255,255,255,0.5) 6.5%)",
             }}
           />
         </div>
@@ -544,12 +568,12 @@ function ResearchTab({
           {steps.map((step) => (
             <div
               key={step.id}
-              className={`text-[10px] px-1.5 py-1 rounded text-center transition-colors ${
+              className={`text-[10px] px-1.5 py-1 rounded-2xl text-center font-bold transition-all ${
                 step.status === "completed"
-                  ? "bg-emerald-50 text-emerald-600"
+                  ? "bg-[#4ECDC4]/10 text-[#4ECDC4] border border-[#4ECDC4]/30"
                   : step.status === "active"
-                  ? "bg-blue-50 text-blue-600 animate-pulse"
-                  : "bg-slate-50 text-slate-600"
+                  ? "bg-[#FFD93D]/20 text-[#FF6B35] border border-[#FFD93D]/50 animate-pulse"
+                  : "bg-slate-50 text-slate-500"
               }`}
             >
               {step.number}. {step.title.slice(0, 4)}
@@ -1403,59 +1427,59 @@ function ReviewDetailPage({ review, onBack }: { review: ReviewDetail; onBack: ()
 function ProfileTab({ profile, onRetakeSurvey }: { profile: UserProfileSurvey; onRetakeSurvey: () => void }) {
   return (
     <div className="p-4 space-y-4">
-      {/* 用户信息 */}
-      <div className="bg-white rounded-lg p-4 border border-slate-100">
+      {/* 用户信息 - 多巴胺风格 */}
+      <div className="bg-white rounded-3xl p-4 border-2 border-[#FFD93D] shadow-md">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-lg font-bold">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FF6B6B] via-[#FFD93D] to-[#4ECDC4] flex items-center justify-center text-white text-2xl font-black shadow-lg">
             Y
           </div>
           <div>
-            <div className="text-sm font-semibold text-slate-800">投资者</div>
-            <div className="text-xs text-slate-500">
-              默认风格：{profile.recommended_style === "short" ? "短线" : profile.recommended_style === "swing" ? "波段" : "长期"}
+            <div className="text-base font-black text-slate-800">投资者</div>
+            <div className="text-xs font-bold text-[#FF6B35]">
+              🎯 {profile.recommended_style === "short" ? "⚡ 短线猎手" : profile.recommended_style === "swing" ? "🎯 波段达人" : "💎 长期价值"}
             </div>
           </div>
         </div>
       </div>
 
-      {/* 投资风格测评 */}
-      <div className="bg-white rounded-lg p-4 border border-slate-100">
-        <h3 className="text-sm font-semibold text-slate-800 mb-2">投资风格测评</h3>
-        <p className="text-xs text-slate-600 mb-3">
-          推荐风格：{profile.recommended_style === "short" ? "短线" : profile.recommended_style === "swing" ? "波段" : "长期"}
+      {/* 投资风格测评 - 重新测试按钮 */}
+      <div className="bg-white rounded-3xl p-4 border-2 border-[#FF6B6B] shadow-md">
+        <h3 className="text-sm font-black mb-2 bg-gradient-to-r from-[#FF6B6B] to-[#FFD93D] bg-clip-text text-transparent">🧠 投资风格测评</h3>
+        <p className="text-xs text-slate-500 font-bold mb-3">
+          当前风格：{profile.recommended_style === "short" ? "⚡ 短线" : profile.recommended_style === "swing" ? "🎯 波段" : "💎 长期"} · 默认周期：{profile.default_horizon}
         </p>
         <button
           onClick={onRetakeSurvey}
-          className="w-full py-2 text-xs text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+          className="w-full py-3 text-sm font-black bg-gradient-to-r from-[#FF6B6B] to-[#FFD93D] text-white rounded-2xl shadow-lg shadow-[#FF6B6B]/20 transition-all hover:scale-[1.02] active:scale-95"
         >
-          重新测评
+          🔄 重新测评
         </button>
       </div>
 
       {/* 关注股票 */}
-      <div className="bg-white rounded-lg p-4 border border-slate-100">
-        <h3 className="text-sm font-semibold text-slate-800 mb-3">我的关注</h3>
+      <div className="bg-white rounded-3xl p-4 border-2 border-[#4ECDC4] shadow-md">
+        <h3 className="text-sm font-black mb-3 bg-gradient-to-r from-[#4ECDC4] to-[#FFD93D] bg-clip-text text-transparent">⭐ 我的关注</h3>
         <div className="space-y-2">
           {["北方华创 002371", "中芯国际 688981", "比亚迪 002594"].map((stock) => (
-            <div key={stock} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
-              <span className="text-xs text-slate-700">{stock}</span>
-              <button className="text-[10px] text-blue-600">查看研究</button>
+            <div key={stock} className="flex items-center justify-between py-2.5 border-b-2 border-slate-100 last:border-0">
+              <span className="text-xs font-bold text-slate-700">{stock}</span>
+              <button className="text-[10px] font-black text-[#FF6B35] hover:underline">查看研究 →</button>
             </div>
           ))}
         </div>
       </div>
 
       {/* 历史档案 */}
-      <div className="bg-white rounded-lg p-4 border border-slate-100">
-        <h3 className="text-sm font-semibold text-slate-800 mb-3">历史研究档案</h3>
+      <div className="bg-white rounded-3xl p-4 border-2 border-[#FFD93D] shadow-md">
+        <h3 className="text-sm font-black mb-3 bg-gradient-to-r from-[#FFD93D] to-[#FF6B35] bg-clip-text text-transparent">📚 历史研究档案</h3>
         <div className="grid grid-cols-3 gap-3 text-center">
           <div>
-            <div className="text-lg font-mono font-bold text-slate-800">28</div>
-            <div className="text-[10px] text-slate-500">总研究数</div>
+            <div className="text-xl font-black text-slate-800">28</div>
+            <div className="text-[10px] font-bold text-slate-500">总研究数</div>
           </div>
           <div>
-            <div className="text-lg font-mono font-bold text-blue-600">68%</div>
-            <div className="text-[10px] text-slate-500">方向准确率</div>
+            <div className="text-xl font-black text-[#FF6B6B]">68%</div>
+            <div className="text-[10px] font-bold text-slate-500">方向准确率</div>
           </div>
           <div>
             <div className="text-lg font-mono font-bold text-emerald-600">52%</div>
@@ -1523,13 +1547,13 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
 
   return (
     <div className="p-4 space-y-4">
-      {/* AI 摘要 */}
-      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-4 text-white">
+      {/* AI 摘要 - 多巴胺彩虹渐变 */}
+      <div className="bg-gradient-to-r from-[#FF6B6B] via-[#FFD93D] to-[#4ECDC4] rounded-3xl p-4 text-white shadow-lg shadow-[#FF6B6B]/20">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-lg">🤖</span>
-          <span className="text-sm font-semibold">今日市场 AI 摘要</span>
+          <span className="text-sm font-black">今日市场 AI 摘要</span>
         </div>
-        <p className="text-xs leading-relaxed opacity-90">{mockMarketData.summary}</p>
+        <p className="text-xs leading-relaxed font-semibold drop-shadow-sm">{mockMarketData.summary}</p>
       </div>
 
       {/* 全球新闻雷达 */}
@@ -1741,108 +1765,122 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
         </div>
       )}
 
-      {/* 指数卡片 */}
+      {/* 指数卡片 - 多巴胺风格 */}
       <div className="grid grid-cols-2 gap-2">
-        {mockMarketData.indices.map((idx) => (
-          <div key={idx.code} className="bg-white rounded-lg p-3 border border-slate-100">
-            <div className="text-xs text-slate-500 mb-1">{idx.name}</div>
-            <div className="text-lg font-mono font-bold text-slate-800">{idx.price.toFixed(2)}</div>
-            <div className={`text-xs font-mono ${idx.change >= 0 ? "text-red-600" : "text-emerald-600"}`}>
-              {idx.change >= 0 ? "+" : ""}{idx.change}%
+        {mockMarketData.indices.map((idx, i) => {
+          const cardColors = [
+            { bg: "#FF6B6B", border: "#FF4444" },
+            { bg: "#FFD93D", border: "#FFC107" },
+            { bg: "#4ECDC4", border: "#2DB5A8" },
+            { bg: "#FF6B35", border: "#E5551A" },
+          ];
+          const c = cardColors[i % 4];
+          return (
+            <div key={idx.code} className="rounded-2xl p-3 border-2 shadow-md transition-all hover:scale-[1.03] hover:-translate-y-0.5" style={{ backgroundColor: `${c.bg}15`, borderColor: c.border }}>
+              <div className="text-xs font-black text-slate-700 mb-1">{idx.name}</div>
+              <div className="text-lg font-black text-slate-800" style={{ fontFamily: "'SF Mono', Menlo, monospace" }}>{idx.price.toFixed(2)}</div>
+              <div className={`text-xs font-black ${idx.change >= 0 ? "text-[#FF4444]" : "text-[#2DB5A8]"}`}>
+                {idx.change >= 0 ? "+" : ""}{idx.change}%
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {/* 板块热度榜 */}
-      <div className="bg-white rounded-lg p-4 border border-slate-100">
-        <h3 className="text-sm font-semibold text-slate-800 mb-3">板块热度榜</h3>
+      {/* 板块热度榜 - 多巴胺风格 */}
+      <div className="bg-white rounded-3xl p-4 border-2 border-[#FFE66D] shadow-md">
+        <h3 className="text-sm font-black mb-3 bg-gradient-to-r from-[#FF6B6B] to-[#FFD93D] bg-clip-text text-transparent">🔥 板块热度榜</h3>
         <div className="space-y-2">
           {mockMarketData.hotSectors.map((sector, i) => (
-            <div key={sector.name} className="flex items-center gap-3">
-              <span className="text-xs text-slate-500 w-4">{i + 1}</span>
-              <span className="text-xs font-medium text-slate-700 flex-1">{sector.name}</span>
+            <div key={sector.name} className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#FFF8E1] transition-colors">
+              <span className={`text-xs font-black w-5 h-5 rounded-full flex items-center justify-center text-white ${i < 3 ? "bg-[#FF6B6B]" : "bg-slate-300"}`}>{i + 1}</span>
+              <span className="text-xs font-bold text-slate-700 flex-1">{sector.name}</span>
               <div className="flex items-center gap-2">
-                <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-red-500 rounded-full" style={{ width: `${sector.heat}%` }} />
+                <div className="w-16 h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-[#FFD93D] to-[#FF6B6B] rounded-full" style={{ width: `${sector.heat}%` }} />
                 </div>
-                <span className="text-xs font-mono text-red-600">+{sector.change}%</span>
+                <span className="text-xs font-black text-[#FF4444]">+{sector.change}%</span>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* 个股异动榜 */}
-      <div className="bg-white rounded-lg p-4 border border-slate-100">
-        <h3 className="text-sm font-semibold text-slate-800 mb-3">个股异动榜</h3>
+      {/* 个股异动榜 - 多巴胺风格 */}
+      <div className="bg-white rounded-3xl p-4 border-2 border-[#4ECDC4] shadow-md">
+        <h3 className="text-sm font-black mb-3 bg-gradient-to-r from-[#4ECDC4] to-[#00D4FF] bg-clip-text text-transparent">⚡ 个股异动榜</h3>
         <div className="space-y-2">
           {mockMarketData.activeStocks.map((stock) => (
-            <div key={stock.code} className="flex items-center gap-3 py-1.5 border-b border-slate-50 last:border-0">
+            <div key={stock.code} className="flex items-center gap-3 py-1.5 px-2 rounded-xl hover:bg-[#F0FFF4] transition-colors">
               <div className="flex-1">
-                <div className="text-xs font-medium text-slate-700">{stock.name}</div>
+                <div className="text-xs font-bold text-slate-700">{stock.name}</div>
                 <div className="text-[10px] text-slate-500">{stock.reason}</div>
               </div>
               <div className="text-right">
-                <div className="text-xs font-mono text-slate-700">{stock.price}</div>
-                <div className="text-xs font-mono text-red-600">+{stock.change}%</div>
+                <div className="text-xs font-black text-slate-700" style={{ fontFamily: "'SF Mono', Menlo, monospace" }}>{stock.price}</div>
+                <div className="text-xs font-black text-[#FF4444]">+{stock.change}%</div>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* 今日AI推荐研究标的 */}
-      <div className="bg-white rounded-lg p-4 border border-slate-100">
+      {/* 今日AI推荐研究标的 - 多巴胺风格 */}
+      <div className="bg-white rounded-3xl p-4 border-2 border-[#FF6B35] shadow-md">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-slate-800">今日AI推荐研究标的</h3>
-          <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded">Demo数据</span>
+          <h3 className="text-sm font-black bg-gradient-to-r from-[#FF6B35] to-[#FFD93D] bg-clip-text text-transparent">🎯 今日AI推荐研究标的</h3>
+          <span className="text-[10px] font-black text-[#FF6B35] bg-[#FFF0E8] px-2 py-0.5 rounded-full">Demo数据</span>
         </div>
         <div className="space-y-3">
-          {mockRecommendedTargets.map((target) => (
-            <div key={target.code} className="p-3 rounded-lg bg-slate-50 border border-slate-100">
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <span className="text-sm font-semibold text-slate-800">{target.name}</span>
-                  <span className="text-xs text-slate-500 ml-2">{target.code}</span>
+          {mockRecommendedTargets.map((target, i) => {
+            const cardColors = ["#FF6B6B", "#FFD93D", "#4ECDC4", "#FF6B35"];
+            const c = cardColors[i % 4];
+            return (
+              <div key={target.code} className="p-3 rounded-2xl border-2 transition-all hover:scale-[1.02]" style={{ backgroundColor: `${c}08`, borderColor: `${c}40` }}>
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <span className="text-sm font-black text-slate-800">{target.name}</span>
+                    <span className="text-xs text-slate-500 ml-2" style={{ fontFamily: "'SF Mono', Menlo, monospace" }}>{target.code}</span>
+                  </div>
+                  <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-black ${
+                    target.recommended_style === "short" ? "bg-[#FFE0E0] text-[#FF4444]" :
+                    target.recommended_style === "swing" ? "bg-[#FFF3CD] text-[#FF8C00]" :
+                    "bg-[#E0F0FF] text-[#3B82F6]"
+                  }`}>
+                    {target.recommended_style === "short" ? "⚡ 短线" : target.recommended_style === "swing" ? "🎯 波段" : "💎 长期"}
+                  </span>
                 </div>
-                <span className={`text-[10px] px-2 py-0.5 rounded ${
-                  target.recommended_style === "short" ? "bg-red-50 text-red-600" :
-                  target.recommended_style === "swing" ? "bg-blue-50 text-blue-600" :
-                  "bg-purple-50 text-purple-600"
-                }`}>
-                  {target.recommended_style === "short" ? "短线" : target.recommended_style === "swing" ? "波段" : "长期"}
-                </span>
-              </div>
-              <div className="flex items-center gap-4 mb-2">
-                <div className="flex items-center gap-1">
-                  <span className="text-[10px] text-slate-500">机会评分</span>
-                  <span className="text-sm font-mono font-bold text-blue-600">{target.opportunity_score}</span>
+                <div className="flex items-center gap-4 mb-2">
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] text-slate-500">机会评分</span>
+                    <span className="text-sm font-black text-[#FF6B35]" style={{ fontFamily: "'SF Mono', Menlo, monospace" }}>{target.opportunity_score}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] text-slate-500">风险</span>
+                    <span className={`text-xs font-black ${
+                      target.risk_level === "高" ? "text-[#FF4444]" :
+                      target.risk_level === "中" ? "text-[#FF8C00]" : "text-[#2DB5A8]"
+                    }`}>{target.risk_level}</span>
+                  </div>
+                  <span className="text-[10px] text-slate-500">{target.industry}</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-[10px] text-slate-500">风险</span>
-                  <span className={`text-xs ${
-                    target.risk_level === "高" ? "text-red-600" :
-                    target.risk_level === "中" ? "text-amber-600" : "text-emerald-600"
-                  }`}>{target.risk_level}</span>
+                <p className="text-xs text-slate-600 mb-1 font-medium">{target.reason}</p>
+                <p className="text-[10px] text-[#FF4444] mb-2 font-bold">⚠️ 风险：{target.main_risk}</p>
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {target.trigger_source.map((src) => (
+                    <span key={src} className="text-[10px] px-1.5 py-0.5 rounded-full font-bold" style={{ backgroundColor: `${c}20`, color: c }}>{src}</span>
+                  ))}
                 </div>
-                <span className="text-[10px] text-slate-500">{target.industry}</span>
+                <button
+                  onClick={() => onFillResearch(target)}
+                  className="w-full py-2.5 text-xs font-black text-white rounded-2xl transition-all hover:scale-[1.02] active:scale-95 shadow-md"
+                  style={{ background: `linear-gradient(135deg, ${c}, ${c}cc)` }}
+                >
+                  🚀 填入研究
+                </button>
               </div>
-              <p className="text-xs text-slate-600 mb-1">{target.reason}</p>
-              <p className="text-[10px] text-red-500 mb-2">风险：{target.main_risk}</p>
-              <div className="flex flex-wrap gap-1 mb-2">
-                {target.trigger_source.map((src) => (
-                  <span key={src} className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded">{src}</span>
-                ))}
-              </div>
-              <button
-                onClick={() => onFillResearch(target)}
-                className="w-full py-2 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-              >
-                填入研究
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <p className="text-[10px] text-slate-500 mt-3 text-center">
           Demo数据，仅用于产品演示，不代表实时行情。
