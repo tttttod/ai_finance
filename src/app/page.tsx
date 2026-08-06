@@ -20,9 +20,11 @@ import {
   SampleStockResult,
   GlobalNewsEvent,
   ResearchClue,
-  SBTIDimension,
-  SBTIPersonality,
-  SBTIResult,
+  TradeTIPersonalityId,
+  TradeTIState,
+  TradeTIResult,
+  TradeTIScores,
+  TRADETI_PERSONALITIES,
   WORKFLOW_STEPS,
   AGENT_TEAM,
   SURVEY_QUESTIONS,
@@ -38,16 +40,18 @@ import {
   DEFAULT_SELECTED_FACTORS,
   generateGeneralPredictionModel,
   MOCK_GLOBAL_NEWS,
-  MOCK_SBTI_QUESTIONS,
-  MOCK_SBTI_RESULTS,
+  TRADETI_QUESTIONS,
+  calculateTradeTIResult,
 } from "@/lib/mini-mock";
 
 type TabId = "market" | "research" | "review" | "profile";
 
 export default function MiniProgramPage() {
   const [activeTab, setActiveTab] = useState<TabId>("market");
-  const [surveyCompleted, setSurveyCompleted] = useState(false);
+  const [tradeTIUnlocked, setTradeTIUnlocked] = useState(false);
+  const [tradeTICompleted, setTradeTICompleted] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [tradeTIResult, setTradeTIResult] = useState<TradeTIState | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfileSurvey>({
     completed: false,
     recommended_style: "",
@@ -58,11 +62,12 @@ export default function MiniProgramPage() {
     experience_level: "",
   });
 
-  // 水合安全：在 useEffect 中读取 localStorage，避免 SSR/CSR 不一致导致问卷闪现消失
-  // 支持 ?retake=1 URL 参数强制重置问卷，方便测试
+  // 水合安全：在 useEffect 中读取 localStorage
+  // 支持 ?retake=1 URL 参数强制重置
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("retake") === "1") {
+      localStorage.removeItem("tradeti_state");
       localStorage.removeItem("user_profile_survey");
       localStorage.removeItem("sbti_result_v2");
       localStorage.removeItem("investment_style");
@@ -72,13 +77,16 @@ export default function MiniProgramPage() {
       return;
     }
 
-    const saved = localStorage.getItem("user_profile_survey");
+    const saved = localStorage.getItem("tradeti_state");
     if (saved) {
       try {
-        const profile = JSON.parse(saved);
-        setUserProfile(profile);
-        if (profile.completed) {
-          setSurveyCompleted(true);
+        const state: TradeTIState = JSON.parse(saved);
+        setTradeTIResult(state);
+        if (state.is_unlocked) {
+          setTradeTIUnlocked(true);
+          setTradeTICompleted(true);
+        } else {
+          setTradeTICompleted(true);
         }
       } catch { /* ignore */ }
     }
@@ -86,31 +94,25 @@ export default function MiniProgramPage() {
   }, []);
   const [selectedResearchTarget, setSelectedResearchTarget] = useState<RecommendedTarget | null>(null);
 
-  // 完成问卷
-  const completeSurvey = (style: InvestmentStyle) => {
-    const horizon = style === "short" ? "5日" : style === "swing" ? "20日" : "12个月";
-    const newProfile: UserProfileSurvey = {
-      ...userProfile,
-      completed: true,
-      recommended_style: style,
-      default_horizon: horizon,
-    };
-    setUserProfile(newProfile);
-    setSurveyCompleted(true);
-    localStorage.setItem("user_profile_survey", JSON.stringify(newProfile));
-    localStorage.setItem("sbti_result_v2", JSON.stringify(style));
-    localStorage.setItem("investment_style", style);
-    localStorage.setItem("completed_sbti_test", "true");
+  // tradeTI 通关：进入完整功能区
+  const completeTradeTI = () => {
+    setTradeTIUnlocked(true);
+    setTradeTICompleted(true);
   };
 
-  // 未做问卷时显示 SBTI 多巴胺测试（加载中默认显示问卷，避免闪烁）
-  if (!surveyCompleted && !isLoadingProfile) {
-    return <SBTISurvey onComplete={completeSurvey} />;
+  // 未做 tradeTI 时显示测试（加载中默认显示测试，避免闪烁）
+  if (!tradeTICompleted && !isLoadingProfile) {
+    return <TradeTITest onComplete={completeTradeTI} />;
   }
 
-  // 加载中显示问卷骨架
+  // 加载中显示测试骨架
   if (isLoadingProfile) {
-    return <SBTISurvey onComplete={completeSurvey} />;
+    return <TradeTITest onComplete={completeTradeTI} />;
+  }
+
+  // 已完成 tradeTI 但未通关：显示拦截页（不能进入主界面）
+  if (tradeTICompleted && !tradeTIUnlocked) {
+    return <TradeTITest onComplete={completeTradeTI} />;
   }
 
   return (
@@ -140,12 +142,16 @@ export default function MiniProgramPage() {
           />
         )}
         {activeTab === "review" && <ModelTab />}
-        {activeTab === "profile" && <ProfileTab profile={userProfile} onRetakeSurvey={() => {
+        {activeTab === "profile" && <ProfileTab profile={userProfile} tradeTIResult={tradeTIResult} onRetakeSurvey={() => {
+              localStorage.removeItem("tradeti_state");
               localStorage.removeItem("user_profile_survey");
               localStorage.removeItem("sbti_result_v2");
               localStorage.removeItem("investment_style");
               localStorage.removeItem("completed_sbti_test");
-              setSurveyCompleted(false);
+              localStorage.removeItem("sbti_personality");
+              setTradeTIUnlocked(false);
+              setTradeTICompleted(false);
+              setTradeTIResult(null);
             }} />}
       </div>
 
@@ -183,23 +189,30 @@ export default function MiniProgramPage() {
 
 // ===== 投资风格问卷 =====
 // ===== SBTI 交易风格测试（多巴胺风格）=====
-function SBTISurvey({ onComplete }: { onComplete: (style: InvestmentStyle) => void }) {
+// ===== tradeTI 交易抽象人格测试 =====
+type TradeTIScreen = "intro" | "questions" | "result" | "blocked";
+
+function TradeTITest({ onComplete }: { onComplete: () => void }) {
+  const [screen, setScreen] = useState<TradeTIScreen>("intro");
   const [currentQ, setCurrentQ] = useState(0);
-  const [scores, setScores] = useState({ S: 0, B: 0, T: 0, I: 0 });
-  const [isCalculating, setIsCalculating] = useState(false);
-  const [result, setResult] = useState<SBTIResult | null>(null);
+  const [answers, setAnswers] = useState<{ question_id: number; chosen: TradeTIPersonalityId }[]>([]);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [resultPersonality, setResultPersonality] = useState<TradeTIPersonalityId | null>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [blockBtnClicked, setBlockBtnClicked] = useState<number | null>(null);
 
-  const handleAnswer = (dimension: SBTIDimension, delta: number, idx: number) => {
+  const handleStart = () => setScreen("questions");
+
+  const handleAnswer = (personality: TradeTIPersonalityId, idx: number) => {
     if (isTransitioning) return;
-    const newScores = { ...scores, [dimension]: scores[dimension] + delta };
-    setScores(newScores);
+    const newAnswers = [...answers, { question_id: currentQ + 1, chosen: personality }];
+    setAnswers(newAnswers);
     setSelectedOption(idx);
     setIsTransitioning(true);
 
     setTimeout(() => {
-      if (currentQ < MOCK_SBTI_QUESTIONS.length - 1) {
+      if (currentQ < 11) {
         setCurrentQ(currentQ + 1);
         setSelectedOption(null);
         setIsTransitioning(false);
@@ -208,43 +221,94 @@ function SBTISurvey({ onComplete }: { onComplete: (style: InvestmentStyle) => vo
         setSelectedOption(null);
         setIsTransitioning(false);
         setTimeout(() => {
-          const diffSB = newScores.S - newScores.B;
-          const diffTI = newScores.T - newScores.I;
-          let res: SBTIResult;
-          if (diffSB >= 0 && diffTI >= 0) {
-            res = MOCK_SBTI_RESULTS[SBTIPersonality.THE_CONTROLLER];
-          } else if (diffSB < 0 && diffTI >= 0) {
-            res = MOCK_SBTI_RESULTS[SBTIPersonality.THE_WANDERER];
-          } else if (diffSB >= 0 && diffTI < 0) {
-            res = MOCK_SBTI_RESULTS[SBTIPersonality.THE_ORPHAN];
-          } else {
-            res = MOCK_SBTI_RESULTS[SBTIPersonality.THE_DRINKER];
-          }
-          setResult(res);
+          const result = calculateTradeTIResult(newAnswers);
+          setResultPersonality(result);
           setIsCalculating(false);
+          const personality = TRADETI_PERSONALITIES[result];
+          if (personality.is_unlock) {
+            setScreen("result");
+          } else {
+            setScreen("blocked");
+          }
+          // 保存结果
+          const scores = { wall_street: 0, old_money: 0, qin_shihuang: 0, kline_shaman: 0, all_in_warrior: 0, breakeven_master: 0, fomo_chaser: 0, report_archaeologist: 0, monte_carlo_poet: 0 };
+          for (const a of newAnswers) scores[a.chosen]++;
+          const state: TradeTIState = {
+            completed: true,
+            is_unlocked: personality.is_unlock,
+            result_type: result,
+            scores,
+            answers: newAnswers,
+            completed_at: new Date().toISOString(),
+          };
+          localStorage.setItem("tradeti_state", JSON.stringify(state));
         }, 2000);
       }
     }, 500);
   };
 
-  const handleFinish = () => {
-    if (result) {
-      localStorage.setItem("sbti_personality", JSON.stringify(result));
-      const style = (result.style_map_to_real_investment === "short" ? "short" : result.style_map_to_real_investment === "band" ? "swing" : "long") as InvestmentStyle;
-      onComplete(style);
-    }
+  const handleRetake = () => {
+    localStorage.removeItem("tradeti_state");
+    setCurrentQ(0);
+    setAnswers([]);
+    setSelectedOption(null);
+    setIsTransitioning(false);
+    setResultPersonality(null);
+    setBlockBtnClicked(null);
+    setScreen("intro");
   };
 
+  const handleBlockBtn = (idx: number) => {
+    setBlockBtnClicked(idx);
+  };
+
+  // ===== 首屏 =====
+  if (screen === "intro") {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#FFF8E1] to-white flex flex-col max-w-md mx-auto">
+        <div className="flex-1 p-6 flex flex-col justify-center">
+          <div className="text-center mb-10">
+            <div className="text-6xl mb-4 animate-bounce">🏦</div>
+            <h1 className="text-4xl font-black mb-2 bg-gradient-to-r from-[#FF6B35] via-[#FFD93D] to-[#00FF88] bg-clip-text text-transparent">
+              tradeTI
+            </h1>
+            <p className="text-lg font-bold text-slate-700">交易抽象人格测试</p>
+            <p className="text-xs text-slate-500 mt-1">Trade Type Indicator</p>
+          </div>
+
+          <div className="bg-white rounded-[24px] p-5 border-2 border-[#FFD93D] shadow-lg mb-6">
+            <p className="text-sm text-slate-700 leading-relaxed font-bold">
+              12道题，测出你是华尔街在逃交易员，还是市场需要重点保护的对象。
+            </p>
+          </div>
+
+          <button
+            onClick={handleStart}
+            className="w-full py-4 rounded-2xl font-black text-white text-lg transition-all hover:scale-[1.02] active:scale-95 shadow-lg"
+            style={{ background: "linear-gradient(135deg, #FF6B35, #FF00FF, #00D4FF)" }}
+          >
+            开始测试 🔥
+          </button>
+
+          <p className="text-[10px] text-slate-400 text-center mt-4">
+            本测试仅供娱乐和投资行为自省，不构成投资建议。
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ===== 计算中 =====
   if (isCalculating) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#FFF8E1] to-white flex flex-col max-w-md mx-auto">
         <div className="flex-1 p-6 flex flex-col items-center justify-center">
           <div className="relative w-16 h-16 mx-auto mb-6">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FF6B6B] via-[#FFE66D] to-[#4ECDC4] animate-spin" />
-            <div className="absolute inset-1.5 rounded-full bg-white flex items-center justify-center text-3xl">🎭</div>
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FF6B35] via-[#FFD93D] to-[#00FF88] animate-spin" />
+            <div className="absolute inset-1.5 rounded-full bg-white flex items-center justify-center text-3xl">🧬</div>
           </div>
-          <p className="text-base font-bold bg-gradient-to-r from-[#FF6B6B] to-[#4ECDC4] bg-clip-text text-transparent text-center">
-            多巴胺人格正在生成你的交易灵魂...
+          <p className="text-base font-bold bg-gradient-to-r from-[#FF6B35] to-[#00FF88] bg-clip-text text-transparent text-center">
+            正在解析你的交易人格...
           </p>
           <p className="text-xs text-slate-400 mt-2">别急，好的人格需要时间酝酿</p>
         </div>
@@ -252,76 +316,133 @@ function SBTISurvey({ onComplete }: { onComplete: (style: InvestmentStyle) => vo
     );
   }
 
-  if (result) {
+  // ===== 通关结果页 =====
+  if (screen === "result" && resultPersonality) {
+    const p = TRADETI_PERSONALITIES[resultPersonality];
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#FFF8E1] to-white flex flex-col max-w-md mx-auto">
-        <div className="flex-1 p-6 overflow-auto">
-          <div className="text-center mb-4">
-            <div className="text-6xl mb-3 animate-bounce">{result.emoji}</div>
-            <h2 className="text-2xl font-black mb-2" style={{ color: result.color_hex }}>
-              {result.personality_name}
+        <div className="flex-1 p-6 flex flex-col justify-center">
+          <div className="text-center mb-6">
+            <div className="text-6xl mb-3 animate-bounce">{p.emoji}</div>
+            <h2 className="text-3xl font-black mb-2" style={{ color: p.color }}>
+              {p.name}
             </h2>
-            <p className="text-sm text-slate-600 leading-relaxed text-left">{result.description}</p>
-          </div>
-
-          <div className="bg-slate-50 rounded-2xl p-4 mb-3">
-            <p className="text-xs font-bold text-slate-600 mb-2">🎯 最适合你的玩法</p>
-            <div className="flex flex-wrap gap-1.5">
-              {result.recommendation.map((tag: string, i: number) => (
-                <span key={i} className="text-xs px-2.5 py-1 rounded-full text-white font-bold"
-                  style={{ backgroundColor: result.color_hex }}>{tag}</span>
-              ))}
+            <div className="bg-[#0D9488]/10 rounded-2xl p-4 mb-4 border-2 border-[#0D9488]/20">
+              <p className="text-sm text-slate-700 leading-relaxed">{p.description}</p>
             </div>
-          </div>
-
-          <div className="bg-red-50 rounded-2xl p-4 mb-4">
-            <p className="text-xs font-bold text-red-600 mb-2">⚠️ 绝对不能碰</p>
-            <div className="flex flex-wrap gap-1.5">
-              {result.avoid.map((tag: string, i: number) => (
-                <span key={i} className="text-xs px-2.5 py-1 rounded-full text-red-700 bg-red-100 font-bold">{tag}</span>
-              ))}
-            </div>
+            <p className="text-xs text-[#0D9488] font-bold">
+              交易所门口没有你的通缉令，但市场已经注意到你了。
+            </p>
+            <p className="text-xs text-[#0D9488] font-bold mt-1">
+              你已解锁完整A股可视化投研Agent。
+            </p>
           </div>
 
           <button
-            onClick={handleFinish}
-            className="w-full py-3.5 rounded-2xl font-black text-white text-base transition-all hover:scale-[1.02] active:scale-95"
-            style={{ background: `linear-gradient(135deg, ${result.color_hex}, ${result.color_hex}cc)` }}
+            onClick={onComplete}
+            className="w-full py-4 rounded-2xl font-black text-white text-lg transition-all hover:scale-[1.02] active:scale-95 shadow-lg"
+            style={{ background: `linear-gradient(135deg, ${p.color}, ${p.color}cc)` }}
           >
-            进入多巴胺投研平台 🚀
+            进入完整功能区 🚀
           </button>
 
           <p className="text-[10px] text-slate-400 text-center mt-4">
-            以上内容仅供娱乐参考，不构成投资建议。SBTI 人格测试仅为交互体验，不代表真实交易性格评估。
+            tradeTI仅供娱乐和投资行为自省，不构成投资建议。股票市场存在风险。
           </p>
         </div>
       </div>
     );
   }
 
-  const question = MOCK_SBTI_QUESTIONS[currentQ];
-  const colors = ["#FF6B6B", "#FFE66D", "#4ECDC4", "#A8E6CF"];
+  // ===== 拦截页 =====
+  if (screen === "blocked" && resultPersonality) {
+    const p = TRADETI_PERSONALITIES[resultPersonality];
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#FFF8E1] to-white flex flex-col max-w-md mx-auto">
+        <div className="flex-1 p-6 flex flex-col justify-center">
+          <div className="text-center mb-6">
+            <div className="text-6xl mb-3 animate-bounce">{p.emoji}</div>
+            <h2 className="text-3xl font-black mb-2" style={{ color: p.color }}>
+              {p.name}
+            </h2>
+            <div className="bg-orange-50 rounded-2xl p-4 mb-3 border-2 border-orange-200">
+              <p className="text-sm text-slate-700 leading-relaxed font-bold">{p.description}</p>
+            </div>
+            <div className="bg-red-50 rounded-2xl p-4 border-2 border-red-200">
+              <p className="text-xs text-red-600 font-bold mb-1">系统判断：当前暂不建议解锁完整投研功能。</p>
+              <p className="text-xs text-red-500">{p.block_reason}</p>
+            </div>
+          </div>
+
+          <div className="space-y-3 mb-4">
+            {p.block_buttons.map((btn, i) => (
+              <button
+                key={i}
+                onClick={() => handleBlockBtn(i)}
+                className={`w-full py-3.5 rounded-2xl font-black text-white text-base transition-all hover:scale-[1.02] active:scale-95 shadow-lg ${
+                  blockBtnClicked === i ? "opacity-70 scale-95" : ""
+                }`}
+                style={{
+                  background: i === 0
+                    ? `linear-gradient(135deg, ${p.color}, ${p.color}cc)`
+                    : "linear-gradient(135deg, #64748B, #94A3B8)",
+                }}
+              >
+                {blockBtnClicked === i ? "冷静是你今天最好的交易。" : btn}
+              </button>
+            ))}
+          </div>
+
+          {p.block_small_link && (
+            <button
+              onClick={handleRetake}
+              className="w-full text-center text-xs text-slate-400 hover:text-slate-600 py-2 transition-colors"
+            >
+              {p.block_small_link}
+            </button>
+          )}
+
+          {!p.block_small_link && (
+            <button
+              onClick={handleRetake}
+              className="w-full py-3 rounded-2xl font-bold text-slate-500 text-sm border-2 border-slate-200 hover:bg-slate-50 transition-all"
+            >
+              返回重测
+            </button>
+          )}
+
+          <p className="text-[10px] text-slate-400 text-center mt-4">
+            tradeTI仅供娱乐和投资行为自省，不构成投资建议。股票市场存在风险。
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ===== 答题页 =====
+  const question = TRADETI_QUESTIONS[currentQ];
+  const dopamineColors = ["#FF6B35", "#FF00FF", "#FFD93D", "#00FF88"];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#FFF8E1] to-white flex flex-col max-w-md mx-auto">
       <div className="flex-1 p-6 flex flex-col justify-center">
         <div className="mb-8">
-          <h1 className="text-2xl font-black mb-2 bg-gradient-to-r from-[#FF6B6B] via-[#FFE66D] to-[#4ECDC4] bg-clip-text text-transparent">
-            🎭 SBTI 交易风格大揭秘
+          <h1 className="text-xl font-black mb-2 bg-gradient-to-r from-[#FF6B35] via-[#FFD93D] to-[#00FF88] bg-clip-text text-transparent">
+            tradeTI · 交易抽象人格测试
           </h1>
           <p className="text-xs text-slate-500 leading-relaxed">
-            多巴胺风格！不是严肃人格测试，是金融圈老股民都懂的幽默镜像。找到你的交易灵魂人格。
+            找到你的交易灵魂人格。只有真正的交易员才能通关。
           </p>
         </div>
 
-        {/* 多巴胺彩虹进度条 */}
+        {/* 进度条 */}
         <div className="mb-6">
           <div className="flex gap-1 mb-4">
-            {MOCK_SBTI_QUESTIONS.map((_, i) => (
+            {Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className={`flex-1 h-1.5 rounded-full overflow-hidden ${i <= currentQ ? "bg-slate-200" : "bg-slate-100"}`}>
                 {i <= currentQ && (
                   <div
-                    className="h-full bg-gradient-to-r from-[#FF6B6B] via-[#FFE66D] to-[#4ECDC4] rounded-full"
+                    className="h-full bg-gradient-to-r from-[#FF6B35] via-[#FFD93D] to-[#00FF88] rounded-full"
                     style={{
                       animation: "shimmer 2s infinite",
                       backgroundSize: "200% 100%",
@@ -332,7 +453,7 @@ function SBTISurvey({ onComplete }: { onComplete: (style: InvestmentStyle) => vo
             ))}
           </div>
           <p className="text-xs text-slate-500 font-bold">
-            问题 {currentQ + 1} / {MOCK_SBTI_QUESTIONS.length} · 维度: {question.dimension}
+            问题 {currentQ + 1} / 12
           </p>
         </div>
 
@@ -340,10 +461,11 @@ function SBTISurvey({ onComplete }: { onComplete: (style: InvestmentStyle) => vo
           <h2 className="text-base font-bold text-slate-800 mb-4">{question.question_text}</h2>
           {question.options.map((opt, idx) => {
             const isSelected = selectedOption === idx;
+            const color = dopamineColors[idx % 4];
             return (
               <button
                 key={idx}
-                onClick={() => handleAnswer(question.dimension, opt.score_value, idx)}
+                onClick={() => handleAnswer(opt.personality, idx)}
                 disabled={isTransitioning}
                 className={`w-full p-4 text-left rounded-2xl border-2 transition-all duration-300 ${
                   isTransitioning && !isSelected ? "opacity-40 scale-[0.98]" : ""
@@ -354,16 +476,14 @@ function SBTISurvey({ onComplete }: { onComplete: (style: InvestmentStyle) => vo
                 }`}
                 style={{
                   background: isSelected
-                    ? `linear-gradient(135deg, ${colors[idx % 4]}40, ${colors[idx % 4]}15)`
-                    : `linear-gradient(135deg, ${colors[idx % 4]}15, #fff)`,
-                  borderColor: isSelected ? colors[idx % 4] : colors[idx % 4],
+                    ? `${color}20`
+                    : `${color}08`,
+                  borderColor: isSelected ? color : `${color}40`,
                   borderWidth: isSelected ? "3px" : "2px",
                 }}
               >
                 <div className="flex items-center gap-2">
-                  {isSelected && (
-                    <span className="text-lg animate-bounce">👆</span>
-                  )}
+                  {isSelected && <span className="text-lg animate-bounce">👆</span>}
                   <span className="text-sm font-bold text-slate-800">{opt.text}</span>
                 </div>
               </button>
@@ -1424,7 +1544,7 @@ function ReviewDetailPage({ review, onBack }: { review: ReviewDetail; onBack: ()
 }
 
 // ===== 我的 Tab =====
-function ProfileTab({ profile, onRetakeSurvey }: { profile: UserProfileSurvey; onRetakeSurvey: () => void }) {
+function ProfileTab({ profile, tradeTIResult, onRetakeSurvey }: { profile: UserProfileSurvey; tradeTIResult: TradeTIState | null; onRetakeSurvey: () => void }) {
   return (
     <div className="p-4 space-y-4">
       {/* 用户信息 - 多巴胺风格 */}
@@ -1442,18 +1562,23 @@ function ProfileTab({ profile, onRetakeSurvey }: { profile: UserProfileSurvey; o
         </div>
       </div>
 
-      {/* 投资风格测评 - 重新测试按钮 */}
-      <div className="bg-white rounded-3xl p-4 border-2 border-[#FF6B6B] shadow-md">
-        <h3 className="text-sm font-black mb-2 bg-gradient-to-r from-[#FF6B6B] to-[#FFD93D] bg-clip-text text-transparent">🧠 投资风格测评</h3>
-        <p className="text-xs text-slate-500 font-bold mb-3">
-          当前风格：{profile.recommended_style === "short" ? "⚡ 短线" : profile.recommended_style === "swing" ? "🎯 波段" : "💎 长期"} · 默认周期：{profile.default_horizon}
-        </p>
-        <button
-          onClick={onRetakeSurvey}
-          className="w-full py-3 text-sm font-black bg-gradient-to-r from-[#FF6B6B] to-[#FFD93D] text-white rounded-2xl shadow-lg shadow-[#FF6B6B]/20 transition-all hover:scale-[1.02] active:scale-95"
-        >
-          🔄 重新测评
-        </button>
+      {/* tradeTI 交易人格 */}
+      <div className="bg-white rounded-3xl p-4 border-2 border-[#FFD93D] shadow-md">
+        <h3 className="text-sm font-black mb-2 bg-gradient-to-r from-[#FF6B35] to-[#FFD93D] bg-clip-text text-transparent">🧬 tradeTI 交易抽象人格</h3>
+        {tradeTIResult && tradeTIResult.result_type ? (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">{TRADETI_PERSONALITIES[tradeTIResult.result_type]?.emoji || "🎭"}</span>
+              <span className="text-sm font-black text-slate-800">{TRADETI_PERSONALITIES[tradeTIResult.result_type]?.name || tradeTIResult.result_type}</span>
+              {tradeTIResult.is_unlocked && <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#0D9488]/10 text-[#0D9488] font-black">✅ 已通关</span>}
+              {!tradeTIResult.is_unlocked && <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 font-black">🚫 未通关</span>}
+            </div>
+            <p className="text-xs text-slate-500 font-medium">{TRADETI_PERSONALITIES[tradeTIResult.result_type]?.description}</p>
+          </div>
+        ) : (
+          <p className="text-xs text-slate-500 font-bold mb-3">尚未完成 tradeTI 测试</p>
+        )}
+        <button onClick={onRetakeSurvey} className="w-full mt-3 py-3 text-sm font-black bg-gradient-to-r from-[#FF6B35] to-[#FFD93D] text-white rounded-2xl shadow-lg shadow-[#FF6B35]/20 transition-all hover:scale-[1.02] active:scale-95">🔄 重新测试</button>
       </div>
 
       {/* 关注股票 */}

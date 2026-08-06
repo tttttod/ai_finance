@@ -447,39 +447,192 @@ export interface GlobalNewsRadar {
   research_clues: ResearchClue[];
 }
 
-// ================= SBTI 交易风格测试 (ShaoBo Trading Big Five) =================
-export enum SBTIDimension {
-  S = "S", // 策略导向：系统化交易
-  B = "B", // 情绪化交易：知行合一难度
-  T = "T", // 时间框架：短线 / 波段 / 长期
-  I = "I", // 信息偏好：K线派 vs 基本面派
+// ================= tradeTI 交易抽象人格测试 (Trade Type Indicator) =================
+
+/** 9种 tradeTI 人格 ID */
+export type TradeTIPersonalityId =
+  | "wall_street"
+  | "old_money"
+  | "qin_shihuang"
+  | "kline_shaman"
+  | "all_in_warrior"
+  | "breakeven_master"
+  | "fomo_chaser"
+  | "report_archaeologist"
+  | "monte_carlo_poet";
+
+/** tradeTI 人格配置 */
+export interface TradeTIPersonality {
+  id: TradeTIPersonalityId;
+  name: string;           // 人格名称
+  emoji: string;
+  color: string;          // 主色 hex
+  description: string;    // 人格说明
+  typical_issues: string; // 典型问题
+  is_unlock: boolean;     // 是否可通关
+  block_buttons: string[]; // 拦截页按钮
+  block_small_link?: string; // 拦截页小链接
+  block_reason: string;   // 拦截原因
 }
 
-export enum SBTIPersonality {
-  THE_CONTROLLER = "THE_CONTROLLER",     // 拿捏者 S
-  THE_DRINKER = "THE_DRINKER",           // 酒鬼 B
-  THE_WANDERER = "THE_WANDERER",         // 行者 T
-  THE_ORPHAN = "THE_ORPHAN",             // 孤儿 I
-}
-
-export interface SBTIQuestion {
-  id: number;
+/** 一道 tradeTI 测试题 */
+export interface TradeTIQuestion {
+  id: number; // 1-12
   question_text: string;
-  dimension: SBTIDimension;
   options: {
     text: string;
-    score_value: number; // -1~+1
+    personality: TradeTIPersonalityId;
   }[];
 }
 
-export interface SBTIResult {
-  personality: SBTIPersonality;
-  personality_name: string; // 中文名：拿捏者 / 酒鬼 / 行者 / 孤儿
-  emoji: string;
-  color_hex: string;
-  description: string; // 幽默描述
-  trading_style_tip: string; // 交易风格指导
-  recommendation: string[]; // 适合你的策略
-  avoid: string[]; // 千万别碰
-  style_map_to_real_investment: "short" | "band" | "long";
+/** tradeTI 计分状态 */
+export interface TradeTIScores {
+  wall_street: number;
+  old_money: number;
+  qin_shihuang: number;
+  kline_shaman: number;
+  all_in_warrior: number;
+  breakeven_master: number;
+  fomo_chaser: number;
+  report_archaeologist: number;
+  monte_carlo_poet: number;
 }
+
+/** tradeTI 测试结果 */
+export interface TradeTIResult {
+  personality_id: TradeTIPersonalityId;
+  personality_name: string;
+  emoji: string;
+  color: string;
+  description: string;
+  is_unlocked: boolean;
+  scores: TradeTIScores;
+  total_questions: number;
+}
+
+/** tradeTI 完整状态（持久化到 localStorage） */
+export interface TradeTIState {
+  completed: boolean;
+  is_unlocked: boolean;
+  result_type: TradeTIPersonalityId | "";
+  scores: TradeTIScores;
+  answers: { question_id: number; chosen: TradeTIPersonalityId }[];
+  completed_at?: string;
+}
+
+/** 9种人格完整配置 */
+export const TRADETI_PERSONALITIES: Record<TradeTIPersonalityId, TradeTIPersonality> = {
+  wall_street: {
+    id: "wall_street",
+    name: "华尔街在逃交易员",
+    emoji: "🏦",
+    color: "#0D9488",
+    description: "你不是没有情绪，而是知道情绪不能替你下单。你会看逻辑、看风险、看仓位，也会在交易结束后复盘自己哪里做对、哪里犯病。",
+    typical_issues: "暂无",
+    is_unlock: true,
+    block_buttons: [],
+    block_reason: "",
+  },
+  old_money: {
+    id: "old_money",
+    name: "老钱，老了才有钱",
+    emoji: "👴",
+    color: "#D97706",
+    description: "你不是不想赚钱，你只是每次机会来了都想再观察三年。",
+    typical_issues: "过度保守。犹豫太久。机会确认时，行情可能已经走完。",
+    is_unlock: false,
+    block_buttons: ["继续定投余额宝", "返回重测"],
+    block_reason: "你不是不想赚钱，你只是每次机会来了都想再观察三年。",
+  },
+  qin_shihuang: {
+    id: "qin_shihuang",
+    name: "我是秦始皇，打钱！",
+    emoji: "👑",
+    color: "#DC2626",
+    description: "你对投资最大的误解，是觉得财富路径可以通过别人直接转账完成。",
+    typical_issues: "不想分析。只想别人给代码。容易被荐股、内幕、暴富故事吸引。",
+    is_unlock: false,
+    block_buttons: ["下载反诈APP", "返回重测"],
+    block_reason: "你对投资最大的误解，是觉得财富路径可以通过别人直接转账完成。",
+  },
+  kline_shaman: {
+    id: "kline_shaman",
+    name: "K线萨满",
+    emoji: "🔮",
+    color: "#7C3AED",
+    description: "你不是在看K线，你是在和蜡烛图进行神秘交流。",
+    typical_issues: "过度迷信技术形态。忽略基本面和风险。容易把随机波动解释成天机。",
+    is_unlock: false,
+    block_buttons: ["给均线上香", "返回重测"],
+    block_reason: "你不是在看K线，你是在和蜡烛图进行神秘交流。",
+  },
+  all_in_warrior: {
+    id: "all_in_warrior",
+    name: "梭哈战神",
+    emoji: "⚔️",
+    color: "#FF6B35",
+    description: "你的交易系统很简单：看好，满仓；看错，嘴硬。",
+    typical_issues: "没有仓位管理。过度进攻。情绪上头。容易把一次判断变成人生决战。",
+    is_unlock: false,
+    block_buttons: ["下载反诈APP", "卸载炒股软件"],
+    block_small_link: "我冷静了，返回重测",
+    block_reason: "你的交易系统很简单：看好，满仓；看错，嘴硬。",
+  },
+  breakeven_master: {
+    id: "breakeven_master",
+    name: "回本就卖宗师",
+    emoji: "📉",
+    color: "#F59E0B",
+    description: "你赚钱时像短跑冠军，亏钱时像长期股东。",
+    typical_issues: "小赚就跑。大亏死扛。盈亏比长期不健康。",
+    is_unlock: false,
+    block_buttons: ["练习止盈止损", "返回重测"],
+    block_reason: "你赚钱时像短跑冠军，亏钱时像长期股东。",
+  },
+  fomo_chaser: {
+    id: "fomo_chaser",
+    name: "利好已出尽还在冲",
+    emoji: "🚀",
+    color: "#EC4899",
+    description: "你总是在热搜第三天，宣布自己发现了时代主线。",
+    typical_issues: "追热点。FOMO严重。容易买在情绪顶点。",
+    is_unlock: false,
+    block_buttons: ["冷静10分钟", "返回重测"],
+    block_reason: "你总是在热搜第三天，宣布自己发现了时代主线。",
+  },
+  report_archaeologist: {
+    id: "report_archaeologist",
+    name: "财报考古学家",
+    emoji: "📜",
+    color: "#8B5CF6",
+    description: "你研究得很深，但市场已经从新石器时代涨到了AI时代。",
+    typical_issues: "只看基本面。忽略市场节奏。研究很完整，但执行太慢。",
+    is_unlock: false,
+    block_buttons: ["继续读年报", "返回重测"],
+    block_reason: "你研究得很深，但市场已经从新石器时代涨到了AI时代。",
+  },
+  monte_carlo_poet: {
+    id: "monte_carlo_poet",
+    name: "蒙特卡洛诗人",
+    emoji: "🎲",
+    color: "#06B6D4",
+    description: "你有很多模型，但市场只用一根阴线就让它们集体沉默。",
+    typical_issues: "过度模型化。容易过拟合。忘记模型只是辅助，不是水晶球。",
+    is_unlock: false,
+    block_buttons: ["降低过拟合", "返回重测"],
+    block_reason: "你有很多模型，但市场只用一根阴线就让它们集体沉默。",
+  },
+};
+
+/** tradeTI 判定优先级（并列时按此顺序，越低越优先） */
+export const TRADETI_PRIORITY: TradeTIPersonalityId[] = [
+  "qin_shihuang",
+  "all_in_warrior",
+  "fomo_chaser",
+  "breakeven_master",
+  "kline_shaman",
+  "monte_carlo_poet",
+  "report_archaeologist",
+  "old_money",
+  "wall_street",
+];

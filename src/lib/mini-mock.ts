@@ -13,10 +13,11 @@ import {
   ReplayCurveFit,
   ReviewDetail,
   GlobalNewsEvent,
-  SBTIQuestion,
-  SBTIDimension,
-  SBTIPersonality,
-  SBTIResult,
+  TradeTIQuestion,
+  TradeTIPersonalityId,
+  TradeTIResult,
+  TradeTIScores,
+  TRADETI_PRIORITY,
 } from "./mini-types";
 
 // 生成因子评分
@@ -850,123 +851,195 @@ export const MOCK_GLOBAL_NEWS: GlobalNewsEvent[] = [
   },
 ];
 
-// SBTI 交易风格测试 - 多巴胺风格题库
-export const MOCK_SBTI_QUESTIONS: SBTIQuestion[] = [
+// ================= tradeTI 交易抽象人格测试 - 12道题 =================
+
+export const TRADETI_QUESTIONS: TradeTIQuestion[] = [
   {
     id: 1,
-    question_text: "当你看到K线涨了5%，你的第一反应是？",
-    dimension: SBTIDimension.S,
+    question_text: "你看到一只股票今天涨停，第一反应是？",
     options: [
-      { text: "看一眼均线和成交量，画根趋势线再说", score_value: 1 },
-      { text: "卧槽！追！晚了拍大腿！", score_value: -1 },
+      { text: "A. 查涨停原因、板块联动、成交量和风险", personality: "wall_street" },
+      { text: "B. 已经涨停了，说明强，明天还能冲", personality: "fomo_chaser" },
+      { text: "C. 涨停？这是不是天选之股", personality: "kline_shaman" },
+      { text: "D. 我问问群里大佬能不能买", personality: "qin_shihuang" },
     ],
   },
   {
     id: 2,
-    question_text: "你设置了止盈，到点位你会？",
-    dimension: SBTIDimension.S,
+    question_text: "你买股票前最想知道什么？",
     options: [
-      { text: "手起刀落，严格执行，绝不留恋", score_value: 1 },
-      { text: "等一等，感觉还能涨，再拿一会儿", score_value: -1 },
+      { text: "A. 买入逻辑、风险条件、仓位和复盘标准", personality: "wall_street" },
+      { text: "B. 有没有人说它能翻倍", personality: "qin_shihuang" },
+      { text: "C. K线像不像要起飞", personality: "kline_shaman" },
+      { text: "D. 它是不是足够安全，最好十年不跌", personality: "old_money" },
     ],
   },
   {
     id: 3,
-    question_text: "股票跳水5%，你会？",
-    dimension: SBTIDimension.B,
+    question_text: "股票亏了10%，你会怎么做？",
     options: [
-      { text: "卧槽！心态炸了！立刻割肉！", score_value: 1 },
-      { text: "看一下基本面有没有变，设好止损等反弹", score_value: -1 },
+      { text: "A. 看是否触发原定止损或逻辑失效", personality: "wall_street" },
+      { text: "B. 不卖就不亏，回本再说", personality: "breakeven_master" },
+      { text: "C. 再补一点，摊薄成本，命运会眷顾我", personality: "all_in_warrior" },
+      { text: "D. 赶紧求一个大神告诉我怎么办", personality: "qin_shihuang" },
     ],
   },
   {
     id: 4,
-    question_text: "你的交易账户最像什么？",
-    dimension: SBTIDimension.B,
+    question_text: "如果一只股票涨了8%，你会？",
     options: [
-      { text: "过山车V型曲线，上蹿下跳每天坐过山车", score_value: 1 },
-      { text: "蜗牛爬坡，慢是慢但每天都在新高", score_value: -1 },
+      { text: "A. 检查是否达到目标区间，决定减仓、持有或复盘", personality: "wall_street" },
+      { text: "B. 立刻卖，落袋为安，赚了就是胜利", personality: "breakeven_master" },
+      { text: "C. 加仓，强者恒强，今天我是市场之子", personality: "all_in_warrior" },
+      { text: "D. 不动，我准备拿到退休", personality: "old_money" },
     ],
   },
   {
     id: 5,
-    question_text: "打开交易软件，你最可能先看什么？",
-    dimension: SBTIDimension.T,
+    question_text: "你更相信哪种分析？",
     options: [
-      { text: "实时分时，挂单盘口，5 分钟线", score_value: 1 },
-      { text: "周线月线，画个大趋势，躺平等结果", score_value: -1 },
+      { text: "A. 基本面、技术面、资金面、情绪面一起看", personality: "wall_street" },
+      { text: "B. 只看K线，价格包含一切，甚至包含我的命", personality: "kline_shaman" },
+      { text: "C. 只看财报，短期涨跌都是噪音", personality: "report_archaeologist" },
+      { text: "D. 只看别人总结，节省脑细胞", personality: "qin_shihuang" },
     ],
   },
   {
     id: 6,
-    question_text: "一只股票你最多拿多久？",
-    dimension: SBTIDimension.T,
+    question_text: "你如何看待仓位管理？",
     options: [
-      { text: "半天，不隔夜！", score_value: 1 },
-      { text: "至少拿它几个月，等风来", score_value: -1 },
+      { text: "A. 仓位是交易系统的一部分", personality: "wall_street" },
+      { text: "B. 看好就满仓，不看好就空仓", personality: "all_in_warrior" },
+      { text: "C. 仓位是什么？我只知道买入按钮", personality: "qin_shihuang" },
+      { text: "D. 越跌越买，直到我和股票融为一体", personality: "breakeven_master" },
     ],
   },
   {
     id: 7,
-    question_text: "让你满仓一只股，你最信什么？",
-    dimension: SBTIDimension.I,
+    question_text: "你看到某只股票上热搜，会？",
     options: [
-      { text: "K线走成多头趋势，量价配合图形太完美了", score_value: 1 },
-      { text: "PE 10倍，ROE 25%，行业龙头没人比它便宜", score_value: -1 },
+      { text: "A. 判断消息是否已被价格反映", personality: "wall_street" },
+      { text: "B. 热搜都上了，不买感觉错过一个时代", personality: "fomo_chaser" },
+      { text: "C. 看评论区有没有人喊目标价", personality: "qin_shihuang" },
+      { text: "D. 等热度过去半年再研究", personality: "old_money" },
     ],
   },
   {
     id: 8,
-    question_text: "晚上复盘你最爱刷什么？",
-    dimension: SBTIDimension.I,
+    question_text: "你做完一次交易后会复盘吗？",
     options: [
-      { text: "财经大 V 直播、股吧热帖、群内消息", score_value: 1 },
-      { text: "财报PDF、券商研报、行业数据", score_value: -1 },
+      { text: "A. 会记录买入理由、结果、错误和下次规则", personality: "wall_street" },
+      { text: "B. 赢了就是我牛，亏了就是主力坏", personality: "all_in_warrior" },
+      { text: "C. 不复盘，人生要向前看", personality: "qin_shihuang" },
+      { text: "D. 会做一个巨复杂模型，但下次不一定用", personality: "monte_carlo_poet" },
+    ],
+  },
+  {
+    id: 9,
+    question_text: "你看到模型预测R²很高，会？",
+    options: [
+      { text: "A. 看样本、过拟合、误差分布和稳定性", personality: "wall_street" },
+      { text: "B. R²高就是准，立刻相信", personality: "monte_carlo_poet" },
+      { text: "C. 先截图发朋友圈", personality: "qin_shihuang" },
+      { text: "D. 我觉得模型不如一根均线", personality: "kline_shaman" },
+    ],
+  },
+  {
+    id: 10,
+    question_text: "你最喜欢Agent给你什么？",
+    options: [
+      { text: "A. 结论、证据、风险、情景和复盘计划", personality: "wall_street" },
+      { text: "B. 直接告诉我代码，别废话", personality: "qin_shihuang" },
+      { text: "C. 告诉我什么时候发财", personality: "all_in_warrior" },
+      { text: "D. 给我一份80页研报，我先收藏", personality: "report_archaeologist" },
+    ],
+  },
+  {
+    id: 11,
+    question_text: "面对市场大跌，你会？",
+    options: [
+      { text: "A. 看风险暴露、仓位、是否触发风控", personality: "wall_street" },
+      { text: "B. 闭眼，假装今天不开盘", personality: "breakeven_master" },
+      { text: "C. 冲进去抄底，富贵险中求", personality: "all_in_warrior" },
+      { text: "D. 等市场完全安全了再说", personality: "old_money" },
+    ],
+  },
+  {
+    id: 12,
+    question_text: "你觉得交易最重要的是？",
+    options: [
+      { text: "A. 逻辑、概率、纪律、复盘", personality: "wall_street" },
+      { text: "B. 胆子大", personality: "all_in_warrior" },
+      { text: "C. 消息快", personality: "fomo_chaser" },
+      { text: "D. 有人带", personality: "qin_shihuang" },
     ],
   },
 ];
 
-// SBTI 结果集 - 多巴胺配色 + 金融圈幽默梗
-export const MOCK_SBTI_RESULTS: Record<SBTIPersonality, SBTIResult> = {
-  [SBTIPersonality.THE_CONTROLLER]: {
-    personality: SBTIPersonality.THE_CONTROLLER,
-    personality_name: "拿捏者 S",
-    emoji: "🎮",
-    color_hex: "#FF6B6B",
-    description: "你是A股罕见的战略级狙击手，严格执行策略绝不情绪化，别人在追高时你画趋势线，别人在恐慌割肉时你算支撑位，你的每一笔下单都像狙击手扣扳机一样冷静。但要小心——太喜欢定规则，容易错过游资制造的暴力行情！",
-    trading_style_tip: "你最适合波段量化、网格交易、ETF轮动，把规则写死，让情绪无孔可入。",
-    recommendation: ["网格交易 ETF", "波段行业轮动", "量化趋势跟踪"],
-    avoid: ["追涨停打板", "全仓单只小票", "T+0 高频"],
-    style_map_to_real_investment: "band",
-  },
-  [SBTIPersonality.THE_DRINKER]: { personality_name: "酒鬼 T",
-    personality: SBTIPersonality.THE_DRINKER,
-    emoji: "🍺",
-    color_hex: "#4ECDC4",
-    description: "你是市场中的真实醉汉，涨一点就嗨全仓冲，跌一点就炸毛割肉，账户曲线像过山车一样上蹿下跳，每天都在为券商贡献手续费。情绪是你的最大敌人，也是你交易生涯的第一关。",
-    trading_style_tip: "先做模拟盘练手，把胜率练到>55%再实盘上，设严格止损线。",
-    recommendation: ["模拟盘训练", "ETF定投", "大盘宽基"],
-    avoid: ["杠杆融资", "日内T+0", "高波动妖股"],
-    style_map_to_real_investment: "long",
-  },
-  [SBTIPersonality.THE_WANDERER]: { personality_name: "行者 B",
-    personality: SBTIPersonality.THE_WANDERER,
-    emoji: "🌪️",
-    color_hex: "#FFE66D",
-    description: "你是A股的行者，5分钟线和实时盘口是你的圣经，超短线、打板、隔夜跑是你的日常。你交易的频率高到券商都想给你 VIP 服务，但跑得快不等于赚得多，小心手续费吃掉利润。",
-    trading_style_tip: "你适合短线游资打法，把胜率和盈亏比算清楚，快进快出绝不恋战。",
-    recommendation: ["热点题材短线", "龙头战法", "资金流打板"],
-    avoid: ["长线死扛", "越套越补", "深度价值"],
-    style_map_to_real_investment: "short",
-  },
-  [SBTIPersonality.THE_ORPHAN]: { personality_name: "孤儿 I",
-    personality: SBTIPersonality.THE_ORPHAN,
-    emoji: "🧙‍♂️",
-    color_hex: "#A8E6CF",
-    description: "你是市场中的孤儿，不看K线不看群，只看财报ROE和行业景气度，拿股几个月不闻不问，价值投资大师胚子。但要小心——景气反转时，你可能最后一个知道。",
-    trading_style_tip: "你适合长期价投+产业趋势，选ROE>20%的公司躺平。",
-    recommendation: ["基本面价值", "赛道长坡厚雪", "指数长期持有"],
-    avoid: ["炒概念追热点", "技术分析做T", "游资短线"],
-    style_map_to_real_investment: "long",
-  },
-};
+/** tradeTI 计分引擎：根据答案计算最终人格 */
+export function calculateTradeTIResult(
+  answers: { question_id: number; chosen: TradeTIPersonalityId }[]
+): TradeTIPersonalityId {
+  const scores: Record<TradeTIPersonalityId, number> = {
+    wall_street: 0,
+    old_money: 0,
+    qin_shihuang: 0,
+    kline_shaman: 0,
+    all_in_warrior: 0,
+    breakeven_master: 0,
+    fomo_chaser: 0,
+    report_archaeologist: 0,
+    monte_carlo_poet: 0,
+  };
+
+  for (const answer of answers) {
+    scores[answer.chosen]++;
+  }
+
+  // 特殊规则1：秦始皇 >= 4 分 → 优先判定秦始皇
+  if (scores.qin_shihuang >= 4) return "qin_shihuang";
+
+  // 特殊规则2：梭哈战神 >= 4 分 → 优先判定梭哈战神
+  if (scores.all_in_warrior >= 4) return "all_in_warrior";
+
+  // 找最高分
+  let maxScore = 0;
+  let maxPersonality: TradeTIPersonalityId = "wall_street";
+  for (const [key, val] of Object.entries(scores)) {
+    if (val > maxScore) {
+      maxScore = val;
+      maxPersonality = key as TradeTIPersonalityId;
+    }
+  }
+
+  // 并列时按优先级判定
+  const tied = Object.entries(scores)
+    .filter(([, v]) => v === maxScore)
+    .map(([k]) => k as TradeTIPersonalityId);
+
+  if (tied.length > 1) {
+    // 按优先级顺序取第一个
+    for (const p of TRADETI_PRIORITY) {
+      if (tied.includes(p)) {
+        maxPersonality = p;
+        break;
+      }
+    }
+  }
+
+  // 特殊规则3：华尔街 >= 8 分才通关，否则降级
+  if (maxPersonality === "wall_street" && scores.wall_street < 8) {
+    // 找第二高
+    let secondMax = 0;
+    let secondPersonality: TradeTIPersonalityId = "old_money";
+    for (const [key, val] of Object.entries(scores)) {
+      if (key !== "wall_street" && val > secondMax) {
+        secondMax = val;
+        secondPersonality = key as TradeTIPersonalityId;
+      }
+    }
+    return secondPersonality;
+  }
+
+  return maxPersonality;
+}
