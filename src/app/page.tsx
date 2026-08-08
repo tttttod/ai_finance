@@ -2258,6 +2258,94 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
         )}
       </div>
 
+      {/* 3.5 AI推荐研究标的 — 详细分析卡片 */}
+      {recommendedTargets.length > 0 && (
+        <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="p-3 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">🎯</span>
+              <span className="text-sm font-bold text-slate-800">今日AI推荐研究标的</span>
+              <span className="text-[10px] text-slate-400 ml-auto">
+                {recommendedTargets.length} 个标的
+              </span>
+            </div>
+          </div>
+          <div className="p-3 space-y-3">
+            {recommendedTargets.map((target, i) => {
+              const scoreColor =
+                target.opportunity_score >= 80
+                  ? "bg-red-100 text-red-700"
+                  : target.opportunity_score >= 60
+                    ? "bg-orange-100 text-orange-700"
+                    : "bg-slate-100 text-slate-600";
+              const riskColor =
+                target.risk_level === "low"
+                  ? "bg-emerald-100 text-emerald-700"
+                  : target.risk_level === "medium"
+                    ? "bg-orange-100 text-orange-700"
+                    : "bg-red-100 text-red-700";
+              const riskLabel =
+                target.risk_level === "low"
+                  ? "低风险"
+                  : target.risk_level === "medium"
+                    ? "中风险"
+                    : "高风险";
+              return (
+                <div
+                  key={i}
+                  className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 space-y-2"
+                >
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-bold text-slate-800">
+                      {target.name}
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      {target.code}
+                    </span>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${scoreColor}`}
+                    >
+                      机会 {target.opportunity_score}
+                    </span>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${riskColor}`}
+                    >
+                      {riskLabel}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    {target.reason}
+                  </p>
+                  {target.main_risk && (
+                    <p className="text-[11px] text-slate-400">
+                      ⚠️ {target.main_risk}
+                    </p>
+                  )}
+                  {target.trigger_source && target.trigger_source.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {target.trigger_source.map((src, j) => (
+                        <span
+                          key={j}
+                          className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600"
+                        >
+                          {src}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => onFillResearch(target as unknown as RecommendedTarget)}
+                    className="w-full text-xs py-2 rounded-lg bg-[#3B82F6] text-white font-bold hover:bg-[#2563EB] transition-colors"
+                  >
+                    填入研究 →
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* 4. 全球冒险地图 - 仅在数据可用时显示 */}
       {(globalNews.length > 0 || globalNewsLoading) && (
         <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm">

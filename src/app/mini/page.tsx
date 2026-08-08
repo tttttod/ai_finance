@@ -2143,6 +2143,58 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
         </div>
       </div>
 
+      {/* AI推荐研究标的 */}
+      {recommendedTargets.length > 0 && (
+        <div className="bg-white rounded-xl border border-slate-100 p-4 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-base">🎯</span>
+            <h3 className="text-sm font-bold text-slate-800">AI推荐研究标的</h3>
+            <span className="text-xs text-slate-400 ml-auto">基于板块数据</span>
+          </div>
+          <div className="space-y-3">
+            {recommendedTargets.map((target, i) => {
+              const scoreColor = target.opportunity_score >= 7 ? "bg-red-50 text-red-600" : target.opportunity_score >= 5 ? "bg-amber-50 text-amber-600" : "bg-slate-50 text-slate-600";
+              const riskColor = target.risk_level === "低" ? "bg-green-50 text-green-600" : target.risk_level === "中" ? "bg-amber-50 text-amber-600" : "bg-red-50 text-red-600";
+              return (
+                <div key={i} className="border border-slate-100 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <span className="font-bold text-slate-800">{target.name}</span>
+                      <span className="text-xs text-slate-400 ml-1">({target.code})</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${scoreColor}`}>
+                        机会评分 {target.opportunity_score}
+                      </span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${riskColor}`}>
+                        风险{target.risk_level}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-600 mb-2">{target.reason}</p>
+                  {target.main_risk && (
+                    <p className="text-xs text-slate-400 mb-2">⚠️ {target.main_risk}</p>
+                  )}
+                  {target.trigger_source && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {target.trigger_source.map((s, j) => (
+                        <span key={j} className="text-xs px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded">{s}</span>
+                      ))}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => onFillResearch(target as unknown as RecommendedTarget)}
+                    className="w-full text-xs py-1.5 rounded-lg font-medium text-white bg-gradient-to-r from-[#FF6B6B] to-[#FF8E53] hover:opacity-90 transition-opacity"
+                  >
+                    填入研究 →
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* 4. 全球冒险地图 */}
       <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm">
         <div className="p-3 border-b border-slate-100">
