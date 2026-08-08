@@ -110,7 +110,9 @@ export default function MiniProgramPage() {
           setTradeTIUnlocked(true);
           setTradeTICompleted(true);
         } else {
+          // 非通关人格：completed 但未解锁，保持 blocked 状态
           setTradeTICompleted(true);
+          setTradeTIUnlocked(false);
         }
       } catch { /* ignore */ }
     }
@@ -153,8 +155,8 @@ export default function MiniProgramPage() {
     setTradeTICompleted(true);
   };
 
-  // 未做 tradeTI 时显示测试（加载中默认显示测试，避免闪烁）
-  if (!tradeTICompleted && !tradeTISkipped && !isLoadingProfile) {
+  // 未做 tradeTI 或非通关人格时显示测试（加载中默认显示测试，避免闪烁）
+  if ((!tradeTICompleted || !tradeTIUnlocked) && !tradeTISkipped && !isLoadingProfile) {
     return <TradeTITest onComplete={completeTradeTI} onSkip={() => setTradeTISkipped(true)} />;
   }
 
