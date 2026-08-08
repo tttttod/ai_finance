@@ -1772,6 +1772,82 @@ function ProfileTab({ profile, tradeTIResult, onRetakeSurvey, watchlist, onRemov
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  const getStockReport = (stockName: string) => {
+    const stockData: Record<string, { industry: string; pe: string; peStatus: string; roe: string; roeStatus: string; revenueGrowth: string; revenueStatus: string; rating: string; coverage: string; summary: string; risk: string; verdict: string }> = {
+      "宁德时代": {
+        industry: "电力设备", pe: "18.5", peStatus: "低于行业均值", roe: "21.3%", roeStatus: "优秀",
+        revenueGrowth: "32.1%", revenueStatus: "高增长", rating: "买入", coverage: "35家机构覆盖",
+        summary: "电池界的「卷王」，产能利用率拉满，技术路线碾压同行。",
+        risk: "下游需求放缓，产能过剩风险，原材料价格波动。",
+        verdict: "成长性依然能打，但估值已经不便宜了。看好就问，别追高就行。"
+      },
+      "贵州茅台": {
+        industry: "食品饮料", pe: "28.2", peStatus: "合理偏高", roe: "33.5%", roeStatus: "优秀",
+        revenueGrowth: "15.8%", revenueStatus: "稳健", rating: "买入", coverage: "42家机构覆盖",
+        summary: "白酒界的「定海神针」，提价逻辑还在，但年轻人还喝不喝是个问题。",
+        risk: "消费降级冲击，政策风险，年轻人白酒消费下滑。",
+        verdict: "A股第一信仰标的。短期看价格，长期看品牌。信仰可以，但别上头。"
+      },
+      "比亚迪": {
+        industry: "汽车", pe: "22.8", peStatus: "合理", roe: "18.7%", roeStatus: "良好",
+        revenueGrowth: "45.6%", revenueStatus: "高增长", rating: "买入", coverage: "38家机构覆盖",
+        summary: "新能源车「销冠」，但价格战打得凶，利润率是个隐患。",
+        risk: "价格战加剧，出海受阻，毛利率下滑。",
+        verdict: "销量很猛，但利润增长跟不上销量的节奏。中长期看好，短期波动大。"
+      },
+      "药明康德": {
+        industry: "医药生物", pe: "25.3", peStatus: "合理", roe: "16.8%", roeStatus: "良好",
+        revenueGrowth: "8.5%", revenueStatus: "放缓", rating: "增持", coverage: "30家机构覆盖",
+        summary: "CXO 赛道「头号玩家」，海外订单回暖，但地缘政治是条暗线。",
+        risk: "中美关系不确定性，海外订单波动，行业竞争加剧。",
+        verdict: "行业回暖趋势明显，但地缘政治这颗雷不确定。看好可以，但仓位别太重。"
+      },
+      "科大讯飞": {
+        industry: "计算机", pe: "45.6", peStatus: "偏高", roe: "8.2%", roeStatus: "一般",
+        revenueGrowth: "25.3%", revenueStatus: "高增长", rating: "增持", coverage: "28家机构覆盖",
+        summary: "AI 概念「当红炸子鸡」，星火大模型迭代快，但商业化还要时间。",
+        risk: "AI 商业化不及预期，高估值压力，竞争激烈。",
+        verdict: "AI 风口上的好标的，但估值已经飞在天上了。等回调再上车，不追高。"
+      },
+      "中国中免": {
+        industry: "商贸零售", pe: "20.1", peStatus: "合理偏低", roe: "14.5%", roeStatus: "良好",
+        revenueGrowth: "-5.2%", revenueStatus: "下滑", rating: "中性", coverage: "25家机构覆盖",
+        summary: "免税「一哥」，消费降级背景下承压，但牌照壁垒还在。",
+        risk: "消费疲软，海南免税增速放缓，竞争加剧。",
+        verdict: "护城河还在，但增长动力不足。属于等风来的标的，要有耐心。"
+      },
+      "迈瑞医疗": {
+        industry: "医药器械", pe: "30.2", peStatus: "合理", roe: "29.1%", roeStatus: "优秀",
+        revenueGrowth: "18.2%", revenueStatus: "稳健", rating: "买入", coverage: "32家机构覆盖",
+        summary: "医疗器械「学霸」，海外业务增长快，国产替代逻辑顺畅。",
+        risk: "集采风险，海外合规风险，汇率波动。",
+        verdict: "国产替代的确定性标的，业绩稳健。可以长期持有，但别指望短期爆发。"
+      },
+      "东方财富": {
+        industry: "非银金融", pe: "25.8", peStatus: "合理", roe: "12.3%", roeStatus: "良好",
+        revenueGrowth: "8.5%", revenueStatus: "稳健", rating: "增持", coverage: "30家机构覆盖",
+        summary: "互联网券商「扛把子」，市场活跃度直接决定业绩。",
+        risk: "市场成交量下滑，佣金率下行，竞争加剧。",
+        verdict: "市场好了它就好，市场差了它就差。属于市场的「温度计」，看准了再下手。"
+      },
+      "隆基绿能": {
+        industry: "电力设备", pe: "35.2", peStatus: "偏高", roe: "6.8%", roeStatus: "一般",
+        revenueGrowth: "-12.5%", revenueStatus: "下滑", rating: "中性", coverage: "28家机构覆盖",
+        summary: "光伏「老大哥」，行业产能过剩严重，还在等出清。",
+        risk: "产能过剩，价格战，海外贸易壁垒。",
+        verdict: "行业周期底部，等出清。有耐心可以左侧布局，想赚快钱的别来。"
+      },
+      "海康威视": {
+        industry: "计算机", pe: "22.5", peStatus: "合理偏低", roe: "19.8%", roeStatus: "优秀",
+        revenueGrowth: "12.3%", revenueStatus: "稳健", rating: "买入", coverage: "36家机构覆盖",
+        summary: "安防「霸主」，AI 赋能打开新空间，从「看得见」到「看得懂」。",
+        risk: "海外制裁风险，AI 转型不及预期，政府订单波动。",
+        verdict: "安防老大底蕴深厚，AI 转型是第二增长曲线。稳健型选手，适合长期拿着。"
+      }
+    };
+    return stockData[stockName] || stockData["宁德时代"];
+  };
+
   const feedbackDimensions = [
     { key: "timeliness", label: "数据及时性", emoji: "📡" },
     { key: "recommendation", label: "推荐标的质量", emoji: "🎯" },
@@ -1899,61 +1975,40 @@ function ProfileTab({ profile, tradeTIResult, onRetakeSurvey, watchlist, onRemov
             </div>
             <div className="space-y-3 text-xs text-slate-600">
               <div className="bg-gradient-to-r from-[#FF6B6B] via-[#FFE66D] to-[#4ECDC4] p-4 rounded-2xl text-white">
-                <div className="font-black text-sm mb-1">🎯 一句话总结</div>
-                <div className="font-bold text-[11px] opacity-90">
-                  {reportStock === "宁德时代" && "电池界的「卷王」，产能利用率拉满，海外订单排到明年。短期有回调压力，但长线逻辑没毛病～"}
-                  {reportStock === "贵州茅台" && "白酒界的「定海神针」，提价逻辑还在，但年轻人喝不喝是个问题。短期看消费复苏，长期看品牌信仰。"}
-                  {reportStock === "比亚迪" && "新能源车「销冠」，但价格战打得凶，毛利率承压。技术护城河深，但短期股价可能要磨一磨。"}
-                  {reportStock === "药明康德" && "CXO 赛道「头号玩家」，海外订单回暖，但地缘政治风险悬在头上。估值已经不贵了，等风来。"}
-                  {reportStock === "科大讯飞" && "AI 概念「当红炸子鸡」，星火大模型迭代快，但商业化还在路上。短期情绪驱动，别追高。"}
-                  {reportStock === "中国中免" && "免税「一哥」，消费降级背景下承压，但海南封关有想象空间。底部区域，耐心等拐点。"}
-                  {reportStock === "迈瑞医疗" && "医疗器械「学霸」，海外业务增长快，国产替代逻辑清晰。估值合理，适合稳健型选手。"}
-                  {reportStock === "东方财富" && "互联网券商「扛把子」，市场活跃度直接决定业绩。等牛市东风，弹性大，但波动也大。"}
-                  {reportStock === "隆基绿能" && "光伏「老大哥」，行业产能过剩严重，但技术迭代快。短期看困境反转，长期看新技术路线。"}
-                  {reportStock === "海康威视" && "安防「霸主」，AI 赋能打开新空间，但海外制裁是隐忧。估值低，分红好，适合防守配置。"}
-                </div>
-              </div>
-              <div className="bg-slate-50 rounded-2xl p-4">
-                <div className="font-black text-sm text-slate-800 mb-2">📈 核心指标</div>
-                <div className="grid grid-cols-2 gap-2 text-[11px]">
-                  <div className="bg-white rounded-xl p-2.5 border border-slate-100">
-                    <div className="text-slate-400 font-bold">PE 估值</div>
-                    <div className="font-black text-slate-800 mt-0.5">22.5x</div>
-                    <div className="text-emerald-500 font-bold text-[10px]">低于行业平均</div>
-                  </div>
-                  <div className="bg-white rounded-xl p-2.5 border border-slate-100">
-                    <div className="text-slate-400 font-bold">ROE</div>
-                    <div className="font-black text-slate-800 mt-0.5">15.8%</div>
-                    <div className="text-emerald-500 font-bold text-[10px]">盈利能力优秀</div>
-                  </div>
-                  <div className="bg-white rounded-xl p-2.5 border border-slate-100">
-                    <div className="text-slate-400 font-bold">营收增速</div>
-                    <div className="font-black text-slate-800 mt-0.5">+12.3%</div>
-                    <div className="text-amber-500 font-bold text-[10px]">增速放缓</div>
-                  </div>
-                  <div className="bg-white rounded-xl p-2.5 border border-slate-100">
-                    <div className="text-slate-400 font-bold">机构评级</div>
-                    <div className="font-black text-slate-800 mt-0.5">买入</div>
-                    <div className="text-emerald-500 font-bold text-[10px]">25家机构覆盖</div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-slate-50 rounded-2xl p-4">
-                <div className="font-black text-sm text-slate-800 mb-2">🧠 搭子说</div>
-                <div className="text-[11px] font-bold text-slate-600 leading-relaxed">
-                  {reportStock === "宁德时代" && "电池王者的底气在于技术和成本双领先。短期别追高，等回调到支撑位再考虑。记住：好公司也要好价格。"}
-                  {reportStock === "贵州茅台" && "茅台还是那个茅台，但市场已经不是那个市场了。短期看消费复苏进度，长期看品牌壁垒。适合逢低定投。"}
-                  {reportStock === "比亚迪" && "销量数据亮眼，但价格战让利润承压。关注毛利率拐点，那才是真正的反转信号。"}
-                  {reportStock === "药明康德" && "CXO 行业的底层逻辑还在——药企离不开外包。短期波动是机会，不是风险。"}
-                  {reportStock === "科大讯飞" && "AI 概念热，但业绩兑现还需要时间。想参与的话，小仓位跟着趋势走，别一把梭。"}
-                  {reportStock === "中国中免" && "消费降级是短期压力，但免税牌照的稀缺性在长期会体现。耐心是美德。"}
-                  {reportStock === "迈瑞医疗" && "医疗器械的国产替代是个十年大趋势。迈瑞是龙头，稳得很。"}
-                  {reportStock === "东方财富" && "券商的灵魂是市场情绪。现在情绪低迷，但反转的时候弹性最大。等风来。"}
-                  {reportStock === "隆基绿能" && "光伏产能出清还需要时间，但活下来的龙头会更强。关注新技术路线的进展。"}
-                  {reportStock === "海康威视" && "安防主业现金流稳定，AI 第二增长曲线有想象力。低估值高股息，防守选择。"}
-                  {(reportStock !== "宁德时代" && reportStock !== "贵州茅台" && reportStock !== "比亚迪" && reportStock !== "药明康德" && reportStock !== "科大讯飞" && reportStock !== "中国中免" && reportStock !== "迈瑞医疗" && reportStock !== "东方财富" && reportStock !== "隆基绿能" && reportStock !== "海康威视") && "这个标的目前没有详细研究报告。建议先去研究页看看有没有相关分析～"}
-                </div>
-              </div>
+                      <div className="font-black text-sm mb-1">🎯 一句话总结</div>
+                      <div className="font-bold text-[11px] opacity-90">{getStockReport(reportStock).summary}</div>
+                    </div>
+                    <div className="bg-slate-50 rounded-2xl p-4">
+                      <div className="font-black text-sm text-slate-800 mb-2">📈 核心指标</div>
+                      <div className="grid grid-cols-2 gap-2 text-[11px]">
+                        <div className="bg-white rounded-xl p-2.5 border border-slate-100">
+                          <div className="text-slate-400 font-bold">PE 估值</div>
+                          <div className="font-black text-slate-800 mt-0.5">{getStockReport(reportStock).pe}</div>
+                          <div className="text-emerald-500 font-bold text-[10px]">{getStockReport(reportStock).peStatus}</div>
+                        </div>
+                        <div className="bg-white rounded-xl p-2.5 border border-slate-100">
+                          <div className="text-slate-400 font-bold">ROE</div>
+                          <div className="font-black text-slate-800 mt-0.5">{getStockReport(reportStock).roe}</div>
+                          <div className="text-emerald-500 font-bold text-[10px]">{getStockReport(reportStock).roeStatus}</div>
+                        </div>
+                        <div className="bg-white rounded-xl p-2.5 border border-slate-100">
+                          <div className="text-slate-400 font-bold">营收增速</div>
+                          <div className="font-black text-slate-800 mt-0.5">{getStockReport(reportStock).revenueGrowth}</div>
+                          <div className="text-amber-500 font-bold text-[10px]">{getStockReport(reportStock).revenueStatus}</div>
+                        </div>
+                        <div className="bg-white rounded-xl p-2.5 border border-slate-100">
+                          <div className="text-slate-400 font-bold">机构评级</div>
+                          <div className="font-black text-slate-800 mt-0.5">{getStockReport(reportStock).rating}</div>
+                          <div className="text-emerald-500 font-bold text-[10px]">{getStockReport(reportStock).coverage}</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-slate-50 rounded-2xl p-4">
+                      <div className="font-black text-sm text-slate-800 mb-2">🧠 搭子说</div>
+                      <div className="text-[11px] font-bold text-slate-600 leading-relaxed">{getStockReport(reportStock).verdict}</div>
+                    </div>
+
+
             </div>
           </div>
         </div>
