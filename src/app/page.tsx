@@ -1868,18 +1868,16 @@ function ProfileTab({ profile, tradeTIResult, onRetakeSurvey }: { profile: UserP
                 </div>
                 <div>
                   <p className="text-xs font-bold text-slate-700 mb-1.5">总体评分：</p>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1">
                     {[1, 2, 3, 4, 5].map((n) => (
                       <button
                         key={n}
                         onClick={() => setRating(n)}
-                        className={`w-10 h-10 rounded-xl text-lg font-black transition-all ${
-                          n <= rating
-                            ? "bg-[#FFD93D] text-slate-800 scale-110"
-                            : "bg-slate-100 text-slate-400"
+                        className={`text-2xl transition-all ${
+                          n <= rating ? "scale-110" : "opacity-40 grayscale"
                         }`}
                       >
-                        {n}
+                        {n <= rating ? "⭐" : "☆"}
                       </button>
                     ))}
                   </div>
