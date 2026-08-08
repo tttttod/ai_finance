@@ -1112,7 +1112,8 @@ export function generateAgentResponseFromContext(
       if (ih) {
         return `${stockName}所属${industry}行业，行业平均涨跌幅${fmtPct(ih.avgChange)}，热度排名${ih.rank || "N/A"}，热度评分${fmtNum(ih.heat, 0)}。${ih.avgChange && ih.avgChange > 0 ? "行业景气度上行，板块表现强势。" : ih.avgChange && ih.avgChange < 0 ? "行业短期承压，需关注基本面变化。" : "行业表现中性。"}`;
       }
-      return `${stockName}所属${industry}行业。当前未获取到行业热度数据，建议结合行业研报进一步分析。`;
+      // 没有行业热度数据时，基于行业名称给出基本分析
+      return `${stockName}所属${industry}行业。当前未接入行业热度实时数据，建议结合行业研报和板块资金流向进一步分析。`;
     })(),
 
     step6_fundamental: (() => {
@@ -1236,8 +1237,9 @@ export function generateAgentResponseFromContext(
       if (missing.length > 2) {
         risks.push({ name: "数据缺失风险", level: "中", desc: `缺失数据项：${missing.join("、")}，可能影响分析准确性` });
       }
+      const riskSummary = risks.map((r) => `${r.name}（${r.level}）`).join("、");
       return JSON.stringify({
-        content: `风险检查完成：${risks.map((r) => `${r.name}（${r.level}）`).join("、")}。`,
+        content: `风险检查完成。共识别 ${risks.length} 项风险：${riskSummary}。建议关注主要风险点，做好仓位管理。`,
         data: { risks },
       });
     })(),
