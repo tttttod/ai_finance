@@ -425,6 +425,9 @@ function ResearchTab({
     setContextCacheStatus(null);
     onClearPrefilled();
 
+    // Local variable to hold context for the interval closure
+    let fetchedContext: StockResearchContext | null = null;
+
     // Fetch stock context first
     try {
       const clientId = getClientId();
@@ -450,7 +453,8 @@ function ResearchTab({
       } else {
         const json = await res.json();
         if (json.success && json.data) {
-          setStockContext(json.data);
+          fetchedContext = json.data as StockResearchContext;
+          setStockContext(fetchedContext);
           setContextCacheStatus(json.cache || null);
         }
         setContextLoading(false);
@@ -470,6 +474,8 @@ function ResearchTab({
     }));
     setSteps(initialSteps);
 
+    // Use local variable to avoid stale closure issue with React state
+    const currentContext = fetchedContext;
     let step = 0;
     timerRef.current = setInterval(() => {
       if (step >= WORKFLOW_STEPS.length) {
@@ -479,8 +485,8 @@ function ResearchTab({
       }
 
       const stepInfo = WORKFLOW_STEPS[step];
-      const response = stockContext
-        ? generateAgentResponseFromContext(step + 1, stepInfo.id, target, style, stockContext)
+      const response = currentContext
+        ? generateAgentResponseFromContext(step + 1, stepInfo.id, target, style, currentContext)
         : generateAgentResponse(step + 1, stepInfo.id, target, style);
 
       setSteps((prev) =>
