@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { WORLD_MAP_PATHS } from "@/lib/world-map-paths";
 import {
   InvestmentStyle,
@@ -1822,7 +1823,7 @@ function ProfileTab({ profile, tradeTIResult, onRetakeSurvey }: { profile: UserP
           onClick={() => { setFeedbackOpen(!feedbackOpen); if (!feedbackOpen) setSubmitted(false); }}
           className="w-full flex items-center justify-between"
         >
-          <h3 className="text-sm font-black bg-gradient-to-r from-[#8B5CF6] to-[#FF6B6B] bg-clip-text text-transparent">💬 用户反馈</h3>
+          <h3 className="text-sm font-black bg-gradient-to-r from-[#8B5CF6] to-[#FF6B6B] bg-clip-text text-transparent"> 用户反馈</h3>
           <span className="text-xs text-slate-400">{feedbackOpen ? "收起" : "展开"}</span>
         </button>
         {feedbackOpen && (
@@ -1905,6 +1906,10 @@ function ProfileTab({ profile, tradeTIResult, onRetakeSurvey }: { profile: UserP
             )}
           </div>
         )}
+        {/* 查看统计入口 */}
+        <Link href="/feedback-stats" className="block mt-3 text-center text-xs font-bold text-[#8B5CF6] hover:underline">
+          📊 查看反馈统计报告 →
+        </Link>
       </div>
 
       {/* 常看行业 */}
