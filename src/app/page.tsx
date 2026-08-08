@@ -290,6 +290,13 @@ function TradeTITest({ onComplete }: { onComplete: () => void }) {
             开始测试 🔥
           </button>
 
+          <button
+            onClick={onComplete}
+            className="w-full py-3 mt-3 rounded-2xl font-bold text-slate-500 text-sm border-2 border-slate-200 transition-all hover:border-slate-300 active:scale-95"
+          >
+            跳过，直接进入 →
+          </button>
+
           <p className="text-[10px] text-slate-400 text-center mt-4">
             本测试仅供娱乐和投资行为自省，不构成投资建议。
           </p>
