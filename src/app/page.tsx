@@ -317,10 +317,6 @@ function TradeTITest({ onComplete }: { onComplete: () => void }) {
 
   const handleBlockBtn = (idx: number) => {
     setBlockBtnClicked(idx);
-    // 延迟调用 onComplete，让用户看到按钮文字变化后再进入
-    setTimeout(() => {
-      onComplete();
-    }, 800);
   };
 
   // ===== 首屏 =====
@@ -485,6 +481,13 @@ function TradeTITest({ onComplete }: { onComplete: () => void }) {
               返回重测
             </button>
           )}
+
+          <button
+            onClick={onComplete}
+            className="w-full py-3 mt-2 rounded-2xl font-bold text-slate-400 text-sm border-2 border-dashed border-slate-200 hover:border-slate-300 transition-all"
+          >
+            跳过测试，直接进入 →
+          </button>
 
           <p className="text-[10px] text-slate-400 text-center mt-4">
             tradeTI仅供娱乐和投资行为自省，不构成投资建议。股票市场存在风险。
