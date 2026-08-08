@@ -19,7 +19,6 @@ import {
   GeneralPredictionModel,
   SampleStockResult,
   GlobalNewsEvent,
-  ResearchClue,
   TradeTIPersonalityId,
   TradeTIState,
   TradeTIResult,
@@ -43,6 +42,7 @@ import {
   TRADETI_QUESTIONS,
   calculateTradeTIResult,
 } from "@/lib/mini-mock";
+import type { MiniMarketSnapshot } from "@/lib/data/market-types";
 
 type TabId = "market" | "research" | "review" | "profile";
 
@@ -736,6 +736,22 @@ function ResearchTab({
           </p>
         </div>
       )}
+
+      {/* 返回/重置按钮 - 允许搜索新的股票 */}
+      <button
+        onClick={() => {
+          if (timerRef.current) clearInterval(timerRef.current);
+          setStarted(false);
+          setTarget("");
+          setSteps([]);
+          setResponses([]);
+          setCurrentStep(0);
+          setIsRunning(false);
+        }}
+        className="w-full py-2.5 text-sm font-black text-slate-600 bg-white border-2 border-slate-200 rounded-2xl hover:bg-slate-50 transition-all active:scale-95"
+      >
+        ← 返回重新搜索
+      </button>
     </div>
   );
 }
@@ -1566,6 +1582,67 @@ function ReviewDetailPage({ review, onBack }: { review: ReviewDetail; onBack: ()
 
 // ===== 我的 Tab =====
 function ProfileTab({ profile, tradeTIResult, onRetakeSurvey }: { profile: UserProfileSurvey; tradeTIResult: TradeTIState | null; onRetakeSurvey: () => void }) {
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
+  const feedbackQuestions = [
+    "数据是否足够及时？",
+    "推荐研究标的是否有帮助？",
+    "AI 解释是否容易理解？",
+    "风险提示是否充分？",
+    "页面操作是否顺手？",
+    "你是否愿意继续使用这个工具？",
+  ];
+
+  const toggleIssue = (q: string) => {
+    setSelectedIssues((prev) =>
+      prev.includes(q) ? prev.filter((i) => i !== q) : [...prev, q],
+    );
+  };
+
+  const handleSubmitFeedback = async () => {
+    if (rating < 1) {
+      setSubmitError("请先选择评分");
+      return;
+    }
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rating,
+          selectedIssues,
+          comment,
+          page: "profile",
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || "提交失败");
+      }
+      setSubmitted(true);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "提交失败，请稍后重试");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleResetFeedback = () => {
+    setFeedbackOpen(false);
+    setRating(0);
+    setSelectedIssues([]);
+    setComment("");
+    setSubmitted(false);
+    setSubmitError("");
+  };
   return (
     <div className="p-4 space-y-4">
       {/* 用户信息 - 多巴胺风格 */}
@@ -1657,6 +1734,111 @@ function ProfileTab({ profile, tradeTIResult, onRetakeSurvey }: { profile: UserP
         </ul>
       </div>
 
+      {/* 用户反馈入口 */}
+      {!feedbackOpen && !submitted && (
+        <button
+          onClick={() => setFeedbackOpen(true)}
+          className="w-full bg-white rounded-3xl p-4 border-2 border-[#FF6B6B] shadow-md text-left hover:shadow-lg transition-all"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-lg">💬</span>
+            <span className="text-sm font-black bg-gradient-to-r from-[#FF6B6B] to-[#FF6B35] bg-clip-text text-transparent">用户反馈</span>
+          </div>
+          <p className="text-[10px] text-slate-500 mt-1 font-medium">告诉我们你的使用体验，帮助我们改进产品</p>
+        </button>
+      )}
+
+      {/* 反馈表单 */}
+      {feedbackOpen && !submitted && (
+        <div className="bg-white rounded-3xl p-4 border-2 border-[#FF6B6B] shadow-md">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-black bg-gradient-to-r from-[#FF6B6B] to-[#FF6B35] bg-clip-text text-transparent">💬 用户反馈</h3>
+            <button onClick={handleResetFeedback} className="text-[10px] text-slate-400 hover:text-slate-600">关闭</button>
+          </div>
+
+          {/* 评分 */}
+          <div className="mb-3">
+            <label className="text-xs font-bold text-slate-600 mb-1.5 block">整体评分</label>
+            <div className="flex gap-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setRating(star)}
+                  className={`w-10 h-10 rounded-2xl border-2 font-black text-sm transition-all active:scale-90 ${
+                    star <= rating
+                      ? "bg-[#FFE0E0] border-[#FF4444] text-[#FF4444]"
+                      : "border-slate-200 text-slate-400 hover:border-slate-300"
+                  }`}
+                >
+                  {star}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 固定问题 */}
+          <div className="mb-3">
+            <label className="text-xs font-bold text-slate-600 mb-1.5 block">你觉得以下方面如何？（可多选）</label>
+            <div className="space-y-1.5">
+              {feedbackQuestions.map((q) => (
+                <button
+                  key={q}
+                  onClick={() => toggleIssue(q)}
+                  className={`w-full text-left px-3 py-2 text-xs rounded-2xl border-2 font-bold transition-all ${
+                    selectedIssues.includes(q)
+                      ? "bg-[#E0F0FF] border-[#3B82F6] text-[#3B82F6]"
+                      : "border-slate-200 text-slate-600 hover:border-slate-300"
+                  }`}
+                >
+                  {selectedIssues.includes(q) ? "✅ " : "○ "}{q}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 主观留言 */}
+          <div className="mb-3">
+            <label className="text-xs font-bold text-slate-600 mb-1.5 block">其他建议（选填）</label>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              maxLength={1000}
+              placeholder="写下你的想法..."
+              className="w-full px-3 py-2.5 text-xs border-2 border-slate-200 rounded-2xl focus:outline-none focus:border-[#FF6B6B] font-medium transition-colors resize-none h-20"
+            />
+            <div className="text-[10px] text-slate-400 text-right mt-0.5">{comment.length}/1000</div>
+          </div>
+
+          {submitError && (
+            <div className="mb-2 text-xs text-red-500 font-bold bg-red-50 rounded-xl p-2">{submitError}</div>
+          )}
+
+          <button
+            onClick={handleSubmitFeedback}
+            disabled={submitting}
+            className="w-full py-3 text-sm font-black text-white rounded-2xl disabled:opacity-50 transition-all hover:scale-[1.02] active:scale-95 shadow-lg"
+            style={{ background: "linear-gradient(135deg, #FF6B6B, #FF6B35)" }}
+          >
+            {submitting ? "提交中..." : "提交反馈"}
+          </button>
+        </div>
+      )}
+
+      {/* 提交成功 */}
+      {submitted && (
+        <div className="bg-white rounded-3xl p-4 border-2 border-[#4ECDC4] shadow-md text-center">
+          <div className="text-3xl mb-2">🎉</div>
+          <h3 className="text-sm font-black text-slate-800 mb-1">感谢反馈！</h3>
+          <p className="text-xs text-slate-500 font-medium mb-3">你的反馈对我们非常重要，我们会持续改进产品体验。</p>
+          <button
+            onClick={handleResetFeedback}
+            className="text-xs font-black text-[#4ECDC4] hover:underline"
+          >
+            继续提交
+          </button>
+        </div>
+      )}
+
       {/* 免责声明 */}
       <div className="bg-slate-100 rounded-lg p-4">
         <p className="text-[10px] text-slate-500 leading-relaxed text-center">
@@ -1672,34 +1854,65 @@ function ProfileTab({ profile, tradeTIResult, onRetakeSurvey }: { profile: UserP
 // ===== 市场 Tab =====
 function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTarget) => void }) {
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
-  const [researchClues, setResearchClues] = useState<ResearchClue[]>([]);
+  const [marketSnapshot, setMarketSnapshot] = useState<MiniMarketSnapshot | null>(null);
+  const [snapshotLoading, setSnapshotLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/market-snapshot")
+      .then((res) => res.json())
+      .then((json) => {
+        if (!cancelled && json.success && json.data) {
+          setMarketSnapshot(json.data);
+        }
+      })
+      .catch(() => {
+        // fallback to mock, already handled by API
+      })
+      .finally(() => {
+        if (!cancelled) setSnapshotLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Use snapshot data or fallback to mock
+  const snapshot = marketSnapshot;
+  const summary = snapshot?.summary || mockMarketData.summary;
+  const indices = snapshot?.indices || mockMarketData.indices;
+  const hotSectors = snapshot?.hotSectors || mockMarketData.hotSectors;
+  const activeStocks = snapshot?.activeStocks || mockMarketData.activeStocks;
+  const recommendedTargets = snapshot?.recommendedTargets || mockRecommendedTargets;
+  const events = snapshot?.events || mockMarketData.events;
 
   const handleSelectEvent = (country: string) => {
     setSelectedCountry(country);
-  };
-
-  const handleAddClue = (event: GlobalNewsEvent) => {
-    const clue: ResearchClue = {
-      source: "全球新闻雷达",
-      country: event.country,
-      title: event.title,
-      related_a_share_sectors: event.related_a_share_sectors,
-      created_at: event.time,
-    };
-    setResearchClues((prev) => [...prev, clue]);
   };
 
   const selectedEvent = selectedCountry ? MOCK_GLOBAL_NEWS.find((e) => e.country === selectedCountry) : null;
 
   return (
     <div className="p-4 space-y-4">
+      {/* 数据状态标签 */}
+      {snapshot && (
+        <div className="flex items-center gap-2 text-[10px] text-slate-400 font-medium">
+          <span>数据日期: {snapshot.tradeDate.slice(0,4)}-{snapshot.tradeDate.slice(4,6)}-{snapshot.tradeDate.slice(6,8)}</span>
+          <span>|</span>
+          <span>来源: {snapshot.source === "tushare" ? "Tushare" : snapshot.source === "mock" ? "Demo" : "缓存"}</span>
+          {snapshot.stale && <span className="text-amber-500 font-bold">缓存数据</span>}
+        </div>
+      )}
+
       {/* AI 摘要 - 多巴胺彩虹渐变 */}
       <div className="bg-gradient-to-r from-[#FF6B6B] via-[#FFD93D] to-[#4ECDC4] rounded-3xl p-4 text-white shadow-lg shadow-[#FF6B6B]/20">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-lg">🤖</span>
           <span className="text-sm font-black">今日市场 AI 摘要</span>
         </div>
-        <p className="text-xs leading-relaxed font-semibold drop-shadow-sm">{mockMarketData.summary}</p>
+        {snapshotLoading ? (
+          <div className="h-8 bg-white/20 rounded animate-pulse" />
+        ) : (
+          <p className="text-xs leading-relaxed font-semibold drop-shadow-sm">{summary}</p>
+        )}
       </div>
 
       {/* 全球新闻雷达 */}
@@ -1851,12 +2064,6 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
               <button className="flex-1 text-[10px] py-1.5 rounded bg-blue-500 text-white font-medium hover:bg-blue-600 transition-colors">
                 查看影响板块
               </button>
-              <button
-                className="flex-1 text-[10px] py-1.5 rounded bg-slate-200 text-slate-700 font-medium hover:bg-slate-300 transition-colors"
-                onClick={() => handleAddClue(selectedEvent)}
-              >
-                加入研究线索
-              </button>
             </div>
           </div>
         )}
@@ -1889,31 +2096,9 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
         </div>
       </div>
 
-      {/* 研究线索 */}
-      {researchClues.length > 0 && (
-        <div className="bg-white rounded-lg p-4 border border-slate-100">
-          <h3 className="text-sm font-semibold text-slate-800 mb-3">今日研究线索 ({researchClues.length})</h3>
-          <div className="space-y-2">
-            {researchClues.map((clue, i) => (
-              <div key={i} className="p-2 rounded bg-blue-50 border border-blue-100">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] font-medium text-blue-700">{clue.country}</span>
-                  <span className="text-[10px] text-blue-500">{clue.title}</span>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {clue.related_a_share_sectors.map((sector) => (
-                    <span key={sector} className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">{sector}</span>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* 指数卡片 - 多巴胺风格 */}
       <div className="grid grid-cols-2 gap-2">
-        {mockMarketData.indices.map((idx, i) => {
+        {indices.map((idx, i) => {
           const cardColors = [
             { bg: "#FF6B6B", border: "#FF4444" },
             { bg: "#FFD93D", border: "#FFC107" },
@@ -1937,7 +2122,7 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
       <div className="bg-white rounded-3xl p-4 border-2 border-[#FFE66D] shadow-md">
         <h3 className="text-sm font-black mb-3 bg-gradient-to-r from-[#FF6B6B] to-[#FFD93D] bg-clip-text text-transparent">🔥 板块热度榜</h3>
         <div className="space-y-2">
-          {mockMarketData.hotSectors.map((sector, i) => (
+          {hotSectors.map((sector, i) => (
             <div key={sector.name} className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#FFF8E1] transition-colors">
               <span className={`text-xs font-black w-5 h-5 rounded-full flex items-center justify-center text-white ${i < 3 ? "bg-[#FF6B6B]" : "bg-slate-300"}`}>{i + 1}</span>
               <span className="text-xs font-bold text-slate-700 flex-1">{sector.name}</span>
@@ -1956,7 +2141,7 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
       <div className="bg-white rounded-3xl p-4 border-2 border-[#4ECDC4] shadow-md">
         <h3 className="text-sm font-black mb-3 bg-gradient-to-r from-[#4ECDC4] to-[#00D4FF] bg-clip-text text-transparent">⚡ 个股异动榜</h3>
         <div className="space-y-2">
-          {mockMarketData.activeStocks.map((stock) => (
+          {activeStocks.map((stock) => (
             <div key={stock.code} className="flex items-center gap-3 py-1.5 px-2 rounded-xl hover:bg-[#F0FFF4] transition-colors">
               <div className="flex-1">
                 <div className="text-xs font-bold text-slate-700">{stock.name}</div>
@@ -1975,10 +2160,10 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
       <div className="bg-white rounded-3xl p-4 border-2 border-[#FF6B35] shadow-md">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-black bg-gradient-to-r from-[#FF6B35] to-[#FFD93D] bg-clip-text text-transparent">🎯 今日AI推荐研究标的</h3>
-          <span className="text-[10px] font-black text-[#FF6B35] bg-[#FFF0E8] px-2 py-0.5 rounded-full">Demo数据</span>
+          <span className="text-[10px] font-black text-[#FF6B35] bg-[#FFF0E8] px-2 py-0.5 rounded-full">{snapshot?.source === "tushare" ? "实时数据" : "Demo数据"}</span>
         </div>
         <div className="space-y-3">
-          {mockRecommendedTargets.map((target, i) => {
+          {recommendedTargets.map((target, i) => {
             const cardColors = ["#FF6B6B", "#FFD93D", "#4ECDC4", "#FF6B35"];
             const c = cardColors[i % 4];
             return (
@@ -2018,7 +2203,7 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
                   ))}
                 </div>
                 <button
-                  onClick={() => onFillResearch(target)}
+                  onClick={() => onFillResearch(target as unknown as RecommendedTarget)}
                   className="w-full py-2.5 text-xs font-black text-white rounded-2xl transition-all hover:scale-[1.02] active:scale-95 shadow-md"
                   style={{ background: `linear-gradient(135deg, ${c}, ${c}cc)` }}
                 >
@@ -2029,7 +2214,7 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
           })}
         </div>
         <p className="text-[10px] text-slate-500 mt-3 text-center">
-          Demo数据，仅用于产品演示，不代表实时行情。
+          {snapshot?.source === "tushare" ? `数据更新时间: ${snapshot.fetchedAt}` : "Demo数据，仅用于产品演示，不代表实时行情。"}
         </p>
       </div>
 
@@ -2037,7 +2222,7 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
       <div className="bg-white rounded-lg p-4 border border-slate-100">
         <h3 className="text-sm font-semibold text-slate-800 mb-3">重要事件</h3>
         <div className="space-y-3">
-          {mockMarketData.events.map((event, i) => (
+          {events.map((event, i) => (
             <div key={i} className="flex gap-3">
               <div className="text-xs text-slate-500 w-10 font-mono">{event.time}</div>
               <div className="flex-1">

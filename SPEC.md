@@ -671,3 +671,4 @@ src/lib/coze-adapter.ts       # Coze API 适配器
 | 日期 | 变更内容 |
 |------|---------|
 | 2026-08-03 | 小程序 MVP 产品设计：4 Tab + 12 Agent 团队 + 16 步工作流 + Mock 数据层 + Coze 适配预留 |
+| 2026-03-13 | 接入 Tushare 每日市场快照（后台刷新+前端读缓存模式）；新增 POST /api/admin/refresh-market、GET /api/market-snapshot、POST /api/feedback 接口；/api/chat 改用快照数据替代写死市场数据；/api/sectors 和 /api/report 兼容快照；市场 Tab 接入快照数据并显示数据日期/来源/stale 标记；去掉市场页"加入研究线索"功能；研究 Tab 增加"重新选择标的"返回按钮；"我的"页增加用户反馈功能（固定问题多选+主观建议+1-5评分）；新增 docs/database.sql 和 docs/LIVE_DATA.md |
