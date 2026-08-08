@@ -749,7 +749,28 @@ function ResearchTab({
       <div className="bg-white rounded-3xl p-4 border-2 border-[#4ECDC4] shadow-md">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-black bg-gradient-to-r from-[#4ECDC4] to-[#FFD93D] bg-clip-text text-transparent">📊 研究进度</h3>
-          <span className="text-xs font-black text-[#FF6B6B]">{currentStep}/16</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-black text-[#FF6B6B]">{currentStep}/16</span>
+            <button
+              onClick={() => {
+                if (timerRef.current) clearInterval(timerRef.current);
+                setIsRunning(false);
+                setStarted(false);
+                setCurrentStep(0);
+                setTarget("");
+                setResponses([]);
+                setStockContext(null);
+                setContextLoading(false);
+                setContextError(null);
+                setContextCacheStatus(null);
+                setSteps(WORKFLOW_STEPS.map((s) => ({ ...s, status: "pending" as StepStatus })));
+                onClearPrefilled();
+              }}
+              className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200 transition-colors font-bold"
+            >
+              重新搜索
+            </button>
+          </div>
         </div>
         {/* 进度条 - 彩虹糖风格 */}
         <div className="relative w-full h-4 bg-slate-100 rounded-full overflow-hidden">
@@ -817,10 +838,16 @@ function ResearchTab({
           </button>
           <button
             onClick={() => {
+              if (timerRef.current) clearInterval(timerRef.current);
               setIsRunning(false);
+              setStarted(false);
               setCurrentStep(0);
               setTarget("");
               setResponses([]);
+              setStockContext(null);
+              setContextLoading(false);
+              setContextError(null);
+              setContextCacheStatus(null);
               setSteps(WORKFLOW_STEPS.map((s) => ({ ...s, status: "pending" as StepStatus })));
               onClearPrefilled();
             }}

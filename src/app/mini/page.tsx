@@ -603,7 +603,28 @@ function ResearchTab({
       <div className="bg-white rounded-lg p-4 border border-slate-100">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-semibold text-slate-800">研究进度</h3>
-          <span className="text-xs text-slate-500">{currentStep}/16</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500">{currentStep}/16</span>
+            <button
+              onClick={() => {
+                if (timerRef.current) clearInterval(timerRef.current);
+                setIsRunning(false);
+                setStarted(false);
+                setCurrentStep(0);
+                setTarget("");
+                setResponses([]);
+                setStockContext(null);
+                setContextLoading(false);
+                setContextError(null);
+                setContextCacheStatus(null);
+                setSteps(WORKFLOW_STEPS.map((s) => ({ ...s, status: "pending" as StepStatus })));
+                onClearPrefilled();
+              }}
+              className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200 transition-colors font-medium"
+            >
+              重新搜索
+            </button>
+          </div>
         </div>
         {/* 进度条 - 网格线风格 */}
         <div className="relative w-full h-2 bg-slate-900 rounded-full overflow-hidden">
