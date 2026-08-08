@@ -268,6 +268,15 @@ function TradeTITest({ onComplete, onSkip }: { onComplete: () => void; onSkip: (
   const [resultPassScore, setResultPassScore] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
 
+  // 预加载所有人格头像，结果页秒出
+  useEffect(() => {
+    const ids = ["wall_street","old_money","qin_shihuang","kline_shaman","all_in_warrior","breakeven_master","fomo_chaser","report_archaeologist","monte_carlo_poet"];
+    ids.forEach(id => {
+      const img = new Image();
+      img.src = `/avatar_${id}.png`;
+    });
+  }, []);
+
   const handleStart = () => setScreen("questions");
 
   const handleAnswer = (type: "pass" | TradeTIPersonalityId, idx: number) => {
