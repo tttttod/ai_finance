@@ -44,6 +44,7 @@ import {
   TRADETI_QUESTIONS,
   calculateTradeTIResult,
 } from "@/lib/mini-mock";
+import { getStoryline, getDefaultStoryline } from "@/lib/storylines";
 
 type TabId = "market" | "research" | "review" | "profile";
 
@@ -1847,6 +1848,38 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
   const [snapshotLoading, setSnapshotLoading] = useState(true);
   const [snapshotError, setSnapshotError] = useState<string | null>(null);
 
+  // 人格身份
+  const personalityId = tradeTIResult?.result_type || null;
+
+  // 人格故事线
+  const storyline = personalityId ? getStoryline(personalityId) : getDefaultStoryline();
+  const [completedTasks, setCompletedTasks] = useState<string[]>([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("tradeti_story_progress");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.personalityId === personalityId) {
+          setCompletedTasks(parsed.completedTasks || []);
+        }
+      } catch {}
+    }
+  }, [personalityId]);
+
+  const toggleTask = (taskId: string) => {
+    setCompletedTasks((prev) => {
+      const next = prev.includes(taskId)
+        ? prev.filter((id) => id !== taskId)
+        : [...prev, taskId];
+      localStorage.setItem(
+        "tradeti_story_progress",
+        JSON.stringify({ personalityId, completedTasks: next })
+      );
+      return next;
+    });
+  };
+
   useEffect(() => {
     let cancelled = false;
     setSnapshotLoading(true);
@@ -1885,7 +1918,6 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
   const events = marketSnapshot?.events?.length ? marketSnapshot.events : mockMarketData.events;
 
   // 人格搭子
-  const personalityId = tradeTIResult?.result_type || null;
   const buddyGreetings: Record<string, { greeting: string; line: string }> = {
     wall_street: { greeting: "华尔街在逃交易员", line: "今天板块轮动很快，但你的逻辑比情绪快。稳住。" },
     old_money: { greeting: "老钱，老了才有钱", line: "机会又来了。这次别观察三年，先看三分钟。" },
@@ -1996,46 +2028,118 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
         <div className="p-3 border-b border-slate-100 flex items-center gap-2">
           <span className="text-sm">📋</span>
           <span className="text-sm font-bold text-slate-800">今日主线任务</span>
-          <span className="text-[10px] text-slate-400 ml-auto">搭子推荐</span>
+          <span className="text-[10px] text-slate-400 ml-auto">
+            {storyline && personalityId && personalityId !== "wall_street" ? `成长·${storyline.title}` : "搭子推荐"}
+          </span>
         </div>
         <div className="p-3 space-y-3">
-          {recommendedTargets.map((target, i) => {
-            const difficulty = i === 0 ? "⭐⭐⭐" : i === 1 ? "⭐⭐" : "⭐";
-            const taskType = target.recommended_style === "short" ? "短线分析" : target.recommended_style === "swing" ? "波段复盘" : "基本面研究";
-            return (
-              <div key={target.code} className="p-3 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors bg-slate-50/50">
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-amber-500 font-mono">{difficulty}</span>
-                    <span className="text-sm font-bold text-slate-800">{target.name}</span>
-                    <span className="text-[10px] text-slate-400 font-mono">{target.code}</span>
-                  </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-slate-100 text-slate-600">{taskType}</span>
-                </div>
-                <p className="text-xs text-slate-500 mb-2">{target.reason}</p>
-                <div className="flex items-center gap-3 text-[10px] text-slate-400 mb-2">
-                  <span>🎯 机会评分 <strong className="text-slate-700">{target.opportunity_score}</strong></span>
-                  <span>⚠️ 风险 <strong className={target.risk_level === "高" ? "text-red-500" : target.risk_level === "中" ? "text-amber-500" : "text-emerald-500"}>{target.risk_level}</strong></span>
-                  <span>🏷️ {target.industry}</span>
-                </div>
-                <div className="flex flex-wrap gap-1 mb-2">
-                  {target.trigger_source.map((src) => (
-                    <span key={src} className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600">{src}</span>
-                  ))}
-                </div>
-                <button
-                  onClick={() => onFillResearch(target as unknown as RecommendedTarget)}
-                  className="w-full py-2 text-xs font-semibold text-white rounded-lg transition-all hover:brightness-110 active:scale-[0.98]"
-                  style={{ backgroundColor: meta.color }}
-                >
-                  接受任务 →
-                </button>
+          {storyline && personalityId && personalityId !== "wall_street" ? (
+            <>
+              {/* 人格开场白 */}
+              <div className="p-3 rounded-xl bg-gradient-to-r from-slate-50 to-white border border-slate-100">
+                <p className="text-xs text-slate-600 italic leading-relaxed">
+                  "{storyline.opening}"
+                </p>
               </div>
-            );
-          })}
-        </div>
-        <div className="px-3 pb-3">
-          <p className="text-[10px] text-slate-400 text-center">Demo数据，仅用于产品演示，不代表实时行情。</p>
+              {/* 任务进度 */}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${(completedTasks.length / storyline.tasks.length) * 100}%`, backgroundColor: meta.color }}
+                  />
+                </div>
+                <span className="text-[10px] font-medium text-slate-500 font-mono">
+                  {completedTasks.length}/{storyline.tasks.length}
+                </span>
+              </div>
+              {/* 任务列表 */}
+              {storyline.tasks.map((task) => {
+                const done = completedTasks.includes(task.id);
+                return (
+                  <div
+                    key={task.id}
+                    className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                      done
+                        ? "border-green-200 bg-green-50/50"
+                        : "border-slate-100 bg-slate-50/50 hover:border-slate-200"
+                    }`}
+                    onClick={() => toggleTask(task.id)}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${
+                          done
+                            ? "border-green-400 bg-green-400"
+                            : "border-slate-300"
+                        }`}
+                      >
+                        {done && <span className="text-white text-[10px] font-bold">✓</span>}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{task.emoji}</span>
+                          <span className={`text-xs font-bold ${done ? "text-slate-400 line-through" : "text-slate-800"}`}>
+                            {task.name}
+                          </span>
+                        </div>
+                        <p className={`text-[10px] mt-1 ${done ? "text-slate-300" : "text-slate-500"}`}>
+                          {task.desc}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              {/* 完成奖励 */}
+              {completedTasks.length === storyline.tasks.length && (
+                <div className="p-3 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 animate-pulse">
+                  <p className="text-xs text-amber-700 font-semibold">🎉 任务完成！</p>
+                  <p className="text-[10px] text-amber-600 mt-1 italic">"{storyline.reward}"</p>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {recommendedTargets.map((target, i) => {
+                const difficulty = i === 0 ? "⭐⭐⭐" : i === 1 ? "⭐⭐" : "⭐";
+                const taskType = target.recommended_style === "short" ? "短线分析" : target.recommended_style === "swing" ? "波段复盘" : "基本面研究";
+                return (
+                  <div key={target.code} className="p-3 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors bg-slate-50/50">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-amber-500 font-mono">{difficulty}</span>
+                        <span className="text-sm font-bold text-slate-800">{target.name}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">{target.code}</span>
+                      </div>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-slate-100 text-slate-600">{taskType}</span>
+                    </div>
+                    <p className="text-xs text-slate-500 mb-2">{target.reason}</p>
+                    <div className="flex items-center gap-3 text-[10px] text-slate-400 mb-2">
+                      <span>🎯 机会评分 <strong className="text-slate-700">{target.opportunity_score}</strong></span>
+                      <span>⚠️ 风险 <strong className={target.risk_level === "高" ? "text-red-500" : target.risk_level === "中" ? "text-amber-500" : "text-emerald-500"}>{target.risk_level}</strong></span>
+                      <span>🏷️ {target.industry}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {target.trigger_source.map((src) => (
+                        <span key={src} className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600">{src}</span>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => onFillResearch(target as unknown as RecommendedTarget)}
+                      className="w-full py-2 text-xs font-semibold text-white rounded-lg transition-all hover:brightness-110 active:scale-[0.98]"
+                      style={{ backgroundColor: meta.color }}
+                    >
+                      接受任务 →
+                    </button>
+                  </div>
+                );
+              })}
+              <div className="px-3">
+                <p className="text-[10px] text-slate-400 text-center">Demo数据，仅用于产品演示，不代表实时行情。</p>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

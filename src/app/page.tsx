@@ -45,6 +45,8 @@ import {
   TRADETI_QUESTIONS,
   calculateTradeTIResult,
 } from "@/lib/mini-mock";
+import { getStoryline, getDefaultStoryline } from "@/lib/storylines";
+import type { PersonalityStoryline, StoryTask } from "@/lib/storylines";
 
 type TabId = "market" | "research" | "review" | "profile";
 
@@ -1979,6 +1981,40 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
   const [globalNews, setGlobalNews] = useState<GlobalNewsEvent[]>([]);
   const [globalNewsLoading, setGlobalNewsLoading] = useState(true);
 
+  // 人格身份
+  const personalityId = tradeTIResult?.result_type || null;
+
+  // 人格故事线
+  const storyline = personalityId ? getStoryline(personalityId) : getDefaultStoryline();
+  const [completedTasks, setCompletedTasks] = useState<string[]>([]);
+
+  // 从 localStorage 加载任务完成状态
+  useEffect(() => {
+    const saved = localStorage.getItem("tradeti_story_progress");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.personalityId === personalityId) {
+          setCompletedTasks(parsed.completedTasks || []);
+        }
+      } catch {}
+    }
+  }, [personalityId]);
+
+  // 切换任务完成状态
+  const toggleTask = (taskId: string) => {
+    setCompletedTasks((prev) => {
+      const next = prev.includes(taskId)
+        ? prev.filter((id) => id !== taskId)
+        : [...prev, taskId];
+      localStorage.setItem(
+        "tradeti_story_progress",
+        JSON.stringify({ personalityId, completedTasks: next })
+      );
+      return next;
+    });
+  };
+
   useEffect(() => {
     let cancelled = false;
     setSnapshotLoading(true);
@@ -2038,7 +2074,6 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
   const events = marketSnapshot?.events?.length ? marketSnapshot.events : mockMarketData.events;
 
   // 人格搭子的问候语
-  const personalityId = tradeTIResult?.result_type || null;
   const buddyGreetings: Record<string, { greeting: string; line: string }> = {
     wall_street: { greeting: "华尔街在逃交易员", line: "今天板块轮动很快，但你的逻辑比情绪快。稳住。" },
     old_money: { greeting: "老钱，老了才有钱", line: "机会又来了。这次别观察三年，先看三分钟。" },
@@ -2147,54 +2182,80 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
         {snapshotError && <p className="text-[10px] text-amber-500 mt-1">{snapshotError}</p>}
       </div>
 
-      {/* 3. 主线任务 — 今日推荐研究标的 */}
+      {/* 3. 主线任务 — 人格成长故事线 */}
       <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-3 border-b border-slate-100 flex items-center gap-2">
-          <span className="text-sm">📋</span>
-          <span className="text-sm font-bold text-slate-800">今日主线任务</span>
-          <span className="text-[10px] text-slate-400 ml-auto">搭子推荐</span>
+        <div className="p-3 border-b border-slate-100">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-sm">📋</span>
+            <span className="text-sm font-bold text-slate-800">今日主线任务</span>
+            <span className="text-[10px] text-slate-400 ml-auto">{storyline?.title}</span>
+          </div>
+          {storyline && (
+            <p className="text-xs text-slate-500 italic mt-1">
+              &ldquo;{storyline.opening}&rdquo;
+            </p>
+          )}
         </div>
-        <div className="p-3 space-y-3">
-          {recommendedTargets.map((target, i) => {
-            const difficulty = i === 0 ? "⭐⭐⭐" : i === 1 ? "⭐⭐" : "⭐";
-            const taskType = target.recommended_style === "short" ? "短线分析" : target.recommended_style === "swing" ? "波段复盘" : "基本面研究";
+        <div className="p-3 space-y-2">
+          {storyline?.tasks.map((task) => {
+            const isDone = completedTasks.includes(task.id);
             return (
-              <div key={target.code} className="p-3 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors bg-slate-50/50">
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-amber-500 font-mono">{difficulty}</span>
-                    <span className="text-sm font-bold text-slate-800">{target.name}</span>
-                    <span className="text-[10px] text-slate-400 font-mono">{target.code}</span>
+              <div
+                key={task.id}
+                onClick={() => toggleTask(task.id)}
+                className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                  isDone
+                    ? "bg-emerald-50 border-emerald-200"
+                    : "bg-slate-50/50 border-slate-100 hover:border-slate-200"
+                }`}
+              >
+                <div className="flex items-start gap-2.5">
+                  <div
+                    className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-xs border-2 flex-shrink-0 transition-all ${
+                      isDone
+                        ? "bg-emerald-500 border-emerald-500 text-white"
+                        : "border-slate-300 hover:border-blue-400"
+                    }`}
+                  >
+                    {isDone ? "✓" : ""}
                   </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-slate-100 text-slate-600">
-                    {taskType}
-                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="text-sm">{task.emoji}</span>
+                      <span
+                        className={`text-xs font-bold ${isDone ? "text-emerald-700" : "text-slate-800"}`}
+                      >
+                        {task.name}
+                      </span>
+                      {isDone && (
+                        <span className="text-[10px] text-emerald-500 ml-auto">已完成</span>
+                      )}
+                    </div>
+                    <p className={`text-[11px] ${isDone ? "text-emerald-600" : "text-slate-500"}`}>
+                      {task.desc}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-xs text-slate-500 mb-2">{target.reason}</p>
-                <div className="flex items-center gap-3 text-[10px] text-slate-400 mb-2">
-                  <span>🎯 机会评分 <strong className="text-slate-700">{target.opportunity_score}</strong></span>
-                  <span>⚠️ 风险 <strong className={target.risk_level === "高" ? "text-red-500" : target.risk_level === "中" ? "text-amber-500" : "text-emerald-500"}>{target.risk_level}</strong></span>
-                  <span>🏷️ {target.industry}</span>
-                </div>
-                <div className="flex flex-wrap gap-1 mb-2">
-                  {target.trigger_source.map((src) => (
-                    <span key={src} className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600">{src}</span>
-                  ))}
-                </div>
-                <button
-                  onClick={() => onFillResearch(target as unknown as RecommendedTarget)}
-                  className="w-full py-2 text-xs font-semibold text-white rounded-lg transition-all hover:brightness-110 active:scale-[0.98]"
-                  style={{ backgroundColor: meta.color }}
-                >
-                  接受任务 →
-                </button>
               </div>
             );
           })}
         </div>
-        <div className="px-3 pb-3">
-          <p className="text-[10px] text-slate-400 text-center">Demo数据，仅用于产品演示，不代表实时行情。</p>
-        </div>
+        {storyline && (
+          <div className="px-3 pb-3">
+            <p className="text-[10px] text-slate-400 text-center italic">
+              {completedTasks.length === storyline.tasks.length
+                ? `✨ ${storyline.reward}`
+                : `搭子说：${storyline.opening}`}
+            </p>
+          </div>
+        )}
+        {!personalityId && (
+          <div className="px-3 pb-3">
+            <p className="text-[10px] text-slate-400 text-center">
+              完成人格测试，解锁专属成长故事线 ✨
+            </p>
+          </div>
+        )}
       </div>
 
       {/* 4. 全球冒险地图 - 仅在数据可用时显示 */}
