@@ -241,7 +241,7 @@ export default function MiniProgramPage() {
 // ===== 投资风格问卷 =====
 // ===== SBTI 交易风格测试（多巴胺风格）=====
 // ===== tradeTI 交易抽象人格测试 =====
-type TradeTIScreen = "intro" | "questions" | "result" | "blocked";
+type TradeTIScreen = "intro" | "questions" | "result";
 
 function TradeTITest({ onComplete, onSkip }: { onComplete: () => void; onSkip: () => void }) {
   const [screen, setScreen] = useState<TradeTIScreen>("intro");
@@ -252,7 +252,6 @@ function TradeTITest({ onComplete, onSkip }: { onComplete: () => void; onSkip: (
   const [resultPersonality, setResultPersonality] = useState<TradeTIPersonalityId | null>(null);
   const [resultPassScore, setResultPassScore] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [blockBtnClicked, setBlockBtnClicked] = useState<number | null>(null);
 
   const handleStart = () => setScreen("questions");
 
@@ -285,15 +284,9 @@ function TradeTITest({ onComplete, onSkip }: { onComplete: () => void; onSkip: (
             completed_at: new Date().toISOString(),
           };
           localStorage.setItem("tradeti_state", JSON.stringify(state));
-          if (result.is_unlocked) {
-            setResultPersonality(result.personality_id);
-            setResultPassScore(result.pass_score);
-            setScreen("result");
-          } else {
-            setResultPersonality(result.personality_id);
-            setResultPassScore(result.pass_score);
-            setScreen("blocked");
-          }
+          setResultPersonality(result.personality_id);
+          setResultPassScore(result.pass_score);
+          setScreen("result");
         }, 2000);
       }
     }, 500);
@@ -306,12 +299,7 @@ function TradeTITest({ onComplete, onSkip }: { onComplete: () => void; onSkip: (
     setSelectedOption(null);
     setIsTransitioning(false);
     setResultPersonality(null);
-    setBlockBtnClicked(null);
     setScreen("intro");
-  };
-
-  const handleBlockBtn = (idx: number) => {
-    setBlockBtnClicked(idx);
   };
 
   // ===== 首屏 =====
@@ -357,10 +345,8 @@ function TradeTITest({ onComplete, onSkip }: { onComplete: () => void; onSkip: (
         <div className="flex-1 p-6 flex flex-col justify-center">
           <div className="text-center mb-6">
             <div className="text-6xl mb-3 animate-bounce">{p.emoji}</div>
-            <h2 className="text-3xl font-black mb-2" style={{ color: p.color }}>{p.name}</h2>
-            <div className="bg-[#0D9488]/10 rounded-2xl p-4 mb-4 border-2 border-[#0D9488]/20"><p className="text-sm text-slate-700 leading-relaxed">{p.description}</p></div>
-            <p className="text-xs text-[#0D9488] font-bold">交易所门口没有你的通缉令，但市场已经注意到你了。</p>
-            <p className="text-xs text-[#0D9488] font-bold mt-1">你已解锁完整A股可视化投研Agent。</p>
+            <h2 className="text-3xl font-black mb-3" style={{ color: p.color }}>{p.name}</h2>
+            <div className="bg-white/80 rounded-2xl p-4 mb-6 border border-slate-100"><p className="text-sm text-slate-700 leading-relaxed">{p.description}</p></div>
           </div>
           <button onClick={onComplete} className="w-full py-4 rounded-2xl font-black text-white text-lg transition-all hover:scale-[1.02] active:scale-95 shadow-lg" style={{ background: `linear-gradient(135deg, ${p.color}, ${p.color}cc)` }}>进入完整功能区 🚀</button>
           <p className="text-[10px] text-slate-400 text-center mt-4">tradeTI仅供娱乐和投资行为自省，不构成投资建议。股票市场存在风险。</p>
@@ -369,31 +355,8 @@ function TradeTITest({ onComplete, onSkip }: { onComplete: () => void; onSkip: (
     );
   }
 
-  // ===== 拦截页 =====
-  if (screen === "blocked" && resultPersonality) {
-    const p = TRADETI_PERSONALITIES[resultPersonality];
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-[#FFF8E1] to-white flex flex-col max-w-md mx-auto">
-        <div className="flex-1 p-6 flex flex-col justify-center">
-          <div className="text-center mb-6">
-            <div className="text-6xl mb-3 animate-bounce">{p.emoji}</div>
-            <h2 className="text-3xl font-black mb-2" style={{ color: p.color }}>{p.name}</h2>
-            <div className="bg-orange-50 rounded-2xl p-4 mb-3 border-2 border-orange-200"><p className="text-sm text-slate-700 leading-relaxed font-bold">{p.description}</p></div>
-            <div className="bg-red-50 rounded-2xl p-4 border-2 border-red-200"><p className="text-xs text-red-600 font-bold mb-1">系统判断：当前暂不建议解锁完整投研功能。</p><p className="text-xs text-red-500">{p.block_reason}</p></div>
-          </div>
-          <div className="space-y-3 mb-4">
-            {p.block_buttons.map((btn, i) => (
-              <button key={i} onClick={() => handleBlockBtn(i)} className={`w-full py-3.5 rounded-2xl font-black text-white text-base transition-all hover:scale-[1.02] active:scale-95 shadow-lg ${blockBtnClicked === i ? "opacity-70 scale-95" : ""}`} style={{ background: i === 0 ? `linear-gradient(135deg, ${p.color}, ${p.color}cc)` : "linear-gradient(135deg, #64748B, #94A3B8)" }}>{blockBtnClicked === i ? "冷静是你今天最好的交易。" : btn}</button>
-            ))}
-          </div>
-          {p.block_small_link && <button onClick={handleRetake} className="w-full text-center text-xs text-slate-400 hover:text-slate-600 py-2 transition-colors">{p.block_small_link}</button>}
-          {!p.block_small_link && <button onClick={handleRetake} className="w-full py-3 rounded-2xl font-bold text-slate-500 text-sm border-2 border-slate-200 hover:bg-slate-50 transition-all">返回重测</button>}
-          <button onClick={onSkip} className="w-full py-3 mt-2 rounded-2xl font-bold text-slate-400 text-sm border-2 border-dashed border-slate-200 hover:border-slate-300 transition-all">跳过测试，直接进入 →</button>
-          <p className="text-[10px] text-slate-400 text-center mt-4">tradeTI仅供娱乐和投资行为自省，不构成投资建议。股票市场存在风险。</p>
-        </div>
-      </div>
-    );
-  }
+  // ===== 拦截页（已废弃，所有人格均可进入完整功能）=====
+  // 后续可改为人格成长故事线入口
 
   // ===== 答题页 =====
   const question = TRADETI_QUESTIONS[currentQ];
