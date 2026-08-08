@@ -60,6 +60,7 @@ export default function MiniProgramPage() {
   const [activeTab, setActiveTab] = useState<TabId>("market");
   const [tradeTIUnlocked, setTradeTIUnlocked] = useState(false);
   const [tradeTICompleted, setTradeTICompleted] = useState(false);
+  const [tradeTISkipped, setTradeTISkipped] = useState(false); // 本次会话跳过（不保存到 localStorage）
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [tradeTIResult, setTradeTIResult] = useState<TradeTIState | null>(null);
   const [currentTime, setCurrentTime] = useState(() => {
@@ -150,12 +151,12 @@ export default function MiniProgramPage() {
     setTradeTICompleted(true);
   };
 
-  if (!tradeTICompleted && !isLoadingProfile) {
-    return <TradeTITest onComplete={completeTradeTI} />;
+  if (!tradeTICompleted && !tradeTISkipped && !isLoadingProfile) {
+    return <TradeTITest onComplete={completeTradeTI} onSkip={() => setTradeTISkipped(true)} />;
   }
 
   if (isLoadingProfile) {
-    return <TradeTITest onComplete={completeTradeTI} />;
+    return <TradeTITest onComplete={completeTradeTI} onSkip={() => setTradeTISkipped(true)} />;
   }
 
   return (
@@ -239,7 +240,7 @@ export default function MiniProgramPage() {
 // ===== tradeTI 交易抽象人格测试 =====
 type TradeTIScreen = "intro" | "questions" | "result" | "blocked";
 
-function TradeTITest({ onComplete }: { onComplete: () => void }) {
+function TradeTITest({ onComplete, onSkip }: { onComplete: () => void; onSkip: () => void }) {
   const [screen, setScreen] = useState<TradeTIScreen>("intro");
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState<{ question_id: number; type: "pass" | TradeTIPersonalityId }[]>([]);
@@ -384,7 +385,7 @@ function TradeTITest({ onComplete }: { onComplete: () => void }) {
           </div>
           {p.block_small_link && <button onClick={handleRetake} className="w-full text-center text-xs text-slate-400 hover:text-slate-600 py-2 transition-colors">{p.block_small_link}</button>}
           {!p.block_small_link && <button onClick={handleRetake} className="w-full py-3 rounded-2xl font-bold text-slate-500 text-sm border-2 border-slate-200 hover:bg-slate-50 transition-all">返回重测</button>}
-          <button onClick={onComplete} className="w-full py-3 mt-2 rounded-2xl font-bold text-slate-400 text-sm border-2 border-dashed border-slate-200 hover:border-slate-300 transition-all">跳过测试，直接进入 →</button>
+          <button onClick={onSkip} className="w-full py-3 mt-2 rounded-2xl font-bold text-slate-400 text-sm border-2 border-dashed border-slate-200 hover:border-slate-300 transition-all">跳过测试，直接进入 →</button>
           <p className="text-[10px] text-slate-400 text-center mt-4">tradeTI仅供娱乐和投资行为自省，不构成投资建议。股票市场存在风险。</p>
         </div>
       </div>

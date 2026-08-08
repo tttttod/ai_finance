@@ -62,6 +62,7 @@ export default function MiniProgramPage() {
   const [currentTime, setCurrentTime] = useState("");
   const [tradeTIUnlocked, setTradeTIUnlocked] = useState(false);
   const [tradeTICompleted, setTradeTICompleted] = useState(false);
+  const [tradeTISkipped, setTradeTISkipped] = useState(false); // 本次会话跳过（不保存到 localStorage）
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [tradeTIResult, setTradeTIResult] = useState<TradeTIState | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfileSurvey>({
@@ -153,13 +154,13 @@ export default function MiniProgramPage() {
   };
 
   // 未做 tradeTI 时显示测试（加载中默认显示测试，避免闪烁）
-  if (!tradeTICompleted && !isLoadingProfile) {
-    return <TradeTITest onComplete={completeTradeTI} />;
+  if (!tradeTICompleted && !tradeTISkipped && !isLoadingProfile) {
+    return <TradeTITest onComplete={completeTradeTI} onSkip={() => setTradeTISkipped(true)} />;
   }
 
   // 加载中显示测试骨架
   if (isLoadingProfile) {
-    return <TradeTITest onComplete={completeTradeTI} />;
+    return <TradeTITest onComplete={completeTradeTI} onSkip={() => setTradeTISkipped(true)} />;
   }
 
   return (
@@ -248,7 +249,7 @@ export default function MiniProgramPage() {
 // ===== tradeTI 交易抽象人格测试 =====
 type TradeTIScreen = "intro" | "questions" | "result" | "blocked";
 
-function TradeTITest({ onComplete }: { onComplete: () => void }) {
+function TradeTITest({ onComplete, onSkip }: { onComplete: () => void; onSkip: () => void }) {
   const [screen, setScreen] = useState<TradeTIScreen>("intro");
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState<{ question_id: number; type: "pass" | TradeTIPersonalityId }[]>([]);
@@ -483,7 +484,7 @@ function TradeTITest({ onComplete }: { onComplete: () => void }) {
           )}
 
           <button
-            onClick={onComplete}
+            onClick={onSkip}
             className="w-full py-3 mt-2 rounded-2xl font-bold text-slate-400 text-sm border-2 border-dashed border-slate-200 hover:border-slate-300 transition-all"
           >
             跳过测试，直接进入 →
