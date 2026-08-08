@@ -2385,6 +2385,7 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
             ))}
           </div>
         </div>
+      </div>
       )}
 
       {/* 5. 支线任务 — 热门区域 + 异动信号 */}
