@@ -359,7 +359,13 @@ function TradeTITest({ onComplete, onSkip }: { onComplete: () => void; onSkip: (
       <div className="min-h-screen bg-gradient-to-b from-[#FFF8E1] to-white flex flex-col max-w-md mx-auto">
         <div className="flex-1 p-6 flex flex-col justify-center">
           <div className="text-center mb-6">
-            <div className="text-6xl mb-3 animate-bounce">{p.emoji}</div>
+            <div className="w-28 h-28 mx-auto mb-3 rounded-2xl overflow-hidden border-2 border-white shadow-lg" style={{ borderColor: `${p.color}40` }}>
+              <img
+                src={`/avatar_${resultPersonality}.png`}
+                alt={p.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
             <h2 className="text-3xl font-black mb-3" style={{ color: p.color }}>{p.name}</h2>
             <div className="bg-white/80 rounded-2xl p-4 mb-6 border border-slate-100"><p className="text-sm text-slate-700 leading-relaxed">{p.description}</p></div>
           </div>
@@ -1716,7 +1722,13 @@ function ProfileTab({ profile, tradeTIResult, watchlist, onRemoveFromWatchlist, 
         {tradeTIResult && tradeTIResult.result_type ? (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="text-xl">{TRADETI_PERSONALITIES[tradeTIResult.result_type]?.emoji || ""}</span>
+              <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-[#FFD93D] flex-shrink-0">
+                <img
+                  src={`/avatar_${tradeTIResult.result_type}.png`}
+                  alt={TRADETI_PERSONALITIES[tradeTIResult.result_type]?.name || ""}
+                  className="w-full h-full object-cover"
+                />
+              </div>
               <span className="text-sm font-bold text-slate-800">{TRADETI_PERSONALITIES[tradeTIResult.result_type]?.name || tradeTIResult.result_type}</span>
             </div>
             <p className="text-xs text-slate-500">{TRADETI_PERSONALITIES[tradeTIResult.result_type]?.description}</p>
@@ -2048,10 +2060,16 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
       >
         <div className="flex items-center gap-3">
           <div
-            className="w-12 h-12 rounded-full flex items-center justify-center text-2xl shadow-sm"
-            style={{ backgroundColor: `${meta.color}18` }}
+            className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 shadow-sm border-2"
+            style={{ borderColor: `${meta.color}40` }}
           >
-            {meta.emoji}
+            {personalityId ? (
+              <img src={`/avatar_${personalityId}.png`} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-2xl" style={{ backgroundColor: `${meta.color}18` }}>
+                🗺️
+              </div>
+            )}
           </div>
           <div className="flex-1">
             <p className="text-sm font-bold text-slate-800">
