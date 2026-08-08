@@ -143,17 +143,13 @@ export default function MiniProgramPage() {
     return <TradeTITest onComplete={completeTradeTI} />;
   }
 
-  if (tradeTICompleted && !tradeTIUnlocked) {
-    return <TradeTITest onComplete={completeTradeTI} />;
-  }
-
   return (
-    <div className="min-h-screen bg-[#F5F5F7] flex flex-col max-w-md mx-auto relative">
-      {/* 状态栏模拟 */}
-      <div className="bg-white px-4 py-2 flex items-center justify-between text-xs text-slate-500 border-b border-slate-100">
-        <span>9:41</span>
-        <span className="font-semibold text-sm text-slate-800">🗺️ 市场冒险局</span>
-        <span>📶 </span>
+    <div className="min-h-screen bg-gradient-to-b from-[#FFF8E1] via-[#FFF3CD] to-white flex flex-col max-w-md mx-auto relative">
+      {/* 状态栏模拟 - 市场冒险局 */}
+      <div className="bg-gradient-to-r from-[#FF6B6B] via-[#FFE66D] to-[#4ECDC4] px-4 py-2 flex items-center justify-between text-xs text-white shadow-md">
+        <span className="font-black">9:41</span>
+        <span className="font-black text-sm">🗺️ 市场冒险局</span>
+        <span className="font-black">📶</span>
       </div>
 
       {/* 主内容区 */}
@@ -191,23 +187,31 @@ export default function MiniProgramPage() {
             }} />}
       </div>
 
-      {/* 底部 Tab 栏 */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t border-slate-200 flex">
+      {/* 底部 Tab 栏 - 市场冒险局 */}
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/90 backdrop-blur-sm border-t-2 border-[#FFE66D] flex rounded-t-3xl shadow-[0_-4px_20px_rgba(255,107,107,0.15)]">
         {[
-          { id: "market" as TabId, label: "冒险", icon: "🗺️" },
-          { id: "research" as TabId, label: "任务", icon: "📋" },
-          { id: "review" as TabId, label: "工坊", icon: "🔧" },
-          { id: "profile" as TabId, label: "档案", icon: "🎒" },
+          { id: "market" as TabId, label: "冒险", icon: "🗺️", color: "#FF6B6B" },
+          { id: "research" as TabId, label: "任务", icon: "📋", color: "#8B5CF6" },
+          { id: "review" as TabId, label: "工坊", icon: "🔧", color: "#4ECDC4" },
+          { id: "profile" as TabId, label: "档案", icon: "🎒", color: "#FF6B35" },
         ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-2.5 flex flex-col items-center gap-0.5 transition-colors ${
-              activeTab === tab.id ? "text-blue-600" : "text-slate-500"
-            }`}
+            className="flex-1 py-2.5 flex flex-col items-center gap-0.5 transition-all duration-300"
+            style={{
+              color: activeTab === tab.id ? tab.color : "#94A3B8",
+            }}
           >
-            <span className="text-lg">{tab.icon}</span>
-            <span className="text-[10px] font-medium">{tab.label}</span>
+            <span className={`text-lg transition-transform duration-300 ${activeTab === tab.id ? "scale-125" : ""}`}>
+              {tab.icon}
+            </span>
+            <span className={`text-[11px] transition-all duration-300 ${activeTab === tab.id ? "font-black" : "font-medium"}`}>
+              {tab.label}
+            </span>
+            {activeTab === tab.id && (
+              <div className="h-1 w-6 rounded-full mt-0.5" style={{ backgroundColor: tab.color }} />
+            )}
           </button>
         ))}
       </div>
