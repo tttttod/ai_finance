@@ -32,7 +32,8 @@ export async function saveUserFeedback(
     try {
       await sb.from("user_feedback").insert({
         rating: payload.rating,
-        selected_issues: payload.selectedIssues,
+        selected_issues: payload.selectedIssues || null,
+        dimension_scores: payload.dimensionScores || null,
         comment: payload.comment,
         page: payload.page,
         user_agent: payload.userAgent || null,

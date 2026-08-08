@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { rating, selectedIssues, comment, page } = body;
+    const { rating, selectedIssues, dimensionScores, comment, page } = body;
 
     // Validate rating
     if (typeof rating !== "number" || rating < 1 || rating > 5) {
@@ -17,12 +17,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate selectedIssues
-    if (!Array.isArray(selectedIssues) || !selectedIssues.every((i: unknown) => typeof i === "string")) {
-      return NextResponse.json(
-        { success: false, error: "selectedIssues must be a string array" },
-        { status: 400 },
-      );
+    // Validate dimensionScores (new format) or selectedIssues (legacy)
+    if (dimensionScores !== undefined) {
+      if (typeof dimensionScores !== "object" || dimensionScores === null || Array.isArray(dimensionScores)) {
+        return NextResponse.json(
+          { success: false, error: "dimensionScores must be an object" },
+          { status: 400 },
+        );
+      }
+    } else if (selectedIssues !== undefined) {
+      if (!Array.isArray(selectedIssues) || !selectedIssues.every((i: unknown) => typeof i === "string")) {
+        return NextResponse.json(
+          { success: false, error: "selectedIssues must be a string array" },
+          { status: 400 },
+        );
+      }
     }
 
     // Validate comment length
@@ -35,7 +44,8 @@ export async function POST(request: NextRequest) {
 
     const payload: UserFeedbackPayload = {
       rating,
-      selectedIssues,
+      ...(dimensionScores ? { dimensionScores } : {}),
+      ...(selectedIssues ? { selectedIssues } : {}),
       comment: comment || "",
       page: page || "unknown",
       createdAt: new Date().toISOString(),

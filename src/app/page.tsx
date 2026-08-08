@@ -1697,24 +1697,31 @@ function ReviewDetailPage({ review, onBack }: { review: ReviewDetail; onBack: ()
 function ProfileTab({ profile, tradeTIResult, onRetakeSurvey }: { profile: UserProfileSurvey; tradeTIResult: TradeTIState | null; onRetakeSurvey: () => void }) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [rating, setRating] = useState(0);
-  const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const feedbackQuestions = [
-    "数据是否足够及时？",
-    "推荐研究标的是否有帮助？",
-    "AI 解释是否容易理解？",
-    "风险提示是否充分？",
-    "页面操作是否顺手？",
-    "你是否愿意继续使用这个工具？",
+  const feedbackDimensions = [
+    { key: "timeliness", label: "数据及时性", emoji: "📡" },
+    { key: "recommendation", label: "推荐标的质量", emoji: "🎯" },
+    { key: "ai_clarity", label: "AI 解释易懂度", emoji: "💡" },
+    { key: "risk_warning", label: "风险提示充分度", emoji: "⚠️" },
+    { key: "ux_smooth", label: "页面操作流畅度", emoji: "🖐️" },
+    { key: "retention", label: "持续使用意愿", emoji: "🔄" },
   ];
 
-  const toggleIssue = (q: string) => {
-    setSelectedIssues((prev) => prev.includes(q) ? prev.filter((x) => x !== q) : [...prev, q]);
+  const [dimensionScores, setDimensionScores] = useState<Record<string, number>>({});
+
+  const setDimensionScore = (key: string, score: number) => {
+    setDimensionScores((prev) => ({ ...prev, [key]: score }));
   };
+
+  const faces = [
+    { value: 1, emoji: "😞", label: "不满意" },
+    { value: 2, emoji: "😐", label: "一般" },
+    { value: 3, emoji: "😊", label: "满意" },
+  ];
 
   const handleSubmitFeedback = async () => {
     if (rating < 1 || rating > 5) return;
@@ -1726,7 +1733,7 @@ function ProfileTab({ profile, tradeTIResult, onRetakeSurvey }: { profile: UserP
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           rating,
-          selectedIssues,
+          dimensionScores,
           comment,
           page: "profile",
           userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
@@ -1829,23 +1836,36 @@ function ProfileTab({ profile, tradeTIResult, onRetakeSurvey }: { profile: UserP
               </div>
             ) : (
               <>
-                <div>
-                  <p className="text-xs font-bold text-slate-700 mb-2">请评价以下问题（可多选）：</p>
-                  <div className="space-y-1.5">
-                    {feedbackQuestions.map((q) => (
-                      <button
-                        key={q}
-                        onClick={() => toggleIssue(q)}
-                        className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
-                          selectedIssues.includes(q)
-                            ? "bg-[#8B5CF6]/10 text-[#8B5CF6] border border-[#8B5CF6]/30"
-                            : "bg-slate-50 text-slate-600 border border-transparent hover:bg-slate-100"
-                        }`}
-                      >
-                        {selectedIssues.includes(q) ? "✅" : "○"} {q}
-                      </button>
-                    ))}
-                  </div>
+                <div className="space-y-3">
+                  <p className="text-xs font-bold text-slate-700">请为以下维度打分：</p>
+                  {feedbackDimensions.map((dim) => (
+                    <div key={dim.key} className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-slate-700 min-w-[90px] shrink-0">
+                        <span className="mr-1">{dim.emoji}</span>{dim.label}
+                      </span>
+                      <div className="flex gap-1.5">
+                        {faces.map((f) => {
+                          const selected = dimensionScores[dim.key] === f.value;
+                          return (
+                            <button
+                              key={f.value}
+                              onClick={() => setDimensionScore(dim.key, f.value)}
+                              className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all ${
+                                selected
+                                  ? f.value === 3 ? "bg-green-100 border-2 border-green-400 scale-110"
+                                    : f.value === 2 ? "bg-yellow-100 border-2 border-yellow-400 scale-110"
+                                    : "bg-red-100 border-2 border-red-400 scale-110"
+                                  : "bg-slate-50 border border-slate-200 hover:bg-slate-100"
+                              }`}
+                              title={f.label}
+                            >
+                              {f.emoji}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
                 <div>
                   <p className="text-xs font-bold text-slate-700 mb-1.5">总体评分：</p>
