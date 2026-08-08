@@ -149,6 +149,13 @@ export default function MiniProgramPage() {
 
   // tradeTI 通关
   const completeTradeTI = () => {
+    const saved = localStorage.getItem("tradeti_state");
+    if (saved) {
+      try {
+        const state: TradeTIState = JSON.parse(saved);
+        setTradeTIResult(state);
+      } catch { /* ignore */ }
+    }
     setTradeTIUnlocked(true);
     setTradeTICompleted(true);
   };
@@ -349,6 +356,7 @@ function TradeTITest({ onComplete, onSkip }: { onComplete: () => void; onSkip: (
             <div className="bg-white/80 rounded-2xl p-4 mb-6 border border-slate-100"><p className="text-sm text-slate-700 leading-relaxed">{p.description}</p></div>
           </div>
           <button onClick={onComplete} className="w-full py-4 rounded-2xl font-black text-white text-lg transition-all hover:scale-[1.02] active:scale-95 shadow-lg" style={{ background: `linear-gradient(135deg, ${p.color}, ${p.color}cc)` }}>进入完整功能区 🚀</button>
+          <button onClick={() => { setResultPersonality(null); setResultPassScore(0); setCurrentQ(0); setAnswers([]); setScreen("intro"); }} className="w-full py-3 rounded-2xl font-black text-slate-500 text-sm mt-3 border-2 border-slate-200 bg-white transition-all hover:scale-[1.02] active:scale-95">返回重测</button>
           <p className="text-[10px] text-slate-400 text-center mt-4">tradeTI仅供娱乐和投资行为自省，不构成投资建议。股票市场存在风险。</p>
         </div>
       </div>
@@ -1663,9 +1671,8 @@ function ProfileTab({ profile, tradeTIResult, watchlist, onRemoveFromWatchlist, 
         {tradeTIResult && tradeTIResult.result_type ? (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="text-xl">{TRADETI_PERSONALITIES[tradeTIResult.result_type]?.emoji || "🎭"}</span>
+              <span className="text-xl">{TRADETI_PERSONALITIES[tradeTIResult.result_type]?.emoji || ""}</span>
               <span className="text-sm font-bold text-slate-800">{TRADETI_PERSONALITIES[tradeTIResult.result_type]?.name || tradeTIResult.result_type}</span>
-              {tradeTIResult.is_unlocked && <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#0D9488]/10 text-[#0D9488] font-bold">已通关</span>}
             </div>
             <p className="text-xs text-slate-500">{TRADETI_PERSONALITIES[tradeTIResult.result_type]?.description}</p>
           </div>
