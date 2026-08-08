@@ -45,3 +45,39 @@ CREATE TABLE IF NOT EXISTS user_feedback (
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_feedback_created_at ON user_feedback (created_at DESC);
+
+-- 4. Stock Context Cache
+-- Caches per-stock research context to reduce Tushare API calls
+CREATE TABLE IF NOT EXISTS stock_context_cache (
+  cache_key text PRIMARY KEY,
+  ts_code text NOT NULL,
+  payload jsonb NOT NULL DEFAULT '{}'::jsonb,
+  expires_at timestamptz NOT NULL,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_stock_context_cache_ts_code ON stock_context_cache (ts_code);
+CREATE INDEX IF NOT EXISTS idx_stock_context_cache_expires_at ON stock_context_cache (expires_at);
+
+-- 5. Stock Watchlist Candidates
+-- Records stocks that users have researched
+CREATE TABLE IF NOT EXISTS stock_watchlist_candidates (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  ts_code text NOT NULL,
+  query text,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_stock_watchlist_candidates_ts_code ON stock_watchlist_candidates (ts_code);
+
+-- 6. Rate Limit Buckets
+-- Tracks per-user and global rate limits for Tushare API calls
+CREATE TABLE IF NOT EXISTS rate_limit_buckets (
+  key text PRIMARY KEY,
+  count int NOT NULL DEFAULT 0,
+  reset_at timestamptz NOT NULL,
+  updated_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_rate_limit_buckets_reset_at ON rate_limit_buckets (reset_at);

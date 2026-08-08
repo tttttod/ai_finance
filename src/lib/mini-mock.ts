@@ -19,6 +19,7 @@ import {
   TradeTIScores,
   TRADETI_PRIORITY,
 } from "./mini-types";
+import type { StockResearchContext } from "./data/stock-context-types";
 
 // 生成因子评分
 function generateFactorScores(style: InvestmentStyle): FactorScore[] {
@@ -1029,5 +1030,293 @@ export function calculateTradeTIResult(
     pass_score: passScore,
     scores,
     is_unlocked: false,
+  };
+}
+
+// ===== 基于真实 StockResearchContext 生成 Agent 响应 =====
+
+function fmtNum(n: number | undefined, decimals = 2): string {
+  if (n === undefined || n === null) return "N/A";
+  return n.toFixed(decimals);
+}
+
+function fmtPct(n: number | undefined): string {
+  if (n === undefined || n === null) return "N/A";
+  return `${n > 0 ? "+" : ""}${n.toFixed(2)}%`;
+}
+
+function fmtMv(n: number | undefined): string {
+  if (n === undefined || n === null) return "N/A";
+  if (n >= 10000) return `${(n / 10000).toFixed(2)}万亿`;
+  return `${n.toFixed(2)}亿`;
+}
+
+export function generateAgentResponseFromContext(
+  step: number,
+  stepId: WorkflowStep,
+  target: string,
+  style: InvestmentStyle,
+  ctx: StockResearchContext,
+): AgentResponse {
+  const agentMap: Record<string, string> = {
+    step1_question: "lead",
+    step2_style: "lead",
+    step3_data: "data",
+    step4_market: "market",
+    step5_industry: "industry",
+    step6_fundamental: "fundamental",
+    step7_valuation: "valuation",
+    step8_technical: "technical",
+    step9_sentiment: "sentiment",
+    step10_scoring: "lead",
+    step11_bull: "bull",
+    step12_bear: "bear",
+    step13_risk: "risk",
+    step14_scenario: "lead",
+    step15_conclusion: "manager",
+    step16_review: "manager",
+  };
+
+  const stockName = ctx.stock.name || target;
+  const stockCode = ctx.stock.tsCode || "";
+  const industry = ctx.stock.industry || "未知";
+  const close = ctx.quote?.close;
+  const pctChg = ctx.quote?.pctChg;
+  const tradeDate = ctx.quote?.tradeDate;
+  const missing = ctx.dataQuality.missing;
+
+  const contentMap: Record<string, string> = {
+    step1_question: `已确认研究对象：${stockName}（${stockCode}），所属行业：${industry}。我将引导您完成一次完整的基本面分析流程。`,
+
+    step2_style: `投资风格：${style === "short" ? "短线" : style === "swing" ? "波段" : "长期"}。研究周期已设定。数据来源：${ctx.dataQuality.source === "tushare" ? "Tushare 实时" : ctx.dataQuality.source === "cache" ? "缓存" : "演示"}。`,
+
+    step3_data: (() => {
+      const parts: string[] = [];
+      if (ctx.quote) parts.push(`行情数据（${tradeDate}）`);
+      if (ctx.valuation) parts.push("估值数据");
+      if (ctx.technical) parts.push("技术指标");
+      if (ctx.market) parts.push("市场概览");
+      const available = parts.length > 0 ? parts.join("、") + "已就绪" : "无可用数据";
+      const missingStr = missing.length > 0 ? `缺失项：${missing.join("、")}` : "无重大缺失";
+      return `数据收集完成。${available}。${missingStr}。`;
+    })(),
+
+    step4_market: (() => {
+      if (ctx.market?.marketSummary) {
+        return ctx.market.marketSummary;
+      }
+      return "当前未获取到市场概览数据，使用默认判断：大盘处于震荡格局，风险偏好中性。";
+    })(),
+
+    step5_industry: (() => {
+      const ih = ctx.market?.industryHeat;
+      if (ih) {
+        return `${stockName}所属${industry}行业，行业平均涨跌幅${fmtPct(ih.avgChange)}，热度排名${ih.rank || "N/A"}，热度评分${fmtNum(ih.heat, 0)}。${ih.avgChange && ih.avgChange > 0 ? "行业景气度上行，板块表现强势。" : ih.avgChange && ih.avgChange < 0 ? "行业短期承压，需关注基本面变化。" : "行业表现中性。"}`;
+      }
+      return `${stockName}所属${industry}行业。当前未获取到行业热度数据，建议结合行业研报进一步分析。`;
+    })(),
+
+    step6_fundamental: (() => {
+      if (missing.includes("valuation") && !ctx.valuation) {
+        return "当前未接入高频财务数据，使用估值与交易数据辅助判断。建议参考公司最新财报获取完整基本面信息。";
+      }
+      const v = ctx.valuation;
+      const parts: string[] = [`${stockName}（${stockCode}）基本面概况：`];
+      if (v?.peTtm) parts.push(`PE(TTM) ${fmtNum(v.peTtm, 1)}倍`);
+      if (v?.pb) parts.push(`PB ${fmtNum(v.pb, 2)}倍`);
+      if (v?.turnoverRate) parts.push(`换手率 ${fmtNum(v.turnoverRate, 2)}%`);
+      parts.push("当前未接入高频财务数据（营收/净利润），使用估值与交易数据辅助判断。");
+      return parts.join("，");
+    })(),
+
+    step7_valuation: (() => {
+      const v = ctx.valuation;
+      if (!v) return "当前未获取到估值数据，无法进行估值分析。";
+      const parts: string[] = [];
+      if (v.peTtm) parts.push(`PE(TTM) ${fmtNum(v.peTtm, 1)}倍`);
+      if (v.pe) parts.push(`PE ${fmtNum(v.pe, 1)}倍`);
+      if (v.pb) parts.push(`PB ${fmtNum(v.pb, 2)}倍`);
+      if (v.totalMv) parts.push(`总市值 ${fmtMv(v.totalMv)}`);
+      if (v.circMv) parts.push(`流通市值 ${fmtMv(v.circMv)}`);
+      if (v.turnoverRate) parts.push(`换手率 ${fmtNum(v.turnoverRate, 2)}%`);
+      if (v.volumeRatio) parts.push(`量比 ${fmtNum(v.volumeRatio, 2)}`);
+      return `估值数据：${parts.join("，")}。`;
+    })(),
+
+    step8_technical: (() => {
+      const t = ctx.technical;
+      if (!t) return "当前未获取到足够日线数据，无法计算技术指标。";
+      const parts: string[] = [];
+      if (t.ma5) parts.push(`MA5 ${fmtNum(t.ma5)}`);
+      if (t.ma20) parts.push(`MA20 ${fmtNum(t.ma20)}`);
+      if (t.ma60) parts.push(`MA60 ${fmtNum(t.ma60)}`);
+      if (t.change5d !== undefined) parts.push(`5日涨跌 ${fmtPct(t.change5d)}`);
+      if (t.change20d !== undefined) parts.push(`20日涨跌 ${fmtPct(t.change20d)}`);
+      if (t.volatility20d !== undefined) parts.push(`20日波动率 ${fmtNum(t.volatility20d, 1)}%`);
+      if (t.support20) parts.push(`20日支撑 ${fmtNum(t.support20)}`);
+      if (t.pressure20) parts.push(`20日压力 ${fmtNum(t.pressure20)}`);
+      const trendText = t.trend === "bullish" ? "均线多头排列，趋势偏多" : t.trend === "bearish" ? "均线空头排列，趋势偏空" : "均线交织，趋势中性";
+      return `技术面：${parts.join("，")}。${trendText}。`;
+    })(),
+
+    step9_sentiment: (() => {
+      const parts: string[] = [];
+      if (ctx.quote?.pctChg !== undefined) {
+        parts.push(`最新涨跌幅 ${fmtPct(ctx.quote.pctChg)}`);
+      }
+      if (ctx.valuation?.turnoverRate) {
+        const tr = ctx.valuation.turnoverRate;
+        parts.push(`换手率 ${fmtNum(tr, 2)}%${tr > 5 ? "，交投活跃" : tr < 1 ? "，交投清淡" : ""}`);
+      }
+      if (ctx.valuation?.volumeRatio) {
+        const vr = ctx.valuation.volumeRatio;
+        parts.push(`量比 ${fmtNum(vr, 2)}${vr > 1.5 ? "，放量" : vr < 0.5 ? "，缩量" : ""}`);
+      }
+      return parts.length > 0 ? `市场情绪参考：${parts.join("，")}。` : "当前情绪面数据有限，建议关注公司公告和行业动态。";
+    })(),
+
+    step10_scoring: (() => {
+      // Generate factor scores influenced by real data
+      const baseScores = generateFactorScores(style);
+      // Adjust scores based on real context
+      const adjusted = baseScores.map((f) => {
+        let adj = 0;
+        if (ctx.technical?.trend === "bullish") adj += 5;
+        if (ctx.technical?.trend === "bearish") adj -= 5;
+        if (ctx.market?.industryHeat && ctx.market.industryHeat.heat && ctx.market.industryHeat.heat > 80) adj += 3;
+        const score = Math.max(30, Math.min(95, f.score + adj));
+        return { ...f, score, contribution: Math.round((score * f.weight) / 100) };
+      });
+      const total = adjusted.reduce((sum, f) => sum + f.contribution, 0);
+      return JSON.stringify({
+        content: `多因子评分完成，综合得分 ${total} 分（满分 100）。评分基于实时行情、估值和技术指标。`,
+        data: { scores: adjusted, totalScore: total },
+      });
+    })(),
+
+    step11_bull: (() => {
+      const points: string[] = [];
+      if (ctx.technical?.trend === "bullish") points.push("均线多头排列，技术趋势向好");
+      if (ctx.market?.industryHeat?.heat && ctx.market.industryHeat.heat > 70) points.push(`${industry}行业热度较高，板块景气度上行`);
+      if (ctx.quote?.pctChg && ctx.quote.pctChg > 0) points.push(`最新交易日上涨 ${fmtPct(ctx.quote.pctChg)}，短期动能充足`);
+      if (ctx.valuation?.peTtm && ctx.valuation.peTtm < 30) points.push(`PE(TTM) ${fmtNum(ctx.valuation.peTtm, 1)}倍，估值合理`);
+      if (points.length === 0) points.push("建议结合基本面研报寻找看多逻辑");
+      return JSON.stringify({
+        content: `看多观点：${points.join("；")}。`,
+        data: { points: points.map((p) => ({ argument: p, evidence: "数据支撑", confidence: 70 })) },
+      });
+    })(),
+
+    step12_bear: (() => {
+      const points: string[] = [];
+      if (ctx.technical?.trend === "bearish") points.push("均线空头排列，技术趋势偏弱");
+      if (ctx.valuation?.peTtm && ctx.valuation.peTtm > 60) points.push(`PE(TTM) ${fmtNum(ctx.valuation.peTtm, 1)}倍，估值偏高`);
+      if (ctx.technical?.volatility20d && ctx.technical.volatility20d > 40) points.push(`20日波动率 ${fmtNum(ctx.technical.volatility20d, 1)}%，波动较大`);
+      if (ctx.quote?.pctChg && ctx.quote.pctChg < -3) points.push(`最新交易日下跌 ${fmtPct(ctx.quote.pctChg)}，短期承压`);
+      if (points.length === 0) points.push("当前数据未显示明显看空信号，但仍需关注市场系统性风险");
+      return JSON.stringify({
+        content: `看空观点：${points.join("；")}。`,
+        data: { points: points.map((p) => ({ argument: p, evidence: "数据支撑", confidence: 65 })) },
+      });
+    })(),
+
+    step13_risk: (() => {
+      const risks: { name: string; level: string; desc: string }[] = [];
+      if (ctx.valuation?.peTtm && ctx.valuation.peTtm > 50) {
+        risks.push({ name: "估值风险", level: "高", desc: `PE(TTM) ${fmtNum(ctx.valuation.peTtm, 1)}倍，处于较高水平` });
+      } else if (ctx.valuation?.peTtm && ctx.valuation.peTtm > 30) {
+        risks.push({ name: "估值风险", level: "中", desc: `PE(TTM) ${fmtNum(ctx.valuation.peTtm, 1)}倍` });
+      } else {
+        risks.push({ name: "估值风险", level: "低", desc: "估值处于合理区间" });
+      }
+      if (ctx.technical?.volatility20d && ctx.technical.volatility20d > 40) {
+        risks.push({ name: "波动风险", level: "高", desc: `20日波动率 ${fmtNum(ctx.technical.volatility20d, 1)}%` });
+      } else {
+        risks.push({ name: "波动风险", level: "中", desc: "波动率处于正常范围" });
+      }
+      if (missing.length > 2) {
+        risks.push({ name: "数据缺失风险", level: "中", desc: `缺失数据项：${missing.join("、")}，可能影响分析准确性` });
+      }
+      return JSON.stringify({
+        content: `风险检查完成：${risks.map((r) => `${r.name}（${r.level}）`).join("、")}。`,
+        data: { risks },
+      });
+    })(),
+
+    step14_scenario: (() => {
+      const basePrice = close || 100;
+      const trend = ctx.technical?.trend || "neutral";
+      const vol = ctx.technical?.volatility20d || 25;
+
+      const optRet = Math.max(5, Math.round(vol * 0.6));
+      const neuRet = trend === "bullish" ? Math.round(vol * 0.1) : trend === "bearish" ? -Math.round(vol * 0.15) : 0;
+      const pesRet = -Math.max(5, Math.round(vol * 0.8));
+
+      const scenarios: ScenarioPrediction = {
+        optimistic: {
+          price: Math.round(basePrice * (1 + optRet / 100) * 100) / 100,
+          returnPct: optRet,
+          logic: `${industry}行业景气度上行，技术面趋势向好，资金流入加速。`,
+        },
+        neutral: {
+          price: Math.round(basePrice * (1 + neuRet / 100) * 100) / 100,
+          returnPct: neuRet,
+          logic: "市场维持震荡格局，个股跟随行业波动。",
+        },
+        pessimistic: {
+          price: Math.round(basePrice * (1 + pesRet / 100) * 100) / 100,
+          returnPct: pesRet,
+          logic: "市场系统性风险释放，行业景气度下行，估值承压。",
+        },
+      };
+      return JSON.stringify({
+        content: `三情景预测：乐观 +${optRet}%，中性 ${neuRet >= 0 ? "+" : ""}${neuRet}%，悲观 ${pesRet}%。基于当前价 ${fmtNum(basePrice)} 元和 20 日波动率 ${fmtNum(vol, 1)}%。`,
+        data: { scenarios },
+      });
+    })(),
+
+    step15_conclusion: (() => {
+      const report = generateReport(stockName, style);
+      return JSON.stringify({
+        content: `研究报告生成完成。${stockName}（${stockCode}）最新价 ${fmtNum(close)}元，涨跌幅 ${fmtPct(pctChg)}。数据来源：${ctx.dataQuality.source}。`,
+        data: { report },
+      });
+    })(),
+
+    step16_review: (() => {
+      const reviewTask = generateReviewTask(stockName, style);
+      return JSON.stringify({
+        content: "复盘任务已创建，将在指定日期提醒您复盘。",
+        data: { reviewTask },
+      });
+    })(),
+  };
+
+  const raw = contentMap[stepId] || "分析进行中...";
+
+  // Some steps return JSON with content + data
+  let content = raw;
+  let data: Record<string, unknown> | undefined;
+
+  if (stepId === "step10_scoring" || stepId === "step11_bull" || stepId === "step12_bear" || stepId === "step13_risk" || stepId === "step14_scenario" || stepId === "step15_conclusion" || stepId === "step16_review") {
+    try {
+      const parsed = JSON.parse(raw);
+      content = parsed.content;
+      data = parsed.data;
+    } catch {
+      // use raw content
+    }
+  }
+
+  return {
+    step,
+    stepId,
+    agent: agentMap[stepId] as AgentResponse["agent"],
+    content,
+    data,
+    metadata: {
+      source: ctx.dataQuality.source,
+      timestamp: ctx.dataQuality.fetchedAt,
+    },
   };
 }

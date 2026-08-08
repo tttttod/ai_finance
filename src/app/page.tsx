@@ -28,8 +28,10 @@ import {
   SURVEY_QUESTIONS,
 } from "@/lib/mini-types";
 import type { MiniMarketSnapshot, MiniRecommendedTarget } from "@/lib/data/market-types";
+import type { StockResearchContext } from "@/lib/data/stock-context-types";
 import {
   generateAgentResponse,
+  generateAgentResponseFromContext,
   mockMarketData,
   mockReviewData,
   mockRecommendedTargets,
@@ -528,6 +530,21 @@ function ResearchTab({
   const [responses, setResponses] = useState<AgentResponse[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [stockContext, setStockContext] = useState<StockResearchContext | null>(null);
+  const [contextLoading, setContextLoading] = useState(false);
+  const [contextError, setContextError] = useState<string | null>(null);
+  const [contextCacheStatus, setContextCacheStatus] = useState<"hit" | "miss" | null>(null);
+
+  // Get or create client ID for rate limiting
+  const getClientId = (): string => {
+    if (typeof window === "undefined") return "anonymous";
+    let id = localStorage.getItem("client-id");
+    if (!id) {
+      id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
+      localStorage.setItem("client-id", id);
+    }
+    return id;
+  };
 
   // 处理预填充
   useEffect(() => {
@@ -539,13 +556,54 @@ function ResearchTab({
     }
   }, [prefilledTarget]);
 
-  const startResearch = () => {
+  const startResearch = async () => {
     if (!target.trim()) return;
     setStarted(true);
+    setContextLoading(true);
+    setContextError(null);
+    setStockContext(null);
+    setContextCacheStatus(null);
+    onClearPrefilled();
+
+    // Fetch stock context first
+    try {
+      const clientId = getClientId();
+      const res = await fetch(`/api/stock-context?query=${encodeURIComponent(target.trim())}`, {
+        headers: { "x-client-id": clientId },
+      });
+      if (res.status === 429) {
+        const data = await res.json().catch(() => ({}));
+        setContextError(`查询太频繁，请稍后再试（${data.retryAfterSeconds || 60}秒后可重试）。可先使用演示分析继续。`);
+        setContextLoading(false);
+        setStarted(false);
+        return;
+      }
+      if (res.status === 404) {
+        setContextError("无法识别该股票，请检查代码或名称是否正确。");
+        setContextLoading(false);
+        setStarted(false);
+        return;
+      }
+      if (!res.ok) {
+        setContextError("数据获取失败，将使用演示分析继续。");
+        setContextLoading(false);
+        // Continue with mock analysis
+      } else {
+        const json = await res.json();
+        if (json.success && json.data) {
+          setStockContext(json.data);
+          setContextCacheStatus(json.cache || null);
+        }
+        setContextLoading(false);
+      }
+    } catch {
+      setContextError("网络异常，将使用演示分析继续。");
+      setContextLoading(false);
+    }
+
     setIsRunning(true);
     setCurrentStep(0);
     setResponses([]);
-    onClearPrefilled();
 
     const initialSteps = WORKFLOW_STEPS.map((s) => ({
       ...s,
@@ -562,7 +620,10 @@ function ResearchTab({
       }
 
       const stepInfo = WORKFLOW_STEPS[step];
-      const response = generateAgentResponse(step + 1, stepInfo.id, target, style);
+      // Use real context if available, otherwise fallback to mock
+      const response = stockContext
+        ? generateAgentResponseFromContext(step + 1, stepInfo.id, target, style, stockContext)
+        : generateAgentResponse(step + 1, stepInfo.id, target, style);
 
       setSteps((prev) =>
         prev.map((s, i) => ({
@@ -698,6 +759,17 @@ function ResearchTab({
             }}
           />
         </div>
+        {/* 股票上下文信息 */}
+        {stockContext && (
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-slate-500">
+            <span className="font-bold text-slate-700">{stockContext.stock.name} {stockContext.stock.tsCode}</span>
+            {stockContext.quote?.tradeDate && <span>数据: {stockContext.quote.tradeDate}</span>}
+            <span>来源: {stockContext.dataQuality.source === "tushare" ? "Tushare" : stockContext.dataQuality.source === "cache" ? "缓存" : "演示"}</span>
+            {contextCacheStatus && <span>缓存: {contextCacheStatus === "hit" ? "命中" : "刷新"}</span>}
+            {stockContext.dataQuality.stale && <span className="text-amber-600">数据较旧</span>}
+            {stockContext.dataQuality.missing.length > 0 && <span className="text-amber-600">缺失: {stockContext.dataQuality.missing.join(", ")}</span>}
+          </div>
+        )}
         <div className="mt-3 grid grid-cols-4 gap-1">
           {steps.map((step) => (
             <div
