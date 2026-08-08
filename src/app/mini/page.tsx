@@ -1609,6 +1609,25 @@ function ProfileTab({ profile, tradeTIResult, watchlist, onRemoveFromWatchlist, 
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [reportStock, setReportStock] = useState<string | null>(null);
+
+  const MOCK_REPORTS: Record<string, {title: string; content: string; verdict: string; score: number}> = {
+    "600519": { title: "茅台还是那个茅台", content: "白酒大哥还是一如既往的稳。最近动销数据不错，经销商库存处于低位，批价平稳。但也要注意，经济复苏节奏偏慢，高端消费的弹性可能不如预期。", verdict: "短期震荡，长期看消费复苏节奏。适合拿得住的人。", score: 78 },
+    "000858": { title: "五粮液在追茅台", content: "五粮液今年渠道改革效果不错，普五批价稳中有升。不过和茅台的差距还是在品牌力上，短期难追。", verdict: "跟随茅台行情，但弹性更大。适合波段操作。", score: 72 },
+    "000333": { title: "美的：出海才是真主线", content: "美的今年海外业务增长强劲，暖通空调在东南亚市占率持续提升。国内家电虽然卷，但美的的机器人业务开始贡献利润了。", verdict: "出海逻辑清晰，估值合理，适合中线持有。", score: 82 },
+    "600036": { title: "招行：零售之王最近有点累", content: "招行零售业务受经济环境影响，信用卡不良率略有上升。但财富管理业务依然领先，客户粘性高。", verdict: "经济复苏的弹性标的，适合逢低布局。", score: 68 },
+    "601318": { title: "平安：转型阵痛还没结束", content: "平安的寿险改革还在进行中，NBV增速有所改善但还没回到正轨。科技板块估值已经跌到地板价了。", verdict: "转型期需要耐心，短期承压，长期看改革成效。", score: 62 },
+    "000002": { title: "万科：地产的冬天有多长", content: "万科是地产里最稳健的，但行业下行周期还没结束。销售数据还没企稳，现金为王。", verdict: "等政策底到市场底的传导，不急。", score: 55 },
+    "600887": { title: "伊利：牛奶还是那个牛奶", content: "伊利的基本盘很稳，液态奶市占率持续提升。但奶粉业务增长乏力，新业务还需要时间。", verdict: "防御性配置，波动小，适合稳健型选手。", score: 70 },
+    "002415": { title: "海康威视：AI安防的新故事", content: "海康的安防主业受政府预算影响，但AI+大数据的新业务增长不错。海外业务恢复中。", verdict: "AI赋能传统业务，估值有修复空间，中线看好。", score: 75 },
+  };
+
+  const getReport = (code: string) => MOCK_REPORTS[code] || {
+    title: `${code} 速览`,
+    content: "这只股票最近有一些值得关注的变化。建议结合基本面和技术面综合分析，不要只看K线。",
+    verdict: "建议深入研究后再做判断。",
+    score: 65,
+  };
 
   const feedbackQuestions = [
     "数据是否足够及时？",
@@ -1701,12 +1720,50 @@ function ProfileTab({ profile, tradeTIResult, watchlist, onRemoveFromWatchlist, 
                   </div>
                   {item.reason && <div className="text-[10px] text-slate-500 truncate">{item.reason}</div>}
                 </div>
-                <button onClick={() => onRemoveFromWatchlist(item.code)} className="text-[10px] text-red-500 ml-2">取消关注</button>
+                <div className="flex items-center gap-1.5 ml-2">
+                  <button onClick={() => setReportStock(item.name)} className="text-[10px] text-blue-500 font-medium whitespace-nowrap">📄 查看报告</button>
+                  <button onClick={() => onRemoveFromWatchlist(item.code)} className="text-[10px] text-red-500 whitespace-nowrap">取消关注</button>
+                </div>
               </div>
             ))
           )}
         </div>
       </div>
+
+      {/* 报告弹窗 */}
+      {reportStock && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => setReportStock(null)}>
+          <div className="bg-white rounded-2xl p-5 max-w-sm w-full max-h-[80vh] overflow-y-auto shadow-xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-black text-slate-800">📋 {reportStock} 研究报告</h3>
+              <button onClick={() => setReportStock(null)} className="text-slate-400 hover:text-slate-600 text-lg leading-none">&times;</button>
+            </div>
+            <div className="space-y-3 text-sm text-slate-700 leading-relaxed">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-3 border border-blue-100">
+                <p className="font-bold text-slate-800 text-xs mb-1">📌 搭子怎么说</p>
+                <p className="text-slate-600 text-xs">"{(() => {
+                  const r = MOCK_REPORTS[reportStock];
+                  return r ? r.title : "今天这个票有点意思，值得深入看看。"
+                })()}"</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-slate-50 rounded-lg p-2.5 text-center">
+                  <p className="text-[10px] text-slate-400 mb-0.5">综合评分</p>
+                  <p className="text-sm font-bold" style={{color: (() => {const r = MOCK_REPORTS[reportStock]; return r ? (r.score >= 80 ? "#059669" : r.score >= 70 ? "#D97706" : "#DC2626") : "#3B82F6"})()}}>{(() => {const r = MOCK_REPORTS[reportStock]; return r ? r.score + "分" : "待定"})()}</p>
+                </div>
+                <div className="bg-slate-50 rounded-lg p-2.5 text-center">
+                  <p className="text-[10px] text-slate-400 mb-0.5">搭子判断</p>
+                  <p className="text-sm font-bold text-slate-800">{(() => {const r = MOCK_REPORTS[reportStock]; return r ? r.verdict : "建议深入研究"})()}</p>
+                </div>
+              </div>
+              <div>
+                <p className="font-bold text-slate-800 text-xs mb-1">📊 详细分析</p>
+                <p className="text-xs text-slate-600">{(() => {const r = MOCK_REPORTS[reportStock]; return r ? r.content : "暂无详细分析"})()}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 历史档案 */}
       <div className="bg-white rounded-lg p-4 border border-slate-100">
