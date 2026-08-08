@@ -1906,10 +1906,6 @@ function ProfileTab({ profile, tradeTIResult, onRetakeSurvey }: { profile: UserP
             )}
           </div>
         )}
-        {/* 查看统计入口 */}
-        <Link href="/feedback-stats" className="block mt-3 text-center text-xs font-bold text-[#8B5CF6] hover:underline">
-          📊 查看反馈统计报告 →
-        </Link>
       </div>
 
       {/* 常看行业 */}

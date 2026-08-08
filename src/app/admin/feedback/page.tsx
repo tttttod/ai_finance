@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 
 interface DimensionStat {
   key: string;
@@ -25,12 +24,32 @@ const DIMENSION_LABELS: Record<string, { label: string; emoji: string }> = {
   retention: { label: "持续使用意愿", emoji: "🔄" },
 };
 
-export default function FeedbackStatsPage() {
+export default function AdminFeedbackPage() {
   const [stats, setStats] = useState<FeedbackStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
+    // 简单的访问控制：检查 URL 参数或 localStorage
+    const params = new URLSearchParams(window.location.search);
+    const hasAccess = params.get("access") === "admin" || localStorage.getItem("admin_access") === "true";
+    
+    if (!hasAccess) {
+      // 提示输入访问码
+      const code = prompt("请输入管理访问码：");
+      if (code === "admin2024") {
+        localStorage.setItem("admin_access", "true");
+        setAuthorized(true);
+      } else {
+        setError("访问被拒绝");
+        setLoading(false);
+        return;
+      }
+    } else {
+      setAuthorized(true);
+    }
+
     fetch("/api/feedback-stats")
       .then((res) => res.json())
       .then((json) => {
@@ -43,6 +62,14 @@ export default function FeedbackStatsPage() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
+
+  if (!authorized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F5F5F7]">
+        <div className="text-slate-500">验证中...</div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -64,12 +91,9 @@ export default function FeedbackStatsPage() {
     return (
       <div className="min-h-screen bg-[#F5F5F7] p-4">
         <div className="max-w-4xl mx-auto">
-          <Link href="/" className="text-blue-500 text-sm mb-4 inline-block">
-            ← 返回首页
-          </Link>
           <div className="bg-white rounded-2xl p-8 text-center">
             <div className="text-4xl mb-3">📊</div>
-            <h1 className="text-xl font-bold text-slate-800 mb-2">反馈统计</h1>
+            <h1 className="text-xl font-bold text-slate-800 mb-2">反馈统计（内部）</h1>
             <p className="text-slate-500">暂无反馈数据</p>
           </div>
         </div>
@@ -82,14 +106,10 @@ export default function FeedbackStatsPage() {
   return (
     <div className="min-h-screen bg-[#F5F5F7] p-4">
       <div className="max-w-4xl mx-auto space-y-4">
-        <Link href="/" className="text-blue-500 text-sm inline-block">
-          ← 返回首页
-        </Link>
-
         {/* 标题 */}
         <div className="bg-white rounded-2xl p-6">
-          <h1 className="text-2xl font-bold text-slate-800">📊 用户反馈统计</h1>
-          <p className="text-sm text-slate-500 mt-1">共收到 {stats.total} 条反馈</p>
+          <h1 className="text-2xl font-bold text-slate-800"> 用户反馈统计（内部）</h1>
+          <p className="text-sm text-slate-500 mt-1">共收到 {stats.total} 条反馈 · 仅开发/产品团队可见</p>
         </div>
 
         {/* 总体评分分布 */}
