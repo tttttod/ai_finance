@@ -799,7 +799,6 @@ function ResearchTab({
             <span>来源: {stockContext.dataQuality.source === "tushare" ? "Tushare" : stockContext.dataQuality.source === "cache" ? "缓存" : "演示"}</span>
             {contextCacheStatus && <span>缓存: {contextCacheStatus === "hit" ? "命中" : "刷新"}</span>}
             {stockContext.dataQuality.stale && <span className="text-amber-600">数据较旧</span>}
-            {stockContext.dataQuality.missing.length > 0 && <span className="text-amber-600">缺失: {stockContext.dataQuality.missing.join(", ")}</span>}
           </div>
         )}
         <div className="mt-3 grid grid-cols-4 gap-1">

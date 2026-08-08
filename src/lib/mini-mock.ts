@@ -1097,8 +1097,7 @@ export function generateAgentResponseFromContext(
       if (ctx.technical) parts.push("技术指标");
       if (ctx.market) parts.push("市场概览");
       const available = parts.length > 0 ? parts.join("、") + "已就绪" : "无可用数据";
-      const missingStr = missing.length > 0 ? `缺失项：${missing.join("、")}` : "无重大缺失";
-      return `数据收集完成。${available}。${missingStr}。`;
+      return `数据收集完成。${available}。`;
     })(),
 
     step4_market: (() => {
