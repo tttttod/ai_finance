@@ -660,7 +660,7 @@ function ResearchTab({
               <input
                 type="text"
                 value={target}
-                onChange={(e) => setTarget(e.target.value)}
+                onChange={(e) => { setTarget(e.target.value); setContextError(null); }}
                 placeholder="输入股票代码或名称"
                 className="w-full px-3 py-2.5 text-sm border-2 border-slate-200 rounded-2xl focus:outline-none focus:border-[#FFD93D] font-bold transition-colors"
               />
@@ -710,6 +710,11 @@ function ResearchTab({
                 ))}
               </div>
             </div>
+            {contextError && (
+              <div className="p-3 bg-red-50 border-2 border-red-200 rounded-2xl">
+                <p className="text-xs font-bold text-red-600">{contextError}</p>
+              </div>
+            )}
             <button
               onClick={startResearch}
               disabled={!target.trim()}

@@ -568,6 +568,11 @@ function ResearchTab({
                 ))}
               </div>
             </div>
+            {contextError && !started && (
+              <div className="mb-3 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
+                {contextError}
+              </div>
+            )}
             <button
               onClick={startResearch}
               disabled={!target.trim()}
