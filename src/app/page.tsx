@@ -202,6 +202,13 @@ export default function MiniProgramPage() {
             onAddToWatchlist={addToWatchlist}
             onRemoveFromWatchlist={removeFromWatchlist}
             watchlist={watchlist}
+            onResearchComplete={(targetName) => {
+              const saved = JSON.parse(localStorage.getItem("tradeti_researched_stocks") || "[]");
+              if (!saved.includes(targetName)) {
+                saved.push(targetName);
+                localStorage.setItem("tradeti_researched_stocks", JSON.stringify(saved));
+              }
+            }}
           />
         )}
         {activeTab === "review" && <ModelTab />}
@@ -514,6 +521,7 @@ function ResearchTab({
   onAddToWatchlist,
   onRemoveFromWatchlist,
   watchlist = [],
+  onResearchComplete,
 }: {
   defaultStyle: InvestmentStyle;
   prefilledTarget: RecommendedTarget | null;
@@ -521,6 +529,7 @@ function ResearchTab({
   onAddToWatchlist?: (name: string, code: string) => void;
   onRemoveFromWatchlist?: (code: string) => void;
   watchlist?: WatchlistItem[];
+  onResearchComplete?: (name: string) => void;
 }) {
   const [started, setStarted] = useState(false);
   const [target, setTarget] = useState("");
@@ -623,6 +632,9 @@ function ResearchTab({
       if (step >= WORKFLOW_STEPS.length) {
         setIsRunning(false);
         if (timerRef.current) clearInterval(timerRef.current);
+        if (onResearchComplete && target) {
+          onResearchComplete(target);
+        }
         return;
       }
 
@@ -1768,6 +1780,21 @@ function ProfileTab({ profile, tradeTIResult, onRetakeSurvey, watchlist, onRemov
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [reportStock, setReportStock] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const handle = () => refreshResearchedCount();
+    window.addEventListener("storage", handle);
+    return () => window.removeEventListener("storage", handle);
+  }, []);
+  const refreshResearchedCount = () => {
+    const stored = localStorage.getItem("tradeti_researched_stocks");
+    setResearchedCount(stored ? JSON.parse(stored).length : 0);
+  };
+  const [researchedCount, setResearchedCount] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    const stored = localStorage.getItem("tradeti_researched_stocks");
+    return stored ? JSON.parse(stored).length : 0;
+  });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -2043,7 +2070,7 @@ function ProfileTab({ profile, tradeTIResult, onRetakeSurvey, watchlist, onRemov
         <h3 className="text-sm font-black mb-3 bg-gradient-to-r from-[#FFD93D] to-[#FF6B35] bg-clip-text text-transparent">📚 历史研究档案</h3>
         <div className="grid grid-cols-3 gap-3 text-center">
           <div>
-            <div className="text-xl font-black text-slate-800">28</div>
+            <div className="text-xl font-black text-slate-800">{researchedCount}</div>
             <div className="text-[10px] font-bold text-slate-500">总研究数</div>
           </div>
           <div>

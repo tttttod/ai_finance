@@ -198,6 +198,13 @@ export default function MiniProgramPage() {
             onAddToWatchlist={(stock) => addToWatchlist(stock.name, stock.tsCode.split(".")[0], stock.tsCode, stock.industry, stock.reason)}
             watchlist={watchlist}
             onRemoveFromWatchlist={removeFromWatchlist}
+            onResearchComplete={(targetName) => {
+              const saved = JSON.parse(localStorage.getItem("tradeti_researched_stocks") || "[]");
+              if (!saved.includes(targetName)) {
+                saved.push(targetName);
+                localStorage.setItem("tradeti_researched_stocks", JSON.stringify(saved));
+              }
+            }}
           />
         )}
         {activeTab === "review" && <ModelTab />}
@@ -415,6 +422,7 @@ function ResearchTab({
   onAddToWatchlist,
   watchlist,
   onRemoveFromWatchlist,
+  onResearchComplete,
 }: {
   defaultStyle: InvestmentStyle;
   prefilledTarget: RecommendedTarget | null;
@@ -422,6 +430,7 @@ function ResearchTab({
   onAddToWatchlist: (stock: { tsCode: string; name: string; code: string; industry: string; reason?: string; addedAt?: string }) => void;
   watchlist: WatchlistItem[];
   onRemoveFromWatchlist: (code: string) => void;
+  onResearchComplete?: (name: string) => void;
 }) {
   const [started, setStarted] = useState(false);
   const [target, setTarget] = useState("");
@@ -436,6 +445,17 @@ function ResearchTab({
   const [contextLoading, setContextLoading] = useState(false);
   const [contextError, setContextError] = useState<string | null>(null);
   const [contextCacheStatus, setContextCacheStatus] = useState<"hit" | "miss" | null>(null);
+  const researchCompletedRef = useRef(false);
+
+  useEffect(() => {
+    if (!isRunning && currentStep === 16 && target && !researchCompletedRef.current) {
+      researchCompletedRef.current = true;
+      onResearchComplete?.(target);
+    }
+    if (currentStep !== 16 || isRunning) {
+      researchCompletedRef.current = false;
+    }
+  }, [currentStep, isRunning, target, onResearchComplete]);
 
   const getClientId = (): string => {
     if (typeof window === "undefined") return "anonymous";
@@ -1610,6 +1630,11 @@ function ProfileTab({ profile, tradeTIResult, watchlist, onRemoveFromWatchlist, 
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [reportStock, setReportStock] = useState<string | null>(null);
+  const [researchedCount, setResearchedCount] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    const stored = localStorage.getItem("tradeti_researched_stocks");
+    return stored ? JSON.parse(stored).length : 0;
+  });
 
   const MOCK_REPORTS: Record<string, {title: string; content: string; verdict: string; score: number}> = {
     "600519": { title: "茅台还是那个茅台", content: "白酒大哥还是一如既往的稳。最近动销数据不错，经销商库存处于低位，批价平稳。但也要注意，经济复苏节奏偏慢，高端消费的弹性可能不如预期。", verdict: "短期震荡，长期看消费复苏节奏。适合拿得住的人。", score: 78 },
@@ -1770,7 +1795,7 @@ function ProfileTab({ profile, tradeTIResult, watchlist, onRemoveFromWatchlist, 
         <h3 className="text-sm font-semibold text-slate-800 mb-3">历史研究档案</h3>
         <div className="grid grid-cols-3 gap-3 text-center">
           <div>
-            <div className="text-lg font-mono font-bold text-slate-800">28</div>
+            <div className="text-lg font-mono font-bold text-slate-800">{researchedCount}</div>
             <div className="text-[10px] text-slate-500">总研究数</div>
           </div>
           <div>
