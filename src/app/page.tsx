@@ -2249,20 +2249,21 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
         </div>
       </div>
 
-      {/* 4. 全球冒险地图 */}
-      <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm">
-        <div className="p-3 border-b border-slate-100">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm">🌍</span>
-            <span className="text-sm font-bold text-slate-800">全球冒险地图</span>
-            {globalNewsLoading && <span className="text-[10px] text-slate-400">加载中...</span>}
-            {!globalNewsLoading && globalNews.length > 0 && <span className="text-[10px] text-green-600">● 实时数据</span>}
+      {/* 4. 全球冒险地图 - 仅在数据可用时显示 */}
+      {(globalNews.length > 0 || globalNewsLoading) && (
+        <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm">
+          <div className="p-3 border-b border-slate-100">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <span className="text-sm">🌍</span>
+              <span className="text-sm font-bold text-slate-800">全球冒险地图</span>
+              {globalNewsLoading && <span className="text-[10px] text-slate-400">加载中...</span>}
+              {!globalNewsLoading && globalNews.length > 0 && <span className="text-[10px] text-green-600">● 实时数据</span>}
+            </div>
+            <p className="text-[10px] text-slate-500">点击闪光点查看事件详情，了解对A股的潜在影响</p>
           </div>
-          <p className="text-[10px] text-slate-500">点击闪光点查看事件详情，了解对A股的潜在影响</p>
-        </div>
 
-        {/* 世界地图 - 保留深色雷达风格 */}
-        <div className="relative bg-slate-950 h-[260px] overflow-hidden">
+          {/* 世界地图 - 保留深色雷达风格 */}
+          <div className="relative bg-slate-950 h-[260px] overflow-hidden">
           {/* 网格背景 */}
           <div
             className="absolute inset-0 opacity-15"
@@ -2384,7 +2385,7 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
             ))}
           </div>
         </div>
-      </div>
+      )}
 
       {/* 5. 支线任务 — 热门区域 + 异动信号 */}
       <div className="grid grid-cols-1 gap-3">
