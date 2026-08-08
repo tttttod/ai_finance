@@ -62,6 +62,10 @@ export default function MiniProgramPage() {
   const [tradeTICompleted, setTradeTICompleted] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [tradeTIResult, setTradeTIResult] = useState<TradeTIState | null>(null);
+  const [currentTime, setCurrentTime] = useState(() => {
+    const now = new Date();
+    return `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+  });
   const [userProfile, setUserProfile] = useState<UserProfileSurvey>({
     completed: false,
     recommended_style: "",
@@ -80,6 +84,17 @@ export default function MiniProgramPage() {
       const saved = localStorage.getItem("watchlist");
       if (saved) setWatchlist(JSON.parse(saved));
     } catch {}
+  }, []);
+
+  // 更新当前时间
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      setCurrentTime(`${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`);
+    };
+    updateTime();
+    const timer = setInterval(updateTime, 60000);
+    return () => clearInterval(timer);
   }, []);
 
   const addToWatchlist = (name: string, code: string, tsCode?: string, industry?: string, reason?: string) => {
@@ -147,9 +162,9 @@ export default function MiniProgramPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#FFF8E1] via-[#FFF3CD] to-white flex flex-col max-w-md mx-auto relative">
       {/* 状态栏模拟 - 市场冒险局 */}
       <div className="bg-gradient-to-r from-[#FF6B6B] via-[#FFE66D] to-[#4ECDC4] px-4 py-2 flex items-center justify-between text-xs text-white shadow-md">
-        <span className="font-black">9:41</span>
+        <span className="font-black">{currentTime}</span>
         <span className="font-black text-sm">🗺️ 市场冒险局</span>
-        <span className="font-black">📶</span>
+        <span className="font-black opacity-0">--</span>
       </div>
 
       {/* 主内容区 */}
@@ -293,6 +308,10 @@ function TradeTITest({ onComplete }: { onComplete: () => void }) {
 
   const handleBlockBtn = (idx: number) => {
     setBlockBtnClicked(idx);
+    // 延迟调用 onComplete，让用户看到按钮文字变化后再进入
+    setTimeout(() => {
+      onComplete();
+    }, 800);
   };
 
   // ===== 首屏 =====

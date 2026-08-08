@@ -59,6 +59,7 @@ interface WatchlistItem {
 
 export default function MiniProgramPage() {
   const [activeTab, setActiveTab] = useState<TabId>("market");
+  const [currentTime, setCurrentTime] = useState("");
   const [tradeTIUnlocked, setTradeTIUnlocked] = useState(false);
   const [tradeTICompleted, setTradeTICompleted] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -72,6 +73,17 @@ export default function MiniProgramPage() {
     focus_preference: "",
     experience_level: "",
   });
+
+  // 实时更新当前时间
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      setCurrentTime(now.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }));
+    };
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // 水合安全：在 useEffect 中读取 localStorage
   // 支持 ?retake=1 URL 参数强制重置
@@ -154,9 +166,9 @@ export default function MiniProgramPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#FFF8E1] via-[#FFF3CD] to-white flex flex-col max-w-md mx-auto relative">
       {/* 状态栏模拟 - 市场冒险局 */}
       <div className="bg-gradient-to-r from-[#FF6B6B] via-[#FFE66D] to-[#4ECDC4] px-4 py-2 flex items-center justify-between text-xs text-white shadow-md">
-        <span className="font-black">9:41</span>
+        <span className="font-black">{currentTime}</span>
         <span className="font-black text-sm">🗺️ 市场冒险局</span>
-        <span className="font-black">📶</span>
+        <span className="font-black opacity-0">📶</span>
       </div>
 
       {/* 主内容区 */}
@@ -305,6 +317,10 @@ function TradeTITest({ onComplete }: { onComplete: () => void }) {
 
   const handleBlockBtn = (idx: number) => {
     setBlockBtnClicked(idx);
+    // 延迟调用 onComplete，让用户看到按钮文字变化后再进入
+    setTimeout(() => {
+      onComplete();
+    }, 800);
   };
 
   // ===== 首屏 =====
