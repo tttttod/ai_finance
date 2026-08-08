@@ -173,6 +173,8 @@ export default function MiniProgramPage() {
             prefilledTarget={selectedResearchTarget}
             onClearPrefilled={() => setSelectedResearchTarget(null)}
             onAddToWatchlist={(stock) => addToWatchlist(stock.name, stock.tsCode.split(".")[0], stock.tsCode, stock.industry, stock.reason)}
+            watchlist={watchlist}
+            onRemoveFromWatchlist={removeFromWatchlist}
           />
         )}
         {activeTab === "review" && <ModelTab />}
@@ -415,11 +417,15 @@ function ResearchTab({
   prefilledTarget,
   onClearPrefilled,
   onAddToWatchlist,
+  watchlist,
+  onRemoveFromWatchlist,
 }: {
   defaultStyle: InvestmentStyle;
   prefilledTarget: RecommendedTarget | null;
   onClearPrefilled: () => void;
   onAddToWatchlist: (stock: { tsCode: string; name: string; code: string; industry: string; reason?: string; addedAt?: string }) => void;
+  watchlist: WatchlistItem[];
+  onRemoveFromWatchlist: (code: string) => void;
 }) {
   const [started, setStarted] = useState(false);
   const [target, setTarget] = useState("");
@@ -731,23 +737,40 @@ function ResearchTab({
 
       {!isRunning && currentStep === 16 && (
         <div className="space-y-3">
-          <button
-            onClick={() => {
-              if (stockContext) {
-                onAddToWatchlist({
-                  tsCode: stockContext.stock.tsCode,
-                  name: stockContext.stock.name,
-                  code: stockContext.stock.symbol,
-                  industry: stockContext.stock.industry,
-                  reason: "研究分析后关注",
-                  addedAt: new Date().toISOString(),
-                });
-              }
-            }}
-            className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-medium rounded-lg"
-          >
-            添加关注
-          </button>
+          {(() => {
+            const stockCode = stockContext?.stock.symbol || "";
+            const isWatched = watchlist.some((w) => w.code === stockCode);
+            return isWatched ? (
+              <button
+                onClick={() => {
+                  if (stockCode) {
+                    onRemoveFromWatchlist(stockCode);
+                  }
+                }}
+                className="w-full py-2.5 bg-slate-100 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors"
+              >
+                已关注 · 点击取消
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  if (stockContext) {
+                    onAddToWatchlist({
+                      tsCode: stockContext.stock.tsCode,
+                      name: stockContext.stock.name,
+                      code: stockContext.stock.symbol,
+                      industry: stockContext.stock.industry,
+                      reason: "研究分析后关注",
+                      addedAt: new Date().toISOString(),
+                    });
+                  }
+                }}
+                className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-medium rounded-lg"
+              >
+                添加关注
+              </button>
+            );
+          })()}
           <button
             onClick={() => {
               setIsRunning(false);

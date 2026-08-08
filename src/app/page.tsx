@@ -181,6 +181,8 @@ export default function MiniProgramPage() {
             prefilledTarget={selectedResearchTarget}
             onClearPrefilled={() => setSelectedResearchTarget(null)}
             onAddToWatchlist={addToWatchlist}
+            onRemoveFromWatchlist={removeFromWatchlist}
+            watchlist={watchlist}
           />
         )}
         {activeTab === "review" && <ModelTab />}
@@ -563,11 +565,15 @@ function ResearchTab({
   prefilledTarget,
   onClearPrefilled,
   onAddToWatchlist,
+  onRemoveFromWatchlist,
+  watchlist = [],
 }: {
   defaultStyle: InvestmentStyle;
   prefilledTarget: RecommendedTarget | null;
   onClearPrefilled: () => void;
   onAddToWatchlist?: (name: string, code: string) => void;
+  onRemoveFromWatchlist?: (code: string) => void;
+  watchlist?: WatchlistItem[];
 }) {
   const [started, setStarted] = useState(false);
   const [target, setTarget] = useState("");
@@ -887,13 +893,24 @@ function ResearchTab({
         <div className="space-y-3">
           <button
             onClick={() => {
-              if (onAddToWatchlist && stockContext) {
-                onAddToWatchlist(stockContext.stock.name, stockContext.stock.tsCode);
+              if (!stockContext) return;
+              const stockCode = stockContext.stock.tsCode;
+              const isWatched = watchlist.some((item) => item.code === stockCode);
+              if (isWatched) {
+                onRemoveFromWatchlist?.(stockCode);
+              } else {
+                onAddToWatchlist?.(stockContext.stock.name, stockCode);
               }
             }}
-            className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-medium rounded-lg"
+            className={`w-full py-2.5 text-white text-sm font-medium rounded-lg ${
+              watchlist.some((item) => item.code === stockContext?.stock.tsCode)
+                ? "bg-slate-500 hover:bg-slate-600"
+                : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+            }`}
           >
-            添加关注
+            {watchlist.some((item) => item.code === stockContext?.stock.tsCode)
+              ? "已关注 (点击取消)"
+              : "添加关注"}
           </button>
           <button
             onClick={() => {
