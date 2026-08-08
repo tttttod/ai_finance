@@ -1,9 +1,8 @@
 import { NextRequest } from "next/server";
 import { LLMClient, Config, HeaderUtils } from "coze-coding-dev-sdk";
-import { getLatestMarketSnapshot } from "@/lib/data/market-snapshot-store";
-import type { MiniMarketSnapshot } from "@/lib/data/market-types";
+import { getDailyReport } from "@/lib/mock-data";
 
-const SYSTEM_PROMPT_STATIC = `你是一位专业的 A 股市场投研顾问，名叫"小研"。你的职责是基于当前的市场数据为用户提供金融分析和投资策略建议。
+const SYSTEM_PROMPT = `你是一位专业的 A 股市场投研顾问，名叫"小研"。你的职责是基于当前的市场数据为用户提供金融分析和投资策略建议。
 
 ## 你的角色定位
 - 你是一位经验丰富、理性客观的投研分析师
@@ -38,6 +37,41 @@ const SYSTEM_PROMPT_STATIC = `你是一位专业的 A 股市场投研顾问，�
 step1_info
 \`\`\`
 
+## 当前市场数据摘要
+以下是今日（${new Date().toISOString().split("T")[0]}）的市场数据：
+
+### 市场概览
+- 上证指数: 3356.78 (+1.12%)
+- 深证成指: 10582.45 (+1.58%)
+- 两市成交额: 12856 亿元
+- 上涨板块: 42 个 | 下跌板块: 18 个
+
+### 热门板块（连续2日主力资金净流入）
+1. 传媒 +64.84亿 +2.18% 领涨: 电声股份
+2. 食品饮料 +55.57亿 +0.85% 领涨: ST西王
+3. 计算机 +23.58亿 +0.47% 领涨: 罗普特
+4. 汽车 +25.07亿 +0.12% 领涨: 天海电子
+5. 家用电器 +23.58亿 -0.10% 领涨: 亿田智能
+6. 农林牧渔 +22.02亿 +0.60% 领涨: 天康生物
+7. 商贸零售 +22.58亿 +1.13% 领涨: 博士眼镜
+8. 社会服务 +6.11亿 +0.65% 领涨: 西藏旅游
+
+### 机构共识股
+- 中国人寿 (601628): 11家机构覆盖, 评级"优于大市", 目标价48.40元, 当前38.92元, 多头趋势
+- 桐昆股份 (601233): 4家机构覆盖, 评级"买入", 目标价30.50元, 当前20.33元, 高位回撤
+- 安井食品 (603345): 3家机构覆盖, 评级"买入", 目标价96.11元, 当前88.90元, 反弹修复
+
+### 宏观环境
+- 美联储: 紧缩预期持续，利率维持高位
+- 原油: 地缘冲突推升油价，通胀压力上升
+- 中美博弈: 贸易摩擦持续，影响出口和人民币定价
+
+### 核心主题
+1. 保险业绩兑现 — 中国人寿利润增速超预期
+2. 化工景气上行 — 桐昆股份长丝高景气持续
+3. 食品饮料需求改善 — 安井食品迎来新周期
+4. 传媒资金涌入 — 主力资金连续大幅流入
+
 ## 回答规范
 1. 回答要简洁精炼，每次回答控制在 200 字以内
 2. 涉及具体个股时，要结合技术面和基本面数据
@@ -45,70 +79,6 @@ step1_info
 4. 不要给出具体的买卖点位或保证收益
 5. 用中文回答
 6. 如果用户问的问题超出你的专业范围，礼貌引导回金融话题`;
-
-function buildMarketPromptFromSnapshot(
-  snapshot: MiniMarketSnapshot | null,
-): string {
-  if (!snapshot) {
-    return `\n\n## 当前市场数据摘要\n当前无可用市场数据（Demo/缓存模式）。请在回答中提示用户数据可能不是最新的。`;
-  }
-
-  const tradeDate = `${snapshot.tradeDate.slice(0, 4)}-${snapshot.tradeDate.slice(4, 6)}-${snapshot.tradeDate.slice(6, 8)}`;
-  const staleNote = snapshot.stale ? "\n**注意：当前为缓存数据，可能不是最新。**" : "";
-  const sourceNote =
-    snapshot.source === "mock"
-      ? "\n**注意：当前使用 Demo/缓存数据。**"
-      : "";
-
-  const indexLines = snapshot.indices
-    .map(
-      (idx) =>
-        `- ${idx.name}: ${idx.price.toFixed(2)} (${idx.change >= 0 ? "+" : ""}${idx.change}%)`,
-    )
-    .join("\n");
-
-  const sectorLines = snapshot.hotSectors
-    .slice(0, 8)
-    .map(
-      (s, i) =>
-        `${i + 1}. ${s.name} ${s.change >= 0 ? "+" : ""}${s.change}% 热度:${s.heat}`,
-    )
-    .join("\n");
-
-  const stockLines = snapshot.activeStocks
-    .slice(0, 5)
-    .map(
-      (s) =>
-        `- ${s.name} (${s.code}): ${s.price}元, ${s.change >= 0 ? "+" : ""}${s.change}%, ${s.reason}`,
-    )
-    .join("\n");
-
-  const targetLines = snapshot.recommendedTargets
-    .slice(0, 5)
-    .map(
-      (t) =>
-        `- ${t.name} (${t.code}): ${t.industry}, 机会评分${t.opportunity_score}, 风险${t.risk_level}, ${t.reason}`,
-    )
-    .join("\n");
-
-  return `\n\n## 当前市场数据摘要
-以下是${tradeDate}的市场数据（更新时间: ${snapshot.fetchedAt}, 来源: ${snapshot.source}）:${staleNote}${sourceNote}
-
-### 市场概览
-${indexLines}
-
-### 热门板块
-${sectorLines}
-
-### 活跃个股
-${stockLines}
-
-### AI推荐研究标的
-${targetLines}
-
-### 市场摘要
-${snapshot.summary}`;
-}
 
 function buildAnalysisContext(context?: Record<string, unknown>): string {
   if (!context?.currentStep) return "";
@@ -125,17 +95,7 @@ export async function POST(request: NextRequest) {
   const { messages, context } = await request.json();
   const customHeaders = HeaderUtils.extractForwardHeaders(request.headers);
 
-  // Read latest snapshot — never call Tushare here
-  let snapshot: MiniMarketSnapshot | null = null;
-  try {
-    snapshot = await getLatestMarketSnapshot();
-  } catch {
-    // ignore, will use null fallback
-  }
-
-  const marketSection = buildMarketPromptFromSnapshot(snapshot);
-  const fullSystemPrompt =
-    SYSTEM_PROMPT_STATIC + marketSection + buildAnalysisContext(context);
+  const fullSystemPrompt = SYSTEM_PROMPT + buildAnalysisContext(context);
 
   const config = new Config();
   const client = new LLMClient(config, customHeaders);
