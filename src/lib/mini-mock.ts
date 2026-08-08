@@ -261,7 +261,7 @@ export function generateAgentResponse(
     step13_risk: "风险检查完成：估值风险（高）、流动性风险（中）、财务风险（中），整体可控。",
     step14_scenario: "三情景预测：乐观 +25%，中性 -2%，悲观 -15%。",
     step15_conclusion: "研究结论生成完成，请查看完整研究报告。",
-    step16_review: "复盘任务已创建，将在指定日期提醒您复盘。",
+    step16_review: "研究分析完成。建议持续关注标的表现，结合市场变化及时调整策略。",
   };
 
   const dataMap: Record<string, Record<string, unknown>> = {
@@ -1327,10 +1327,10 @@ export function generateAgentResponseFromContext(
     })(),
 
     step16_review: (() => {
-      const reviewTask = generateReviewTask(stockName, style);
+      const horizon = style === "short" ? "1-5天" : style === "swing" ? "2-8周" : "3个月以上";
       return JSON.stringify({
-        content: "复盘任务已创建，将在指定日期提醒您复盘。",
-        data: { reviewTask },
+        content: `研究分析完成。建议关注 ${stockName} 在 ${horizon} 内的表现，结合市场变化及时调整策略。已自动添加到您的关注列表，方便后续跟踪。`,
+        data: { summary: { stock: stockName, horizon, nextAction: "持续关注" } },
       });
     })(),
   };
