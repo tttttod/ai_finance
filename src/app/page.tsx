@@ -48,6 +48,15 @@ import {
 
 type TabId = "market" | "research" | "review" | "profile";
 
+interface WatchlistItem {
+  code: string;
+  tsCode?: string;
+  name: string;
+  industry?: string;
+  reason?: string;
+  addedAt?: string;
+}
+
 export default function MiniProgramPage() {
   const [activeTab, setActiveTab] = useState<TabId>("market");
   const [tradeTIUnlocked, setTradeTIUnlocked] = useState(false);
@@ -95,6 +104,35 @@ export default function MiniProgramPage() {
     setIsLoadingProfile(false);
   }, []);
   const [selectedResearchTarget, setSelectedResearchTarget] = useState<RecommendedTarget | null>(null);
+  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
+
+  // 加载关注列表
+  useEffect(() => {
+    const saved = localStorage.getItem("stock_watchlist");
+    if (saved) {
+      try { setWatchlist(JSON.parse(saved)); } catch { /* ignore */ }
+    }
+  }, []);
+
+  // 添加关注股票
+  const addToWatchlist = (name: string, code: string) => {
+    setWatchlist(prev => {
+      const exists = prev.some(s => s.code === code);
+      if (exists) return prev;
+      const newList = [{ name, code, addedAt: new Date().toISOString() }, ...prev].slice(0, 20);
+      localStorage.setItem("stock_watchlist", JSON.stringify(newList));
+      return newList;
+    });
+  };
+
+  // 移除关注股票
+  const removeFromWatchlist = (code: string) => {
+    setWatchlist(prev => {
+      const newList = prev.filter(s => s.code !== code);
+      localStorage.setItem("stock_watchlist", JSON.stringify(newList));
+      return newList;
+    });
+  };
 
   // tradeTI 通关：进入完整功能区
   const completeTradeTI = () => {
@@ -118,11 +156,11 @@ export default function MiniProgramPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FFF8E1] via-[#FFF3CD] to-white flex flex-col max-w-md mx-auto relative">
-      {/* 状态栏模拟 - 多巴胺风格 */}
-      <div className="bg-gradient-to-r from-[#FF6B6B] via-[#FFE66D] to-[#4ECDC4] px-4 py-2 flex items-center justify-between text-xs text-white shadow-md">
+    <div className="min-h-screen bg-[#FAFAF9] flex flex-col max-w-md mx-auto relative">
+      {/* 状态栏模拟 - 市场冒险局 */}
+      <div className="bg-slate-800 px-4 py-2 flex items-center justify-between text-xs text-white">
         <span className="font-black">9:41</span>
-        <span className="font-black text-sm drop-shadow-sm">🦄 多巴胺投研</span>
+        <span className="font-black text-sm tracking-wide">🗺️ 市场冒险局</span>
         <span className="font-black">📶</span>
       </div>
 
@@ -130,6 +168,7 @@ export default function MiniProgramPage() {
       <div className="flex-1 overflow-y-auto pb-16">
         {activeTab === "market" && (
           <MarketTab
+            tradeTIResult={tradeTIResult}
             onFillResearch={(target) => {
               setSelectedResearchTarget(target);
               setActiveTab("research");
@@ -141,10 +180,16 @@ export default function MiniProgramPage() {
             defaultStyle={(userProfile.recommended_style as InvestmentStyle) || "swing"}
             prefilledTarget={selectedResearchTarget}
             onClearPrefilled={() => setSelectedResearchTarget(null)}
+            onAddToWatchlist={addToWatchlist}
           />
         )}
         {activeTab === "review" && <ModelTab />}
-        {activeTab === "profile" && <ProfileTab profile={userProfile} tradeTIResult={tradeTIResult} onRetakeSurvey={() => {
+        {activeTab === "profile" && <ProfileTab
+            profile={userProfile}
+            tradeTIResult={tradeTIResult}
+            watchlist={watchlist}
+            onRemoveFromWatchlist={removeFromWatchlist}
+            onRetakeSurvey={() => {
               localStorage.removeItem("tradeti_state");
               localStorage.removeItem("user_profile_survey");
               localStorage.removeItem("sbti_result_v2");
@@ -157,13 +202,13 @@ export default function MiniProgramPage() {
             }} />}
       </div>
 
-      {/* 底部 Tab 栏 - 多巴胺风格 */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/90 backdrop-blur-sm border-t-2 border-[#FFE66D] flex rounded-t-3xl shadow-[0_-4px_20px_rgba(255,107,107,0.15)]">
+      {/* 底部 Tab 栏 - 市场冒险局 */}
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/90 backdrop-blur-sm border-t border-slate-200 flex rounded-t-xl shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
         {[
-          { id: "market" as TabId, label: "市场", icon: "📊", color: "#FF6B6B" },
-          { id: "research" as TabId, label: "研究", icon: "🔬", color: "#FFD93D" },
-          { id: "review" as TabId, label: "模型", icon: "📊", color: "#4ECDC4" },
-          { id: "profile" as TabId, label: "我的", icon: "👤", color: "#FF6B35" },
+          { id: "market" as TabId, label: "冒险", icon: "🗺️", color: "#3B82F6" },
+          { id: "research" as TabId, label: "任务", icon: "📋", color: "#8B5CF6" },
+          { id: "review" as TabId, label: "工坊", icon: "🔧", color: "#0D9488" },
+          { id: "profile" as TabId, label: "档案", icon: "🎒", color: "#D97706" },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -517,10 +562,12 @@ function ResearchTab({
   defaultStyle,
   prefilledTarget,
   onClearPrefilled,
+  onAddToWatchlist,
 }: {
   defaultStyle: InvestmentStyle;
   prefilledTarget: RecommendedTarget | null;
   onClearPrefilled: () => void;
+  onAddToWatchlist?: (name: string, code: string) => void;
 }) {
   const [started, setStarted] = useState(false);
   const [target, setTarget] = useState("");
@@ -838,8 +885,15 @@ function ResearchTab({
 
       {!isRunning && currentStep === 16 && (
         <div className="space-y-3">
-          <button className="w-full py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-medium rounded-lg">
-            一键创建复盘任务
+          <button
+            onClick={() => {
+              if (onAddToWatchlist && stockContext) {
+                onAddToWatchlist(stockContext.stock.name, stockContext.stock.tsCode);
+              }
+            }}
+            className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-medium rounded-lg"
+          >
+            添加关注
           </button>
           <button
             onClick={() => {
@@ -1694,7 +1748,7 @@ function ReviewDetailPage({ review, onBack }: { review: ReviewDetail; onBack: ()
 }
 
 // ===== 我的 Tab =====
-function ProfileTab({ profile, tradeTIResult, onRetakeSurvey }: { profile: UserProfileSurvey; tradeTIResult: TradeTIState | null; onRetakeSurvey: () => void }) {
+function ProfileTab({ profile, tradeTIResult, onRetakeSurvey, watchlist, onRemoveFromWatchlist }: { profile: UserProfileSurvey; tradeTIResult: TradeTIState | null; onRetakeSurvey: () => void; watchlist: WatchlistItem[]; onRemoveFromWatchlist: (code: string) => void }) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -1789,12 +1843,25 @@ function ProfileTab({ profile, tradeTIResult, onRetakeSurvey }: { profile: UserP
       <div className="bg-white rounded-3xl p-4 border-2 border-[#4ECDC4] shadow-md">
         <h3 className="text-sm font-black mb-3 bg-gradient-to-r from-[#4ECDC4] to-[#FFD93D] bg-clip-text text-transparent">⭐ 我的关注</h3>
         <div className="space-y-2">
-          {["北方华创 002371", "中芯国际 688981", "比亚迪 002594"].map((stock) => (
-            <div key={stock} className="flex items-center justify-between py-2.5 border-b-2 border-slate-100 last:border-0">
-              <span className="text-xs font-bold text-slate-700">{stock}</span>
-              <button className="text-[10px] font-black text-[#FF6B35] hover:underline">查看研究 →</button>
-            </div>
-          ))}
+          {watchlist.length === 0 ? (
+            <div className="text-xs font-bold text-slate-400 text-center py-4">还没有关注股票，去研究页添加吧</div>
+          ) : (
+            watchlist.map((item) => (
+              <div key={item.tsCode} className="flex items-center justify-between py-2.5 border-b-2 border-slate-100 last:border-0">
+                <div className="flex-1">
+                  <span className="text-xs font-bold text-slate-700">{item.name} {item.code}</span>
+                  {item.industry && <span className="text-[10px] font-bold text-slate-400 ml-2">{item.industry}</span>}
+                  {item.reason && <div className="text-[10px] font-bold text-slate-400 mt-0.5">{item.reason}</div>}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-slate-400">{item.addedAt ? item.addedAt.slice(5, 10) : ''}</span>
+                  {onRemoveFromWatchlist && (
+                    <button onClick={() => onRemoveFromWatchlist(item.tsCode || item.code)} className="text-[10px] font-bold text-red-400 hover:text-red-600">✕</button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -1943,8 +2010,8 @@ function ProfileTab({ profile, tradeTIResult, onRetakeSurvey }: { profile: UserP
   );
 }
 
-// ===== 市场 Tab =====
-function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTarget) => void }) {
+// ===== 市场冒险局 =====
+function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTIState | null; onFillResearch: (target: RecommendedTarget) => void }) {
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [marketSnapshot, setMarketSnapshot] = useState<MiniMarketSnapshot | null>(null);
   const [snapshotLoading, setSnapshotLoading] = useState(true);
@@ -2010,101 +2077,225 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
     : mockRecommendedTargets;
   const events = marketSnapshot?.events?.length ? marketSnapshot.events : mockMarketData.events;
 
+  // 人格搭子的问候语
+  const personalityId = tradeTIResult?.result_type || null;
+  const buddyGreetings: Record<string, { greeting: string; line: string }> = {
+    wall_street: { greeting: "华尔街在逃交易员", line: "今天板块轮动很快，但你的逻辑比情绪快。稳住。" },
+    old_money: { greeting: "老钱，老了才有钱", line: "机会又来了。这次别观察三年，先看三分钟。" },
+    qin_shihuang: { greeting: "我是秦始皇，打钱！", line: "没有人会直接给你打钱。但这里有条靠谱的分析路径。" },
+    kline_shaman: { greeting: "K线萨满", line: "金叉很多，但点蜡烛之前，我们先看看基本面。" },
+    all_in_warrior: { greeting: "梭哈战神", line: "欢迎回来。今天第一个任务仍然是：管住仓位。" },
+    breakeven_master: { greeting: "回本就卖宗师", line: "成本价不是宇宙中心。今天也要记住这一点。" },
+    fomo_chaser: { greeting: "利好已出尽还在冲", line: "热搜第一的股票，三天前就该研究了。今天别追了。" },
+    report_archaeologist: { greeting: "财报考古学家", line: "别急着翻十年财报，今天有个短线机会值得先看。" },
+    monte_carlo_poet: { greeting: "蒙特卡洛诗人", line: "模型说今天风平浪静。现实正在旁边冷笑。" },
+  };
+  const defaultBuddy = { greeting: "市场冒险家", line: "准备好开启今天的市场冒险了吗？" };
+  const buddy = personalityId && buddyGreetings[personalityId] ? buddyGreetings[personalityId] : defaultBuddy;
+
+  // 人格对应的Emoji/颜色
+  const personalityMeta: Record<string, { emoji: string; color: string }> = {
+    wall_street: { emoji: "🏦", color: "#0D9488" },
+    old_money: { emoji: "👴", color: "#D97706" },
+    qin_shihuang: { emoji: "👑", color: "#DC2626" },
+    kline_shaman: { emoji: "🔮", color: "#7C3AED" },
+    all_in_warrior: { emoji: "⚔️", color: "#FF6B35" },
+    breakeven_master: { emoji: "📉", color: "#F59E0B" },
+    fomo_chaser: { emoji: "🚀", color: "#EC4899" },
+    report_archaeologist: { emoji: "📜", color: "#8B5CF6" },
+    monte_carlo_poet: { emoji: "🎲", color: "#06B6D4" },
+  };
+  const meta = personalityId && personalityMeta[personalityId] ? personalityMeta[personalityId] : { emoji: "🗺️", color: "#3B82F6" };
+
+  // 市场天气判断
+  const getMarketWeather = () => {
+    const avgChange = indices.reduce((s, i) => s + i.change, 0) / indices.length;
+    if (avgChange > 0.5) return { icon: "☀️", label: "晴", desc: "市场情绪积极，适合主动研究" };
+    if (avgChange > 0) return { icon: "⛅", label: "多云转晴", desc: "震荡消化获利盘，耐心等待机会" };
+    if (avgChange > -0.5) return { icon: "☁️", label: "阴天", desc: "市场偏弱，多看少动" };
+    return { icon: "🌧️", label: "雨天", desc: "风险释放中，守住仓位比进攻更重要" };
+  };
+  const weather = getMarketWeather();
+
   return (
-    <div className="p-4 space-y-4">
-      {/* AI 摘要 - 多巴胺彩虹渐变 */}
-      <div className="bg-gradient-to-r from-[#FF6B6B] via-[#FFD93D] to-[#4ECDC4] rounded-3xl p-4 text-white shadow-lg shadow-[#FF6B6B]/20">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-lg">🤖</span>
-          <span className="text-sm font-black">市场 AI 摘要</span>
-          {marketSnapshot && (
-            <span className="ml-auto text-[10px] font-bold opacity-80">
-              {marketSnapshot.tradeDate.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3")}
-              {marketSnapshot.stale ? " (缓存)" : ""}
-            </span>
-          )}
-        </div>
-        {snapshotLoading ? (
-          <div className="animate-pulse space-y-2">
-            <div className="h-3 bg-white/30 rounded w-3/4" />
-            <div className="h-3 bg-white/30 rounded w-1/2" />
+    <div className="p-4 space-y-4 pb-20">
+      {/* 1. 人格搭子问候区 */}
+      <div
+        className="rounded-2xl p-4 border"
+        style={{
+          background: `linear-gradient(135deg, ${meta.color}12, ${meta.color}04)`,
+          borderColor: `${meta.color}30`,
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className="w-12 h-12 rounded-full flex items-center justify-center text-2xl shadow-sm"
+            style={{ backgroundColor: `${meta.color}18` }}
+          >
+            {meta.emoji}
           </div>
-        ) : (
-          <p className="text-xs leading-relaxed font-semibold drop-shadow-sm">{summary}</p>
-        )}
-        {snapshotError && <p className="text-[10px] mt-1 opacity-80">{snapshotError}，使用演示数据</p>}
+          <div className="flex-1">
+            <p className="text-sm font-bold text-slate-800">
+              早上好，{buddy.greeting}！
+            </p>
+            <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+              {buddy.line}
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 flex items-center gap-2 pt-3 border-t border-slate-100">
+          <span className="text-[10px] font-medium text-slate-500">LV.3 市场调查员</span>
+          <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden max-w-[120px]">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{ width: "33%", backgroundColor: meta.color }}
+            />
+          </div>
+          <span className="text-[10px] font-bold" style={{ color: meta.color }}>
+            今日研究进度 1/3
+          </span>
+        </div>
       </div>
 
-      {/* 全球新闻雷达 */}
-      <div className="bg-white rounded-lg border border-slate-100 overflow-hidden">
+      {/* 2. 今日市场天气 */}
+      <div className="bg-white rounded-xl border border-slate-100 p-4 shadow-sm">
+        <div className="flex items-center gap-3">
+          <span className="text-3xl">{weather.icon}</span>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-slate-800">今日市场：{weather.label}</span>
+              <span className="text-[10px] text-slate-400">
+                {marketSnapshot?.tradeDate?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3") || ""}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">{weather.desc}</p>
+          </div>
+        </div>
+        {/* 指数快照 */}
+        <div className="grid grid-cols-4 gap-2 mt-3">
+          {indices.slice(0, 4).map((idx) => (
+            <div key={idx.code} className="text-center">
+              <div className="text-[10px] text-slate-500">{idx.name.slice(0, 4)}</div>
+              <div className="text-xs font-bold text-slate-800 font-mono">{idx.price.toFixed(2)}</div>
+              <div className={`text-[10px] font-bold ${idx.change >= 0 ? "text-red-500" : "text-emerald-500"}`}>
+                {idx.change >= 0 ? "+" : ""}{idx.change}%
+              </div>
+            </div>
+          ))}
+        </div>
+        {snapshotLoading && <div className="animate-pulse h-3 bg-slate-100 rounded w-1/2 mt-2" />}
+        {snapshotError && <p className="text-[10px] text-amber-500 mt-1">{snapshotError}</p>}
+      </div>
+
+      {/* 3. 主线任务 — 今日推荐研究标的 */}
+      <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="p-3 border-b border-slate-100 flex items-center gap-2">
+          <span className="text-sm">📋</span>
+          <span className="text-sm font-bold text-slate-800">今日主线任务</span>
+          <span className="text-[10px] text-slate-400 ml-auto">搭子推荐</span>
+        </div>
+        <div className="p-3 space-y-3">
+          {recommendedTargets.map((target, i) => {
+            const difficulty = i === 0 ? "⭐⭐⭐" : i === 1 ? "⭐⭐" : "⭐";
+            const taskType = target.recommended_style === "short" ? "短线分析" : target.recommended_style === "swing" ? "波段复盘" : "基本面研究";
+            return (
+              <div key={target.code} className="p-3 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors bg-slate-50/50">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-amber-500 font-mono">{difficulty}</span>
+                    <span className="text-sm font-bold text-slate-800">{target.name}</span>
+                    <span className="text-[10px] text-slate-400 font-mono">{target.code}</span>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-slate-100 text-slate-600">
+                    {taskType}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mb-2">{target.reason}</p>
+                <div className="flex items-center gap-3 text-[10px] text-slate-400 mb-2">
+                  <span>🎯 机会评分 <strong className="text-slate-700">{target.opportunity_score}</strong></span>
+                  <span>⚠️ 风险 <strong className={target.risk_level === "高" ? "text-red-500" : target.risk_level === "中" ? "text-amber-500" : "text-emerald-500"}>{target.risk_level}</strong></span>
+                  <span>🏷️ {target.industry}</span>
+                </div>
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {target.trigger_source.map((src) => (
+                    <span key={src} className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600">{src}</span>
+                  ))}
+                </div>
+                <button
+                  onClick={() => onFillResearch(target as unknown as RecommendedTarget)}
+                  className="w-full py-2 text-xs font-semibold text-white rounded-lg transition-all hover:brightness-110 active:scale-[0.98]"
+                  style={{ backgroundColor: meta.color }}
+                >
+                  接受任务 →
+                </button>
+              </div>
+            );
+          })}
+        </div>
+        <div className="px-3 pb-3">
+          <p className="text-[10px] text-slate-400 text-center">Demo数据，仅用于产品演示，不代表实时行情。</p>
+        </div>
+      </div>
+
+      {/* 4. 全球冒险地图 */}
+      <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm">
         <div className="p-3 border-b border-slate-100">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm font-semibold text-slate-800">全球新闻雷达</span>
+            <span className="text-sm">🌍</span>
+            <span className="text-sm font-bold text-slate-800">全球冒险地图</span>
             {globalNewsLoading && <span className="text-[10px] text-slate-400">加载中...</span>}
-            {!globalNewsLoading && globalNews.length === 0 && <span className="text-[10px] text-slate-400">暂无实时数据</span>}
             {!globalNewsLoading && globalNews.length > 0 && <span className="text-[10px] text-green-600">● 实时数据</span>}
           </div>
-          <p className="text-[10px] text-slate-500">追踪全球宏观、政策、科技、商品与地缘事件对A股的潜在影响</p>
+          <p className="text-[10px] text-slate-500">点击闪光点查看事件详情，了解对A股的潜在影响</p>
         </div>
 
-      {/* 世界地图 - 未来感网格风格 */}
-      <div className="relative bg-slate-950 h-[280px] overflow-hidden">
-        {/* 网格背景 */}
-        <div
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(59,130,246,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.3) 1px, transparent 1px)",
-            backgroundSize: "20px 20px",
-          }}
-        />
-
-        {/* 真实世界地图轮廓 - 网格线风格 */}
-        <svg viewBox="0 0 360 180" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid meet">
-          <defs>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="1" result="coloredBlur" />
-              <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-          <g fill="none" stroke="#3B82F6" strokeWidth="0.5" opacity="0.6" filter="url(#glow)">
-            {WORLD_MAP_PATHS.map((path, i) => (
-              <path key={i} d={path} />
-            ))}
-          </g>
-        </svg>
-
-        {/* 扫描线动画 */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: "linear-gradient(180deg, transparent 0%, rgba(59,130,246,0.1) 50%, transparent 100%)",
-            animation: "scan 3s linear infinite",
-          }}
-        />
-
-          {/* 闪光点 - 脉冲动画 */}
-          {globalNews.length === 0 && !globalNewsLoading && <div className="absolute inset-0 flex items-center justify-center text-slate-500 text-xs">暂无全球新闻数据</div>}
+        {/* 世界地图 - 保留深色雷达风格 */}
+        <div className="relative bg-slate-950 h-[260px] overflow-hidden">
+          {/* 网格背景 */}
+          <div
+            className="absolute inset-0 opacity-15"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(59,130,246,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.3) 1px, transparent 1px)",
+              backgroundSize: "20px 20px",
+            }}
+          />
+          {/* 地图轮廓 */}
+          <svg viewBox="0 0 360 180" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="1" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            <g fill="none" stroke="#3B82F6" strokeWidth="0.5" opacity="0.6" filter="url(#glow)">
+              {WORLD_MAP_PATHS.map((path, i) => (
+                <path key={i} d={path} />
+              ))}
+            </g>
+          </svg>
+          {/* 扫描线动画 */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: "linear-gradient(180deg, transparent 0%, rgba(59,130,246,0.08) 50%, transparent 100%)",
+              animation: "scan 3s linear infinite",
+            }}
+          />
+          {globalNews.length === 0 && !globalNewsLoading && (
+            <div className="absolute inset-0 flex items-center justify-center text-slate-500 text-xs">暂无全球新闻数据</div>
+          )}
           {globalNews.map((event) => {
-            // 将经纬度转换为地图坐标 (匹配新的SVG viewBox 360x180)
             const x = ((event.lng + 180) / 360) * 360;
             const y = ((90 - event.lat) / 180) * 180;
             const isSelected = selectedCountry === event.country;
             const isDimmed = selectedCountry && !isSelected;
-
-            const colorMap: Record<string, string> = {
-              red: "#DC2626",
-              blue: "#3B82F6",
-              orange: "#F59E0B",
-              green: "#10B981",
-              purple: "#8B5CF6",
-            };
+            const colorMap: Record<string, string> = { red: "#DC2626", blue: "#3B82F6", orange: "#F59E0B", green: "#10B981", purple: "#8B5CF6" };
             const dotColor = colorMap[event.pulse_color] || "#3B82F6";
             const dotSize = event.importance === "高" ? 12 : event.importance === "中" ? 8 : 6;
-
             return (
               <button
                 key={event.country_code}
@@ -2112,32 +2303,11 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
                 style={{ left: `${(x / 360) * 100}%`, top: `${(y / 180) * 100}%` }}
                 onClick={() => handleSelectEvent(event.country)}
               >
-                {/* 脉冲动画 */}
-                <span
-                  className={`absolute inset-0 rounded-full ${isSelected ? "animate-ping" : "animate-pulse"}`}
-                  style={{
-                    backgroundColor: dotColor,
-                    width: dotSize * 2,
-                    height: dotSize * 2,
-                    marginLeft: -(dotSize * 2 - dotSize) / 2,
-                    marginTop: -(dotSize * 2 - dotSize) / 2,
-                    opacity: 0.4,
-                  }}
-                />
-                {/* 中心点 */}
-                <span
-                  className="relative block rounded-full border-2 border-white shadow-lg"
-                  style={{
-                    backgroundColor: dotColor,
-                    width: dotSize,
-                    height: dotSize,
-                  }}
-                />
+                <span className="absolute inset-0 rounded-full animate-pulse" style={{ backgroundColor: dotColor, width: dotSize * 2, height: dotSize * 2, marginLeft: -(dotSize * 2 - dotSize) / 2, marginTop: -(dotSize * 2 - dotSize) / 2, opacity: 0.4 }} />
+                <span className="relative block rounded-full border-2 border-white shadow-lg" style={{ backgroundColor: dotColor, width: dotSize, height: dotSize }} />
               </button>
             );
           })}
-
-          {/* 选中国家标签 */}
           {selectedEvent && (
             <div className="absolute top-2 left-2 bg-slate-800/90 backdrop-blur-sm rounded px-2 py-1 text-[10px] text-white">
               {selectedEvent.country} · {selectedEvent.category}
@@ -2145,7 +2315,7 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
           )}
         </div>
 
-        {/* 新闻卡片 */}
+        {/* 事件详情 */}
         {selectedEvent && (
           <div className="p-3 border-t border-slate-100 bg-slate-50">
             <div className="flex items-start gap-2 mb-2">
@@ -2153,17 +2323,12 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xs font-semibold text-slate-800">{selectedEvent.country}</span>
                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-600">{selectedEvent.category}</span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                    selectedEvent.importance === "高" ? "bg-red-100 text-red-700" :
-                    selectedEvent.importance === "中" ? "bg-amber-100 text-amber-700" :
-                    "bg-slate-100 text-slate-600"
-                  }`}>{selectedEvent.importance}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded ${selectedEvent.importance === "高" ? "bg-red-100 text-red-700" : selectedEvent.importance === "中" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"}`}>{selectedEvent.importance}</span>
                 </div>
                 <h4 className="text-xs font-medium text-slate-800 mb-1">{selectedEvent.title}</h4>
                 <p className="text-[10px] text-slate-600 leading-relaxed mb-2">{selectedEvent.summary}</p>
               </div>
             </div>
-
             <div className="space-y-1.5 mb-2">
               <div>
                 <span className="text-[10px] text-slate-500">可能影响A股：</span>
@@ -2182,16 +2347,10 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
                 <span className="text-[10px] text-slate-700">{selectedEvent.risk_note}</span>
               </div>
             </div>
-
-            <div className="flex gap-2">
-              <button className="flex-1 text-[10px] py-1.5 rounded bg-blue-500 text-white font-medium hover:bg-blue-600 transition-colors">
-                查看影响板块
-              </button>
-            </div>
           </div>
         )}
 
-        {/* 今日全球事件列表 */}
+        {/* 事件列表 */}
         <div className="p-3 border-t border-slate-100">
           <h4 className="text-[10px] font-semibold text-slate-600 mb-2">今日全球事件</h4>
           <div className="space-y-1.5">
@@ -2199,9 +2358,7 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
               <button
                 key={event.country_code}
                 className={`w-full text-left p-2 rounded border transition-colors ${
-                  selectedCountry === event.country
-                    ? "border-blue-300 bg-blue-50"
-                    : "border-slate-100 hover:bg-slate-50"
+                  selectedCountry === event.country ? "border-blue-300 bg-blue-50" : "border-slate-100 hover:bg-slate-50"
                 }`}
                 onClick={() => handleSelectEvent(event.country)}
               >
@@ -2210,154 +2367,82 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
                   <span className="text-[10px] text-slate-500">|</span>
                   <span className="text-[10px] text-slate-600 truncate flex-1">{event.title}</span>
                 </div>
-                <div className="text-[10px] text-slate-500 mt-0.5">
-                  影响：{event.related_a_share_sectors.slice(0, 3).join("、")}
-                </div>
+                <div className="text-[10px] text-slate-500 mt-0.5">影响：{event.related_a_share_sectors.slice(0, 3).join("、")}</div>
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* 指数卡片 - 多巴胺风格 */}
-      <div className="grid grid-cols-2 gap-2">
-        {indices.map((idx, i) => {
-          const cardColors = [
-            { bg: "#FF6B6B", border: "#FF4444" },
-            { bg: "#FFD93D", border: "#FFC107" },
-            { bg: "#4ECDC4", border: "#2DB5A8" },
-            { bg: "#FF6B35", border: "#E5551A" },
-          ];
-          const c = cardColors[i % 4];
-          return (
-            <div key={idx.code} className="rounded-2xl p-3 border-2 shadow-md transition-all hover:scale-[1.03] hover:-translate-y-0.5" style={{ backgroundColor: `${c.bg}15`, borderColor: c.border }}>
-              <div className="text-xs font-black text-slate-700 mb-1">{idx.name}</div>
-              <div className="text-lg font-black text-slate-800" style={{ fontFamily: "'SF Mono', Menlo, monospace" }}>{idx.price.toFixed(2)}</div>
-              <div className={`text-xs font-black ${idx.change >= 0 ? "text-[#FF4444]" : "text-[#2DB5A8]"}`}>
-                {idx.change >= 0 ? "+" : ""}{idx.change}%
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* 板块热度榜 - 多巴胺风格 */}
-      <div className="bg-white rounded-3xl p-4 border-2 border-[#FFE66D] shadow-md">
-        <h3 className="text-sm font-black mb-3 bg-gradient-to-r from-[#FF6B6B] to-[#FFD93D] bg-clip-text text-transparent">🔥 板块热度榜</h3>
-        <div className="space-y-2">
-          {hotSectors.map((sector, i) => (
-            <div key={sector.name} className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#FFF8E1] transition-colors">
-              <span className={`text-xs font-black w-5 h-5 rounded-full flex items-center justify-center text-white ${i < 3 ? "bg-[#FF6B6B]" : "bg-slate-300"}`}>{i + 1}</span>
-              <span className="text-xs font-bold text-slate-700 flex-1">{sector.name}</span>
-              <div className="flex items-center gap-2">
-                <div className="w-16 h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-[#FFD93D] to-[#FF6B6B] rounded-full" style={{ width: `${sector.heat}%` }} />
+      {/* 5. 支线任务 — 热门区域 + 异动信号 */}
+      <div className="grid grid-cols-1 gap-3">
+        {/* 热门区域 */}
+        <div className="bg-white rounded-xl border border-slate-100 p-3 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs">🔥</span>
+            <span className="text-xs font-bold text-slate-800">热门区域（板块）</span>
+          </div>
+          <div className="space-y-2">
+            {hotSectors.slice(0, 5).map((sector, i) => (
+              <div key={sector.name} className="flex items-center gap-2">
+                <span className={`text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center text-white ${i < 3 ? "bg-red-500" : "bg-slate-300"}`}>{i + 1}</span>
+                <span className="text-xs font-medium text-slate-700 flex-1">{sector.name}</span>
+                <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-red-500" style={{ width: `${sector.heat}%` }} />
                 </div>
-                <span className="text-xs font-black text-[#FF4444]">+{sector.change}%</span>
+                <span className="text-xs font-bold text-red-500 font-mono">+{sector.change}%</span>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+        </div>
+
+        {/* 异动信号 */}
+        <div className="bg-white rounded-xl border border-slate-100 p-3 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs">⚡</span>
+            <span className="text-xs font-bold text-slate-800">异动信号</span>
+          </div>
+          <div className="space-y-2">
+            {activeStocks.slice(0, 5).map((stock) => (
+              <div key={stock.code} className="flex items-center gap-3 py-1">
+                <div className="flex-1">
+                  <div className="text-xs font-medium text-slate-700">{stock.name}</div>
+                  <div className="text-[10px] text-slate-400">{stock.reason}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs font-bold text-slate-700 font-mono">{stock.price}</div>
+                  <div className="text-[10px] font-bold text-red-500 font-mono">+{stock.change}%</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* 个股异动榜 - 多巴胺风格 */}
-      <div className="bg-white rounded-3xl p-4 border-2 border-[#4ECDC4] shadow-md">
-        <h3 className="text-sm font-black mb-3 bg-gradient-to-r from-[#4ECDC4] to-[#00D4FF] bg-clip-text text-transparent">⚡ 个股异动榜</h3>
-        <div className="space-y-2">
-          {activeStocks.map((stock) => (
-            <div key={stock.code} className="flex items-center gap-3 py-1.5 px-2 rounded-xl hover:bg-[#F0FFF4] transition-colors">
-              <div className="flex-1">
-                <div className="text-xs font-bold text-slate-700">{stock.name}</div>
-                <div className="text-[10px] text-slate-500">{stock.reason}</div>
-              </div>
-              <div className="text-right">
-                <div className="text-xs font-black text-slate-700" style={{ fontFamily: "'SF Mono', Menlo, monospace" }}>{stock.price}</div>
-                <div className="text-xs font-black text-[#FF4444]">+{stock.change}%</div>
-              </div>
-            </div>
-          ))}
+      {/* 6. 今日认知经验 */}
+      <div className="rounded-xl p-4 border" style={{ background: `linear-gradient(135deg, ${meta.color}08, ${meta.color}02)`, borderColor: `${meta.color}20` }}>
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-sm">📊</span>
+          <span className="text-sm font-bold text-slate-800">今日研究总结</span>
         </div>
-      </div>
-
-      {/* 今日AI推荐研究标的 - 多巴胺风格 */}
-      <div className="bg-white rounded-3xl p-4 border-2 border-[#FF6B35] shadow-md">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-black bg-gradient-to-r from-[#FF6B35] to-[#FFD93D] bg-clip-text text-transparent">🎯 今日AI推荐研究标的</h3>
-          <span className="text-[10px] font-black text-[#FF6B35] bg-[#FFF0E8] px-2 py-0.5 rounded-full">Demo数据</span>
+        <div className="space-y-2 text-xs text-slate-600">
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-[10px]">✓</span>
+            <span>浏览了 {globalNews.length} 条全球市场事件</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-[10px]">✓</span>
+            <span>关注了 {hotSectors.length} 个热门板块</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px]">🧠</span>
+            <span>获得 <strong style={{ color: meta.color }}>120</strong> 认知经验</span>
+          </div>
         </div>
-        <div className="space-y-3">
-          {recommendedTargets.map((target, i) => {
-            const cardColors = ["#FF6B6B", "#FFD93D", "#4ECDC4", "#FF6B35"];
-            const c = cardColors[i % 4];
-            return (
-              <div key={target.code} className="p-3 rounded-2xl border-2 transition-all hover:scale-[1.02]" style={{ backgroundColor: `${c}08`, borderColor: `${c}40` }}>
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <span className="text-sm font-black text-slate-800">{target.name}</span>
-                    <span className="text-xs text-slate-500 ml-2" style={{ fontFamily: "'SF Mono', Menlo, monospace" }}>{target.code}</span>
-                  </div>
-                  <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-black ${
-                    target.recommended_style === "short" ? "bg-[#FFE0E0] text-[#FF4444]" :
-                    target.recommended_style === "swing" ? "bg-[#FFF3CD] text-[#FF8C00]" :
-                    "bg-[#E0F0FF] text-[#3B82F6]"
-                  }`}>
-                    {target.recommended_style === "short" ? "⚡ 短线" : target.recommended_style === "swing" ? "🎯 波段" : "💎 长期"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-4 mb-2">
-                  <div className="flex items-center gap-1">
-                    <span className="text-[10px] text-slate-500">机会评分</span>
-                    <span className="text-sm font-black text-[#FF6B35]" style={{ fontFamily: "'SF Mono', Menlo, monospace" }}>{target.opportunity_score}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-[10px] text-slate-500">风险</span>
-                    <span className={`text-xs font-black ${
-                      target.risk_level === "高" ? "text-[#FF4444]" :
-                      target.risk_level === "中" ? "text-[#FF8C00]" : "text-[#2DB5A8]"
-                    }`}>{target.risk_level}</span>
-                  </div>
-                  <span className="text-[10px] text-slate-500">{target.industry}</span>
-                </div>
-                <p className="text-xs text-slate-600 mb-1 font-medium">{target.reason}</p>
-                <p className="text-[10px] text-[#FF4444] mb-2 font-bold">⚠️ 风险：{target.main_risk}</p>
-                <div className="flex flex-wrap gap-1 mb-2">
-                  {target.trigger_source.map((src) => (
-                    <span key={src} className="text-[10px] px-1.5 py-0.5 rounded-full font-bold" style={{ backgroundColor: `${c}20`, color: c }}>{src}</span>
-                  ))}
-                </div>
-                <button
-                  onClick={() => onFillResearch(target as unknown as RecommendedTarget)}
-                  className="w-full py-2.5 text-xs font-black text-white rounded-2xl transition-all hover:scale-[1.02] active:scale-95 shadow-md"
-                  style={{ background: `linear-gradient(135deg, ${c}, ${c}cc)` }}
-                >
-                  🚀 填入研究
-                </button>
-              </div>
-            );
-          })}
-        </div>
-        <p className="text-[10px] text-slate-500 mt-3 text-center">
-          Demo数据，仅用于产品演示，不代表实时行情。
-        </p>
-      </div>
-
-      {/* 事件时间轴 */}
-      <div className="bg-white rounded-lg p-4 border border-slate-100">
-        <h3 className="text-sm font-semibold text-slate-800 mb-3">重要事件</h3>
-        <div className="space-y-3">
-          {events.map((event, i) => (
-            <div key={i} className="flex gap-3">
-              <div className="text-xs text-slate-500 w-10 font-mono">{event.time}</div>
-              <div className="flex-1">
-                <div className="text-xs text-slate-700">{event.title}</div>
-                <span className={`inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded ${
-                  event.impact === "positive" ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"
-                }`}>
-                  {event.impact === "positive" ? "利好" : "利空"}
-                </span>
-              </div>
-            </div>
-          ))}
+        <div className="mt-3 pt-3 border-t border-slate-200/50">
+          <p className="text-xs text-slate-500 italic">
+            "{buddy.greeting}，今天比昨天更了解市场了。明天见！"
+          </p>
         </div>
       </div>
     </div>
