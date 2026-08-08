@@ -701,7 +701,7 @@ function ResearchTab({
             }}
             className="w-full py-2.5 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors"
           >
-            重新选择标的
+            重新选择股票
           </button>
           <p className="text-[10px] text-center text-slate-500">
             以上内容仅供研究参考，不构成投资建议。
