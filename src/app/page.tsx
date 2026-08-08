@@ -27,6 +27,7 @@ import {
   WORKFLOW_STEPS,
   AGENT_TEAM,
   SURVEY_QUESTIONS,
+  GlobalNewsEvent,
 } from "@/lib/mini-types";
 import type { MiniMarketSnapshot, MiniRecommendedTarget } from "@/lib/data/market-types";
 import type { StockResearchContext } from "@/lib/data/stock-context-types";
@@ -41,7 +42,6 @@ import {
   FACTOR_LIBRARY,
   DEFAULT_SELECTED_FACTORS,
   generateGeneralPredictionModel,
-  MOCK_GLOBAL_NEWS,
   TRADETI_QUESTIONS,
   calculateTradeTIResult,
 } from "@/lib/mini-mock";
@@ -1949,6 +1949,8 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
   const [marketSnapshot, setMarketSnapshot] = useState<MiniMarketSnapshot | null>(null);
   const [snapshotLoading, setSnapshotLoading] = useState(true);
   const [snapshotError, setSnapshotError] = useState<string | null>(null);
+  const [globalNews, setGlobalNews] = useState<GlobalNewsEvent[]>([]);
+  const [globalNewsLoading, setGlobalNewsLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -1972,11 +1974,31 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
     return () => { cancelled = true; };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    setGlobalNewsLoading(true);
+    fetch("/api/global-news")
+      .then((res) => res.json())
+      .then((json) => {
+        if (cancelled) return;
+        if (json?.success && json.data) {
+          setGlobalNews(json.data);
+        }
+      })
+      .catch(() => {
+        // 静默失败，显示空状态
+      })
+      .finally(() => {
+        if (!cancelled) setGlobalNewsLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
   const handleSelectEvent = (country: string) => {
     setSelectedCountry(country);
   };
 
-  const selectedEvent = selectedCountry ? MOCK_GLOBAL_NEWS.find((e) => e.country === selectedCountry) : null;
+  const selectedEvent = selectedCountry ? globalNews.find((e) => e.country === selectedCountry) : null;
 
   // Use snapshot data or fallback to mock
   const summary = marketSnapshot?.summary || mockMarketData.summary;
@@ -1994,10 +2016,11 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
       <div className="bg-gradient-to-r from-[#FF6B6B] via-[#FFD93D] to-[#4ECDC4] rounded-3xl p-4 text-white shadow-lg shadow-[#FF6B6B]/20">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-lg">🤖</span>
-          <span className="text-sm font-black">今日市场 AI 摘要</span>
+          <span className="text-sm font-black">市场 AI 摘要</span>
           {marketSnapshot && (
             <span className="ml-auto text-[10px] font-bold opacity-80">
-              {marketSnapshot.tradeDate} {marketSnapshot.stale ? "(缓存)" : ""}
+              {marketSnapshot.tradeDate.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3")}
+              {marketSnapshot.stale ? " (缓存)" : ""}
             </span>
           )}
         </div>
@@ -2017,7 +2040,9 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
         <div className="p-3 border-b border-slate-100">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-sm font-semibold text-slate-800">全球新闻雷达</span>
-            <span className="text-[10px] text-slate-400">Demo 数据，仅用于产品演示，不代表实时新闻。</span>
+            {globalNewsLoading && <span className="text-[10px] text-slate-400">加载中...</span>}
+            {!globalNewsLoading && globalNews.length === 0 && <span className="text-[10px] text-slate-400">暂无实时数据</span>}
+            {!globalNewsLoading && globalNews.length > 0 && <span className="text-[10px] text-green-600">● 实时数据</span>}
           </div>
           <p className="text-[10px] text-slate-500">追踪全球宏观、政策、科技、商品与地缘事件对A股的潜在影响</p>
         </div>
@@ -2062,7 +2087,8 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
         />
 
           {/* 闪光点 - 脉冲动画 */}
-          {MOCK_GLOBAL_NEWS.map((event) => {
+          {globalNews.length === 0 && !globalNewsLoading && <div className="absolute inset-0 flex items-center justify-center text-slate-500 text-xs">暂无全球新闻数据</div>}
+          {globalNews.map((event) => {
             // 将经纬度转换为地图坐标 (匹配新的SVG viewBox 360x180)
             const x = ((event.lng + 180) / 360) * 360;
             const y = ((90 - event.lat) / 180) * 180;
@@ -2169,7 +2195,7 @@ function MarketTab({ onFillResearch }: { onFillResearch: (target: RecommendedTar
         <div className="p-3 border-t border-slate-100">
           <h4 className="text-[10px] font-semibold text-slate-600 mb-2">今日全球事件</h4>
           <div className="space-y-1.5">
-            {MOCK_GLOBAL_NEWS.map((event) => (
+            {globalNews.map((event) => (
               <button
                 key={event.country_code}
                 className={`w-full text-left p-2 rounded border transition-colors ${
