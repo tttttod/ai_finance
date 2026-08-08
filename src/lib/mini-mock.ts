@@ -1221,23 +1221,65 @@ export function generateAgentResponseFromContext(
     })(),
 
     step13_risk: (() => {
-      const risks: { name: string; level: string; desc: string }[] = [];
+      const risks: { id: string; category: string; title: string; description: string; severity: "high" | "medium" | "low"; status: "pass" | "warning" | "fail" }[] = [];
       if (ctx.valuation?.peTtm && ctx.valuation.peTtm > 50) {
-        risks.push({ name: "估值风险", level: "高", desc: `PE(TTM) ${fmtNum(ctx.valuation.peTtm, 1)}倍，处于较高水平` });
+        risks.push({ 
+          id: "valuation",
+          category: "估值",
+          title: "估值风险", 
+          severity: "high",
+          status: "warning",
+          description: `PE(TTM) ${fmtNum(ctx.valuation.peTtm, 1)}倍，处于较高水平，存在估值回调压力。建议谨慎追高，可等待估值回落后再考虑介入。`
+        });
       } else if (ctx.valuation?.peTtm && ctx.valuation.peTtm > 30) {
-        risks.push({ name: "估值风险", level: "中", desc: `PE(TTM) ${fmtNum(ctx.valuation.peTtm, 1)}倍` });
+        risks.push({ 
+          id: "valuation",
+          category: "估值",
+          title: "估值风险", 
+          severity: "medium",
+          status: "pass",
+          description: `PE(TTM) ${fmtNum(ctx.valuation.peTtm, 1)}倍，估值处于中等水平。估值尚可接受，但需关注业绩增长是否能支撑当前估值。`
+        });
       } else {
-        risks.push({ name: "估值风险", level: "低", desc: "估值处于合理区间" });
+        risks.push({ 
+          id: "valuation",
+          category: "估值",
+          title: "估值风险", 
+          severity: "low",
+          status: "pass",
+          description: "估值处于合理区间，当前估值存在一定敏感性，但整体风险较低。估值安全边际较高，可正常参与。"
+        });
       }
       if (ctx.technical?.volatility20d && ctx.technical.volatility20d > 40) {
-        risks.push({ name: "波动风险", level: "高", desc: `20日波动率 ${fmtNum(ctx.technical.volatility20d, 1)}%` });
+        risks.push({ 
+          id: "volatility",
+          category: "波动",
+          title: "波动风险", 
+          severity: "high",
+          status: "warning",
+          description: `20日波动率 ${fmtNum(ctx.technical.volatility20d, 1)}%，短期价格波动较大。建议降低仓位，设置严格止损，避免重仓参与。`
+        });
       } else {
-        risks.push({ name: "波动风险", level: "中", desc: "波动率处于正常范围" });
+        risks.push({ 
+          id: "volatility",
+          category: "波动",
+          title: "波动风险", 
+          severity: "medium",
+          status: "pass",
+          description: "波动率处于正常范围，但短期价格波动可能较明显。建议关注仓位控制，适当分散投资。"
+        });
       }
       if (missing.length > 2) {
-        risks.push({ name: "数据缺失风险", level: "中", desc: `缺失数据项：${missing.join("、")}，可能影响分析准确性` });
+        risks.push({ 
+          id: "data_missing",
+          category: "数据",
+          title: "数据缺失风险", 
+          severity: "medium",
+          status: "warning",
+          description: `缺失数据项：${missing.join("、")}，可能影响分析准确性。建议补充相关数据后再做决策，或降低投资仓位。`
+        });
       }
-      const riskSummary = risks.map((r) => `${r.name}（${r.level}）`).join("、");
+      const riskSummary = risks.map((r) => `${r.title}（${r.severity === "high" ? "高" : r.severity === "medium" ? "中" : "低"}）`).join("、");
       return JSON.stringify({
         content: `风险检查完成。共识别 ${risks.length} 项风险：${riskSummary}。建议关注主要风险点，做好仓位管理。`,
         data: { risks },

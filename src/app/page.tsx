@@ -150,17 +150,12 @@ export default function MiniProgramPage() {
     return <TradeTITest onComplete={completeTradeTI} />;
   }
 
-  // 已完成 tradeTI 但未通关：显示拦截页（不能进入主界面）
-  if (tradeTICompleted && !tradeTIUnlocked) {
-    return <TradeTITest onComplete={completeTradeTI} />;
-  }
-
   return (
-    <div className="min-h-screen bg-[#FAFAF9] flex flex-col max-w-md mx-auto relative">
+    <div className="min-h-screen bg-gradient-to-b from-[#FFF8E1] via-[#FFF3CD] to-white flex flex-col max-w-md mx-auto relative">
       {/* 状态栏模拟 - 市场冒险局 */}
-      <div className="bg-slate-800 px-4 py-2 flex items-center justify-between text-xs text-white">
+      <div className="bg-gradient-to-r from-[#FF6B6B] via-[#FFE66D] to-[#4ECDC4] px-4 py-2 flex items-center justify-between text-xs text-white shadow-md">
         <span className="font-black">9:41</span>
-        <span className="font-black text-sm tracking-wide">🗺️ 市场冒险局</span>
+        <span className="font-black text-sm">🗺️ 市场冒险局</span>
         <span className="font-black">📶</span>
       </div>
 
@@ -205,12 +200,12 @@ export default function MiniProgramPage() {
       </div>
 
       {/* 底部 Tab 栏 - 市场冒险局 */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/90 backdrop-blur-sm border-t border-slate-200 flex rounded-t-xl shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/90 backdrop-blur-sm border-t-2 border-[#FFE66D] flex rounded-t-3xl shadow-[0_-4px_20px_rgba(255,107,107,0.15)]">
         {[
-          { id: "market" as TabId, label: "冒险", icon: "🗺️", color: "#3B82F6" },
+          { id: "market" as TabId, label: "冒险", icon: "🗺️", color: "#FF6B6B" },
           { id: "research" as TabId, label: "任务", icon: "📋", color: "#8B5CF6" },
-          { id: "review" as TabId, label: "工坊", icon: "🔧", color: "#0D9488" },
-          { id: "profile" as TabId, label: "档案", icon: "🎒", color: "#D97706" },
+          { id: "review" as TabId, label: "工坊", icon: "🔧", color: "#4ECDC4" },
+          { id: "profile" as TabId, label: "档案", icon: "🎒", color: "#FF6B35" },
         ].map((tab) => (
           <button
             key={tab.id}
