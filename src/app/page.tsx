@@ -2757,7 +2757,7 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
             {onShowOnboardingGuide && (
               <button
                 onClick={onShowOnboardingGuide}
-                className="mt-2 text-[10px] text-amber-600 font-medium hover:text-amber-700 transition-colors"
+                className="mt-2 inline-flex items-center gap-1 rounded-full border-2 border-amber-400 bg-amber-50 px-3 py-1 text-[11px] font-bold text-amber-700 hover:bg-amber-100 transition-colors"
               >
                 📖 查看玩法指引
               </button>
