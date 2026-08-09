@@ -1035,6 +1035,36 @@ function ResearchTab({
           </p>
         </div>
       )}
+
+      {/* 关卡弹窗 */}
+      {activeGameLevel !== null && (
+        <GameMapPlayer
+          initialLevelId={activeGameLevel}
+          onClose={() => {
+            setActiveGameLevel(null);
+            reloadProgress();
+          }}
+          onLevelComplete={(levelId) => {
+            reloadProgress();
+            const level = TRADER_ROAD_LEVELS.find((l) => l.id === levelId);
+            if (level && level.unlockAgents.length > 0) {
+              const agentRole = level.unlockAgents[0];
+              const agentInfo = AGENT_TEAM.find((a) => a.role === agentRole);
+              if (agentInfo) {
+                setUnlockingAgent(agentInfo);
+              }
+            }
+          }}
+        />
+      )}
+
+      {/* Agent 解锁动画 */}
+      {unlockingAgent && (
+        <AgentUnlockAnimation
+          agent={unlockingAgent}
+          onComplete={() => setUnlockingAgent(null)}
+        />
+      )}
     </div>
   );
 }

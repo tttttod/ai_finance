@@ -124,7 +124,11 @@ export function GameMapPlayer({
       if (progress.completedLevels.includes(levelId)) return;
       const config = getLevelConfig(levelId);
       if (!config) return;
-      const newCompleted = [...progress.completedLevels, levelId];
+
+      // 去重并排序
+      const newCompleted = [...new Set([...progress.completedLevels, levelId])].sort((a, b) => a - b);
+
+      // 去重解锁 Agent
       const newAgents = [...progress.unlockedAgents];
       if (config.unlockAgents) {
         for (const agent of config.unlockAgents) {
@@ -133,12 +137,22 @@ export function GameMapPlayer({
           }
         }
       }
+
+      // 清理当前关卡失败次数
+      const newFailCounts = { ...progress.levelFailCounts };
+      delete newFailCounts[String(levelId)];
+
       const newProgress = {
         ...progress,
         completedLevels: newCompleted,
         unlockedAgents: newAgents,
+        currentLevel: Math.max(progress.currentLevel, levelId + 1),
+        levelFailCounts: newFailCounts,
       };
-      setProgress(newProgress);
+
+      // 同步保存到 localStorage，确保父组件回调时能读到最新进度
+      const savedProgress = saveTraderRoadProgress(newProgress);
+      setProgress(savedProgress);
       onLevelComplete?.(levelId);
     },
     [progress, onLevelComplete]
@@ -416,10 +430,16 @@ export function GameMapPlayer({
           {config.type === "dialogue" && (
             <DialogueGame
               data={DIALOGUE_DATA[activeLevelId]}
-              onComplete={() => {
-                handleLevelComplete(activeLevelId);
-                setView("zone");
-                setActiveLevelId(null);
+              onComplete={(passed) => {
+                if (passed) {
+                  handleLevelComplete(activeLevelId);
+                  setView("zone");
+                  setActiveLevelId(null);
+                } else {
+                  // 失败时不解锁，回到 zone 让玩家重新尝试
+                  setView("zone");
+                  setActiveLevelId(null);
+                }
               }}
             />
           )}
