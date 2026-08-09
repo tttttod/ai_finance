@@ -104,7 +104,7 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
   // ---- Opening phase ----
   if (phase === "opening") {
     return (
-      <div className="relative flex flex-col h-full overflow-hidden">
+      <div className="relative flex flex-col h-full overflow-y-auto">
         {/* 场景背景 */}
         {hasScene && (
           <div className="absolute inset-0">
@@ -119,7 +119,7 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
         )}
 
         {/* 内容 */}
-        <div className="relative z-10 flex-1 flex items-center justify-center p-6">
+        <div className="relative z-10 flex-1 flex items-center justify-center p-6 min-h-full">
           <div className="max-w-sm w-full">
             <div className={`${hasScene ? "bg-black/60 backdrop-blur-sm border border-white/10" : "bg-white border-[#E2E8F0]"} rounded-lg p-5 mb-4 shadow-sm`}>
               <p className={`text-sm leading-relaxed whitespace-pre-line ${hasScene ? "text-white/90" : "text-[#1E293B]"}`}>
@@ -184,7 +184,7 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
   const selectedOptionData = currentNode.options.find(o => o.id === selectedOption);
 
   return (
-    <div className="relative flex flex-col h-full overflow-hidden">
+    <div className="relative flex flex-col h-full overflow-y-auto">
       {/* 场景背景 */}
       {hasScene && (
         <div className="absolute inset-0">
@@ -198,7 +198,7 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
       )}
 
       {/* 内容区域 */}
-      <div className="relative z-10 flex flex-col h-full">
+      <div className="relative z-10 flex flex-col min-h-full">
         {/* Progress */}
         <div className="px-4 pt-3 pb-2">
           <div className="flex items-center gap-2 mb-2">

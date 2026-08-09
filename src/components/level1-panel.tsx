@@ -35,6 +35,12 @@ const DEFAULT_PROGRESS: TraderRoadProgress = {
   coins: 0,
   learnedCards: [],
   correctQuizIds: [],
+  totalXP: 0,
+  rewardedLevels: [],
+  rewardedAgents: [],
+  dailyTaskDate: "",
+  dailyCompletedTasks: [],
+  dailyBonusClaimed: false,
   updatedAt: new Date().toISOString(),
 };
 
