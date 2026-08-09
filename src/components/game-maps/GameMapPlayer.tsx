@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { LogOut } from "lucide-react";
 import { getLevelConfig, GAME_MAP_LEVELS } from "./game-data";
 import { DIALOGUE_DATA } from "./dialogue-data";
 import { QUIZ_DATA } from "./quiz-data";
@@ -545,9 +546,11 @@ export function GameMapPlayer({
             </span>
             <button
               onClick={onClose}
-              className="w-7 h-7 rounded-full bg-[#F1F5F9] flex items-center justify-center text-[#64748B] hover:bg-[#E2E8F0] transition-colors text-sm"
+              aria-label="退出登录"
+              title="退出登录"
+              className="w-10 h-10 rounded-xl bg-[#F1F5F9] flex items-center justify-center text-[#475569] hover:bg-[#FEE2E2] hover:text-[#DC2626] transition-all duration-200"
             >
-              
+              <LogOut className="w-5 h-5" strokeWidth={2} />
             </button>
           </div>
         </div>

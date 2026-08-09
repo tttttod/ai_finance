@@ -59,6 +59,8 @@ export interface DialogueLevelData {
   nodes: DialogueNode[];
   goodEnding: string;
   badEnding: string;
+  /** 场景背景图片（可选），用于视觉小说风格 */
+  sceneImage?: string;
 }
 
 // ===== Quiz 类型 =====
