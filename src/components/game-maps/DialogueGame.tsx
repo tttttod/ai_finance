@@ -113,15 +113,15 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
               alt="场景"
               className="w-full h-full object-cover"
             />
-            {/* 从下到上的渐变遮罩：底部全黑→顶部半透明 */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/30" />
+            {/* 从下到上的渐变遮罩：底部半透明→顶部微暗 */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/10" />
           </div>
         )}
 
         {/* 内容 */}
         <div className="relative z-10 flex-1 flex items-center justify-center p-6 min-h-full">
           <div className="max-w-sm w-full">
-            <div className={`${hasScene ? "bg-black/60 backdrop-blur-sm border border-white/10" : "bg-white border-[#E2E8F0]"} rounded-lg p-5 mb-4 shadow-sm`}>
+            <div className={`${hasScene ? "bg-black/40 backdrop-blur-md border border-white/15 shadow-lg shadow-black/10" : "bg-white border-[#E2E8F0]"} rounded-xl p-5 mb-4 shadow-sm`}>
               <p className={`text-sm leading-relaxed whitespace-pre-line ${hasScene ? "text-white/90" : "text-[#1E293B]"}`}>
                 {displayedText}
                 {isTyping && <span className="inline-block w-0.5 h-4 bg-[#3B82F6] ml-1 animate-pulse" />}
@@ -129,7 +129,7 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
             </div>
             <button
               onClick={isTyping ? handleSkip : handleNext}
-              className="w-full py-3 rounded-lg bg-[#3B82F6] text-white text-sm font-medium hover:bg-blue-600 transition-colors"
+              className="w-full py-3 rounded-xl bg-[#3B82F6] text-white text-sm font-bold hover:bg-blue-600 transition-colors shadow-lg shadow-blue-600/20"
             >
               {isTyping ? "跳过 ▶" : "继续 ▶"}
             </button>
@@ -193,7 +193,7 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
             alt="场景"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/50" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-black/10" />
         </div>
       )}
 
@@ -202,12 +202,12 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
         {/* Progress */}
         <div className="px-4 pt-3 pb-2">
           <div className="flex items-center gap-2 mb-2">
-            <span className={`text-xs ${hasScene ? "text-white/60" : "text-[#64748B]"}`}>
+            <span className={`text-xs ${hasScene ? "text-white/70" : "text-[#64748B]"}`}>
               步骤 {nodeIndex + 1}/{totalNodes}
             </span>
-            <div className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
+            <div className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
               <div
-                className="h-full bg-[#3B82F6] transition-all duration-300"
+                className="h-full bg-[#3B82F6] transition-all duration-300 rounded-full"
                 style={{ width: `${((nodeIndex + 1) / totalNodes) * 100}%` }}
               />
             </div>
@@ -216,8 +216,11 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
 
         {/* 底部对话区 */}
         <div className="flex-1 flex flex-col justify-end px-4 pb-4">
-          {/* 对话气泡 */}
-          <div className={`${hasScene ? "bg-black/60 backdrop-blur-sm border border-white/10" : "bg-white border-[#E2E8F0]"} rounded-lg p-4 mb-3 shadow-sm`}>
+          {/* 底部发光渐变，让过渡更自然 */}
+          <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-black/40 to-transparent pointer-events-none z-0" />
+          <div className="relative z-10">
+            {/* 对话气泡 */}
+          <div className={`${hasScene ? "bg-black/40 backdrop-blur-md border border-white/15 shadow-lg shadow-black/10" : "bg-white border-[#E2E8F0]"} rounded-xl p-4 mb-3 shadow-sm`}>
             <p className={`text-sm leading-relaxed whitespace-pre-line ${hasScene ? "text-white/90" : "text-[#1E293B]"}`}>
               {displayedText}
               {isTyping && <span className="inline-block w-0.5 h-4 bg-[#3B82F6] ml-1 animate-pulse" />}
@@ -235,8 +238,8 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
               {currentNode.options.map((option) => {
                 const isSelected = selectedOption === option.id;
                 const showResult = showFeedback && isSelected;
-                let borderColor = hasScene ? "border-white/20 hover:border-[#3B82F6]" : "border-[#E2E8F0] hover:border-[#3B82F6]";
-                let bgColor = hasScene ? "bg-black/50 backdrop-blur-sm" : "bg-white";
+                let borderColor = hasScene ? "border-white/20 hover:border-[#3B82F6] hover:bg-white/15" : "border-[#E2E8F0] hover:border-[#3B82F6]";
+                let bgColor = hasScene ? "bg-black/30 backdrop-blur-sm" : "bg-white";
                 if (showFeedback) {
                   if (isSelected) {
                     borderColor = option.correct ? "border-[#059669]" : "border-[#DC2626]";
@@ -278,11 +281,12 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
           {showFeedback && (
             <button
               onClick={handleNextNode}
-              className="w-full py-3 rounded-lg bg-[#3B82F6] text-white text-sm font-medium hover:bg-blue-600 transition-colors mt-2"
+              className="w-full py-3 rounded-xl bg-[#3B82F6] text-white text-sm font-bold hover:bg-blue-600 transition-colors mt-2 shadow-lg shadow-blue-600/20"
             >
               {nodeIndex < totalNodes - 1 ? "下一步 ▶" : "查看结果"}
             </button>
           )}
+          </div>{/* end relative z-10 */}
         </div>
       </div>
     </div>
