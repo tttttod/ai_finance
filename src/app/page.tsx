@@ -2559,32 +2559,19 @@ function ProfileAccountSection() {
 }
 
 // ===== 冒险控制台 =====
-type AdventurePanelId = "tasks" | "targets" | "signals" | "summary" | null;
-
 function AdventureEntryCard({
   icon,
   title,
   desc,
   badge,
-  active,
-  onClick,
 }: {
   icon: string;
   title: string;
   desc: string;
   badge?: string;
-  active: boolean;
-  onClick: () => void;
 }) {
   return (
-    <button
-      onClick={onClick}
-      className={`text-left rounded-xl border p-3 transition-all ${
-        active
-          ? "bg-blue-50 border-blue-300 shadow-sm"
-          : "bg-white border-slate-100 hover:border-blue-200"
-      }`}
-    >
+    <div className="text-left rounded-xl border border-slate-100 bg-white p-3">
       <div className="flex items-center gap-2 mb-1">
         <span className="text-lg">{icon}</span>
         <span className="text-sm font-bold text-slate-800">{title}</span>
@@ -2595,7 +2582,7 @@ function AdventureEntryCard({
         )}
       </div>
       <p className="text-[10px] text-slate-500 leading-relaxed">{desc}</p>
-    </button>
+    </div>
   );
 }
 
@@ -2609,7 +2596,7 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
   const [level1Open, setLevel1Open] = useState(false);
   const [activeGameLevel, setActiveGameLevel] = useState<number | null>(null);
   const [traderRoadProgress, setTraderRoadProgress] = useState<TraderRoadProgress>(getDefaultTraderRoadProgress());
-  const [activePanel, setActivePanel] = useState<AdventurePanelId>(null);
+  const [adventureDetailsExpanded, setAdventureDetailsExpanded] = useState(false);
 
   // 加载游戏进度（使用集中式进度模块）
   useEffect(() => {
@@ -2893,7 +2880,15 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
         <div className="flex items-center gap-2">
           <span className="text-sm">🎮</span>
           <span className="text-sm font-bold text-slate-800">冒险控制台</span>
-          <span className="text-[10px] text-slate-400 ml-auto">点击展开详情</span>
+          <button
+            onClick={() => setAdventureDetailsExpanded(!adventureDetailsExpanded)}
+            className="flex items-center gap-1 text-[10px] text-blue-500 ml-auto hover:text-blue-600 transition-colors"
+          >
+            {adventureDetailsExpanded ? "收起详情" : "展开详情"}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${adventureDetailsExpanded ? "rotate-180" : ""}`}>
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
         </div>
         <div className="grid grid-cols-2 gap-2">
           <AdventureEntryCard
@@ -2901,38 +2896,30 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
             title="今日任务"
             desc="主线任务与成长目标"
             badge={`${storyline?.tasks.length || 0}项`}
-            active={activePanel === "tasks"}
-            onClick={() => setActivePanel(activePanel === "tasks" ? null : "tasks")}
           />
           <AdventureEntryCard
             icon="🎯"
             title="研究标的"
             desc="今日可研究机会"
             badge={`${recommendedTargets.length}个`}
-            active={activePanel === "targets"}
-            onClick={() => setActivePanel(activePanel === "targets" ? null : "targets")}
           />
           <AdventureEntryCard
             icon="⚡"
             title="市场异动"
             desc="板块热度与个股信号"
             badge={`${hotSectors.length + activeStocks.length}条`}
-            active={activePanel === "signals"}
-            onClick={() => setActivePanel(activePanel === "signals" ? null : "signals")}
           />
           <AdventureEntryCard
             icon="📊"
             title="研究总结"
             desc="今日进度与认知经验"
             badge="今日"
-            active={activePanel === "summary"}
-            onClick={() => setActivePanel(activePanel === "summary" ? null : "summary")}
           />
         </div>
       </div>
 
       {/* 展开详情面板 */}
-      {activePanel === "tasks" && (
+      {adventureDetailsExpanded && (
       <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="p-3 border-b border-slate-100">
           <div className="flex items-center gap-2 mb-1">
@@ -3010,7 +2997,7 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
       )}
 
       {/* 3.5 AI推荐研究标的 — 详细分析卡片 */}
-      {activePanel === "targets" && recommendedTargets.length > 0 && (
+      {adventureDetailsExpanded && recommendedTargets.length > 0 && (
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="p-3 border-b border-slate-100">
             <div className="flex items-center gap-2">
@@ -3098,7 +3085,7 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
       )}
 
       {/* 冒险控制台入口 */}      {/* 5. 支线任务 — 热门区域 + 异动信号 */}
-      {activePanel === "signals" && (
+      {adventureDetailsExpanded && (
       <div className="grid grid-cols-1 gap-3">
         {/* 热门区域 */}
         <div className="bg-white rounded-xl border border-slate-100 p-3 shadow-sm">
@@ -3145,7 +3132,7 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
       )}
 
       {/* 6. 今日认知经验 */}
-      {activePanel === "summary" && (
+      {adventureDetailsExpanded && (
       <div className="rounded-xl p-4 border" style={{ background: `linear-gradient(135deg, ${meta.color}08, ${meta.color}02)`, borderColor: `${meta.color}20` }}>
         <div className="flex items-center gap-2 mb-3">
           <span className="text-sm">📊</span>
