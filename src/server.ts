@@ -4,12 +4,20 @@ import { existsSync } from 'fs';
 
 // Load env files for production custom server (dev mode auto-loads via Next.js)
 // Priority: .env.local > .env
-const envLocalPath = resolve(process.cwd(), '.env.local');
-const envPath = resolve(process.cwd(), '.env');
-if (existsSync(envLocalPath)) {
-  config({ path: envLocalPath, override: true });
-} else if (existsSync(envPath)) {
-  config({ path: envPath, override: true });
+// Use both cwd and __dirname to cover dev (src/server.ts) and prod (dist/server.js)
+const candidates = [
+  resolve(process.cwd(), '.env.local'),
+  resolve(process.cwd(), '.env'),
+  resolve(__dirname, '.env.local'),
+  resolve(__dirname, '.env'),
+  resolve(__dirname, '..', '.env.local'),
+  resolve(__dirname, '..', '.env'),
+];
+for (const p of candidates) {
+  if (existsSync(p)) {
+    config({ path: p, override: true });
+    break;
+  }
 }
 
 import { createServer } from 'http';
