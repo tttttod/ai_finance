@@ -98,6 +98,7 @@ export const DIALOGUE_DATA: Record<number, DialogueLevelData> = {
       "屏幕上的 K 线剧烈波动，你的虚拟账户亏损严重。\n\nLead Agent 没有责备你：\n\n「这就是市场的第一课。每一个交易员都会犯错，重要的是从错误中学习。」\n\n「回去看看你做的每一个选择，问问自己：当时为什么这么选？有没有更好的方式？」\n\n「当你准备好了，再试一次。」",
   },
   2: {
+    sceneImage: "/dialogue-scene-level2.webp",
     opening:
       "地下交易厅里，三块行情屏幕同时亮起。\n\n屏幕上都是「岚海科技」，走势却完全不同。\n\n行情 A 显示暴跌。\n行情 B 显示上涨。\n行情 C 显示突破。\n\nLead Agent：\n「同一只股票，三张图，三个结果。这里卖的到底是什么行情？」\n\n角落里传来键盘声。Data Agent 坐在行情修复台前，抬头看了一眼。\n\nData Agent：\n「这里什么数据都有，完整的、过期的，还有系统临时编出来的。」\n\nLead Agent：\n「你能找出真的那张吗？」\n\nData Agent：\n「我能。今天轮到你找。」\n\nData Agent 把「行情扫描器」交给玩家。\n\n扫描器只能检查三项内容：\n• 公司记录\n• 更新时间\n• 数据缺口\n\n玩家需要检查三张行情，从中找出能够用于交易的一张。",
     nodes: [
