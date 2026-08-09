@@ -97,15 +97,11 @@ export function GameMapPlayer({
   onClose,
   onLevelComplete,
 }: GameMapPlayerProps) {
-  const [view, setView] = useState<"world" | "zone" | "game">(
-    initialLevelId ? "game" : "world"
-  );
-  const [activeZoneId, setActiveZoneId] = useState<number | null>(
-    initialLevelId
-      ? MAP_ZONES.find((z) => z.levels.includes(initialLevelId))?.id ?? null
-      : null
-  );
-  const [activeLevelId, setActiveLevelId] = useState<number | null>(
+  // 始终从世界地图开始，initialLevelId 仅用于高亮提示
+  const [view, setView] = useState<"world" | "zone" | "game">("world");
+  const [activeZoneId, setActiveZoneId] = useState<number | null>(null);
+  const [activeLevelId, setActiveLevelId] = useState<number | null>(null);
+  const [highlightLevelId, setHighlightLevelId] = useState<number | null>(
     initialLevelId
   );
   const [hoveredMarker, setHoveredMarker] = useState<number | null>(null);
@@ -183,7 +179,13 @@ export function GameMapPlayer({
   );
 
   // ===== Render: World Map =====
-  const renderWorldMap = () => (
+  const renderWorldMap = () => {
+    // 找到高亮关卡所在的区域
+    const highlightZone = highlightLevelId
+      ? MAP_ZONES.find((z) => z.levels.includes(highlightLevelId))
+      : null;
+
+    return (
     <div className="relative w-full" style={{ aspectRatio: "3/2" }}>
       <img
         src="/map-world-v2.jpeg"
@@ -191,6 +193,21 @@ export function GameMapPlayer({
         className="w-full h-full object-cover rounded-2xl"
         draggable={false}
       />
+      {/* 首次进入引导：高亮第一关所在区域 */}
+      {highlightZone && (
+        <div
+          className="absolute pointer-events-none animate-bounce"
+          style={{
+            left: `${WORLD_ZONE_HOTSPOTS.find(h => h.zoneId === highlightZone.id)?.x ?? 20}%`,
+            top: `${WORLD_ZONE_HOTSPOTS.find(h => h.zoneId === highlightZone.id)?.y ?? 50}%`,
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg border-2 border-[#3B82F6]">
+            <p className="text-xs font-bold text-[#3B82F6] whitespace-nowrap">👇 从这里开始</p>
+          </div>
+        </div>
+      )}
       {/* Zone hotspots */}
       {WORLD_ZONE_HOTSPOTS.map((hotspot) => {
         const zone = MAP_ZONES.find((z) => z.id === hotspot.zoneId)!;
@@ -267,6 +284,7 @@ export function GameMapPlayer({
       })}
     </div>
   );
+  };
 
   // ===== Render: Zone Map =====
   const renderZoneMap = () => {
