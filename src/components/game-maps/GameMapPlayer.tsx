@@ -220,7 +220,7 @@ export function GameMapPlayer({
     <div className="relative w-full flex-1 min-h-0 overflow-hidden">
       {/* Vintage map background image */}
       <img
-        src="/map-world-vintage2.jpeg"
+        src="/map-world-vintage2.webp"
         alt="金融华尔界世界地图"
         className="w-full h-full object-contain"
         draggable={false}
