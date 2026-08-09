@@ -66,6 +66,7 @@ import type { AgentInfo } from "@/lib/mini-types";
 import AgentAvatar from "@/components/agent-avatar";
 import AgentTeamCard from "@/components/agent-team-card";
 import AgentUnlockAnimation from "@/components/agent-unlock-animation";
+import OnboardingGuideModal from "@/components/onboarding-guide-modal";
 
 type TabId = "market" | "research" | "review" | "profile";
 
@@ -85,6 +86,7 @@ export default function MiniProgramPage() {
   const [tradeTICompleted, setTradeTICompleted] = useState(false);
   const [tradeTISkipped, setTradeTISkipped] = useState(false); // 本次会话跳过（不保存到 localStorage）
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [showOnboardingGuide, setShowOnboardingGuide] = useState(false);
   const [tradeTIResult, setTradeTIResult] = useState<TradeTIState | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfileSurvey>({
     completed: false,
@@ -139,6 +141,19 @@ export default function MiniProgramPage() {
     }
     setIsLoadingProfile(false);
   }, []);
+
+  // 首次进入引导弹窗：tradeTI 完成后才弹出
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (isLoadingProfile) return;
+    // tradeTI 未完成时不弹引导
+    if (!tradeTICompleted && !tradeTISkipped) return;
+    const seen = localStorage.getItem("market_adventure_onboarding_seen");
+    if (!seen) {
+      setShowOnboardingGuide(true);
+    }
+  }, [isLoadingProfile, tradeTICompleted, tradeTISkipped]);
+
   const [selectedResearchTarget, setSelectedResearchTarget] = useState<RecommendedTarget | null>(null);
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
 
@@ -278,6 +293,23 @@ export default function MiniProgramPage() {
           </button>
         ))}
       </div>
+      {/* 新手引导弹窗 */}
+      <OnboardingGuideModal
+        isOpen={showOnboardingGuide}
+        onClose={() => {
+          if (typeof window !== "undefined") {
+            localStorage.setItem("market_adventure_onboarding_seen", "true");
+          }
+          setShowOnboardingGuide(false);
+        }}
+        onStartMap={() => {
+          if (typeof window !== "undefined") {
+            localStorage.setItem("market_adventure_onboarding_seen", "true");
+          }
+          setShowOnboardingGuide(false);
+          setActiveTab("market");
+        }}
+      />
     </div>
   );
 }
