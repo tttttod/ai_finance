@@ -1001,6 +1001,314 @@ Valuation Agent 正式加入团队。
 Valuation Agent：
 "价签还在这里。愿意重新判决，随时回来。"`
   },
+  7: {
+    opening: `团队研究室使用深蓝色灯光。桌面放着远峰医疗的资料，中央屏幕显示当前价格 18.20 元。
+
+Valuation Agent 神情平静，将估值报告放到桌上。
+
+Valuation Agent：
+"远峰医疗经营稳定，十七到十九元处于观察范围。公司值得关注，当前价格也没有离开范围。"
+
+Lead Agent 神情期待，立刻打开交易界面。
+
+Lead Agent：
+"公司和价格都过关了，图上又刚好出现金叉。九千元计划资金可以直接投入了。"
+
+Valuation Agent 眉头微微下压。
+
+Valuation Agent：
+"我确认公司值得观察，也确认当前价格仍在范围里。我没有要求你今天投入全部资金。"
+
+Lead Agent：
+"那还缺什么？"
+
+墙上的 K 线图突然亮起，一扇白色房门出现在屏幕旁。
+
+Technical Agent 的声音从门后传来：
+"缺一个愿意看完图的人。"
+
+系统提示：进入技术图表室。`,
+    nodes: [
+      {
+        id: 1,
+        scene: `房间四周挂满蜡烛图和均线，红绿 K 线像星座一样悬在空中。中央是一张巨大的远峰医疗走势图。
+
+Technical Agent 坐在白色桌台后，手边放着绘图笔和价格尺。他抬起一侧眉毛，表情带着一点笑意。
+
+Technical Agent：
+"金叉、突破、十字星。有人把它们当工具，也有人把它们当神谕。"
+
+Lead Agent 指向走势图，神情兴奋。
+
+Lead Agent：
+"价格连续上涨四天，短期均线也向上穿过。这个信号已经够清楚了。"
+
+Technical Agent 站起身，将走势图分成价格和成交两个区域。
+
+Technical Agent：
+"图形提醒你观察。先看它走到哪里，再看有多少资金愿意一起走。"
+
+走势图放大，16.80 元和 18.50 元出现两条横线。18.50 元附近留下三次回落痕迹。
+
+系统提问：当前价格 18.20 元位于什么位置？`,
+        options: [
+          {
+            id: "p1",
+            text: "接近近期低点",
+            correct: false,
+            feedback: `Lead Agent：
+"它距离最低点也没涨多少，应该还算安全。"
+
+Technical Agent 用价格尺量了一下距离，神情严肃。
+
+Technical Agent：
+"低点在十六块八，当前已经来到十八块二。你的眼睛只看见了想要的答案。"`
+          },
+          {
+            id: "p2",
+            text: "位于普通区域",
+            correct: false,
+            feedback: `Technical Agent 指向 18.50 元附近的三次回落。
+
+Technical Agent：
+"同一个位置已经让价格退回三次，它在图上留下了记号。"`
+          },
+          {
+            id: "p3",
+            text: "接近多次回落的位置",
+            correct: true,
+            feedback: `玩家：
+"当前价格靠近 18.50 元。这里曾经三次出现回落。"
+
+Technical Agent 微微点头。
+
+Technical Agent：
+"这个位置像一扇反复关上的门。价格需要证明这次真能过去。"
+
+玩家获得标签：「接近压力位置」`
+          }
+        ]
+      },
+      {
+        id: 2,
+        scene: `K 线下方出现成交柱。价格连续上涨，成交柱却逐日缩短。
+
+Technical Agent：
+"价格在向上走。现在看看有多少资金愿意一起推门。"
+
+系统提问：当前成交情况说明什么？`,
+        options: [
+          {
+            id: "v1",
+            text: "成交越来越活跃",
+            correct: false,
+            feedback: `Lead Agent：
+"价格连涨四天，参与的人应该越来越多。"
+
+Technical Agent 用绘图笔敲了一下缩短的成交柱。
+
+Technical Agent：
+"价格在变高，成交却在变少。你又被上面的图吸走了视线。"`
+          },
+          {
+            id: "v2",
+            text: "成交保持稳定",
+            correct: false,
+            feedback: `Technical Agent 将四根成交柱并排放大。
+
+Technical Agent：
+"每一天都比前一天短，它们谈不上稳定。"`
+          },
+          {
+            id: "v3",
+            text: "成交逐渐减少",
+            correct: true,
+            feedback: `玩家：
+"价格上涨时，参与交易的资金正在减少。"
+
+Technical Agent 神情变得认真。
+
+Technical Agent：
+"有人把价格推到门口，愿意一起推门的人却越来越少。"
+
+玩家获得标签：「上涨参与度不足」`
+          }
+        ]
+      },
+      {
+        id: 3,
+        scene: `房间中央出现一扇标有"18.50 元"的透明门。门后闪着金光，门前放着玩家的九千元计划资金。
+
+Lead Agent 神情期待：
+"公司值得观察，价格也在范围内。现在距离突破只差三毛钱。"
+
+Valuation Agent 出现在侧边屏幕中，神情平静。
+
+Valuation Agent：
+"十八块二仍在观察范围。投入多少、什么时候投入，由交易计划决定。"
+
+Technical Agent：
+"你已经知道前方有门，也知道推门的资金正在减少。现在安排你的入场方式。"
+
+系统提问：你准备如何投入资金？`,
+        options: [
+          {
+            id: "e1",
+            text: "现在投入全部 9000 元",
+            correct: false,
+            feedback: `玩家：
+"价格还在观察范围，我现在投入全部资金，成本还能低一点。"
+
+Lead Agent 露出兴奋笑容：
+"提前一步，突破后我们就占到优势了。"
+
+Valuation Agent 眉头轻皱。
+
+Valuation Agent：
+"价格处于范围里，不代表九千元必须同时进入。"
+
+Technical Agent 神情严肃：
+"你把一个可能出现的信号，提前当成了完成的信号。"
+
+玩家以 18.20 元买入。`
+          },
+          {
+            id: "e2",
+            text: "价格碰到 18.50 元时投入全部资金",
+            correct: false,
+            feedback: `玩家：
+"我等它碰到 18.50 元，突破的一刻投入全部资金。"
+
+Technical Agent：
+"碰到门和走过门，动作看起来接近，结果可能差得很远。"
+
+第二天，远峰医疗快速上涨到 18.70 元，透明大门短暂打开。成交柱仍然较短。
+
+Lead Agent 神情激动：
+"突破了，现在买！"
+
+玩家在 18.60 元附近投入全部资金。`
+          },
+          {
+            id: "e3",
+            text: "等收盘站稳 18.50 元，确认成交恢复，先投入 3000 元",
+            correct: true,
+            feedback: `玩家：
+"我等价格收盘站稳 18.50 元，也等成交恢复。条件完成后，先投入 3000 元。"
+
+Lead Agent 神情犹豫：
+"它明天直接上涨的话，我们会错过一段。"
+
+Valuation Agent 微微点头。
+
+Valuation Agent：
+"公司仍在观察清单里，资金也保留了调整空间。"
+
+Technical Agent 露出轻微笑意：
+"计划里有条件，也有投入上限。现在让市场自己回答。"`
+          }
+        ]
+      },
+      {
+        id: 4,
+        scene: `第二天
+
+价格盘中升到 18.70 元，金色大门短暂打开。成交柱仍然较短。
+
+Lead Agent 身体向交易按钮靠近。
+
+Lead Agent：
+"它已经过去了，现在算站稳了吗？"
+
+Technical Agent 指向仍在进行的 K 线。
+
+Technical Agent：
+"交易还没结束。"
+
+画面推进到收盘。价格回落至 17.30 元，透明大门重新关闭。
+
+Lead Agent 的神情从遗憾变为惊讶。
+
+Lead Agent：
+"盘中看起来像突破，收盘时又回来了。"
+
+Valuation Agent：
+"公司判断没有变化。我们只是避开了一次条件尚未完成的买入。"
+
+Technical Agent 微微点头。
+
+Technical Agent：
+"技术面帮你规定观察条件。条件完成前，资金留在手里。"`,
+        options: [
+          {
+            id: "w1",
+            text: "继续观察，等待下次机会",
+            correct: true,
+            feedback: `Technical Agent 收起价格尺。
+
+Technical Agent：
+"图形回答了市场正在尝试什么。它没有保证尝试一定成功。"
+
+Valuation Agent 将远峰医疗的资料重新放回观察清单。
+
+Valuation Agent：
+"为什么值得关注，我已经给出范围。什么时候行动，现在有了新的规则。"`
+          }
+        ]
+      }
+    ],
+    goodEnding: `房间里的蜡烛图停止闪烁，杂乱图形逐渐变成一张清楚的走势图。Technical Agent 从白色桌台后走到玩家面前。
+
+Technical Agent 神情温和，将价格尺交给玩家。
+
+Technical Agent：
+"趋势告诉你方向，成交告诉你参与程度，价格位置告诉你风险靠得多近。"
+
+Lead Agent 露出轻松笑容：
+"以后看到漂亮图形，我会看它走到哪里，也会决定投入多少资金。"
+
+Technical Agent：
+"图形没有神谕。它只是帮助你安排时间和资金。"
+
+Technical Agent 正式加入团队。
+
+玩家解锁技能：「技术标尺」
+
+技能可以查看：
+• 当前趋势方向
+• 成交活跃变化
+• 价格支撑与压力位置
+• 突破是否保持到收盘
+• 单次计划投入比例`,
+    badEnding: `金色大门突然关闭。K 线从 18.70 元快速回落，最终收在 17.30 元。
+
+Lead Agent 神情震惊，随后低头看向交易记录。
+
+Lead Agent：
+"图形明明走出来了，怎么又掉回去了？"
+
+Technical Agent 收起价格尺。
+
+Technical Agent：
+"价格短暂越过十八块五，收盘时又退了回来。成交也没有恢复。"
+
+Valuation Agent 查看价格记录，神情严肃。
+
+Valuation Agent：
+"公司仍然值得观察，估值范围也没有改变。你因为一张漂亮图形，一次投入了全部计划资金。"
+
+Lead Agent 神情懊恼：
+"我把碰到压力位置，当成了突破完成。"
+
+Technical Agent：
+"图形回答了市场正在尝试什么。它没有保证尝试一定成功。"
+
+触发结局：「图形崇拜」
+
+Technical Agent 拒绝加入。
+
+白色图表室的灯光变暗。Technical Agent 回到桌台后，Valuation Agent 收起观察报告。`
+  },
   9: {
     opening: "\u5706\u5F62\u8BAE\u4E8B\u5385\uFF0C\u4E24\u65B9\u5BF9\u5750\u3002\n\u5DE6\u8FB9\u662F\u725B\u65B9\u7814\u7A76\u5458\uFF0C\u53F3\u8FB9\u662F\u718A\u65B9\u7814\u7A76\u5458\u3002\n\n\u725B\u65B9\u8BF4\uFF1A\u201C\u6536\u5165\u8FDE\u7EED\u4E09\u5B63\u5EA6\u589E\u957F 30%\uFF0C\u8FD9\u662F\u6210\u957F\u80A1\u3002\u201D\n\u718A\u65B9\u8BF4\uFF1A\u201C\u4F46 PE \u5DF2\u7ECF 80 \u500D\uFF0C\u8FD9\u662F\u6CE1\u6CAB\u3002\u201D\n\n\u4ED6\u4EEC\u540C\u65F6\u770B\u5411\u4F60\uFF1A\u201C\u4F60\u600E\u4E48\u770B\uFF1F\u201D",
     nodes: [
