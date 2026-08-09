@@ -203,7 +203,7 @@ export function GameMapPlayer({
     return (
     <div className="relative w-full flex-1 min-h-0">
       <img
-        src="/map-world-v2.jpeg"
+        src="/map-world-v3.jpeg"
         alt="金融华尔界世界地图"
         className="w-full h-full object-contain"
         draggable={false}
