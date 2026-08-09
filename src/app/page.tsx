@@ -222,6 +222,7 @@ export default function MiniProgramPage() {
         {activeTab === "market" && (
           <MarketTab
             tradeTIResult={tradeTIResult}
+            onShowOnboardingGuide={() => setShowOnboardingGuide(true)}
             onFillResearch={(target) => {
               setSelectedResearchTarget(target);
               setActiveTab("research");
@@ -2753,6 +2754,14 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
             <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
               {buddy.line}
             </p>
+            {onShowOnboardingGuide && (
+              <button
+                onClick={onShowOnboardingGuide}
+                className="mt-2 text-[10px] text-amber-600 font-medium hover:text-amber-700 transition-colors"
+              >
+                📖 查看玩法指引
+              </button>
+            )}
           </div>
         </div>
         <div className="mt-3 flex items-center gap-2 pt-3 border-t border-slate-100">
@@ -2767,15 +2776,6 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
             今日研究进度 1/3
           </span>
         </div>
-        {onShowOnboardingGuide && (
-          <button
-            onClick={onShowOnboardingGuide}
-            className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/80 border border-amber-200 flex items-center justify-center text-amber-500 text-xs font-bold shadow-sm hover:bg-amber-50 transition-colors"
-            title="查看玩法指引"
-          >
-            ?
-          </button>
-        )}
       </div>
 
       {/* 2. 今日市场天气 */}
