@@ -679,7 +679,7 @@ function ResearchTab({
 
         {/* Agent 团队展示 - 未来感升级 */}
         <div className="bg-white rounded-lg p-4 border border-slate-100">
-          <h3 className="text-sm font-semibold text-slate-800 mb-3">Agent 研究团队</h3>
+          <h3 className="text-sm font-semibold text-slate-800 mb-3">Agent 研究天团</h3>
           <div className="grid grid-cols-3 gap-2">
             {AGENT_TEAM.map((agent) => {
               const isUnlocked = isTraderRoadAgentUnlocked(traderRoadProgress, agent.role);
