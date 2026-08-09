@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { WORLD_MAP_PATHS } from "@/lib/world-map-paths";
 import Level1Panel from "@/components/level1-panel";
-import GameMapPlayer from "@/components/game-maps/GameMapPlayer";
+import { GameMapPlayer } from "@/components/game-maps/GameMapPlayer";
 import { getLevelConfig } from "@/components/game-maps/game-data";
 import {
   InvestmentStyle,
@@ -831,6 +831,9 @@ function ResearchTab({
             initialLevelId={researchTabGameLevel}
             onClose={() => {
               setResearchTabGameLevel(null);
+              setTraderRoadProgress({ ...loadTraderRoadProgress() });
+            }}
+            onLevelComplete={(levelId) => {
               setTraderRoadProgress({ ...loadTraderRoadProgress() });
             }}
           />
@@ -3041,6 +3044,9 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIR
           initialLevelId={activeGameLevel}
           onClose={() => {
             setActiveGameLevel(null);
+            reloadProgress();
+          }}
+          onLevelComplete={() => {
             reloadProgress();
           }}
         />

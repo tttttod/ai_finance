@@ -11,6 +11,8 @@ export interface GameMapLevel {
   unlockAgents: string[];
   color: string;
   description: string;
+  /** 关卡数据 - 运行时动态注入 */
+  data?: any;
   /** 学习卡片索引范围 (0-based, into LEARNING_CARDS) */
   learningCardIndices?: number[];
   /** 选择题索引范围 (0-based, into QUIZ_QUESTIONS) */

@@ -14,6 +14,8 @@ export default function AgentDetailModal({ agent, unlocked, onClose }: AgentDeta
   const meta = AGENT_UNLOCK_META[agent.role];
   const overlayRef = useRef<HTMLDivElement>(null);
   const [loaded, setLoaded] = useState(false);
+  const [showLight, setShowLight] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   // 点击遮罩关闭
   useEffect(() => {
@@ -28,7 +30,11 @@ export default function AgentDetailModal({ agent, unlocked, onClose }: AgentDeta
     document.body.style.overflow = "hidden";
     // 预加载图片
     const img = new Image();
-    img.onload = () => setLoaded(true);
+    img.onload = () => {
+      setLoaded(true);
+      // 图片加载完成后触发光效
+      setTimeout(() => setShowLight(true), 100);
+    };
     img.src = unlocked ? meta.fullBody : meta.lockedAvatar;
     return () => {
       document.removeEventListener("mousedown", handleClick);
@@ -58,24 +64,41 @@ export default function AgentDetailModal({ agent, unlocked, onClose }: AgentDeta
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200"
     >
-      <div className="relative bg-white rounded-3xl max-w-sm w-full shadow-2xl overflow-hidden">
+      <div
+        ref={cardRef}
+        className="relative bg-white rounded-3xl max-w-sm w-full shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 ease-out"
+      >
         {/* 关闭按钮 */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 shadow-md text-slate-500 hover:text-slate-800 hover:bg-white transition-all text-sm"
+          className="absolute top-3 right-3 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 shadow-md text-slate-500 hover:text-slate-800 hover:bg-white transition-all text-sm"
         >
           ✕
         </button>
 
-        {/* 图片区域 - 使用原始尺寸确保清晰度 */}
-        <div className="flex justify-center bg-gradient-to-b from-blue-50 to-white">
+        {/* 图片区域 - 带光效 */}
+        <div className="relative flex justify-center bg-gradient-to-b from-blue-50 to-white overflow-hidden">
+          {/* 扫光特效 */}
+          {showLight && (
+            <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 animate-sweep-light" />
+            </div>
+          )}
+
+          {/* 发光边框 */}
+          {loaded && (
+            <div className="absolute inset-0 z-10 pointer-events-none rounded-t-3xl">
+              <div className="absolute inset-0 rounded-t-3xl animate-glow-pulse" />
+            </div>
+          )}
+
           {loaded ? (
             <img
               src={imageSrc}
               alt={agent.name}
-              className="w-full h-auto max-h-[70vh] object-contain"
+              className="w-full h-auto max-h-[70vh] object-contain animate-in fade-in slide-in-from-bottom-4 duration-500"
               style={{ imageRendering: "auto" }}
             />
           ) : (
@@ -86,7 +109,7 @@ export default function AgentDetailModal({ agent, unlocked, onClose }: AgentDeta
         </div>
 
         {/* 信息区域 */}
-        <div className="p-4 space-y-2">
+        <div className="p-4 space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-150">
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-black text-slate-800">{agent.name}</h3>
             <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">
