@@ -1,3 +1,13 @@
+import { config } from 'dotenv';
+import { resolve } from 'path';
+import { existsSync } from 'fs';
+
+// Load .env.local for production custom server (dev mode auto-loads via Next.js)
+const envLocalPath = resolve(process.cwd(), '.env.local');
+if (existsSync(envLocalPath)) {
+  config({ path: envLocalPath, override: true });
+}
+
 import { createServer } from 'http';
 import { parse } from 'url';
 import next from 'next';
