@@ -186,11 +186,11 @@ export function GameMapPlayer({
       : null;
 
     return (
-    <div className="relative w-full" style={{ aspectRatio: "3/2" }}>
+    <div className="relative w-full flex-1 min-h-0">
       <img
         src="/map-world-v2.jpeg"
         alt="金融华尔界世界地图"
-        className="w-full h-full object-cover rounded-2xl"
+        className="w-full h-full object-contain"
         draggable={false}
       />
       {/* 首次进入引导：高亮第一关所在区域 */}
@@ -292,11 +292,11 @@ export function GameMapPlayer({
     if (!zone) return null;
 
     return (
-      <div className="relative w-full" style={{ aspectRatio: "3/2" }}>
+      <div className="relative w-full h-full">
         <img
           src={zone.image}
           alt={zone.name}
-          className="w-full h-full object-cover rounded-2xl"
+          className="absolute inset-0 w-full h-full object-cover"
           draggable={false}
         />
         {/* Level markers */}
@@ -494,14 +494,9 @@ export function GameMapPlayer({
 
   // ===== Main Render =====
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      {/* Panel */}
-      <div className="relative bg-[#F5F5F7] rounded-3xl shadow-2xl w-[95vw] max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      {/* 9:16 Panel */}
+      <div className="relative bg-[#F5F5F7] w-full h-full max-w-[min(100vw,56.25vh)] max-h-[min(100vh,177.78vw)] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#E2E8F0] bg-white rounded-t-3xl">
           <div className="flex items-center gap-2">
