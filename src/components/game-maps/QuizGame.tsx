@@ -53,17 +53,19 @@ export function QuizGame({ data, onComplete }: QuizGameProps) {
     return (
       <div className="flex flex-col h-full items-center justify-center p-6">
         <div className="text-center max-w-sm w-full">
-          <div className="text-4xl mb-4">\uD83C\uDCCF</div>
-          <h3 className="text-lg font-bold text-white mb-2">{data.title}</h3>
-          <p className="text-slate-300 text-sm mb-4">{data.intro}</p>
-          <div className="text-xs text-slate-400 mb-6">
-            \u5171 {totalCards} \u5F20\u5361\u7247\uFF0C\u6B63\u786E\u7387\u9700\u8FBE {Math.round(data.passRate * 100)}%
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-violet-50 border border-violet-200 flex items-center justify-center">
+            <span className="text-2xl">🃏</span>
+          </div>
+          <h3 className="text-lg font-bold text-[#1E293B] mb-2">{data.title}</h3>
+          <p className="text-[#64748B] text-sm mb-4">{data.intro}</p>
+          <div className="text-xs text-[#94A3B8] mb-6">
+            共 {totalCards} 张卡片, 正确率需达 {Math.round(data.passRate * 100)}%
           </div>
           <button
             onClick={() => setPhase("playing")}
-            className="w-full py-3 rounded-lg bg-blue-600/80 text-white text-sm font-medium hover:bg-blue-600 transition-colors"
+            className="w-full py-3 rounded-lg bg-[#3B82F6] text-white text-sm font-medium hover:bg-blue-600 transition-colors"
           >
-            \u5F00\u59CB\u6311\u6218
+            开始挑战
           </button>
         </div>
       </div>
@@ -77,32 +79,32 @@ export function QuizGame({ data, onComplete }: QuizGameProps) {
         <div className="text-center max-w-sm w-full">
           {passed ? (
             <>
-              <div className="text-5xl mb-4">\uD83C\uDF89</div>
-              <h3 className="text-lg font-bold text-emerald-400 mb-2">\u901A\u5173\u6210\u529F\uFF01</h3>
-              <p className="text-slate-300 text-sm mb-2">
-                \u4F60\u7684\u91D1\u878D\u77E5\u8BC6\u50A8\u5907\u5DF2\u8FBE\u6807\u3002
+              <div className="text-5xl mb-4">🎉</div>
+              <h3 className="text-lg font-bold text-[#059669] mb-2">通关成功!</h3>
+              <p className="text-[#64748B] text-sm mb-2">
+                你的金融知识储备已达标。
               </p>
-              <div className="text-xs text-slate-400 mb-4">
-                \u6B63\u786E\u7387\uFF1A{correctCount}/{totalCards}
+              <div className="text-xs text-[#94A3B8] mb-4">
+                正确率: {correctCount}/{totalCards}
               </div>
             </>
           ) : (
             <>
-              <div className="text-5xl mb-4">\uD83D\uDCDA</div>
-              <h3 className="text-lg font-bold text-amber-400 mb-2">\u7EE7\u7EED\u5B66\u4E60</h3>
-              <p className="text-slate-300 text-sm mb-2">
-                \u91D1\u878D\u77E5\u8BC6\u8FD8\u9700\u8981\u52A0\u5F3A\uFF0C\u518D\u8BD5\u4E00\u6B21\u5427\uFF01
+              <div className="text-5xl mb-4">📚</div>
+              <h3 className="text-lg font-bold text-[#D97706] mb-2">继续学习</h3>
+              <p className="text-[#64748B] text-sm mb-2">
+                金融知识还需要加强, 再试一次吧!
               </p>
-              <div className="text-xs text-slate-400 mb-4">
-                \u6B63\u786E\u7387\uFF1A{correctCount}/{totalCards}\uFF0C\u9700\u8981 {Math.ceil(totalCards * data.passRate)} \u9898\u6B63\u786E
+              <div className="text-xs text-[#94A3B8] mb-4">
+                正确率: {correctCount}/{totalCards}, 需要 {Math.ceil(totalCards * data.passRate)} 题正确
               </div>
             </>
           )}
           <button
             onClick={() => onComplete(passed)}
-            className="w-full py-3 rounded-lg bg-blue-600/80 text-white text-sm font-medium hover:bg-blue-600 transition-colors"
+            className="w-full py-3 rounded-lg bg-[#3B82F6] text-white text-sm font-medium hover:bg-blue-600 transition-colors"
           >
-            {passed ? "\u7EE7\u7EED\u524D\u8FDB" : "\u91CD\u65B0\u6311\u6218"}
+            {passed ? "继续前进" : "重新挑战"}
           </button>
         </div>
       </div>
@@ -118,14 +120,14 @@ export function QuizGame({ data, onComplete }: QuizGameProps) {
       {/* Progress */}
       <div className="px-4 pt-3 pb-2">
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs text-slate-400">\u5361\u7247 {currentIndex + 1}/{totalCards}</span>
-          <div className="flex-1 h-1 bg-slate-700 rounded-full overflow-hidden">
+          <span className="text-xs text-[#64748B]">卡片 {currentIndex + 1}/{totalCards}</span>
+          <div className="flex-1 h-1 bg-[#E2E8F0] rounded-full overflow-hidden">
             <div
-              className="h-full bg-purple-500 transition-all duration-300"
+              className="h-full bg-[#8B5CF6] transition-all duration-300"
               style={{ width: `${((currentIndex + 1) / totalCards) * 100}%` }}
             />
           </div>
-          <span className="text-xs text-emerald-400">\u2713 {correctCount}</span>
+          <span className="text-xs text-[#059669] font-medium">✓ {correctCount}</span>
         </div>
       </div>
 
@@ -143,32 +145,34 @@ export function QuizGame({ data, onComplete }: QuizGameProps) {
           >
             {/* Front */}
             <div
-              className="absolute inset-0 rounded-xl border border-slate-600/50 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center p-6"
+              className="absolute inset-0 rounded-lg border border-[#E2E8F0] bg-white shadow-md flex items-center justify-center p-6"
               style={{ backfaceVisibility: "hidden" }}
             >
               <div className="text-center">
-                <div className="text-3xl mb-3">\u2753</div>
-                <p className="text-slate-200 text-sm font-medium">{currentCard.statement}</p>
-                <p className="text-xs text-slate-500 mt-3">\u70B9\u51FB\u7FFB\u5F00\u5361\u7247</p>
+                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-violet-50 border border-violet-200 flex items-center justify-center">
+                  <span className="text-xl text-[#8B5CF6] font-bold">?</span>
+                </div>
+                <p className="text-[#1E293B] text-sm font-medium leading-relaxed">{currentCard.statement}</p>
+                <p className="text-xs text-[#94A3B8] mt-3">点击翻开卡片</p>
               </div>
             </div>
             {/* Back */}
             <div
-              className={`absolute inset-0 rounded-xl border p-5 flex flex-col items-center justify-center ${
+              className={`absolute inset-0 rounded-lg border p-5 flex flex-col items-center justify-center shadow-md ${
                 currentCard.isCorrect
-                  ? "border-emerald-500/50 bg-gradient-to-br from-emerald-900/40 to-slate-900"
-                  : "border-red-500/50 bg-gradient-to-br from-red-900/40 to-slate-900"
+                  ? "border-[#059669]/40 bg-green-50"
+                  : "border-[#DC2626]/40 bg-red-50"
               }`}
               style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
             >
               <div className="text-center">
                 <div className="text-3xl mb-2">
-                  {currentCard.isCorrect ? "\u2705" : "\u274C"}
+                  {currentCard.isCorrect ? "✅" : "❌"}
                 </div>
-                <p className={`text-sm font-bold mb-2 ${currentCard.isCorrect ? "text-emerald-400" : "text-red-400"}`}>
-                  {currentCard.isCorrect ? "\u9648\u8FF0\u6B63\u786E" : "\u9648\u8FF0\u9519\u8BEF"}
+                <p className={`text-sm font-bold mb-2 ${currentCard.isCorrect ? "text-[#059669]" : "text-[#DC2626]"}`}>
+                  {currentCard.isCorrect ? "陈述正确" : "陈述错误"}
                 </p>
-                <p className="text-xs text-slate-300 leading-relaxed">{currentCard.explanation}</p>
+                <p className="text-xs text-[#64748B] leading-relaxed">{currentCard.explanation}</p>
               </div>
             </div>
           </div>
@@ -181,22 +185,22 @@ export function QuizGame({ data, onComplete }: QuizGameProps) {
           <div className="flex gap-2 mb-3">
             <button
               onClick={() => handleAnswer(currentCard.id, currentCard.isCorrect)}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 currentCard.isCorrect
-                  ? "bg-emerald-600/80 text-white hover:bg-emerald-600"
-                  : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                  ? "bg-[#059669] text-white hover:bg-green-700"
+                  : "bg-[#F5F5F7] border border-[#E2E8F0] text-[#1E293B] hover:bg-[#E2E8F0]"
               }`}
             >
-              {currentCard.isCorrect ? "\u6211\u77E5\u9053\u662F\u5BF9\u7684 \u2713" : "\u6211\u5224\u65AD\u5B8C\u6210"}
+              {currentCard.isCorrect ? "我知道是对的 ✓" : "我判断完成"}
             </button>
           </div>
         )}
         {isAnswered && (
           <button
             onClick={handleNext}
-            className="w-full py-3 rounded-lg bg-blue-600/80 text-white text-sm font-medium hover:bg-blue-600 transition-colors"
+            className="w-full py-3 rounded-lg bg-[#3B82F6] text-white text-sm font-medium hover:bg-blue-600 transition-colors"
           >
-            {currentIndex < totalCards - 1 ? "\u4E0B\u4E00\u5F20\u5361\u7247 \u25B6" : "\u67E5\u770B\u7ED3\u679C"}
+            {currentIndex < totalCards - 1 ? "下一张卡片 ▶" : "查看结果"}
           </button>
         )}
       </div>

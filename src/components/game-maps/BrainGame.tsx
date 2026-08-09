@@ -81,7 +81,6 @@ export function BrainGame({ data, onComplete }: BrainGameProps) {
       const secondCard = cards.find(c => c.id === second);
 
       if (firstCard && secondCard && firstCard.pairId === secondCard.pairId && firstCard.type !== secondCard.type) {
-        // Match!
         setTimeout(() => {
           setMatched(prev => {
             const next = new Set(prev);
@@ -92,7 +91,6 @@ export function BrainGame({ data, onComplete }: BrainGameProps) {
           setFlipped([]);
         }, 600);
       } else {
-        // No match
         setTimeout(() => {
           setFlipped([]);
         }, 800);
@@ -100,24 +98,26 @@ export function BrainGame({ data, onComplete }: BrainGameProps) {
     }
   }, [flipped, matched, cards]);
 
-  const passed = moves <= totalPairs * 3; // generous threshold
+  const passed = moves <= totalPairs * 3;
 
   // Intro
   if (phase === "intro") {
     return (
       <div className="flex flex-col h-full items-center justify-center p-6">
         <div className="text-center max-w-sm w-full">
-          <div className="text-4xl mb-4">\uD83E\uDDE0</div>
-          <h3 className="text-lg font-bold text-white mb-2">{data.title}</h3>
-          <p className="text-slate-300 text-sm mb-4">{data.intro}</p>
-          <div className="text-xs text-slate-400 mb-6">
-            \u5171 {totalPairs} \u5BF9\u5361\u7247\uFF0C\u627E\u5230\u6240\u6709\u914D\u5BF9
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center">
+            <span className="text-2xl">🧠</span>
+          </div>
+          <h3 className="text-lg font-bold text-[#1E293B] mb-2">{data.title}</h3>
+          <p className="text-[#64748B] text-sm mb-4">{data.intro}</p>
+          <div className="text-xs text-[#94A3B8] mb-6">
+            共 {totalPairs} 对卡片, 找到所有配对
           </div>
           <button
             onClick={() => { initCards(); setPhase("playing"); }}
-            className="w-full py-3 rounded-lg bg-blue-600/80 text-white text-sm font-medium hover:bg-blue-600 transition-colors"
+            className="w-full py-3 rounded-lg bg-[#3B82F6] text-white text-sm font-medium hover:bg-blue-600 transition-colors"
           >
-            \u5F00\u59CB\u6311\u6218
+            开始挑战
           </button>
         </div>
       </div>
@@ -131,28 +131,28 @@ export function BrainGame({ data, onComplete }: BrainGameProps) {
         <div className="text-center max-w-sm w-full">
           {passed ? (
             <>
-              <div className="text-5xl mb-4">\uD83C\uDF1F</div>
-              <h3 className="text-lg font-bold text-emerald-400 mb-2">\u901A\u5173\u6210\u529F\uFF01</h3>
-              <p className="text-slate-300 text-sm mb-2">\u4F60\u7684\u8BB0\u5FC6\u529B\u548C\u5224\u65AD\u529B\u90FD\u5F88\u51FA\u8272\uFF01</p>
-              <div className="text-xs text-slate-400 mb-4">
-                \u7528\u65F6 {elapsed} \u79D2\uFF0C\u7FFB\u724C {moves} \u6B21
+              <div className="text-5xl mb-4">🌟</div>
+              <h3 className="text-lg font-bold text-[#059669] mb-2">通关成功!</h3>
+              <p className="text-[#64748B] text-sm mb-2">你的记忆力和判断力都很出色!</p>
+              <div className="text-xs text-[#94A3B8] mb-4">
+                用时 {elapsed} 秒, 翻牌 {moves} 次
               </div>
             </>
           ) : (
             <>
-              <div className="text-5xl mb-4">\uD83D\uDCAA</div>
-              <h3 className="text-lg font-bold text-amber-400 mb-2">\u518D\u7EC3\u7EC3</h3>
-              <p className="text-slate-300 text-sm mb-2">\u7FFB\u724C\u6B21\u6570\u8F83\u591A\uFF0C\u591A\u7EC3\u4E60\u53EF\u4EE5\u66F4\u5FEB\uFF01</p>
-              <div className="text-xs text-slate-400 mb-4">
-                \u7528\u65F6 {elapsed} \u79D2\uFF0C\u7FFB\u724C {moves} \u6B21
+              <div className="text-5xl mb-4">💪</div>
+              <h3 className="text-lg font-bold text-[#D97706] mb-2">再练练</h3>
+              <p className="text-[#64748B] text-sm mb-2">翻牌次数较多, 多练习可以更快!</p>
+              <div className="text-xs text-[#94A3B8] mb-4">
+                用时 {elapsed} 秒, 翻牌 {moves} 次
               </div>
             </>
           )}
           <button
             onClick={() => onComplete(passed)}
-            className="w-full py-3 rounded-lg bg-blue-600/80 text-white text-sm font-medium hover:bg-blue-600 transition-colors"
+            className="w-full py-3 rounded-lg bg-[#3B82F6] text-white text-sm font-medium hover:bg-blue-600 transition-colors"
           >
-            {passed ? "\u7EE7\u7EED\u524D\u8FDB" : "\u91CD\u65B0\u6311\u6218"}
+            {passed ? "继续前进" : "重新挑战"}
           </button>
         </div>
       </div>
@@ -162,11 +162,13 @@ export function BrainGame({ data, onComplete }: BrainGameProps) {
   // Playing
   return (
     <div className="flex flex-col h-full">
-      {/* Stats */}
-      <div className="px-4 pt-3 pb-2 flex items-center justify-between">
-        <span className="text-xs text-slate-400">\u23F1 {elapsed}s</span>
-        <span className="text-xs text-slate-400">\u5DF2\u914D\u5BF9 {matched.size / 2}/{totalPairs}</span>
-        <span className="text-xs text-slate-400">\u7FFB\u724C {moves}\u6B21</span>
+      {/* Stats bar */}
+      <div className="px-4 pt-3 pb-2">
+        <div className="flex items-center justify-between bg-white border border-[#E2E8F0] rounded-lg px-3 py-2 shadow-sm">
+          <span className="text-xs text-[#64748B] font-mono">⏱ {elapsed}s</span>
+          <span className="text-xs text-[#1E293B] font-medium">已配对 {matched.size / 2}/{totalPairs}</span>
+          <span className="text-xs text-[#64748B] font-mono">翻牌 {moves}次</span>
+        </div>
       </div>
 
       {/* Grid */}
@@ -180,14 +182,14 @@ export function BrainGame({ data, onComplete }: BrainGameProps) {
                 key={card.id}
                 onClick={() => handleCardClick(card.id)}
                 disabled={isMatched}
-                className={`aspect-square rounded-lg border text-xs font-medium flex items-center justify-center p-1 transition-all duration-300 ${
+                className={`aspect-square rounded-lg border text-xs font-medium flex items-center justify-center p-1 transition-all duration-300 shadow-sm ${
                   isMatched
-                    ? "border-emerald-500/50 bg-emerald-900/30 text-emerald-300 scale-95"
+                    ? "border-[#059669]/40 bg-green-50 text-[#059669] scale-95"
                     : isFlipped
                     ? card.type === "term"
-                      ? "border-blue-500/50 bg-blue-900/40 text-blue-200"
-                      : "border-purple-500/50 bg-purple-900/40 text-purple-200"
-                    : "border-slate-600/50 bg-slate-800/80 text-slate-400 hover:border-slate-500"
+                      ? "border-[#3B82F6]/40 bg-blue-50 text-[#3B82F6]"
+                      : "border-[#8B5CF6]/40 bg-violet-50 text-[#8B5CF6]"
+                    : "border-[#E2E8F0] bg-white text-[#94A3B8] hover:border-[#3B82F6]/40 hover:shadow"
                 }`}
               >
                 <span className="text-center leading-tight" style={{ fontSize: "10px" }}>
