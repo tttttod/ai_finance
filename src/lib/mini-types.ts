@@ -179,6 +179,97 @@ export const AGENT_TEAM: AgentInfo[] = [
   { role: "manager", name: "研究经理", title: "Research Manager", icon: "👔" },
 ];
 
+// Agent 解锁元数据映射（与 AGENT_TEAM 独立，不影响原结构）
+export interface AgentUnlockMeta {
+  avatar: string;
+  lockedAvatar: string;
+  unlockLevel: number;
+  unlockHint: string;
+}
+
+export const AGENT_UNLOCK_META: Record<AgentRole, AgentUnlockMeta> = {
+  lead: {
+    avatar: "/agents/lead-agent.png",
+    lockedAvatar: "/agents/locked-agent.png",
+    unlockLevel: 1,
+    unlockHint: "完成第 1 关「开户日」后解锁",
+  },
+  data: {
+    avatar: "/agents/data-agent.png",
+    lockedAvatar: "/agents/locked-agent.png",
+    unlockLevel: 2,
+    unlockHint: "完成第 2 关「数据黑市」后解锁",
+  },
+  market: {
+    avatar: "/agents/market-agent.png",
+    lockedAvatar: "/agents/locked-agent.png",
+    unlockLevel: 3,
+    unlockHint: "完成第 3 关「市场风暴」后解锁",
+  },
+  industry: {
+    avatar: "/agents/industry-agent.png",
+    lockedAvatar: "/agents/locked-agent.png",
+    unlockLevel: 4,
+    unlockHint: "完成第 4 关「政策密函」后解锁",
+  },
+  fundamental: {
+    avatar: "/agents/fundamental-agent.png",
+    lockedAvatar: "/agents/locked-agent.png",
+    unlockLevel: 5,
+    unlockHint: "完成第 5 关「财报夜审」后解锁",
+  },
+  valuation: {
+    avatar: "/agents/valuation-agent.png",
+    lockedAvatar: "/agents/locked-agent.png",
+    unlockLevel: 6,
+    unlockHint: "完成第 6 关「价格审判庭」后解锁",
+  },
+  technical: {
+    avatar: "/agents/technical-agent.png",
+    lockedAvatar: "/agents/locked-agent.png",
+    unlockLevel: 7,
+    unlockHint: "完成第 7 关「K线神谕」后解锁",
+  },
+  sentiment: {
+    avatar: "/agents/sentiment-agent.png",
+    lockedAvatar: "/agents/locked-agent.png",
+    unlockLevel: 8,
+    unlockHint: "完成第 8 关「舆论火场」后解锁",
+  },
+  bull: {
+    avatar: "/agents/bull-agent.png",
+    lockedAvatar: "/agents/locked-agent.png",
+    unlockLevel: 9,
+    unlockHint: "完成第 9 关「多空议会」后解锁",
+  },
+  bear: {
+    avatar: "/agents/bear-agent.png",
+    lockedAvatar: "/agents/locked-agent.png",
+    unlockLevel: 9,
+    unlockHint: "完成第 9 关「多空议会」后解锁",
+  },
+  risk: {
+    avatar: "/agents/risk-officer.png",
+    lockedAvatar: "/agents/locked-agent.png",
+    unlockLevel: 10,
+    unlockHint: "完成第 10 关「回撤之门」后解锁",
+  },
+  manager: {
+    avatar: "/agents/research-manager.png",
+    lockedAvatar: "/agents/locked-agent.png",
+    unlockLevel: 10,
+    unlockHint: "完成第 10 关「回撤之门」后解锁",
+  },
+};
+
+// 工作流步骤解锁判断（预留，当前不阻断流程）
+export function isWorkflowStepUnlocked(
+  stepAgentRole: AgentRole,
+  unlockedAgents: AgentRole[]
+): boolean {
+  return unlockedAgents.includes(stepAgentRole);
+}
+
 // 16 步工作流定义
 export const WORKFLOW_STEPS: { id: WorkflowStep; number: number; title: string; agent: AgentRole }[] = [
   { id: "step1_question", number: 1, title: "确认研究问题", agent: "lead" },

@@ -11,6 +11,8 @@ import {
   TRADER_ROAD_LEVELS as CENTRALIZED_TRADER_ROAD_LEVELS,
 } from "@/lib/trader-road-progress";
 import type { TraderRoadProgress } from "@/lib/trader-road-progress";
+import AgentAvatar from "@/components/agent-avatar";
+import AgentTeamCard from "@/components/agent-team-card";
 import {
   InvestmentStyle,
   StepStatus,
@@ -682,14 +684,7 @@ function ResearchTab({
             {AGENT_TEAM.map((agent) => {
               const isUnlocked = isTraderRoadAgentUnlocked(traderRoadProgress, agent.role);
               return (
-                <div key={agent.role} className={`flex items-center gap-2 p-2 rounded-lg border ${isUnlocked ? 'bg-slate-900 border-slate-700' : 'bg-slate-100 border-slate-200 opacity-50'}`}>
-                  <span className="text-lg">{isUnlocked ? agent.icon : '🔒'}</span>
-                  <div>
-                    <div className={`text-[10px] font-medium ${isUnlocked ? 'text-blue-400' : 'text-slate-400'}`}>{agent.name}</div>
-                    <div className={`text-[10px] font-medium ${isUnlocked ? 'text-slate-300' : 'text-slate-400'}`}>{agent.title}</div>
-                    {!isUnlocked && <div className="text-[8px] text-slate-400">未解锁</div>}
-                  </div>
-                </div>
+                <AgentTeamCard key={agent.role} agent={agent} unlocked={isUnlocked} />
               );
             })}
           </div>
@@ -776,7 +771,7 @@ function ResearchTab({
       {/* Agent 分析卡片 */}
       <div className="space-y-3">
         {responses.map((resp, i) => (
-          <AgentCard key={i} response={resp} />
+          <AgentCard key={i} response={resp} unlockedAgents={traderRoadProgress.unlockedAgents} />
         ))}
       </div>
 
@@ -848,16 +843,24 @@ function ResearchTab({
 }
 
 // Agent 分析卡片组件
-function AgentCard({ response }: { response: AgentResponse }) {
+function AgentCard({ response, unlockedAgents }: { response: AgentResponse; unlockedAgents?: string[] }) {
   const agent = AGENT_TEAM.find((a) => a.role === response.agent);
+  const isUnlocked = agent ? (unlockedAgents?.includes(agent.role) ?? true) : true;
 
   return (
-    <div className="bg-white rounded-lg p-4 border border-slate-100">
+    <div className={`bg-white rounded-lg p-4 border border-slate-100 ${!isUnlocked ? 'opacity-70' : ''}`}>
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-lg">{agent?.icon}</span>
+        {agent ? (
+          <AgentAvatar agent={agent} unlocked={isUnlocked} size="sm" />
+        ) : (
+          <span className="text-lg">🤖</span>
+        )}
         <div>
           <div className="text-xs font-semibold text-slate-700">{agent?.name}</div>
-          <div className="text-[10px] text-slate-500">第 {response.step} 步 · {agent?.title}</div>
+          <div className="text-[10px] text-slate-500">
+            第 {response.step} 步 · {agent?.title}
+            {!isUnlocked && <span className="ml-1 text-orange-500">(未解锁)</span>}
+          </div>
         </div>
       </div>
       <p className="text-xs text-slate-600 leading-relaxed">{response.content}</p>

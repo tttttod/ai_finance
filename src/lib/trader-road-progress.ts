@@ -382,3 +382,49 @@ export function getTraderRoadLevelsWithStatus(
     status: getTraderRoadLevelStatus(progress, level.id),
   }));
 }
+
+// ===== React Hook =====
+
+/**
+ * React hook for reactive access to trader road progress.
+ * Must be used in "use client" components.
+ */
+export function useTraderRoadProgress() {
+  // Dynamic import to avoid SSR issues
+  const { useState, useEffect, useCallback } = require("react");
+
+  const [progress, setProgress] = useState(
+    getDefaultTraderRoadProgress() as TraderRoadProgress
+  );
+
+  useEffect(() => {
+    setProgress(loadTraderRoadProgress());
+  }, []);
+
+  const completeLevel = useCallback((levelId: number) => {
+    const updated = completeTraderRoadLevel(levelId);
+    setProgress(updated);
+  }, []);
+
+  const isLevelUnlocked = useCallback(
+    (levelId: number) => {
+      const status = getTraderRoadLevelStatus(progress, levelId);
+      return status === "available" || status === "completed";
+    },
+    [progress]
+  );
+
+  const resetProgress = useCallback(() => {
+    if (isBrowser()) {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+    setProgress(getDefaultTraderRoadProgress());
+  }, []);
+
+  return {
+    progress,
+    completeLevel,
+    isLevelUnlocked,
+    resetProgress,
+  };
+}

@@ -26,6 +26,14 @@ export const GAME_MAP_LEVELS: GameMapLevel[] = [
   { id: 10, title: "回撤之门", subtitle: "Risk Officer", icon: "\u{1F6E1}\uFE0F", type: "minigame", unlockAgents: ["risk", "manager"], color: "#14B8A6", description: "风险管理场景快速决策，守护你的本金。" },
 ];
 
+// Alias for backward compatibility
+export const GAME_LEVELS = GAME_MAP_LEVELS;
+
+// Get level config by ID
+export function getLevelConfig(levelId: number): GameMapLevel | undefined {
+  return GAME_MAP_LEVELS.find((l) => l.id === levelId);
+}
+
 // ===== Dialogue 类型 =====
 export interface DialogueOption {
   id: string;
@@ -89,3 +97,4 @@ export interface MiniGameLevelData {
   timePerRound: number; // seconds
   passRate: number;
 }
+

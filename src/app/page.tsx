@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { WORLD_MAP_PATHS } from "@/lib/world-map-paths";
 import Level1Panel from "@/components/level1-panel";
+import { GameMapPlayer } from "@/components/game-maps/GameMapPlayer";
 import {
   InvestmentStyle,
   StepStatus,
@@ -56,6 +57,8 @@ import {
   getTraderRoadLevelsWithStatus,
 } from "@/lib/trader-road-progress";
 import type { TraderRoadProgress } from "@/lib/trader-road-progress";
+import AgentAvatar from "@/components/agent-avatar";
+import AgentTeamCard from "@/components/agent-team-card";
 
 type TabId = "market" | "research" | "review" | "profile";
 
@@ -779,14 +782,7 @@ function ResearchTab({
               const ac = agentColors[i % 4];
               const isUnlocked = isTraderRoadAgentUnlocked(traderRoadProgress, agent.role);
               return (
-                <div key={agent.role} className={`flex items-center gap-2 p-2 rounded-2xl border-2 transition-all ${isUnlocked ? 'hover:scale-[1.05]' : 'opacity-50 grayscale'}`} style={{ backgroundColor: isUnlocked ? `${ac}10` : '#f1f5f9', borderColor: isUnlocked ? `${ac}30` : '#e2e8f0' }}>
-                  <span className="text-lg">{isUnlocked ? agent.icon : '🔒'}</span>
-                  <div>
-                    <div className="text-[10px] font-black" style={{ color: isUnlocked ? ac : '#94a3b8' }}>{agent.name}</div>
-                    <div className="text-[10px] text-slate-500 font-bold">{agent.title}</div>
-                    {!isUnlocked && <div className="text-[8px] text-slate-400 font-bold">未解锁</div>}
-                  </div>
-                </div>
+                <AgentTeamCard key={agent.role} agent={agent} unlocked={isUnlocked} />
               );
             })}
           </div>
@@ -872,7 +868,7 @@ function ResearchTab({
       {/* Agent 分析卡片 */}
       <div className="space-y-3">
         {responses.map((resp, i) => (
-          <AgentCard key={i} response={resp} />
+          <AgentCard key={i} response={resp} unlockedAgents={traderRoadProgress.unlockedAgents} />
         ))}
       </div>
 
@@ -937,16 +933,24 @@ function ResearchTab({
 }
 
 // Agent 分析卡片组件
-function AgentCard({ response }: { response: AgentResponse }) {
+function AgentCard({ response, unlockedAgents }: { response: AgentResponse; unlockedAgents?: string[] }) {
   const agent = AGENT_TEAM.find((a) => a.role === response.agent);
+  const isUnlocked = agent ? (unlockedAgents?.includes(agent.role) ?? true) : true;
 
   return (
-    <div className="bg-white rounded-lg p-4 border border-slate-100">
+    <div className={`bg-white rounded-lg p-4 border border-slate-100 ${!isUnlocked ? 'opacity-70' : ''}`}>
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-lg">{agent?.icon}</span>
+        {agent ? (
+          <AgentAvatar agent={agent} unlocked={isUnlocked} size="sm" />
+        ) : (
+          <span className="text-lg">🤖</span>
+        )}
         <div>
           <div className="text-xs font-semibold text-slate-700">{agent?.name}</div>
-          <div className="text-[10px] text-slate-500">第 {response.step} 步 · {agent?.title}</div>
+          <div className="text-[10px] text-slate-500">
+            第 {response.step} 步 · {agent?.title}
+            {!isUnlocked && <span className="ml-1 text-orange-500">(未解锁)</span>}
+          </div>
         </div>
       </div>
       <p className="text-xs text-slate-600 leading-relaxed">{response.content}</p>
@@ -2262,6 +2266,7 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIR
   const [globalNews, setGlobalNews] = useState<GlobalNewsEvent[]>([]);
   const [globalNewsLoading, setGlobalNewsLoading] = useState(true);
   const [level1Open, setLevel1Open] = useState(false);
+  const [activeGameLevel, setActiveGameLevel] = useState<number | null>(null);
   const [traderRoadProgress, setTraderRoadProgress] = useState<TraderRoadProgress>(getDefaultTraderRoadProgress());
 
   // 加载游戏进度（使用集中式进度模块）
@@ -2506,12 +2511,8 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIR
                 <div key={node.id} className="flex items-center flex-shrink-0">
                   <button
                     onClick={() => {
-                      if (node.id === 1 && isAccessible) {
-                        setLevel1Open(true);
-                      } else if (isCompleted) {
-                        alert(`${node.title} — 已完成`);
-                      } else if (isAvailable) {
-                        alert(`${node.title} — 即将开放`);
+                      if (isAccessible) {
+                        setActiveGameLevel(node.id);
                       } else if (isComingSoon) {
                         alert(`${node.title} — 即将开放，先完成当前关卡`);
                       } else {
@@ -2949,7 +2950,7 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIR
         </div>
       </div>
 
-      {/* 第1关剧情面板 */}
+      {/* 第1关剧情面板（保留兼容） */}
       <Level1Panel
         isOpen={level1Open}
         onClose={() => {
@@ -2961,6 +2962,19 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIR
         }}
         onGoToResearch={() => {
           onGoToResearch();
+        }}
+      />
+
+      {/* 游戏地图系统 */}
+      <GameMapPlayer
+        levelId={activeGameLevel || 1}
+        isOpen={activeGameLevel !== null}
+        onClose={() => {
+          setActiveGameLevel(null);
+          reloadProgress();
+        }}
+        onLevelComplete={() => {
+          reloadProgress();
         }}
       />
     </div>
