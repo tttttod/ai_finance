@@ -87,14 +87,14 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
       <div className="relative flex flex-col h-full overflow-hidden">
         {/* 场景背景 */}
         {hasScene && (
-          <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-black">
             <img
               src={data.sceneImage}
               alt="场景"
-              className="w-full h-full object-cover object-top"
+              className="w-full h-full object-contain"
             />
             {/* 从下到上的渐变遮罩：底部全黑→顶部半透明 */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/30" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/10" />
           </div>
         )}
 
@@ -161,11 +161,11 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
     <div className="relative flex flex-col h-full overflow-hidden">
       {/* 场景背景 */}
       {hasScene && (
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-black">
           <img
             src={data.sceneImage}
             alt="场景"
-            className="w-full h-full object-cover object-top"
+            className="w-full h-full object-contain"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
         </div>
