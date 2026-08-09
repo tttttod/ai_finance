@@ -263,7 +263,6 @@ export default function MiniProgramPage() {
               setTradeTICompleted(false);
               setTradeTIResult(null);
             }}
-            onShowOnboardingGuide={() => setShowOnboardingGuide(true)}
         />}
       </div>
 
@@ -2015,7 +2014,7 @@ const STOCK_REPORTS: Record<string, {
   }
 };
 
-function ProfileTab({ profile, tradeTIResult, onRetakeSurvey, watchlist, onRemoveFromWatchlist, onShowOnboardingGuide }: { profile: UserProfileSurvey; tradeTIResult: TradeTIState | null; onRetakeSurvey: () => void; watchlist: WatchlistItem[]; onRemoveFromWatchlist: (code: string) => void; onShowOnboardingGuide?: () => void }) {
+function ProfileTab({ profile, tradeTIResult, onRetakeSurvey, watchlist, onRemoveFromWatchlist }: { profile: UserProfileSurvey; tradeTIResult: TradeTIState | null; onRetakeSurvey: () => void; watchlist: WatchlistItem[]; onRemoveFromWatchlist: (code: string) => void }) {
   const { isAuthenticated, signOut } = useAuth();
   const router = useRouter();
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -2258,21 +2257,6 @@ function ProfileTab({ profile, tradeTIResult, onRetakeSurvey, watchlist, onRemov
         )}
         <button onClick={onRetakeSurvey} className="w-full mt-3 py-3 text-sm font-black bg-gradient-to-r from-[#FF6B35] to-[#FFD93D] text-white rounded-2xl shadow-lg shadow-[#FF6B35]/20 transition-all hover:scale-[1.02] active:scale-95">🔄 重新测试</button>
       </div>
-
-      {/* 玩法指引 */}
-      {onShowOnboardingGuide && (
-        <button
-          onClick={onShowOnboardingGuide}
-          className="w-full bg-white rounded-3xl p-4 border-2 border-amber-300/50 shadow-md flex items-center gap-3 transition-all hover:border-amber-400 hover:shadow-lg active:scale-[0.98]"
-        >
-          <span className="text-2xl">🗺️</span>
-          <div className="flex-1 text-left">
-            <p className="text-sm font-black text-slate-800">查看玩法指引</p>
-            <p className="text-[10px] text-slate-500">了解市场冒险局怎么玩</p>
-          </div>
-          <span className="text-slate-400 text-lg">›</span>
-        </button>
-      )}
 
       {/* 关注股票 */}
       <div className="bg-white rounded-3xl p-4 border-2 border-[#4ECDC4] shadow-md">
@@ -2611,7 +2595,7 @@ function AdventureEntryCard({
 }
 
 // ===== 市场冒险局 =====
-function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIResult: TradeTIState | null; onFillResearch: (target: RecommendedTarget) => void; onGoToResearch: () => void }) {
+function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboardingGuide }: { tradeTIResult: TradeTIState | null; onFillResearch: (target: RecommendedTarget) => void; onGoToResearch: () => void; onShowOnboardingGuide?: () => void }) {
   const [researchTabGameLevel, setResearchTabGameLevel] = useState<number | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [marketSnapshot, setMarketSnapshot] = useState<MiniMarketSnapshot | null>(null);
@@ -2783,6 +2767,15 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIR
             今日研究进度 1/3
           </span>
         </div>
+        {onShowOnboardingGuide && (
+          <button
+            onClick={onShowOnboardingGuide}
+            className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/80 border border-amber-200 flex items-center justify-center text-amber-500 text-xs font-bold shadow-sm hover:bg-amber-50 transition-colors"
+            title="查看玩法指引"
+          >
+            ?
+          </button>
+        )}
       </div>
 
       {/* 2. 今日市场天气 */}

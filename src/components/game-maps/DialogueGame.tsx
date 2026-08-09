@@ -89,6 +89,16 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
     }
   }, [nodeIndex, totalNodes]);
 
+  const handleRestart = useCallback(() => {
+    setPhase("opening");
+    setNodeIndex(0);
+    setSelectedOption(null);
+    setShowFeedback(false);
+    setCorrectCount(0);
+    setDisplayedText("");
+    setIsTyping(false);
+  }, []);
+
   const passed = correctCount >= Math.ceil(totalNodes * 0.6);
 
   // ---- Opening phase ----
@@ -158,6 +168,12 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
             className="w-full py-3 rounded-lg bg-[#3B82F6] text-white text-sm font-medium hover:bg-blue-600 transition-colors"
           >
             {passed ? "继续前进" : "重新挑战"}
+          </button>
+          <button
+            onClick={handleRestart}
+            className="w-full py-2.5 mt-2 rounded-lg border-2 border-dashed border-[#FFD93D] text-[#FF6B35] text-sm font-bold hover:bg-[#FFD93D]/10 transition-colors"
+          >
+            🔄 重新开始（免费）
           </button>
         </div>
       </div>
