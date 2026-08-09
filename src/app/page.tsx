@@ -60,6 +60,10 @@ import {
   isTraderRoadAgentUnlocked,
   getTraderRoadLevelsWithStatus,
   TRADER_ROAD_LEVELS,
+  calcLevelFromXP,
+  calcXPProgress,
+  completeDailyTask,
+  claimDailyBonus,
 } from "@/lib/trader-road-progress";
 import type { TraderRoadProgress } from "@/lib/trader-road-progress";
 import type { AgentInfo } from "@/lib/mini-types";
@@ -2642,13 +2646,23 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
   // 切换任务完成状态
   const toggleTask = (taskId: string) => {
     setCompletedTasks((prev) => {
-      const next = prev.includes(taskId)
-        ? prev.filter((id) => id !== taskId)
-        : [...prev, taskId];
+      const isCompleting = !prev.includes(taskId);
+      const next = isCompleting
+        ? [...prev, taskId]
+        : prev.filter((id) => id !== taskId);
       localStorage.setItem(
         "tradeti_story_progress",
         JSON.stringify({ personalityId, completedTasks: next })
       );
+      // XP reward for completing a daily task
+      if (isCompleting) {
+        completeDailyTask(taskId);
+        // Check if all 3 daily tasks are now complete
+        if (next.length >= 3) {
+          claimDailyBonus();
+        }
+        reloadProgress();
+      }
       return next;
     });
   };
@@ -2765,16 +2779,27 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
           </div>
         </div>
         <div className="mt-3 flex items-center gap-2 pt-3 border-t border-slate-100">
-          <span className="text-[10px] font-medium text-slate-500">LV.3 市场调查员</span>
-          <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden max-w-[120px]">
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{ width: "33%", backgroundColor: meta.color }}
-            />
-          </div>
-          <span className="text-[10px] font-bold" style={{ color: meta.color }}>
-            今日研究进度 1/3
-          </span>
+          {(() => {
+            const { level, title } = calcLevelFromXP(traderRoadProgress.totalXP);
+            const xpProgress = calcXPProgress(traderRoadProgress.totalXP);
+            const dailyDone = traderRoadProgress.dailyTaskDate === new Date().toISOString().slice(0, 10)
+              ? traderRoadProgress.dailyCompletedTasks.length : 0;
+            const isAllDailyDone = dailyDone >= 3;
+            return (
+              <>
+                <span className="text-[10px] font-medium text-slate-500">LV.{level} {title}</span>
+                <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden max-w-[120px]">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${xpProgress.progressPercent}%`, backgroundColor: meta.color }}
+                  />
+                </div>
+                <span className="text-[10px] font-bold" style={{ color: isAllDailyDone ? "#059669" : meta.color }}>
+                  {isAllDailyDone ? "今日研究完成！" : `今日研究进度 ${dailyDone}/3`}
+                </span>
+              </>
+            );
+          })()}
         </div>
       </div>
 
