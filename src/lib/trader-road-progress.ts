@@ -52,6 +52,19 @@ export interface TraderRoadProgress {
   learnedCards: number[];
   /** 已答对的题目ID */
   correctQuizIds: number[];
+  // ===== XP 成长系统 =====
+  /** 累计经验值 */
+  totalXP: number;
+  /** 已发放关卡首次奖励的关卡ID（防重复） */
+  rewardedLevels: number[];
+  /** 已发放 Agent 首次解锁奖励的 Agent ID（防重复） */
+  rewardedAgents: TraderRoadAgentId[];
+  /** 每日任务完成记录的日期 (YYYY-MM-DD) */
+  dailyTaskDate: string;
+  /** 当天已完成的任务ID列表 */
+  dailyCompletedTasks: string[];
+  /** 当天全部主线任务的额外XP是否已领取 */
+  dailyBonusClaimed: boolean;
   updatedAt: string;
 }
 
@@ -122,6 +135,76 @@ export const TRADER_ROAD_LEVELS: TraderRoadLevel[] = [
   },
 ];
 
+// ===== XP 成长系统常量 =====
+
+/** 等级阈值表：[最低XP, 等级, 称号] */
+export const XP_LEVEL_TABLE: Array<{ minXP: number; level: number; title: string }> = [
+  { minXP: 0, level: 1, title: "市场新手" },
+  { minXP: 50, level: 2, title: "市场观察员" },
+  { minXP: 120, level: 3, title: "市场调查员" },
+  { minXP: 220, level: 4, title: "研究分析员" },
+  { minXP: 350, level: 5, title: "独立研究员" },
+  { minXP: 500, level: 6, title: "资深研究员" },
+  { minXP: 700, level: 7, title: "首席分析师" },
+  { minXP: 1000, level: 8, title: "研究总监" },
+];
+
+/** XP 奖励常量 */
+export const XP_REWARDS = {
+  /** 完成一个普通每日任务 */
+  DAILY_TASK: 10,
+  /** 完成当日全部主线任务额外奖励 */
+  DAILY_BONUS: 20,
+  /** 首次通关一个剧情关卡 */
+  LEVEL_COMPLETE: 50,
+  /** 首次解锁一个 Agent */
+  AGENT_UNLOCK: 30,
+} as const;
+
+// ===== XP 计算函数 =====
+
+/** 根据累计 XP 计算当前等级和称号 */
+export function calcLevelFromXP(totalXP: number): { level: number; title: string } {
+  let result = XP_LEVEL_TABLE[0];
+  for (const entry of XP_LEVEL_TABLE) {
+    if (totalXP >= entry.minXP) {
+      result = entry;
+    } else {
+      break;
+    }
+  }
+  return { level: result.level, title: result.title };
+}
+
+/** 获取当前等级到下一等级的 XP 进度 */
+export function calcXPProgress(totalXP: number): {
+  currentLevelXP: number;
+  nextLevelXP: number;
+  progressPercent: number;
+  xpToNext: number;
+} {
+  const { level } = calcLevelFromXP(totalXP);
+  const currentEntry = XP_LEVEL_TABLE.find(e => e.level === level) || XP_LEVEL_TABLE[0];
+  const nextEntry = XP_LEVEL_TABLE.find(e => e.level === level + 1);
+
+  if (!nextEntry) {
+    // 已满级
+    return { currentLevelXP: totalXP - currentEntry.minXP, nextLevelXP: 0, progressPercent: 100, xpToNext: 0 };
+  }
+
+  const currentLevelXP = totalXP - currentEntry.minXP;
+  const nextLevelXP = nextEntry.minXP - currentEntry.minXP;
+  const progressPercent = Math.min(100, Math.max(0, (currentLevelXP / nextLevelXP) * 100));
+  const xpToNext = nextLevelXP - currentLevelXP;
+
+  return { currentLevelXP, nextLevelXP, progressPercent, xpToNext };
+}
+
+/** 获取今天的日期字符串 YYYY-MM-DD */
+export function getTodayDateStr(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 // ===== 工具函数 =====
 
 /**
@@ -145,6 +228,12 @@ export function getDefaultTraderRoadProgress(): TraderRoadProgress {
     coins: 0,
     learnedCards: [],
     correctQuizIds: [],
+    totalXP: 0,
+    rewardedLevels: [],
+    rewardedAgents: [],
+    dailyTaskDate: getTodayDateStr(),
+    dailyCompletedTasks: [],
+    dailyBonusClaimed: false,
     updatedAt: new Date().toISOString(),
   };
 }
@@ -219,6 +308,32 @@ export function normalizeTraderRoadProgress(raw: unknown): TraderRoadProgress {
     : [];
   const correctQuizIds = [...new Set(rawCorrect)];
 
+  // ===== XP 成长系统字段（兼容旧数据） =====
+  const totalXP = typeof obj.totalXP === "number" ? Math.max(0, Math.floor(obj.totalXP)) : 0;
+
+  const rawRewardedLevels = Array.isArray(obj.rewardedLevels)
+    ? obj.rewardedLevels.filter((v): v is number => typeof v === "number")
+    : [];
+  const rewardedLevels = [...new Set(rawRewardedLevels)];
+
+  const rawRewardedAgents = Array.isArray(obj.rewardedAgents)
+    ? obj.rewardedAgents.filter((v): v is TraderRoadAgentId =>
+        typeof v === "string" && validAgentIds.includes(v as TraderRoadAgentId)
+      )
+    : [];
+  const rewardedAgents = [...new Set(rawRewardedAgents)];
+
+  const dailyTaskDate = typeof obj.dailyTaskDate === "string" ? obj.dailyTaskDate : getTodayDateStr();
+  const rawDailyCompleted = Array.isArray(obj.dailyCompletedTasks)
+    ? obj.dailyCompletedTasks.filter((v): v is string => typeof v === "string")
+    : [];
+  const dailyCompletedTasks = [...new Set(rawDailyCompleted)];
+  const dailyBonusClaimed = obj.dailyBonusClaimed === true;
+
+  // 每日重置：如果不是今天，清空每日任务进度（但保留累计XP）
+  const today = getTodayDateStr();
+  const isToday = dailyTaskDate === today;
+
   return {
     version: 1,
     currentLevel,
@@ -229,6 +344,12 @@ export function normalizeTraderRoadProgress(raw: unknown): TraderRoadProgress {
     coins,
     learnedCards,
     correctQuizIds,
+    totalXP,
+    rewardedLevels,
+    rewardedAgents,
+    dailyTaskDate: isToday ? dailyTaskDate : today,
+    dailyCompletedTasks: isToday ? dailyCompletedTasks : [],
+    dailyBonusClaimed: isToday ? dailyBonusClaimed : false,
     updatedAt,
   };
 }
@@ -287,10 +408,12 @@ export function saveTraderRoadProgress(progress: TraderRoadProgress): TraderRoad
  * - 解锁该关对应 unlockAgents
  * - currentLevel 更新为 Math.max(currentLevel, levelId + 1)
  * - 清空该关失败次数
+ * - 首次通关发放关卡 XP + Agent 解锁 XP
  * - 保存并返回新 progress
  */
 export function completeTraderRoadLevel(levelId: number): TraderRoadProgress {
   const progress = loadTraderRoadProgress();
+  let xpGained = 0;
 
   // 加入 completedLevels（去重）
   if (!progress.completedLevels.includes(levelId)) {
@@ -305,7 +428,24 @@ export function completeTraderRoadLevel(levelId: number): TraderRoadProgress {
       (a) => !progress.unlockedAgents.includes(a)
     );
     progress.unlockedAgents.push(...newAgents);
+
+    // 首次通关关卡 XP（防重复）
+    if (!progress.rewardedLevels.includes(levelId)) {
+      progress.rewardedLevels.push(levelId);
+      xpGained += XP_REWARDS.LEVEL_COMPLETE;
+    }
+
+    // 首次解锁 Agent XP（每个 Agent 只奖励一次）
+    for (const agentId of newAgents) {
+      if (!progress.rewardedAgents.includes(agentId)) {
+        progress.rewardedAgents.push(agentId);
+        xpGained += XP_REWARDS.AGENT_UNLOCK;
+      }
+    }
   }
+
+  // 累加 XP
+  progress.totalXP += xpGained;
 
   // 更新 currentLevel
   progress.currentLevel = Math.max(progress.currentLevel, levelId + 1);
@@ -365,6 +505,56 @@ export function resetTraderRoadLevelFailures(levelId: number): TraderRoadProgres
   delete progress.levelFailCounts[key];
 
   return saveTraderRoadProgress(progress);
+}
+
+// ===== 每日任务 XP 函数 =====
+
+/**
+ * 完成一个每日任务，返回获得的 XP（0 表示已领取过）
+ */
+export function completeDailyTask(taskId: string): { progress: TraderRoadProgress; xpGained: number } {
+  const progress = loadTraderRoadProgress();
+  const today = getTodayDateStr();
+
+  // 日期变更时重置每日状态
+  if (progress.dailyTaskDate !== today) {
+    progress.dailyTaskDate = today;
+    progress.dailyCompletedTasks = [];
+    progress.dailyBonusClaimed = false;
+  }
+
+  // 已完成过 → 不重复发放
+  if (progress.dailyCompletedTasks.includes(taskId)) {
+    return { progress, xpGained: 0 };
+  }
+
+  progress.dailyCompletedTasks.push(taskId);
+  progress.totalXP += XP_REWARDS.DAILY_TASK;
+
+  return { progress: saveTraderRoadProgress(progress), xpGained: XP_REWARDS.DAILY_TASK };
+}
+
+/**
+ * 领取每日全部完成的额外 XP 奖励（每天只能领一次）
+ */
+export function claimDailyBonus(): { progress: TraderRoadProgress; xpGained: number } {
+  const progress = loadTraderRoadProgress();
+  const today = getTodayDateStr();
+
+  if (progress.dailyTaskDate !== today) {
+    progress.dailyTaskDate = today;
+    progress.dailyCompletedTasks = [];
+    progress.dailyBonusClaimed = false;
+  }
+
+  if (progress.dailyBonusClaimed) {
+    return { progress, xpGained: 0 };
+  }
+
+  progress.dailyBonusClaimed = true;
+  progress.totalXP += XP_REWARDS.DAILY_BONUS;
+
+  return { progress: saveTraderRoadProgress(progress), xpGained: XP_REWARDS.DAILY_BONUS };
 }
 
 // ===== 查询函数 =====

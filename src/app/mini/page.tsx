@@ -5,10 +5,17 @@ import { WORLD_MAP_PATHS } from "@/lib/world-map-paths";
 import Level1Panel from "@/components/level1-panel";
 import {
   loadTraderRoadProgress,
+  saveTraderRoadProgress,
   getDefaultTraderRoadProgress,
   isTraderRoadAgentUnlocked,
   getTraderRoadLevelsWithStatus,
   TRADER_ROAD_LEVELS as CENTRALIZED_TRADER_ROAD_LEVELS,
+  calcLevelFromXP,
+  calcXPProgress,
+  completeDailyTask,
+  claimDailyBonus,
+  getTodayDateStr,
+  XP_REWARDS,
 } from "@/lib/trader-road-progress";
 import type { TraderRoadProgress } from "@/lib/trader-road-progress";
 import AgentAvatar from "@/components/agent-avatar";
@@ -2008,7 +2015,18 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
   const storyline = personalityId ? getStoryline(personalityId) : getDefaultStoryline();
   const [completedTasks, setCompletedTasks] = useState<string[]>([]);
 
+  // 从统一进度中加载每日任务状态（兼容旧的 tradeti_story_progress）
   useEffect(() => {
+    const progress = loadTraderRoadProgress();
+    const today = getTodayDateStr();
+
+    // 优先从统一进度读取
+    if (progress.dailyTaskDate === today && progress.dailyCompletedTasks.length > 0) {
+      setCompletedTasks(progress.dailyCompletedTasks);
+      return;
+    }
+
+    // 兼容旧的 tradeti_story_progress
     const saved = localStorage.getItem("tradeti_story_progress");
     if (saved) {
       try {
@@ -2022,9 +2040,29 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
 
   const toggleTask = (taskId: string) => {
     setCompletedTasks((prev) => {
-      const next = prev.includes(taskId)
-        ? prev.filter((id) => id !== taskId)
-        : [...prev, taskId];
+      if (prev.includes(taskId)) {
+        // 取消完成（不退还 XP，只更新 UI 状态）
+        const next = prev.filter((id) => id !== taskId);
+        localStorage.setItem(
+          "tradeti_story_progress",
+          JSON.stringify({ personalityId, completedTasks: next })
+        );
+        return next;
+      }
+
+      // 完成任务 → 发放 XP
+      const next = [...prev, taskId];
+      completeDailyTask(taskId);
+
+      // 检查是否全部完成 → 发放额外奖励
+      const totalTasks = storyline?.tasks?.length || 0;
+      if (next.length >= totalTasks && totalTasks > 0) {
+        claimDailyBonus();
+      }
+
+      // 同步统一进度
+      reloadProgress();
+
       localStorage.setItem(
         "tradeti_story_progress",
         JSON.stringify({ personalityId, completedTasks: next })
@@ -2140,16 +2178,27 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
           </div>
         </div>
         <div className="mt-3 flex items-center gap-2 pt-3 border-t border-slate-100">
-          <span className="text-[10px] font-medium text-slate-500">LV.3 市场调查员</span>
-          <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden max-w-[120px]">
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{ width: "33%", backgroundColor: meta.color }}
-            />
-          </div>
-          <span className="text-[10px] font-bold" style={{ color: meta.color }}>
-            今日研究进度 1/3
-          </span>
+          {(() => {
+            const { level, title } = calcLevelFromXP(traderRoadProgress.totalXP);
+            const xpProgress = calcXPProgress(traderRoadProgress.totalXP);
+            const dailyDone = traderRoadProgress.dailyCompletedTasks.length;
+            const dailyTotal = storyline?.tasks?.length || 3;
+            const allDailyDone = dailyDone >= dailyTotal && dailyTotal > 0;
+            return (
+              <>
+                <span className="text-[10px] font-medium text-slate-500">LV.{level} {title}</span>
+                <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden max-w-[120px]" title={`${xpProgress.currentLevelXP} / ${xpProgress.nextLevelXP} XP`}>
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${xpProgress.progressPercent}%`, backgroundColor: meta.color }}
+                  />
+                </div>
+                <span className="text-[10px] font-bold" style={{ color: allDailyDone ? "#059669" : meta.color }}>
+                  {allDailyDone ? "今日研究完成" : `今日研究进度 ${dailyDone}/${dailyTotal}`}
+                </span>
+              </>
+            );
+          })()}
         </div>
       </div>
 
