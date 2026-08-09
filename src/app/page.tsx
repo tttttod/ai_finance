@@ -2564,14 +2564,25 @@ function AdventureEntryCard({
   title,
   desc,
   badge,
+  active,
+  onClick,
 }: {
   icon: string;
   title: string;
   desc: string;
   badge?: string;
+  active?: boolean;
+  onClick?: () => void;
 }) {
   return (
-    <div className="text-left rounded-xl border border-slate-100 bg-white p-3">
+    <button
+      onClick={onClick}
+      className={`text-left rounded-xl border p-3 transition-all ${
+        active
+          ? "bg-blue-50 border-blue-300 shadow-sm"
+          : "bg-white border-slate-100 hover:border-blue-200"
+      }`}
+    >
       <div className="flex items-center gap-2 mb-1">
         <span className="text-lg">{icon}</span>
         <span className="text-sm font-bold text-slate-800">{title}</span>
@@ -2582,9 +2593,11 @@ function AdventureEntryCard({
         )}
       </div>
       <p className="text-[10px] text-slate-500 leading-relaxed">{desc}</p>
-    </div>
+    </button>
   );
 }
+
+type AdventurePanelId = "tasks" | "targets" | "signals" | "summary" | null;
 
 // ===== 市场冒险局 =====
 function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboardingGuide }: { tradeTIResult: TradeTIState | null; onFillResearch: (target: RecommendedTarget) => void; onGoToResearch: () => void; onShowOnboardingGuide?: () => void }) {
@@ -2597,6 +2610,7 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
   const [activeGameLevel, setActiveGameLevel] = useState<number | null>(null);
   const [traderRoadProgress, setTraderRoadProgress] = useState<TraderRoadProgress>(getDefaultTraderRoadProgress());
   const [adventureDetailsExpanded, setAdventureDetailsExpanded] = useState(false);
+  const [activePanel, setActivePanel] = useState<AdventurePanelId>(null);
 
   // 加载游戏进度（使用集中式进度模块）
   useEffect(() => {
@@ -2908,6 +2922,8 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
             title="市场异动"
             desc="板块热度与个股信号"
             badge={`${hotSectors.length + activeStocks.length}条`}
+            active={activePanel === "signals"}
+            onClick={() => setActivePanel(activePanel === "signals" ? null : "signals")}
           />
           <AdventureEntryCard
             icon="📊"
@@ -2919,7 +2935,7 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
       </div>
 
       {/* 展开详情面板 */}
-      {adventureDetailsExpanded && (
+      {(adventureDetailsExpanded || activePanel === "tasks") && (
       <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="p-3 border-b border-slate-100">
           <div className="flex items-center gap-2 mb-1">
@@ -2997,7 +3013,7 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
       )}
 
       {/* 3.5 AI推荐研究标的 — 详细分析卡片 */}
-      {adventureDetailsExpanded && recommendedTargets.length > 0 && (
+      {(adventureDetailsExpanded || activePanel === "targets") && recommendedTargets.length > 0 && (
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="p-3 border-b border-slate-100">
             <div className="flex items-center gap-2">
@@ -3085,7 +3101,7 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
       )}
 
       {/* 冒险控制台入口 */}      {/* 5. 支线任务 — 热门区域 + 异动信号 */}
-      {adventureDetailsExpanded && (
+      {(adventureDetailsExpanded || activePanel === "signals") && (
       <div className="grid grid-cols-1 gap-3">
         {/* 热门区域 */}
         <div className="bg-white rounded-xl border border-slate-100 p-3 shadow-sm">
@@ -3132,7 +3148,7 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
       )}
 
       {/* 6. 今日认知经验 */}
-      {adventureDetailsExpanded && (
+      {(adventureDetailsExpanded || activePanel === "tasks") && (
       <div className="rounded-xl p-4 border" style={{ background: `linear-gradient(135deg, ${meta.color}08, ${meta.color}02)`, borderColor: `${meta.color}20` }}>
         <div className="flex items-center gap-2 mb-3">
           <span className="text-sm">📊</span>
