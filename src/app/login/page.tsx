@@ -120,11 +120,9 @@ export default function LoginPage() {
         setError(getErrorMessage(signUpError));
         return;
       }
-      // mailer_auto_confirm is true, so user is already logged in
       if (data.session) {
         router.replace('/');
       } else if (data.user) {
-        // Fallback: switch to login mode
         setMode('login');
         setError('注册成功，请登录');
       }
@@ -137,20 +135,17 @@ export default function LoginPage() {
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      if (mode === 'login') {
-        handleLogin();
-      } else {
-        handleRegister();
-      }
+      if (mode === 'login') handleLogin();
+      else handleRegister();
     }
   };
 
   if (isConfigLoading || isAuthLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F5F7]">
+      <div className="min-h-screen bg-gradient-to-b from-[#FFF8E1] via-[#FFF3CD] to-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-[#3B82F6] border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm text-[#64748B]">加载中...</span>
+          <div className="w-10 h-10 rounded-full border-3 border-[#FFD93D] border-t-transparent animate-spin" />
+          <span className="text-sm font-bold text-[#64748B]">加载中...</span>
         </div>
       </div>
     );
@@ -161,129 +156,109 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#F5F5F7] px-4">
-      {/* App Icon & Name */}
-      <div className="flex flex-col items-center mb-8">
-        <div className="relative">
-          <Image
-            src={APP_ICON}
-            alt={APP_NAME}
-            width={80}
-            height={80}
-            className="rounded-2xl mb-3 shadow-md"
-            priority
-          />
-          {/* Subtle glow effect */}
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#3B82F6]/10 to-[#8B5CF6]/10 blur-sm -z-10" />
-        </div>
-        <h1 className="text-2xl font-bold text-[#1E293B] tracking-tight">{APP_NAME}</h1>
-        <p className="text-xs text-[#64748B] mt-1">每日市场副本，你的冒险从这里开始</p>
+    <div className="min-h-screen bg-gradient-to-b from-[#FFF8E1] via-[#FFF3CD] to-white flex flex-col max-w-md mx-auto relative">
+      {/* 状态栏模拟 - 与主页一致 */}
+      <div className="bg-gradient-to-r from-[#FF6B6B] via-[#FFE66D] to-[#4ECDC4] px-4 py-2 flex items-center justify-between text-xs text-white shadow-md">
+        <span className="font-black">--:--</span>
+        <span className="font-black text-sm">🗺️ 市场冒险局</span>
+        <span className="font-black opacity-0">📶</span>
       </div>
 
-      {/* Auth Card */}
-      <div className="w-full max-w-sm bg-white rounded-lg border border-[#E2E8F0] p-6 shadow-sm">
-        {/* Tab Switch */}
-        <div className="flex mb-6 border-b border-[#E2E8F0]">
-          <button
-            onClick={() => { setMode('login'); setError(''); }}
-            className={`flex-1 pb-3 text-sm font-medium transition-colors ${
-              mode === 'login'
-                ? 'text-[#3B82F6] border-b-2 border-[#3B82F6]'
-                : 'text-[#64748B] hover:text-[#1E293B]'
-            }`}
-          >
-            登录
-          </button>
-          <button
-            onClick={() => { setMode('register'); setError(''); }}
-            className={`flex-1 pb-3 text-sm font-medium transition-colors ${
-              mode === 'register'
-                ? 'text-[#3B82F6] border-b-2 border-[#3B82F6]'
-                : 'text-[#64748B] hover:text-[#1E293B]'
-            }`}
-          >
-            注册
-          </button>
+      {/* 主内容区 */}
+      <div className="flex-1 flex flex-col items-center justify-center px-5 py-8">
+        {/* App Icon & Title */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="relative mb-4">
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#FF6B6B] via-[#FFD93D] to-[#4ECDC4] blur-lg opacity-40" />
+            <Image
+              src={APP_ICON}
+              alt={APP_NAME}
+              width={88}
+              height={88}
+              className="relative rounded-3xl border-3 border-white shadow-xl"
+              priority
+            />
+          </div>
+          <h1 className="text-3xl font-black bg-gradient-to-r from-[#FF6B35] via-[#FFD93D] to-[#00FF88] bg-clip-text text-transparent">
+            {APP_NAME}
+          </h1>
+          <p className="text-sm font-bold text-[#64748B] mt-1">每日市场副本，你的冒险从这里开始</p>
         </div>
 
-        {/* Error Message */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-md text-sm text-red-600">
-            {error}
+        {/* Auth Card */}
+        <div className="w-full bg-white rounded-3xl p-5 border-2 border-[#FFD93D] shadow-lg">
+          {/* Tab Switch */}
+          <div className="flex mb-5 bg-slate-50 rounded-2xl p-1">
+            <button
+              onClick={() => { setMode('login'); setError(''); }}
+              className={`flex-1 py-2.5 text-sm font-black rounded-2xl transition-all ${
+                mode === 'login'
+                  ? 'bg-white text-[#FF6B35] shadow-sm'
+                  : 'text-slate-400 hover:text-slate-500'
+              }`}
+            >
+              🗝️ 登录
+            </button>
+            <button
+              onClick={() => { setMode('register'); setError(''); }}
+              className={`flex-1 py-2.5 text-sm font-black rounded-2xl transition-all ${
+                mode === 'register'
+                  ? 'bg-white text-[#4ECDC4] shadow-sm'
+                  : 'text-slate-400 hover:text-slate-500'
+              }`}
+            >
+              🚀 注册
+            </button>
           </div>
-        )}
 
-        {/* Form */}
-        <div className="space-y-4" onKeyDown={handleKeyDown}>
-          {/* Username */}
-          <div>
-            <label className="block text-xs font-medium text-[#64748B] mb-1.5">用户名</label>
-            <div className="relative">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              </div>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="请输入用户名"
-                className="w-full pl-9 pr-3 py-2.5 text-sm border border-[#E2E8F0] rounded-md bg-white text-[#1E293B] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/20 focus:border-[#3B82F6] transition-colors"
-                autoComplete="username"
-              />
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border-2 border-red-200 rounded-2xl text-sm font-bold text-red-600">
+              {error}
             </div>
-          </div>
+          )}
 
-          {/* Password */}
-          <div>
-            <label className="block text-xs font-medium text-[#64748B] mb-1.5">密码</label>
-            <div className="relative">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              </div>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={mode === 'login' ? '请输入密码' : '至少 6 位密码'}
-                className="w-full pl-9 pr-10 py-2.5 text-sm border border-[#E2E8F0] rounded-md bg-white text-[#1E293B] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/20 focus:border-[#3B82F6] transition-colors"
-                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#64748B]"
-              >
-                {showPassword ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Confirm Password (Register only) */}
-          {mode === 'register' && (
+          {/* Form */}
+          <div className="space-y-4" onKeyDown={handleKeyDown}>
+            {/* Username */}
             <div>
-              <label className="block text-xs font-medium text-[#64748B] mb-1.5">确认密码</label>
+              <label className="block text-xs font-black text-[#64748B] mb-1.5 ml-1">用户名</label>
               <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#FFD93D]">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 </div>
                 <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="再次输入密码"
-                  className="w-full pl-9 pr-10 py-2.5 text-sm border border-[#E2E8F0] rounded-md bg-white text-[#1E293B] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/20 focus:border-[#3B82F6] transition-colors"
-                  autoComplete="new-password"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="请输入用户名"
+                  className="w-full pl-10 pr-4 py-3 text-sm font-bold border-2 border-slate-200 rounded-2xl bg-white text-[#1E293B] placeholder:text-slate-300 focus:outline-none focus:border-[#FFD93D] transition-colors"
+                  autoComplete="username"
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-xs font-black text-[#64748B] mb-1.5 ml-1">密码</label>
+              <div className="relative">
+                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#FFD93D]">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={mode === 'login' ? '请输入密码' : '至少 6 位密码'}
+                  className="w-full pl-10 pr-11 py-3 text-sm font-bold border-2 border-slate-200 rounded-2xl bg-white text-[#1E293B] placeholder:text-slate-300 focus:outline-none focus:border-[#FFD93D] transition-colors"
+                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                 />
                 <button
                   type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#64748B]"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors"
                 >
-                  {showConfirmPassword ? (
+                  {showPassword ? (
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                   ) : (
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -291,55 +266,86 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
-          )}
 
-          {/* Submit Button */}
-          <button
-            onClick={mode === 'login' ? handleLogin : handleRegister}
-            disabled={loading}
-            className="w-full py-2.5 bg-[#3B82F6] text-white text-sm font-medium rounded-md hover:bg-[#2563EB] active:bg-[#1D4ED8] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                {mode === 'login' ? '登录中...' : '注册中...'}
-              </span>
-            ) : (
-              mode === 'login' ? '进入冒险' : '开始冒险'
+            {/* Confirm Password (Register only) */}
+            {mode === 'register' && (
+              <div>
+                <label className="block text-xs font-black text-[#64748B] mb-1.5 ml-1">确认密码</label>
+                <div className="relative">
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#FFD93D]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="再次输入密码"
+                    className="w-full pl-10 pr-11 py-3 text-sm font-bold border-2 border-slate-200 rounded-2xl bg-white text-[#1E293B] placeholder:text-slate-300 focus:outline-none focus:border-[#FFD93D] transition-colors"
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors"
+                  >
+                    {showConfirmPassword ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    )}
+                  </button>
+                </div>
+              </div>
             )}
-          </button>
+
+            {/* Submit Button */}
+            <button
+              onClick={mode === 'login' ? handleLogin : handleRegister}
+              disabled={loading}
+              className="w-full py-3.5 bg-gradient-to-r from-[#FF6B6B] via-[#FFD93D] to-[#4ECDC4] text-white text-sm font-black rounded-2xl disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-[#FF6B6B]/20 transition-all hover:scale-[1.02] active:scale-95"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  {mode === 'login' ? '进入冒险中...' : '注册中...'}
+                </span>
+              ) : (
+                mode === 'login' ? '🗺️ 进入冒险' : '🚀 开始冒险'
+              )}
+            </button>
+          </div>
+
+          {/* Switch Mode Link */}
+          <div className="mt-4 text-center">
+            {mode === 'login' ? (
+              <p className="text-xs font-bold text-[#64748B]">
+                还没有账号？{' '}
+                <button
+                  onClick={() => { setMode('register'); setError(''); }}
+                  className="text-[#FF6B35] font-black hover:underline"
+                >
+                  注册新账号
+                </button>
+              </p>
+            ) : (
+              <p className="text-xs font-bold text-[#64748B]">
+                已有账号？{' '}
+                <button
+                  onClick={() => { setMode('login'); setError(''); }}
+                  className="text-[#4ECDC4] font-black hover:underline"
+                >
+                  返回登录
+                </button>
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Switch Mode Link */}
-        <div className="mt-4 text-center">
-          {mode === 'login' ? (
-            <p className="text-xs text-[#64748B]">
-              还没有账号？{' '}
-              <button
-                onClick={() => { setMode('register'); setError(''); }}
-                className="text-[#3B82F6] hover:underline"
-              >
-                注册新账号
-              </button>
-            </p>
-          ) : (
-            <p className="text-xs text-[#64748B]">
-              已有账号？{' '}
-              <button
-                onClick={() => { setMode('login'); setError(''); }}
-                className="text-[#3B82F6] hover:underline"
-              >
-                返回登录
-              </button>
-            </p>
-          )}
-        </div>
+        {/* Footer */}
+        <p className="mt-6 text-[10px] font-bold text-slate-300">
+          登录即表示同意《市场冒险局用户协议》
+        </p>
       </div>
-
-      {/* Footer */}
-      <p className="mt-6 text-[10px] text-[#94A3B8]">
-        登录即表示同意《市场冒险局用户协议》
-      </p>
     </div>
   );
 }

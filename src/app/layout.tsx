@@ -6,9 +6,9 @@ import { AuthProvider } from '@/lib/auth-context';
 import AuthGuard from '@/components/auth-guard';
 
 export const metadata: Metadata = {
-  title: 'A股可视化投研Agent - AI智能投研辅助',
-  description: '面向A股普通投资者的AI投研辅助产品，提供市场雷达、Agent研究、证据卡片、正反方辩论、风险检查、三情景预测和复盘任务。',
-  keywords: ['A股', 'AI投研', '智能金融', '研报分析', '量化投资', '可视化'],
+  title: '市场冒险局 — AI 智能投研冒险',
+  description: '每日市场副本，你的冒险从这里开始。面向A股普通投资者的AI投研辅助产品。',
+  keywords: ['市场冒险局', 'A股', 'AI投研', '智能金融', '研报分析'],
 };
 
 export default function RootLayout({
