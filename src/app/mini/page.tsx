@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { WORLD_MAP_PATHS } from "@/lib/world-map-paths";
+import Level1Panel from "@/components/level1-panel";
 import {
   InvestmentStyle,
   StepStatus,
@@ -1950,6 +1951,19 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
   const [marketSnapshot, setMarketSnapshot] = useState<MiniMarketSnapshot | null>(null);
   const [snapshotLoading, setSnapshotLoading] = useState(true);
   const [snapshotError, setSnapshotError] = useState<string | null>(null);
+  const [level1Open, setLevel1Open] = useState(false);
+  const [gameProgress, setGameProgress] = useState<{ unlockedLevels: number[] }>({ unlockedLevels: [1] });
+
+  // 加载游戏进度
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("tradeti_game_progress");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setGameProgress({ unlockedLevels: parsed.unlockedLevels || [1] });
+      }
+    } catch {}
+  }, []);
 
   // 人格身份
   const personalityId = tradeTIResult?.result_type || null;
@@ -2147,47 +2161,52 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
         <div className="p-3">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {[
-              { id: 1, name: "开户日 Lead Agent", desc: "你的第一个 Agent", icon: "🎯", unlocked: true },
-              { id: 2, name: "数据黑市", desc: "学会获取和筛选数据", icon: "📊", unlocked: false },
-              { id: 3, name: "市场风暴", desc: "理解市场情绪与波动", icon: "🌪️", unlocked: false },
-              { id: 4, name: "政策密函", desc: "解读宏观政策影响", icon: "📜", unlocked: false },
-              { id: 5, name: "财报夜审", desc: "基本面分析入门", icon: "📑", unlocked: false },
-              { id: 6, name: "价格审判庭", desc: "估值与定价逻辑", icon: "⚖️", unlocked: false },
-              { id: 7, name: "K线神谕", desc: "技术面分析基础", icon: "📈", unlocked: false },
-              { id: 8, name: "舆论火场", desc: "信息面与情绪管理", icon: "🔥", unlocked: false },
-              { id: 9, name: "多空议会", desc: "多空观点对比与决策", icon: "🏛️", unlocked: false },
-              { id: 10, name: "回撤之门", desc: "风险管理与复盘", icon: "🛡️", unlocked: false },
-            ].map((node, idx) => (
-              <div key={node.id} className="flex items-center flex-shrink-0">
-                <button
-                  onClick={() => {
-                    if (node.unlocked) {
-                      alert(`🎯 ${node.name}\n\n${node.desc}\n\n即将开放，敬请期待！`);
-                    }
-                  }}
-                  className={`relative flex flex-col items-center justify-center w-16 h-16 rounded-xl border-2 transition-all ${
-                    node.unlocked
-                      ? "bg-blue-500/20 border-blue-400/60 shadow-[0_0_12px_rgba(59,130,246,0.4)] cursor-pointer hover:scale-105"
-                      : "bg-slate-700/30 border-slate-600/40 opacity-50 cursor-not-allowed"
-                  }`}
-                >
-                  <span className="text-xl mb-0.5">{node.icon}</span>
-                  <span className={`text-[8px] font-bold leading-tight text-center ${
-                    node.unlocked ? "text-blue-200" : "text-slate-500"
-                  }`}>
-                    {node.name.split(" ")[0]}
-                  </span>
-                  {!node.unlocked && (
-                    <span className="absolute -top-1 -right-1 text-[10px]">🔒</span>
+              { id: 1, name: "开户日 Lead Agent", desc: "你的第一个 Agent", icon: "🎯" },
+              { id: 2, name: "数据黑市", desc: "学会获取和筛选数据", icon: "📊" },
+              { id: 3, name: "市场风暴", desc: "理解市场情绪与波动", icon: "🌪️" },
+              { id: 4, name: "政策密函", desc: "解读宏观政策影响", icon: "📜" },
+              { id: 5, name: "财报夜审", desc: "基本面分析入门", icon: "📑" },
+              { id: 6, name: "价格审判庭", desc: "估值与定价逻辑", icon: "⚖️" },
+              { id: 7, name: "K线神谕", desc: "技术面分析基础", icon: "📈" },
+              { id: 8, name: "舆论火场", desc: "信息面与情绪管理", icon: "🔥" },
+              { id: 9, name: "多空议会", desc: "多空观点对比与决策", icon: "🏛️" },
+              { id: 10, name: "回撤之门", desc: "风险管理与复盘", icon: "🛡️" },
+            ].map((node, idx) => {
+              const isUnlocked = gameProgress.unlockedLevels.includes(node.id);
+              return (
+                <div key={node.id} className="flex items-center flex-shrink-0">
+                  <button
+                    onClick={() => {
+                      if (node.id === 1 && isUnlocked) {
+                        setLevel1Open(true);
+                      } else if (!isUnlocked) {
+                        alert("请先完成前置关卡");
+                      }
+                    }}
+                    className={`relative flex flex-col items-center justify-center w-16 h-16 rounded-xl border-2 transition-all ${
+                      isUnlocked
+                        ? "bg-blue-500/20 border-blue-400/60 shadow-[0_0_12px_rgba(59,130,246,0.4)] cursor-pointer hover:scale-105"
+                        : "bg-slate-700/30 border-slate-600/40 opacity-50 cursor-not-allowed"
+                    }`}
+                  >
+                    <span className="text-xl mb-0.5">{node.icon}</span>
+                    <span className={`text-[8px] font-bold leading-tight text-center ${
+                      isUnlocked ? "text-blue-200" : "text-slate-500"
+                    }`}>
+                      {node.name.split(" ")[0]}
+                    </span>
+                    {!isUnlocked && (
+                      <span className="absolute -top-1 -right-1 text-[10px]">🔒</span>
+                    )}
+                  </button>
+                  {idx < 9 && (
+                    <div className={`w-3 h-0.5 mx-0.5 ${
+                      isUnlocked ? "bg-blue-400/60" : "bg-slate-600/40"
+                    }`} />
                   )}
-                </button>
-                {idx < 9 && (
-                  <div className={`w-3 h-0.5 mx-0.5 ${
-                    node.unlocked ? "bg-blue-400/60" : "bg-slate-600/40"
-                  }`} />
-                )}
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -2536,6 +2555,30 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
           <p className="text-xs text-slate-500 italic">"{buddy.greeting}，今天比昨天更了解市场了。明天见！"</p>
         </div>
       </div>
+
+      {/* 第1关剧情面板 */}
+      <Level1Panel
+        isOpen={level1Open}
+        onClose={() => {
+          setLevel1Open(false);
+          try {
+            const raw = localStorage.getItem("tradeti_game_progress");
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              setGameProgress({ unlockedLevels: parsed.unlockedLevels || [1] });
+            }
+          } catch {}
+        }}
+        onLevelComplete={() => {
+          try {
+            const raw = localStorage.getItem("tradeti_game_progress");
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              setGameProgress({ unlockedLevels: parsed.unlockedLevels || [1] });
+            }
+          } catch {}
+        }}
+      />
     </div>
   );
 }
