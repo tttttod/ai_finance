@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import AgentImagePreloader from '@/components/agent-image-preloader';
+import { SupabaseConfigProvider } from '@/lib/supabase-config-inject';
+import { AuthProvider } from '@/lib/auth-context';
+import AuthGuard from '@/components/auth-guard';
 
 export const metadata: Metadata = {
   title: 'A股可视化投研Agent - AI智能投研辅助',
@@ -16,8 +19,14 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className="antialiased min-h-screen bg-[#F5F5F7]">
-        <AgentImagePreloader />
-        {children}
+        <SupabaseConfigProvider>
+          <AuthProvider>
+            <AuthGuard>
+              <AgentImagePreloader />
+              {children}
+            </AuthGuard>
+          </AuthProvider>
+        </SupabaseConfigProvider>
       </body>
     </html>
   );

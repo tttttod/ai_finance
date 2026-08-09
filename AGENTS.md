@@ -33,8 +33,10 @@ src/
 │   │   ├── news/route.ts         # GET /api/news - 资讯数据
 │   │   ├── report/route.ts       # GET /api/report - 获取每日完整报告
 │   │   ├── sectors/route.ts      # GET /api/sectors - 获取所有板块列表
-│   │   └── sectors/[id]/route.ts # GET /api/sectors/:id - 获取单个板块详情
+│   │   ├── sectors/[id]/route.ts # GET /api/sectors/:id - 获取单个板块详情
+│   │   └── supabase-config/route.ts # GET /api/supabase-config - 获取Supabase配置
 │   ├── page.tsx                  # 主页面：小程序MVP（4Tab：市场/研究/复盘/我的）
+│   ├── login/page.tsx            # 用户登录/注册页面（Supabase Auth）
 │   ├── mini/page.tsx             # 小程序MVP（备用路由）
 │   ├── chat/page.tsx             # AI投研对话（万德/Choice风格）
 │   ├── knowledge/page.tsx        # 知识库（Agent分析逻辑框架）
@@ -42,6 +44,7 @@ src/
 │   └── globals.css               # 全局样式
 ├── components/
 │   ├── ui/                       # shadcn/ui 组件库
+│   ├── auth-guard.tsx            # 路由守卫（未登录跳转 /login）
 │   ├── game-maps/                # 游戏地图系统（10关关卡）
 │   │   ├── game-data.ts          # 关卡类型定义 + 10关配置
 │   │   ├── dialogue-data.ts      # 对话关卡数据（1/4/9关）
@@ -68,11 +71,17 @@ src/
     ├── types.ts                  # 数据类型定义
     ├── mini-types.ts             # 小程序类型定义（16步工作流、12Agent团队）
     ├── mini-mock.ts              # 小程序Mock数据生成器
+    ├── supabase-config-inject.tsx # Supabase配置注入Provider（客户端）
+    ├── supabase-browser.ts       # Supabase浏览器客户端（单例+重试）
+    ├── auth-context.tsx          # 全局认证Context（user/session/signOut）
     ├── coze-adapter.ts           # Coze API适配器（预留）
     ├── analysis-types.ts         # 分析工作台类型定义
     ├── analysis-data.ts          # 分析工作台模拟数据
     ├── mock-data.ts              # 每日报告模拟数据
     └── utils.ts                  # 通用工具函数
+├── storage/
+│   └── database/
+│       └── supabase-client.ts    # Supabase服务端客户端（getSupabaseClient/getSupabaseCredentials）
 ```
 
 ## 功能模块
@@ -94,6 +103,7 @@ src/
 
 ### 全局功能
 - **AI 浮动对话** — 右下角浮动按钮，自由对话问答
+- **用户认证** — Supabase Auth 邮箱密码登录/注册，路由守卫，登出（档案Tab底部）
 
 ### 交易员的正确之路 — 游戏地图系统
 - **10 个关卡**，4 种游戏类型：对话闯关 (dialogue)、知识翻牌 (quiz)、脑力配对 (brain)、快速反应 (minigame)

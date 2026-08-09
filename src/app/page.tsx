@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
 import { WORLD_MAP_PATHS } from "@/lib/world-map-paths";
 import Level1Panel from "@/components/level1-panel";
 import { GameMapPlayer } from "@/components/game-maps/GameMapPlayer";
@@ -2415,6 +2416,70 @@ function ProfileTab({ profile, tradeTIResult, onRetakeSurvey, watchlist, onRemov
           用户应独立做出投资决策，并承担相应风险。
         </p>
       </div>
+
+      {/* 账户信息 & 退出登录 */}
+      <ProfileAccountSection />
+    </div>
+  );
+}
+
+function ProfileAccountSection() {
+  const { user, signOut } = useAuth();
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      await signOut();
+      window.location.href = '/login';
+    } finally {
+      setSigningOut(false);
+      setShowConfirm(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-3xl p-4 border-2 border-slate-200 shadow-md">
+      <h3 className="text-sm font-black mb-3 text-slate-700">👤 账户信息</h3>
+      {user && (
+        <div className="mb-3">
+          <p className="text-xs text-slate-600">
+            <span className="text-slate-400">邮箱：</span>
+            <span className="font-mono">{user.email}</span>
+          </p>
+          {user.user_metadata?.full_name && (
+            <p className="text-xs text-slate-600 mt-1">
+              <span className="text-slate-400">昵称：</span>
+              {user.user_metadata.full_name}
+            </p>
+          )}
+        </div>
+      )}
+      {!showConfirm ? (
+        <button
+          onClick={() => setShowConfirm(true)}
+          className="w-full py-2 text-xs font-bold text-red-500 bg-red-50 rounded-xl border-2 border-red-100 hover:bg-red-100 transition-colors"
+        >
+          退出登录
+        </button>
+      ) : (
+        <div className="flex gap-2">
+          <button
+            onClick={handleSignOut}
+            disabled={signingOut}
+            className="flex-1 py-2 text-xs font-bold text-white bg-red-500 rounded-xl hover:bg-red-600 disabled:opacity-50 transition-colors"
+          >
+            {signingOut ? '退出中...' : '确认退出'}
+          </button>
+          <button
+            onClick={() => setShowConfirm(false)}
+            className="flex-1 py-2 text-xs font-bold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors"
+          >
+            取消
+          </button>
+        </div>
+      )}
     </div>
   );
 }
