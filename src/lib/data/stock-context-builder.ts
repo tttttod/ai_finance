@@ -4,12 +4,59 @@
  * Server-side only. Never expose TUSHARE_TOKEN to the browser.
  */
 
+import * as fs from "fs";
+import * as path from "path";
 import { callTushare } from "./tushare-client";
 import {
   getLatestStockBasicCache,
   saveStockBasicCache,
   getLatestMarketSnapshot,
 } from "./market-snapshot-store";
+
+// Path to the built-in stock basic list (deployed with the project)
+const BUILTIN_STOCK_BASIC_FILE = path.join(process.cwd(), "src", "data", "stock-basic.json");
+
+/**
+ * Read the built-in stock basic list from src/data/stock-basic.json.
+ * This file is deployed with the project and always available.
+ */
+function readBuiltinStockBasicList(): StockBasicRow[] | null {
+  try {
+    if (fs.existsSync(BUILTIN_STOCK_BASIC_FILE)) {
+      const raw = fs.readFileSync(BUILTIN_STOCK_BASIC_FILE, "utf-8");
+      const parsed = JSON.parse(raw);
+      // Support both { rows: [...] } format and plain array format
+      if (Array.isArray(parsed)) {
+        return parsed as StockBasicRow[];
+      }
+      if (parsed.rows && Array.isArray(parsed.rows)) {
+        return parsed.rows as StockBasicRow[];
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+/**
+ * Update the built-in stock basic list when Tushare fetch succeeds.
+ */
+function updateBuiltinStockBasicList(rows: StockBasicRow[]): void {
+  try {
+    const dir = path.dirname(BUILTIN_STOCK_BASIC_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    const data = {
+      _cachedAt: new Date().toISOString(),
+      rows,
+    };
+    fs.writeFileSync(BUILTIN_STOCK_BASIC_FILE, JSON.stringify(data, null, 2), "utf-8");
+  } catch {
+    // ignore write errors - the file might be read-only in some environments
+  }
+}
 import {
   getStockContextCache,
   saveStockContextCache,
@@ -102,24 +149,31 @@ const FALLBACK_STOCK_LIST: StockBasicRow[] = [
 ];
 
 async function getStockBasicList(): Promise<StockBasicRow[]> {
-  // Check cache first (7-day TTL)
+  // Priority 1: Read from built-in src/data/stock-basic.json (always available, deployed with project)
+  const builtin = readBuiltinStockBasicList();
+  if (builtin && builtin.length > 0) {
+    return builtin;
+  }
+
+  // Priority 2: Check .cache/ or Supabase cache (7-day TTL)
   const cached = await getLatestStockBasicCache();
   if (cached && cached.length > 0) {
     return cached as StockBasicRow[];
   }
 
-  // Fetch from Tushare
+  // Priority 3: Fetch from Tushare API (for updates)
   try {
     const rows = await callTushare<StockBasicRow>(
       "stock_basic",
       { exchange: "", list_status: "L" },
       "ts_code,symbol,name,industry,market,list_date",
     );
-    // Cache for 7 days
+    // Update both cache locations
     await saveStockBasicCache(rows as unknown as Record<string, unknown>[]);
+    updateBuiltinStockBasicList(rows);
     return rows;
   } catch {
-    // Fallback to built-in stock list when Tushare is unavailable
+    // Priority 4: Last resort - hardcoded fallback list
     return FALLBACK_STOCK_LIST;
   }
 }
