@@ -42,10 +42,10 @@ const MAP_ZONES: MapZone[] = [
     colorLight: "#FEF3C7",
     levels: [1, 2, 3, 4],
     markers: [
-      { levelId: 1, x: 12, y: 72 },
-      { levelId: 2, x: 32, y: 55 },
-      { levelId: 3, x: 55, y: 38 },
-      { levelId: 4, x: 78, y: 25 },
+      { levelId: 1, x: 55, y: 78 }, // Market Pier - 底部岛屿中心
+      { levelId: 2, x: 50, y: 58 }, // Data Bazaar - 中下岛屿中心
+      { levelId: 3, x: 45, y: 40 }, // Market Storm - 中上岛屿中心
+      { levelId: 4, x: 55, y: 25 }, // Policy Crossroads - 顶部岛屿中心
     ],
   },
   {
@@ -314,17 +314,20 @@ export function GameMapPlayer({
           className="absolute inset-0 w-full h-full object-cover"
           draggable={false}
         />
-        {/* Level markers */}
+        {/* Level markers - 多巴胺风格 */}
         {zone.markers.map((marker) => {
           const status = getLevelStatus(marker.levelId);
           const config = getLevelConfig(marker.levelId);
           const isHovered = hoveredMarker === marker.levelId;
 
-          const markerColors = {
-            completed: "#059669",
-            available: zone.color,
-            locked: "#94A3B8",
+          // 多巴胺配色：每个关卡一个荧光色
+          const dopamineColors: Record<string, { bg: string; glow: string; emoji: string }> = {
+            "1": { bg: "#FF6B35", glow: "rgba(255, 107, 53, 0.5)", emoji: "🎯" }, // 荧光橙
+            "2": { bg: "#00D4FF", glow: "rgba(0, 212, 255, 0.5)", emoji: "📚" }, // 荧光蓝
+            "3": { bg: "#FFD93D", glow: "rgba(255, 217, 61, 0.5)", emoji: "" }, // 荧光黄
+            "4": { bg: "#00FF88", glow: "rgba(0, 255, 136, 0.5)", emoji: "🔍" }, // 荧光绿
           };
+          const colorInfo = dopamineColors[String(marker.levelId)] || { bg: zone.color, glow: "rgba(59, 130, 246, 0.5)", emoji: "🎮" };
 
           return (
             <button
@@ -343,50 +346,84 @@ export function GameMapPlayer({
               onMouseEnter={() => setHoveredMarker(marker.levelId)}
               onMouseLeave={() => setHoveredMarker(null)}
             >
-              {/* Pulsing ring for available */}
+              {/* 弹跳动画 for available */}
+              {status === "available" && (
+                <span className="absolute inset-0 animate-bounce" style={{ animationDuration: "2s" }}>
+                  <span
+                    className="absolute inset-0 rounded-full opacity-40"
+                    style={{ backgroundColor: colorInfo.glow, filter: "blur(8px)" }}
+                  />
+                </span>
+              )}
+              {/* 脉冲光环 for available */}
               {status === "available" && (
                 <span
-                  className="absolute inset-0 rounded-full animate-ping opacity-30"
-                  style={{ backgroundColor: zone.color }}
+                  className="absolute inset-0 rounded-full animate-ping opacity-40"
+                  style={{ backgroundColor: colorInfo.bg }}
                 />
               )}
-              {/* Marker circle */}
+              {/* 外圈发光 */}
+              <span
+                className="absolute rounded-full transition-all duration-300"
+                style={{
+                  width: isHovered ? 68 : 60,
+                  height: isHovered ? 68 : 60,
+                  left: "50%",
+                  top: "50%",
+                  transform: "translate(-50%, -50%)",
+                  backgroundColor: colorInfo.glow,
+                  filter: "blur(6px)",
+                  opacity: status === "locked" ? 0.3 : 0.6,
+                }}
+              />
+              {/* 主按钮 */}
               <span
                 className="relative flex items-center justify-center rounded-full shadow-lg transition-all duration-300"
                 style={{
-                  width: isHovered ? 52 : 40,
-                  height: isHovered ? 52 : 40,
-                  backgroundColor: markerColors[status],
+                  width: isHovered ? 60 : 52,
+                  height: isHovered ? 60 : 52,
+                  backgroundColor: status === "completed" ? "#059669" : status === "locked" ? "#94A3B8" : colorInfo.bg,
                   border: "3px solid white",
+                  boxShadow: status === "locked" ? "none" : `0 0 20px ${colorInfo.glow}, 0 4px 12px rgba(0,0,0,0.2)`,
                   opacity: status === "locked" ? 0.5 : 1,
                 }}
               >
                 {status === "completed" ? (
-                  <span className="text-white text-base">✓</span>
+                  <span className="text-white text-xl drop-shadow-md">✓</span>
                 ) : status === "locked" ? (
-                  <span className="text-white text-sm">🔒</span>
+                  <span className="text-white text-lg">🔒</span>
                 ) : (
-                  <span className="text-white text-sm font-bold">
-                    {marker.levelId}
-                  </span>
+                  <span className="text-2xl drop-shadow-md">{colorInfo.emoji}</span>
                 )}
               </span>
+              {/* 关卡数字标签 */}
+              {status !== "locked" && (
+                <span
+                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-white rounded-full px-2 py-0.5 shadow-md border-2 font-black text-[10px]"
+                  style={{
+                    borderColor: status === "completed" ? "#059669" : colorInfo.bg,
+                    color: status === "completed" ? "#059669" : colorInfo.bg,
+                  }}
+                >
+                  Lv.{marker.levelId}
+                </span>
+              )}
               {/* Tooltip */}
               {isHovered && status !== "locked" && config && (
                 <div
-                  className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-white rounded-xl shadow-xl border px-3 py-2 whitespace-nowrap z-50"
-                  style={{ borderColor: zone.color }}
+                  className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-xl border-2 px-4 py-2.5 whitespace-nowrap z-50"
+                  style={{ borderColor: colorInfo.bg }}
                 >
-                  <p className="text-sm font-bold text-[#1E293B]">
-                    第{marker.levelId}关：{config.title}
+                  <p className="text-sm font-black text-[#1E293B]">
+                    {colorInfo.emoji} 第{marker.levelId}关：{config.title}
                   </p>
-                  <p className="text-[10px] text-[#64748B]">
-                    {config.type === "learning" ? "知识学习" : config.type === "quiz_choice" ? "答题闯关" : config.type === "dialogue" ? "对话闯关" : config.type === "quiz" ? "知识翻牌" : config.type === "brain" ? "脑力配对" : "快速反应"}
+                  <p className="text-[10px] text-[#64748B] mt-0.5">
+                    {config.type === "dialogue" ? "🎭 对话闯关" : config.type === "quiz" ? "🃏 知识翻牌" : config.type === "brain" ? "🧠 脑力配对" : " 快速反应"}
                   </p>
                   {status === "available" && (
                     <p
-                      className="text-[10px] font-semibold mt-0.5"
-                      style={{ color: zone.color }}
+                      className="text-[10px] font-bold mt-1"
+                      style={{ color: colorInfo.bg }}
                     >
                       点击开始挑战 →
                     </p>
