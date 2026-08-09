@@ -5,6 +5,7 @@ import Link from "next/link";
 import { WORLD_MAP_PATHS } from "@/lib/world-map-paths";
 import Level1Panel from "@/components/level1-panel";
 import { GameMapPlayer } from "@/components/game-maps/GameMapPlayer";
+import { GAME_MAP_LEVELS, getLevelConfig } from "@/components/game-maps/game-data";
 import {
   InvestmentStyle,
   StepStatus,
@@ -51,12 +52,13 @@ import { getStoryline, getDefaultStoryline } from "@/lib/storylines";
 import type { PersonalityStoryline, StoryTask } from "@/lib/storylines";
 import {
   loadTraderRoadProgress,
+  saveTraderRoadProgress,
   completeTraderRoadLevel,
   getDefaultTraderRoadProgress,
   isTraderRoadAgentUnlocked,
   getTraderRoadLevelsWithStatus,
 } from "@/lib/trader-road-progress";
-import type { TraderRoadProgress } from "@/lib/trader-road-progress";
+import type { TraderRoadProgress, TraderRoadAgentId } from "@/lib/trader-road-progress";
 import AgentAvatar from "@/components/agent-avatar";
 import AgentTeamCard from "@/components/agent-team-card";
 
@@ -575,6 +577,7 @@ function ResearchTab({
   
   // 游戏进度 - Agent 解锁状态（使用集中式进度模块）
   const [traderRoadProgress, setTraderRoadProgress] = useState<TraderRoadProgress>(getDefaultTraderRoadProgress());
+  const [researchTabGameLevel, setResearchTabGameLevel] = useState<number | null>(null);
   
   useEffect(() => {
     setTraderRoadProgress(loadTraderRoadProgress());
@@ -790,6 +793,118 @@ function ResearchTab({
             <p className="mt-2 text-[10px] text-slate-400 text-center">完成地图关卡，逐步点亮完整 Agent 链路</p>
           )}
         </div>
+
+        {/* 交易员的正确之路 — 地图入口 */}
+        <div className="bg-white rounded-3xl p-4 border-2 border-[#4ECDC4] shadow-md">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-black bg-gradient-to-r from-[#4ECDC4] to-[#3B82F6] bg-clip-text text-transparent">
+              🗺️ 交易员的正确之路
+            </h3>
+            <span className="text-[10px] font-bold text-[#FFD93D] bg-[#FF6B35]/10 px-2 py-0.5 rounded-full">
+              {traderRoadProgress.completedLevels.length}/10 关
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-500 mb-3">左右滑动浏览 10 张地图，点击进入闯关</p>
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory scrollbar-hide">
+            {GAME_MAP_LEVELS.map((level) => {
+              const isUnlocked = level.id === 1 || traderRoadProgress.completedLevels.includes(level.id - 1);
+              const isCompleted = traderRoadProgress.completedLevels.includes(level.id);
+              const typeIcons: Record<string, string> = {
+                dialogue: "💬",
+                quiz: "🃏",
+                brain: "🧠",
+                minigame: "⚡",
+                learning: "📚",
+                quiz_choice: "✍️",
+              };
+              const typeLabels: Record<string, string> = {
+                dialogue: "对话闯关",
+                quiz: "知识翻牌",
+                brain: "脑力配对",
+                minigame: "快速反应",
+                learning: "知识学习",
+                quiz_choice: "答题闯关",
+              };
+              return (
+                <button
+                  key={level.id}
+                  onClick={() => {
+                    if (isUnlocked) {
+                      setResearchTabGameLevel(level.id);
+                    } else {
+                      alert(`第 ${level.id - 1} 关「${getLevelConfig(level.id - 1)?.title || ""}」尚未完成，完成后自动解锁本关`);
+                    }
+                  }}
+                  className={`flex-shrink-0 w-[140px] snap-center rounded-xl p-3 text-left transition-all ${
+                    isCompleted
+                      ? "bg-gradient-to-br from-[#4ECDC4]/10 to-[#3B82F6]/10 border-2 border-[#4ECDC4]"
+                      : isUnlocked
+                      ? "bg-white border-2 border-[#3B82F6] shadow-sm"
+                      : "bg-slate-50 border-2 border-slate-200 opacity-60"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] font-bold text-slate-400">第{level.id}关</span>
+                    {isCompleted ? (
+                      <span className="text-[10px]">✅</span>
+                    ) : !isUnlocked ? (
+                      <span className="text-[10px]">🔒</span>
+                    ) : null}
+                  </div>
+                  <div className="text-lg mb-1">{typeIcons[level.type] || "🎮"}</div>
+                  <div className={`text-xs font-bold mb-0.5 ${isUnlocked ? "text-slate-800" : "text-slate-400"}`}>
+                    {level.title}
+                  </div>
+                  <div className="text-[10px] text-slate-400">
+                    {typeLabels[level.type] || level.type}
+                  </div>
+                  {isUnlocked && !isCompleted && (
+                    <div className="mt-1.5 text-[10px] font-bold text-[#3B82F6]">
+                      点击挑战 →
+                    </div>
+                  )}
+                  {isCompleted && (
+                    <div className="mt-1.5 text-[10px] font-bold text-[#4ECDC4]">
+                      已通关 ✓
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {/* 炒币余额 */}
+          <div className="mt-3 flex items-center justify-between px-1">
+            <span className="text-[10px] text-slate-400">学习知识、答对题目 earn 炒币</span>
+            <span className="text-xs font-black text-[#FFD93D]">
+              🪙 {traderRoadProgress.coins}
+            </span>
+          </div>
+        </div>
+
+        {/* 游戏地图弹窗 */}
+        <GameMapPlayer
+          levelId={researchTabGameLevel || 1}
+          isOpen={researchTabGameLevel !== null}
+          onClose={() => setResearchTabGameLevel(null)}
+          onLevelComplete={(levelId: number) => {
+            const progress = loadTraderRoadProgress();
+            if (!progress.completedLevels.includes(levelId)) {
+              progress.completedLevels.push(levelId);
+            }
+            // 根据关卡配置解锁对应 Agent
+            const levelConfig = getLevelConfig(levelId);
+            if (levelConfig) {
+              for (const a of levelConfig.unlockAgents) {
+                const agentId = a as TraderRoadAgentId;
+                if (!progress.unlockedAgents.includes(agentId)) {
+                  progress.unlockedAgents.push(agentId);
+                }
+              }
+            }
+            saveTraderRoadProgress(progress);
+            setTraderRoadProgress({ ...progress });
+          }}
+        />
       </div>
     );
   }
