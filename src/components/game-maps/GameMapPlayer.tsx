@@ -78,11 +78,29 @@ const MAP_ZONES: MapZone[] = [
   },
 ];
 
-// World map zone hotspot positions (percentages)
-const WORLD_ZONE_HOTSPOTS = [
-  { zoneId: 1, x: 22, y: 70 }, // 金融学院区 - lower left
-  { zoneId: 2, x: 50, y: 48 }, // 交易所区 - center
-  { zoneId: 3, x: 82, y: 30 }, // 风险山谷 - upper right
+// World map location hotspots (percentages of image)
+interface WorldLocation {
+  id: number;
+  levelId: number;
+  name: string;
+  subtitle: string;
+  x: number;
+  y: number;
+}
+
+const WORLD_LOCATIONS: WorldLocation[] = [
+  { id: 1, levelId: 1, name: "金融知识入港口", subtitle: "Knowledge Entrance", x: 50, y: 88 },
+  { id: 2, levelId: 2, name: "市场天气站", subtitle: "Market Weather Station", x: 28, y: 76 },
+  { id: 3, levelId: 3, name: "信息迷雾群岛", subtitle: "Info Mist Archipelago", x: 22, y: 22 },
+  { id: 4, levelId: 4, name: "证据岔路口", subtitle: "Evidence Crossroads", x: 50, y: 10 },
+  { id: 5, levelId: 5, name: "风险护盾桥", subtitle: "Risk-Shield Bridge", x: 68, y: 26 },
+  { id: 6, levelId: 6, name: "情绪峡谷", subtitle: "Emotion Gorge", x: 38, y: 38 },
+  { id: 7, levelId: 7, name: "财报告遗迹", subtitle: "Financial-Report Ruins", x: 78, y: 14 },
+  { id: 8, levelId: 8, name: "热点火山", subtitle: "Hotspot Volcano", x: 80, y: 36 },
+  { id: 9, levelId: 9, name: "模型沼泽", subtitle: "Model Swamp", x: 50, y: 50 },
+  { id: 10, levelId: 10, name: "验证灯塔", subtitle: "Verification Lighthouse", x: 30, y: 60 },
+  { id: 11, levelId: 1, name: "复盘营地", subtitle: "Review Camp", x: 58, y: 70 },
+  { id: 12, levelId: 3, name: "脑力训练场", subtitle: "Brain Training Ground", x: 74, y: 68 },
 ];
 
 // ===== Props =====
@@ -102,20 +120,16 @@ export function GameMapPlayer({
   const [view, setView] = useState<"world" | "zone" | "game">("world");
   const [activeZoneId, setActiveZoneId] = useState<number | null>(null);
   const [activeLevelId, setActiveLevelId] = useState<number | null>(null);
-  const [highlightLevelId, setHighlightLevelId] = useState<number | null>(
-    initialLevelId
-  );
   const [hoveredMarker, setHoveredMarker] = useState<number | null>(null);
   const [hoveredZone, setHoveredZone] = useState<number | null>(null);
+  const [hoveredWorldLoc, setHoveredWorldLoc] = useState<number | null>(null);
+  const [clickedWorldLoc, setClickedWorldLoc] = useState<number | null>(null);
   const [progress, setProgress] = useState(() => loadTraderRoadProgress());
 
-  // Auto-start level 1 when entering the map (if not completed)
+  // Start from world map view
   useEffect(() => {
-    if (!progress.completedLevels.includes(1) && view === "world") {
-      setActiveLevelId(1);
-      setView("game");
-    }
-  }, []); // Only run on mount
+    // Just ensure we start at world view
+  }, []);
 
   useEffect(() => {
     saveTraderRoadProgress(progress);
@@ -201,106 +215,126 @@ export function GameMapPlayer({
     [progress]
   );
 
-  // ===== Render: World Map =====
+  // ===== Render: World Map (Vintage Treasure Map Style) =====
   const renderWorldMap = () => {
-    // 找到高亮关卡所在的区域
-    const highlightZone = highlightLevelId
-      ? MAP_ZONES.find((z) => z.levels.includes(highlightLevelId))
-      : null;
-
     return (
-    <div className="relative w-full flex-1 min-h-0">
+    <div className="relative w-full flex-1 min-h-0 overflow-hidden">
+      {/* Vintage map background image */}
       <img
-        src="/map-world-spirited.jpeg"
+        src="/map-world-vintage2.jpeg"
         alt="金融华尔界世界地图"
         className="w-full h-full object-contain"
         draggable={false}
       />
-      {/* 首次进入引导：高亮第一关所在区域 */}
-      {highlightZone && (
-        <div
-          className="absolute pointer-events-none animate-bounce"
-          style={{
-            left: `${WORLD_ZONE_HOTSPOTS.find(h => h.zoneId === highlightZone.id)?.x ?? 20}%`,
-            top: `${WORLD_ZONE_HOTSPOTS.find(h => h.zoneId === highlightZone.id)?.y ?? 50}%`,
-            transform: "translate(-50%, -50%)",
-          }}
-        >
-          <div className="bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg border-2 border-[#3B82F6]">
-            <p className="text-xs font-bold text-[#3B82F6] whitespace-nowrap">👇 从这里开始</p>
-          </div>
-        </div>
+      {/* Dark overlay when hovering a location */}
+      {hoveredWorldLoc !== null && (
+        <div className="absolute inset-0 bg-black/20 transition-opacity duration-300 pointer-events-none" />
       )}
-      {/* Zone hotspots */}
-      {WORLD_ZONE_HOTSPOTS.map((hotspot) => {
-        const zone = MAP_ZONES.find((z) => z.id === hotspot.zoneId)!;
-        const zoneProgress = getZoneProgress(hotspot.zoneId);
-        const unlocked = isZoneUnlocked(hotspot.zoneId);
-        const allDone = zoneProgress.done === zoneProgress.total;
-        const isHovered = hoveredZone === hotspot.zoneId;
+      {/* Location hotspots with micro-interactions */}
+      {WORLD_LOCATIONS.map((loc) => {
+        const status = getLevelStatus(loc.levelId);
+        const isHovered = hoveredWorldLoc === loc.id;
+        const isClicked = clickedWorldLoc === loc.id;
+        const isAvailable = status === "available" || status === "completed";
 
         return (
           <button
-            key={hotspot.zoneId}
-            className="absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 group"
+            key={loc.id}
+            className="absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ease-out group"
             style={{
-              left: `${hotspot.x}%`,
-              top: `${hotspot.y}%`,
+              left: `${loc.x}%`,
+              top: `${loc.y}%`,
+              transform: `translate(-50%, -50%) ${isHovered ? "translateY(-8px)" : ""} ${isClicked ? "scale(1.05)" : "scale(1)"}`,
+              zIndex: isHovered ? 50 : 10,
             }}
             onClick={() => {
-              if (unlocked) {
-                setActiveZoneId(hotspot.zoneId);
-                setView("zone");
+              if (isAvailable) {
+                setClickedWorldLoc(loc.id);
+                setTimeout(() => {
+                  setClickedWorldLoc(null);
+                  setActiveLevelId(loc.levelId);
+                  setView("game");
+                }, 300);
               }
             }}
-            onMouseEnter={() => setHoveredZone(hotspot.zoneId)}
-            onMouseLeave={() => setHoveredZone(null)}
+            onMouseEnter={() => setHoveredWorldLoc(loc.id)}
+            onMouseLeave={() => {
+              setHoveredWorldLoc(null);
+              setClickedWorldLoc(null);
+            }}
           >
-            {/* Pulsing ring */}
-            {unlocked && !allDone && (
+            {/* Golden sparkle glint - default blinking */}
+            {isAvailable && (
               <span
-                className="absolute inset-0 rounded-full animate-ping opacity-30"
-                style={{ backgroundColor: zone.color }}
+                className="absolute -top-1 -right-1 w-3 h-3 rounded-full animate-pulse"
+                style={{
+                  background: "radial-gradient(circle, #FFD700 0%, #DAA520 50%, transparent 100%)",
+                  boxShadow: "0 0 6px 2px rgba(218, 165, 32, 0.6)",
+                  animationDuration: "2s",
+                }}
               />
             )}
-            {/* Hotspot circle */}
+            {/* Warm gold outer glow on hover */}
+            {isHovered && isAvailable && (
+              <span
+                className="absolute rounded-full transition-all duration-300"
+                style={{
+                  width: 52,
+                  height: 52,
+                  left: "50%",
+                  top: "50%",
+                  transform: "translate(-50%, -50%)",
+                  background: "radial-gradient(circle, rgba(218, 165, 32, 0.5) 0%, rgba(218, 165, 32, 0.2) 50%, transparent 100%)",
+                  boxShadow: "0 0 20px 8px rgba(218, 165, 32, 0.4)",
+                }}
+              />
+            )}
+            {/* Main location marker */}
             <span
-              className="relative flex items-center justify-center rounded-full border-3 shadow-lg transition-all duration-300"
+              className="relative flex items-center justify-center rounded-full transition-all duration-300"
               style={{
-                width: isHovered ? 56 : 44,
-                height: isHovered ? 56 : 44,
-                backgroundColor: unlocked ? zone.color : "#94A3B8",
-                borderColor: "white",
-                borderWidth: 3,
-                opacity: unlocked ? 1 : 0.5,
+                width: 36,
+                height: 36,
+                backgroundColor: status === "completed" ? "#059669" : isAvailable ? "#DAA520" : "#94A3B8",
+                border: "2px solid rgba(255, 248, 220, 0.8)",
+                boxShadow: isHovered && isAvailable
+                  ? "0 0 16px 4px rgba(218, 165, 32, 0.6), 0 4px 8px rgba(0,0,0,0.3)"
+                  : "0 2px 4px rgba(0,0,0,0.2)",
+                opacity: isAvailable ? 1 : 0.5,
               }}
             >
-              {allDone ? (
-                <span className="text-white text-lg">✓</span>
+              {status === "completed" ? (
+                <span className="text-white text-sm font-bold">✓</span>
+              ) : isAvailable ? (
+                <span className="text-white text-xs font-bold">{loc.levelId}</span>
               ) : (
-                <span className="text-white text-sm font-bold">
-                  {zoneProgress.done}/{zoneProgress.total}
-                </span>
+                <span className="text-white text-xs">🔒</span>
               )}
             </span>
-            {/* Tooltip */}
-            {isHovered && unlocked && (
+            {/* Location name tooltip on hover */}
+            {isHovered && isAvailable && (
               <div
-                className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-white rounded-xl shadow-xl border px-3 py-2 whitespace-nowrap z-50"
-                style={{ borderColor: zone.color }}
+                className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 whitespace-nowrap z-50 pointer-events-none"
+                style={{
+                  background: "linear-gradient(135deg, #F5E6C8 0%, #E8D5A8 100%)",
+                  border: "1px solid #8B7355",
+                  borderRadius: "4px",
+                  padding: "6px 12px",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                }}
               >
-                <p className="text-sm font-bold text-[#1E293B]">
-                  {zone.name}
+                <p className="text-xs font-bold text-[#3D2B1F]" style={{ fontFamily: "serif" }}>
+                  {loc.name}
                 </p>
-                <p className="text-[10px] text-[#64748B]">{zone.subtitle}</p>
-                <p className="text-[10px] font-semibold mt-0.5" style={{ color: zone.color }}>
-                  进度 {zoneProgress.done}/{zoneProgress.total}
+                <p className="text-[9px] text-[#6B5B4B] italic">
+                  {loc.subtitle}
                 </p>
+                {status === "available" && (
+                  <p className="text-[9px] font-semibold text-[#8B4513] mt-0.5">
+                    点击开始挑战 →
+                  </p>
+                )}
               </div>
-            )}
-            {/* Lock icon for locked zones */}
-            {!unlocked && (
-              <span className="absolute -top-1 -right-1 text-xs">🔒</span>
             )}
           </button>
         );
@@ -564,7 +598,20 @@ export function GameMapPlayer({
       {/* 9:16 Panel */}
       <div className="relative bg-[#F5F5F7] w-full h-full max-w-[min(100vw,56.25vh)] max-h-[min(100vh,177.78vw)] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#E2E8F0] bg-white rounded-t-3xl">
+        <div
+          className="flex items-center justify-between px-4 py-3 border-b rounded-t-3xl transition-all duration-300"
+          style={
+            view === "world"
+              ? {
+                  background: "linear-gradient(135deg, #F5E6C8 0%, #E8D5A8 100%)",
+                  borderColor: "#8B7355",
+                }
+              : {
+                  backgroundColor: "white",
+                  borderColor: "#E2E8F0",
+                }
+          }
+        >
           <div className="flex items-center gap-2">
             {view !== "world" && (
               <button
@@ -577,9 +624,16 @@ export function GameMapPlayer({
                 ←
               </button>
             )}
-            <h2 className="text-base font-bold text-[#1E293B]">
+            <h2
+              className="text-base font-bold"
+              style={
+                view === "world"
+                  ? { color: "#3D2B1F", fontFamily: "serif" }
+                  : { color: "#1E293B" }
+              }
+            >
               {view === "world"
-                ? "🗺️ 金融华尔界"
+                ? "金融华尔界"
                 : view === "zone"
                 ? MAP_ZONES.find((z) => z.id === activeZoneId)?.name ?? ""
                 : `第${activeLevelId}关`}
@@ -591,8 +645,8 @@ export function GameMapPlayer({
             </span>
             <button
               onClick={onClose}
-              aria-label="退出登录"
-              title="退出登录"
+              aria-label="退出"
+              title="退出"
               className="w-10 h-10 rounded-xl bg-[#F1F5F9] flex items-center justify-center text-[#475569] hover:bg-[#FEE2E2] hover:text-[#DC2626] transition-all duration-200"
             >
               <LogOut className="w-5 h-5" strokeWidth={2} />
@@ -601,7 +655,7 @@ export function GameMapPlayer({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className={`flex-1 overflow-y-auto ${view === "world" ? "p-0" : "p-4"}`}>
           {view === "world" && renderWorldMap()}
           {view === "zone" && renderZoneMap()}
           {view === "game" && renderGame()}
