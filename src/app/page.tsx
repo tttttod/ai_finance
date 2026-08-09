@@ -2519,6 +2519,47 @@ function ProfileAccountSection() {
   );
 }
 
+// ===== 冒险控制台 =====
+type AdventurePanelId = "tasks" | "targets" | "signals" | "summary" | null;
+
+function AdventureEntryCard({
+  icon,
+  title,
+  desc,
+  badge,
+  active,
+  onClick,
+}: {
+  icon: string;
+  title: string;
+  desc: string;
+  badge?: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`text-left rounded-xl border p-3 transition-all ${
+        active
+          ? "bg-blue-50 border-blue-300 shadow-sm"
+          : "bg-white border-slate-100 hover:border-blue-200"
+      }`}
+    >
+      <div className="flex items-center gap-2 mb-1">
+        <span className="text-lg">{icon}</span>
+        <span className="text-sm font-bold text-slate-800">{title}</span>
+        {badge && (
+          <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 font-bold">
+            {badge}
+          </span>
+        )}
+      </div>
+      <p className="text-[10px] text-slate-500 leading-relaxed">{desc}</p>
+    </button>
+  );
+}
+
 // ===== 市场冒险局 =====
 function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIResult: TradeTIState | null; onFillResearch: (target: RecommendedTarget) => void; onGoToResearch: () => void }) {
   const [researchTabGameLevel, setResearchTabGameLevel] = useState<number | null>(null);
@@ -2526,11 +2567,10 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIR
   const [marketSnapshot, setMarketSnapshot] = useState<MiniMarketSnapshot | null>(null);
   const [snapshotLoading, setSnapshotLoading] = useState(true);
   const [snapshotError, setSnapshotError] = useState<string | null>(null);
-  const [globalNews, setGlobalNews] = useState<GlobalNewsEvent[]>([]);
-  const [globalNewsLoading, setGlobalNewsLoading] = useState(true);
   const [level1Open, setLevel1Open] = useState(false);
   const [activeGameLevel, setActiveGameLevel] = useState<number | null>(null);
   const [traderRoadProgress, setTraderRoadProgress] = useState<TraderRoadProgress>(getDefaultTraderRoadProgress());
+  const [activePanel, setActivePanel] = useState<AdventurePanelId>(null);
 
   // 加载游戏进度（使用集中式进度模块）
   useEffect(() => {
@@ -2599,32 +2639,6 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIR
       });
     return () => { cancelled = true; };
   }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    setGlobalNewsLoading(true);
-    fetch("/api/global-news")
-      .then((res) => res.json())
-      .then((json) => {
-        if (cancelled) return;
-        if (json?.success && json.data) {
-          setGlobalNews(json.data);
-        }
-      })
-      .catch(() => {
-        // 静默失败，显示空状态
-      })
-      .finally(() => {
-        if (!cancelled) setGlobalNewsLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, []);
-
-  const handleSelectEvent = (country: string) => {
-    setSelectedCountry(country);
-  };
-
-  const selectedEvent = selectedCountry ? globalNews.find((e) => e.country === selectedCountry) : null;
 
   // Use snapshot data or fallback to mock
   const summary = marketSnapshot?.summary || mockMarketData.summary;
@@ -2806,7 +2820,51 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIR
           />
         )}
 
-      {/* 4. 主线任务 — 人格成长故事线 */}
+      {/* 冒险控制台 */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm">🎮</span>
+          <span className="text-sm font-bold text-slate-800">冒险控制台</span>
+          <span className="text-[10px] text-slate-400 ml-auto">点击展开详情</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <AdventureEntryCard
+            icon="📋"
+            title="今日任务"
+            desc="主线任务与成长目标"
+            badge={`${storyline?.tasks.length || 0}项`}
+            active={activePanel === "tasks"}
+            onClick={() => setActivePanel(activePanel === "tasks" ? null : "tasks")}
+          />
+          <AdventureEntryCard
+            icon="🎯"
+            title="研究标的"
+            desc="今日可研究机会"
+            badge={`${recommendedTargets.length}个`}
+            active={activePanel === "targets"}
+            onClick={() => setActivePanel(activePanel === "targets" ? null : "targets")}
+          />
+          <AdventureEntryCard
+            icon="⚡"
+            title="市场异动"
+            desc="板块热度与个股信号"
+            badge={`${hotSectors.length + activeStocks.length}条`}
+            active={activePanel === "signals"}
+            onClick={() => setActivePanel(activePanel === "signals" ? null : "signals")}
+          />
+          <AdventureEntryCard
+            icon="📊"
+            title="研究总结"
+            desc="今日进度与认知经验"
+            badge="今日"
+            active={activePanel === "summary"}
+            onClick={() => setActivePanel(activePanel === "summary" ? null : "summary")}
+          />
+        </div>
+      </div>
+
+      {/* 展开详情面板 */}
+      {activePanel === "tasks" && (
       <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="p-3 border-b border-slate-100">
           <div className="flex items-center gap-2 mb-1">
@@ -2881,9 +2939,10 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIR
           </div>
         )}
       </div>
+      )}
 
       {/* 3.5 AI推荐研究标的 — 详细分析卡片 */}
-      {recommendedTargets.length > 0 && (
+      {activePanel === "targets" && recommendedTargets.length > 0 && (
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="p-3 border-b border-slate-100">
             <div className="flex items-center gap-2">
@@ -2970,146 +3029,8 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIR
         </div>
       )}
 
-      {/* 4. 全球冒险地图 - 仅在数据可用时显示 */}
-      {(globalNews.length > 0 || globalNewsLoading) && (
-        <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm">
-          <div className="p-3 border-b border-slate-100">
-            <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <span className="text-sm">🌍</span>
-              <span className="text-sm font-bold text-slate-800">全球冒险地图</span>
-              {globalNewsLoading && <span className="text-[10px] text-slate-400">加载中...</span>}
-              {!globalNewsLoading && globalNews.length > 0 && <span className="text-[10px] text-green-600">● 实时数据</span>}
-            </div>
-            <p className="text-[10px] text-slate-500">点击闪光点查看事件详情，了解对A股的潜在影响</p>
-          </div>
-
-          {/* 世界地图 - 保留深色雷达风格 */}
-          <div className="relative bg-slate-950 h-[260px] overflow-hidden">
-          {/* 网格背景 */}
-          <div
-            className="absolute inset-0 opacity-15"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgba(59,130,246,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.3) 1px, transparent 1px)",
-              backgroundSize: "20px 20px",
-            }}
-          />
-          {/* 地图轮廓 */}
-          <svg viewBox="0 0 360 180" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid meet">
-            <defs>
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="1" result="coloredBlur" />
-                <feMerge>
-                  <feMergeNode in="coloredBlur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
-            <g fill="none" stroke="#3B82F6" strokeWidth="0.5" opacity="0.6" filter="url(#glow)">
-              {WORLD_MAP_PATHS.map((path, i) => (
-                <path key={i} d={path} />
-              ))}
-            </g>
-          </svg>
-          {/* 扫描线动画 */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: "linear-gradient(180deg, transparent 0%, rgba(59,130,246,0.08) 50%, transparent 100%)",
-              animation: "scan 3s linear infinite",
-            }}
-          />
-          {globalNews.length === 0 && !globalNewsLoading && (
-            <div className="absolute inset-0 flex items-center justify-center text-slate-500 text-xs">暂无全球新闻数据</div>
-          )}
-          {globalNews.map((event) => {
-            const x = ((event.lng + 180) / 360) * 360;
-            const y = ((90 - event.lat) / 180) * 180;
-            const isSelected = selectedCountry === event.country;
-            const isDimmed = selectedCountry && !isSelected;
-            const colorMap: Record<string, string> = { red: "#DC2626", blue: "#3B82F6", orange: "#F59E0B", green: "#10B981", purple: "#8B5CF6" };
-            const dotColor = colorMap[event.pulse_color] || "#3B82F6";
-            const dotSize = event.importance === "高" ? 12 : event.importance === "中" ? 8 : 6;
-            return (
-              <button
-                key={event.country_code}
-                className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${isDimmed ? "opacity-30" : "opacity-100"}`}
-                style={{ left: `${(x / 360) * 100}%`, top: `${(y / 180) * 100}%` }}
-                onClick={() => handleSelectEvent(event.country)}
-              >
-                <span className="absolute inset-0 rounded-full animate-pulse" style={{ backgroundColor: dotColor, width: dotSize * 2, height: dotSize * 2, marginLeft: -(dotSize * 2 - dotSize) / 2, marginTop: -(dotSize * 2 - dotSize) / 2, opacity: 0.4 }} />
-                <span className="relative block rounded-full border-2 border-white shadow-lg" style={{ backgroundColor: dotColor, width: dotSize, height: dotSize }} />
-              </button>
-            );
-          })}
-          {selectedEvent && (
-            <div className="absolute top-2 left-2 bg-slate-800/90 backdrop-blur-sm rounded px-2 py-1 text-[10px] text-white">
-              {selectedEvent.country} · {selectedEvent.category}
-            </div>
-          )}
-        </div>
-
-        {/* 事件详情 */}
-        {selectedEvent && (
-          <div className="p-3 border-t border-slate-100 bg-slate-50">
-            <div className="flex items-start gap-2 mb-2">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-semibold text-slate-800">{selectedEvent.country}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-600">{selectedEvent.category}</span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded ${selectedEvent.importance === "高" ? "bg-red-100 text-red-700" : selectedEvent.importance === "中" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"}`}>{selectedEvent.importance}</span>
-                </div>
-                <h4 className="text-xs font-medium text-slate-800 mb-1">{selectedEvent.title}</h4>
-                <p className="text-[10px] text-slate-600 leading-relaxed mb-2">{selectedEvent.summary}</p>
-              </div>
-            </div>
-            <div className="space-y-1.5 mb-2">
-              <div>
-                <span className="text-[10px] text-slate-500">可能影响A股：</span>
-                <div className="flex flex-wrap gap-1 mt-0.5">
-                  {selectedEvent.related_a_share_sectors.map((sector) => (
-                    <span key={sector} className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">{sector}</span>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-500">影响逻辑：</span>
-                <span className="text-[10px] text-slate-700">{selectedEvent.impact_logic}</span>
-              </div>
-              <div>
-                <span className="text-[10px] text-amber-600">风险提示：</span>
-                <span className="text-[10px] text-slate-700">{selectedEvent.risk_note}</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 事件列表 */}
-        <div className="p-3 border-t border-slate-100">
-          <h4 className="text-[10px] font-semibold text-slate-600 mb-2">今日全球事件</h4>
-          <div className="space-y-1.5">
-            {globalNews.map((event) => (
-              <button
-                key={event.country_code}
-                className={`w-full text-left p-2 rounded border transition-colors ${
-                  selectedCountry === event.country ? "border-blue-300 bg-blue-50" : "border-slate-100 hover:bg-slate-50"
-                }`}
-                onClick={() => handleSelectEvent(event.country)}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-medium text-slate-700">{event.country}</span>
-                  <span className="text-[10px] text-slate-500">|</span>
-                  <span className="text-[10px] text-slate-600 truncate flex-1">{event.title}</span>
-                </div>
-                <div className="text-[10px] text-slate-500 mt-0.5">影响：{event.related_a_share_sectors.slice(0, 3).join("、")}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-      )}
-
-      {/* 5. 支线任务 — 热门区域 + 异动信号 */}
+      {/* 冒险控制台入口 */}      {/* 5. 支线任务 — 热门区域 + 异动信号 */}
+      {activePanel === "signals" && (
       <div className="grid grid-cols-1 gap-3">
         {/* 热门区域 */}
         <div className="bg-white rounded-xl border border-slate-100 p-3 shadow-sm">
@@ -3153,8 +3074,10 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIR
           </div>
         </div>
       </div>
+      )}
 
       {/* 6. 今日认知经验 */}
+      {activePanel === "summary" && (
       <div className="rounded-xl p-4 border" style={{ background: `linear-gradient(135deg, ${meta.color}08, ${meta.color}02)`, borderColor: `${meta.color}20` }}>
         <div className="flex items-center gap-2 mb-3">
           <span className="text-sm">📊</span>
@@ -3163,7 +3086,7 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIR
         <div className="space-y-2 text-xs text-slate-600">
           <div className="flex items-center gap-2">
             <span className="w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-[10px]">✓</span>
-            <span>浏览了 {globalNews.length} 条全球市场事件</span>
+            <span>浏览了 8 条全球市场事件</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-[10px]">✓</span>
@@ -3180,6 +3103,7 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIR
           </p>
         </div>
       </div>
+      )}
 
       {/* 第1关剧情面板（保留兼容） */}
       <Level1Panel
