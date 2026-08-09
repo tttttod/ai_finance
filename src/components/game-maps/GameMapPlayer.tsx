@@ -89,18 +89,18 @@ interface WorldLocation {
 }
 
 const WORLD_LOCATIONS: WorldLocation[] = [
-  { id: 1, levelId: 1, name: "金融知识入港口", subtitle: "Knowledge Entrance", x: 50, y: 88 },
-  { id: 2, levelId: 2, name: "市场天气站", subtitle: "Market Weather Station", x: 28, y: 76 },
-  { id: 3, levelId: 3, name: "信息迷雾群岛", subtitle: "Info Mist Archipelago", x: 22, y: 22 },
-  { id: 4, levelId: 4, name: "证据岔路口", subtitle: "Evidence Crossroads", x: 50, y: 10 },
-  { id: 5, levelId: 5, name: "风险护盾桥", subtitle: "Risk-Shield Bridge", x: 68, y: 26 },
-  { id: 6, levelId: 6, name: "情绪峡谷", subtitle: "Emotion Gorge", x: 38, y: 38 },
-  { id: 7, levelId: 7, name: "财报告遗迹", subtitle: "Financial-Report Ruins", x: 78, y: 14 },
-  { id: 8, levelId: 8, name: "热点火山", subtitle: "Hotspot Volcano", x: 80, y: 36 },
-  { id: 9, levelId: 9, name: "模型沼泽", subtitle: "Model Swamp", x: 50, y: 50 },
-  { id: 10, levelId: 10, name: "验证灯塔", subtitle: "Verification Lighthouse", x: 30, y: 60 },
-  { id: 11, levelId: 1, name: "复盘营地", subtitle: "Review Camp", x: 58, y: 70 },
-  { id: 12, levelId: 3, name: "脑力训练场", subtitle: "Brain Training Ground", x: 74, y: 68 },
+  { id: 1, levelId: 1, name: "金融知识入港口", subtitle: "Knowledge Entrance", x: 48, y: 92 },
+  { id: 2, levelId: 2, name: "情绪峡谷", subtitle: "Emotion Canyon", x: 18, y: 82 },
+  { id: 3, levelId: 3, name: "验证灯塔", subtitle: "Verification Lighthouse", x: 30, y: 78 },
+  { id: 4, levelId: 4, name: "复盘营地", subtitle: "Review Camp", x: 72, y: 80 },
+  { id: 5, levelId: 5, name: "证据天气谷", subtitle: "Evidence Weather Valley", x: 15, y: 55 },
+  { id: 6, levelId: 6, name: "信息迷雾群岛", subtitle: "Info Mist Archipelago", x: 18, y: 30 },
+  { id: 7, levelId: 7, name: "模型城堡", subtitle: "Model Castle", x: 48, y: 35 },
+  { id: 8, levelId: 8, name: "财报考古遗迹", subtitle: "Financial Report Ruins", x: 82, y: 22 },
+  { id: 9, levelId: 9, name: "热点火山与火箭", subtitle: "Hotspot Volcano", x: 78, y: 42 },
+  { id: 10, levelId: 10, name: "脑力训练场", subtitle: "Brain Training Ground", x: 82, y: 58 },
+  { id: 11, levelId: 1, name: "quiz练习场", subtitle: "Quiz Practice Field", x: 75, y: 68 },
+  { id: 12, levelId: 4, name: "证据岔路口", subtitle: "Evidence Crossroads", x: 50, y: 12 },
 ];
 
 // ===== Props =====
@@ -220,7 +220,7 @@ export function GameMapPlayer({
     <div className="relative w-full flex-1 min-h-0 overflow-hidden">
       {/* Vintage map background image */}
       <img
-        src="/map-world-vintage2.webp"
+        src="/map-world-final.jpeg"
         alt="金融华尔界世界地图"
         className="w-full h-full object-contain"
         draggable={false}
