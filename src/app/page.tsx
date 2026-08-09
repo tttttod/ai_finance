@@ -938,7 +938,7 @@ function AgentCard({ response, unlockedAgents }: { response: AgentResponse; unlo
   const isUnlocked = agent ? (unlockedAgents?.includes(agent.role) ?? true) : true;
 
   return (
-    <div className={`bg-white rounded-lg p-4 border border-slate-100 ${!isUnlocked ? 'opacity-70' : ''}`}>
+    <div className={`bg-white rounded-lg p-4 border border-slate-100 ${!isUnlocked ? 'opacity-60' : ''}`}>
       <div className="flex items-center gap-2 mb-2">
         {agent ? (
           <AgentAvatar agent={agent} unlocked={isUnlocked} size="sm" />
@@ -949,10 +949,16 @@ function AgentCard({ response, unlockedAgents }: { response: AgentResponse; unlo
           <div className="text-xs font-semibold text-slate-700">{agent?.name}</div>
           <div className="text-[10px] text-slate-500">
             第 {response.step} 步 · {agent?.title}
-            {!isUnlocked && <span className="ml-1 text-orange-500">(未解锁)</span>}
           </div>
         </div>
       </div>
+      {!isUnlocked ? (
+        <div className="flex items-center gap-1.5 py-1">
+          <span className="text-[10px] text-orange-500 font-medium">🔒 未解锁</span>
+          <span className="text-[10px] text-slate-400">完成对应关卡后查看分析详情</span>
+        </div>
+      ) : (
+      <div>
       <p className="text-xs text-slate-600 leading-relaxed">{response.content}</p>
 
       {/* 因子评分 */}
@@ -1061,6 +1067,8 @@ function AgentCard({ response, unlockedAgents }: { response: AgentResponse; unlo
           </div>
         </div>
       ) : null}
+      </div>
+      )}
     </div>
   );
 }
