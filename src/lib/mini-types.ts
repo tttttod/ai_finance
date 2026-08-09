@@ -182,6 +182,7 @@ export const AGENT_TEAM: AgentInfo[] = [
 // Agent 解锁元数据映射（与 AGENT_TEAM 独立，不影响原结构）
 export interface AgentUnlockMeta {
   avatar: string;
+  fullBody: string; // 全身立绘（弹窗展示用）
   lockedAvatar: string;
   unlockLevel: number;
   unlockHint: string;
@@ -189,74 +190,86 @@ export interface AgentUnlockMeta {
 
 export const AGENT_UNLOCK_META: Record<AgentRole, AgentUnlockMeta> = {
   lead: {
-    avatar: "/agents/lead-agent.png",
-    lockedAvatar: "/agents/locked-agent.png",
+    avatar: "/agent-lead.png",
+    fullBody: "/agent-lead-full.png",
+    lockedAvatar: "/agent-locked.png",
     unlockLevel: 1,
     unlockHint: "完成第 1 关「开户日」后解锁",
   },
   data: {
-    avatar: "/agents/data-agent.png",
-    lockedAvatar: "/agents/locked-agent.png",
+    avatar: "/agent-data.png",
+    fullBody: "/agent-data-full.png",
+    lockedAvatar: "/agent-locked.png",
     unlockLevel: 2,
     unlockHint: "完成第 2 关「数据黑市」后解锁",
   },
   market: {
-    avatar: "/agents/market-agent.png",
-    lockedAvatar: "/agents/locked-agent.png",
+    avatar: "/agent-market.png",
+    fullBody: "/agent-market-full.png",
+    lockedAvatar: "/agent-locked.png",
     unlockLevel: 3,
     unlockHint: "完成第 3 关「市场风暴」后解锁",
   },
   industry: {
-    avatar: "/agents/industry-agent.png",
-    lockedAvatar: "/agents/locked-agent.png",
+    avatar: "/agent-industry.png",
+    fullBody: "/agent-industry-full.png",
+    lockedAvatar: "/agent-locked.png",
     unlockLevel: 4,
     unlockHint: "完成第 4 关「政策密函」后解锁",
   },
   fundamental: {
-    avatar: "/agents/fundamental-agent.png",
-    lockedAvatar: "/agents/locked-agent.png",
+    avatar: "/agent-fundamental.png",
+    fullBody: "/agent-fundamental-full.png",
+    lockedAvatar: "/agent-locked.png",
     unlockLevel: 5,
     unlockHint: "完成第 5 关「财报夜审」后解锁",
   },
   valuation: {
-    avatar: "/agents/valuation-agent.png",
-    lockedAvatar: "/agents/locked-agent.png",
+    avatar: "/agent-valuation.png",
+    fullBody: "/agent-valuation-full.png",
+    lockedAvatar: "/agent-locked.png",
     unlockLevel: 6,
     unlockHint: "完成第 6 关「价格审判庭」后解锁",
   },
   technical: {
-    avatar: "/agents/technical-agent.png",
-    lockedAvatar: "/agents/locked-agent.png",
+    avatar: "/agent-technical.png",
+    fullBody: "/agent-technical-full.png",
+    lockedAvatar: "/agent-locked.png",
     unlockLevel: 7,
     unlockHint: "完成第 7 关「K线神谕」后解锁",
   },
   sentiment: {
-    avatar: "/agents/sentiment-agent.png",
-    lockedAvatar: "/agents/locked-agent.png",
+    avatar: "/agent-sentiment.png",
+    fullBody: "/agent-sentiment-full.png",
+    lockedAvatar: "/agent-locked.png",
     unlockLevel: 8,
     unlockHint: "完成第 8 关「舆论火场」后解锁",
   },
   bull: {
-    avatar: "/agents/bull-agent.png",
-    lockedAvatar: "/agents/locked-agent.png",
+    avatar: "/agent-bull.png",
+    fullBody: "/agent-bull-full.png",
+    lockedAvatar: "/agent-locked.png",
     unlockLevel: 9,
     unlockHint: "完成第 9 关「多空议会」后解锁",
   },
   bear: {
-    avatar: "/agents/bear-agent.png",
-    lockedAvatar: "/agents/locked-agent.png",
+    avatar: "/agent-bear.png",
+    fullBody: "/agent-bear-full.png",
+    lockedAvatar: "/agent-locked.png",
     unlockLevel: 9,
     unlockHint: "完成第 9 关「多空议会」后解锁",
   },
   risk: {
-    avatar: "/agents/risk-officer.png",
-    lockedAvatar: "/agents/locked-agent.png",
+    avatar: "/agent-risk.png",
+    fullBody: "/agent-risk-full.png",
+    lockedAvatar: "/agent-locked.png",
     unlockLevel: 10,
     unlockHint: "完成第 10 关「回撤之门」后解锁",
   },
   manager: {
-    avatar: "/agents/research-manager.png",
-    lockedAvatar: "/agents/locked-agent.png",
+    avatar: "/agent-manager.png",
+    fullBody: "/agent-manager-full.png",
+    lockedAvatar: "/agent-locked.png",
     unlockLevel: 10,
     unlockHint: "完成第 10 关「回撤之门」后解锁",
   },

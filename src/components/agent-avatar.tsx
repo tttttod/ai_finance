@@ -11,9 +11,9 @@ interface AgentAvatarProps {
 }
 
 const SIZE_MAP = {
-  xs: 24,
-  sm: 32,
-  md: 40,
+  xs: 28,
+  sm: 36,
+  md: 48,
 };
 
 export default function AgentAvatar({ agent, unlocked, size = "sm" }: AgentAvatarProps) {
@@ -29,7 +29,7 @@ export default function AgentAvatar({ agent, unlocked, size = "sm" }: AgentAvata
 
   return (
     <div
-      className="relative flex-shrink-0 flex items-center justify-center overflow-hidden rounded-full border"
+      className="relative flex-shrink-0 flex items-center justify-center overflow-hidden rounded-full border-2 overflow-hidden"
       style={{
         width: px,
         height: px,
@@ -42,11 +42,10 @@ export default function AgentAvatar({ agent, unlocked, size = "sm" }: AgentAvata
           src={src}
           alt={agent.name}
           onError={() => setImgError(true)}
-          className="object-cover"
-          style={{ width: px, height: px }}
+          className="object-cover w-full h-full"
         />
       ) : unlocked ? (
-        // 已解锁但无头像：显示 icon
+        // 已解锁但无头像：显示 icon 兜底
         <span style={{ fontSize: px * 0.5 }}>{agent.icon}</span>
       ) : (
         // 未解锁：显示锁图标
