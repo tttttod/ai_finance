@@ -26,11 +26,11 @@ export default function AgentTeamCard({ agent, unlocked }: AgentTeamCardProps) {
   return (
     <>
       <button
-        onClick={() => setShowModal(true)}
+        onClick={() => unlocked && setShowModal(true)}
         className={`flex items-center gap-2 p-2 rounded-2xl border-2 transition-all text-left w-full ${
           unlocked
             ? "hover:scale-[1.05] shadow-sm cursor-pointer active:scale-[0.98]"
-            : "opacity-60 grayscale cursor-pointer hover:opacity-80"
+            : "cursor-default"
         }`}
         style={{
           backgroundColor: unlocked ? "#EFF6FF" : "#F8FAFC",
@@ -44,7 +44,7 @@ export default function AgentTeamCard({ agent, unlocked }: AgentTeamCardProps) {
         <div className="min-w-0 flex-1">
           <div
             className="text-[10px] font-black truncate"
-            style={{ color: unlocked ? "#1E40AF" : "#94A3B8" }}
+            style={{ color: unlocked ? "#1E40AF" : "#475569" }}
           >
             {agent.name}
           </div>
@@ -61,8 +61,8 @@ export default function AgentTeamCard({ agent, unlocked }: AgentTeamCardProps) {
         </div>
       </button>
 
-      {/* 弹窗 */}
-      {showModal && (
+      {/* 弹窗 — 仅已解锁可点击 */}
+      {unlocked && showModal && (
         <AgentDetailModal
           agent={agent}
           unlocked={unlocked}
