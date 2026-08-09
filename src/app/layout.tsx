@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import AgentImagePreloader from '@/components/agent-image-preloader';
 
 export const metadata: Metadata = {
   title: 'A股可视化投研Agent - AI智能投研辅助',
@@ -15,6 +16,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className="antialiased min-h-screen bg-[#F5F5F7]">
+        <AgentImagePreloader />
         {children}
       </body>
     </html>
