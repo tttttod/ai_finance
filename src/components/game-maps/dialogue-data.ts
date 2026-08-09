@@ -388,6 +388,7 @@ Industry Agent：
     nodes: [
       // 场景二：阅读政策原文
       {
+        id: 1,
         scene: `【场景二 阅读政策原文】
 
 档案室使用暖黄色灯光，墙上贴着城市地图和行业关系图。中央桌面放着六页政策文件。
@@ -443,6 +444,7 @@ Industry Agent 轻轻敲了一下第四页：
       },
       // 场景三：完成受益关系图 - 北港仓储
       {
+        id: 2,
         scene: `【场景三 完成受益关系图】
 
 墙上的行业图亮起。中心位置是"公共冷库改造"，周围有三个空位，分别标注"直接相关""间接相关"和"关系较弱"。
@@ -457,7 +459,7 @@ Industry Agent：
         options: [
           {
             id: "r2_correct",
-            text: "放在"直接相关"位置",
+            text: `放在"直接相关"位置`,
             correct: true,
             feedback: `Industry Agent：
 "它经营政策支持的项目，位置最近。"
@@ -466,14 +468,14 @@ Industry Agent：
           },
           {
             id: "r2_wrong1",
-            text: "放在"间接相关"位置",
+            text: `放在"间接相关"位置`,
             correct: false,
             feedback: `Industry Agent 摇头：
 "它直接经营政策支持的项目，不是间接受益。"`
           },
           {
             id: "r2_wrong2",
-            text: "放在"关系较弱"位置",
+            text: `放在"关系较弱"位置`,
             correct: false,
             feedback: `Industry Agent 摇头：
 "它拥有六个备案项目，关系不弱。"`
@@ -482,6 +484,7 @@ Industry Agent：
       },
       // 场景三：完成受益关系图 - 霜塔设备
       {
+        id: 3,
         scene: `【霜塔设备】公司卡显示：
 • 生产冷库压缩机
 • 尚未获得新订单
@@ -492,7 +495,7 @@ Industry Agent：
         options: [
           {
             id: "r3_correct",
-            text: "放在"间接相关"位置",
+            text: `放在"间接相关"位置`,
             correct: true,
             feedback: `Industry Agent：
 "项目开始采购后，它才可能获得订单。箭头多走了一步。"
@@ -501,14 +504,14 @@ Industry Agent：
           },
           {
             id: "r3_wrong1",
-            text: "放在"直接相关"位置",
+            text: `放在"直接相关"位置`,
             correct: false,
             feedback: `Industry Agent 摇头：
 "它还没有获得新订单，不是直接受益。"`
           },
           {
             id: "r3_wrong2",
-            text: "放在"关系较弱"位置",
+            text: `放在"关系较弱"位置`,
             correct: false,
             feedback: `Industry Agent 摇头：
 "它的客户包括冷库建设单位，关系不弱。"`
@@ -517,6 +520,7 @@ Industry Agent：
       },
       // 场景三：完成受益关系图 - 鲜达生活
       {
+        id: 4,
         scene: `【鲜达生活】公司卡显示：
 • 经营生鲜购物平台
 • 使用第三方冷库
@@ -535,7 +539,7 @@ Industry Agent：
         options: [
           {
             id: "r4_correct",
-            text: "放在"关系较弱"位置",
+            text: `放在"关系较弱"位置`,
             correct: true,
             feedback: `Industry Agent：
 "名字里有生鲜，不等于拿到补贴。"
@@ -546,14 +550,14 @@ Industry Agent：
           },
           {
             id: "r4_wrong1",
-            text: "放在"直接相关"位置",
+            text: `放在"直接相关"位置`,
             correct: false,
             feedback: `Industry Agent 摇头：
 "它没有自营冷库和备案改造项目。"`
           },
           {
             id: "r4_wrong2",
-            text: "放在"间接相关"位置",
+            text: `放在"间接相关"位置`,
             correct: false,
             feedback: `Industry Agent 摇头：
 "它使用第三方冷库，连间接关系都算不上。"`
@@ -562,6 +566,7 @@ Industry Agent：
       },
       // 场景四：处理投资选择
       {
+        id: 5,
         scene: `【场景四 处理投资选择】
 
 画面回到团队办公室。中央屏幕同时显示三家公司和当日涨幅。
