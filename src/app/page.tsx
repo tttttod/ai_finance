@@ -564,6 +564,8 @@ function ResearchTab({
   watchlist?: WatchlistItem[];
   onResearchComplete?: (name: string) => void;
 }) {
+  const [activeGameLevel, setActiveGameLevel] = useState<number | null>(null);
+  const [unlockingAgent, setUnlockingAgent] = useState<AgentInfo | null>(null);
   const [started, setStarted] = useState(false);
   const [target, setTarget] = useState("");
   const [style, setStyle] = useState<InvestmentStyle>(defaultStyle);
@@ -585,6 +587,10 @@ function ResearchTab({
   useEffect(() => {
     setTraderRoadProgress(loadTraderRoadProgress());
   }, []);
+  const reloadProgress = () => {
+    setTraderRoadProgress({ ...loadTraderRoadProgress() });
+  };
+
 
   // Get or create client ID for rate limiting
   const getClientId = (): string => {
@@ -2385,6 +2391,7 @@ function ProfileTab({ profile, tradeTIResult, onRetakeSurvey, watchlist, onRemov
 
 // ===== 市场冒险局 =====
 function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIResult: TradeTIState | null; onFillResearch: (target: RecommendedTarget) => void; onGoToResearch: () => void }) {
+  const [researchTabGameLevel, setResearchTabGameLevel] = useState<number | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [marketSnapshot, setMarketSnapshot] = useState<MiniMarketSnapshot | null>(null);
   const [snapshotLoading, setSnapshotLoading] = useState(true);
@@ -2654,7 +2661,17 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIR
               setTraderRoadProgress({ ...loadTraderRoadProgress() });
             }}
             onLevelComplete={(levelId) => {
-              setTraderRoadProgress({ ...loadTraderRoadProgress() });
+              const newProgress = loadTraderRoadProgress();
+              setTraderRoadProgress({ ...newProgress });
+              // 触发解锁动画
+              const level = TRADER_ROAD_LEVELS.find(l => l.id === levelId);
+              if (level && level.unlockAgents.length > 0) {
+                const agentRole = level.unlockAgents[0];
+                const agentInfo = AGENT_TEAM.find(a => a.role === agentRole);
+                if (agentInfo) {
+                  setUnlockingAgent(agentInfo);
+                }
+              }
             }}
           />
         )}
@@ -3049,38 +3066,14 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIR
         }}
       />
 
-      {/* 游戏地图系统 */}
-      {activeGameLevel !== null && (
-        <GameMapPlayer
-          initialLevelId={activeGameLevel}
-          onClose={() => {
-            setActiveGameLevel(null);
-            reloadProgress();
-          }}
-          onLevelComplete={(levelId) => {
-            // 查找该关卡解锁的 Agent 并触发动画
-            const level = TRADER_ROAD_LEVELS.find((l) => l.id === levelId);
-            if (level && level.unlockAgents.length > 0) {
-              const agentRole = level.unlockAgents[0];
-              const agent = AGENT_TEAM.find((a) => a.role === agentRole);
-              if (agent) {
-                setUnlockingAgent(agent);
-              }
-            }
-            reloadProgress();
-          }}
-        />
-      )}
-
       {/* Agent 解锁动画 */}
       {unlockingAgent && (
         <AgentUnlockAnimation
           agent={unlockingAgent}
-          onComplete={() => {
-            setUnlockingAgent(null);
-          }}
+          onComplete={() => setUnlockingAgent(null)}
         />
       )}
+
     </div>
   );
 }
