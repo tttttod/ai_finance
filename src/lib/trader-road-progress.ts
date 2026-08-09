@@ -46,6 +46,12 @@ export interface TraderRoadProgress {
   unlockedAgents: TraderRoadAgentId[];
   levelFailCounts: Record<string, number>;
   failureRecords: TraderRoadFailureRecord[];
+  /** 炒币 — 答题/学习奖励货币 */
+  coins: number;
+  /** 已学习的学习卡片ID */
+  learnedCards: number[];
+  /** 已答对的题目ID */
+  correctQuizIds: number[];
   updatedAt: string;
 }
 
@@ -136,6 +142,9 @@ export function getDefaultTraderRoadProgress(): TraderRoadProgress {
     unlockedAgents: [],
     levelFailCounts: {},
     failureRecords: [],
+    coins: 0,
+    learnedCards: [],
+    correctQuizIds: [],
     updatedAt: new Date().toISOString(),
   };
 }
@@ -195,6 +204,21 @@ export function normalizeTraderRoadProgress(raw: unknown): TraderRoadProgress {
   // updatedAt
   const updatedAt = typeof obj.updatedAt === "string" ? obj.updatedAt : new Date().toISOString();
 
+  // coins
+  const coins = typeof obj.coins === "number" ? Math.max(0, Math.floor(obj.coins)) : 0;
+
+  // learnedCards
+  const rawLearned = Array.isArray(obj.learnedCards)
+    ? obj.learnedCards.filter((v): v is number => typeof v === "number")
+    : [];
+  const learnedCards = [...new Set(rawLearned)];
+
+  // correctQuizIds
+  const rawCorrect = Array.isArray(obj.correctQuizIds)
+    ? obj.correctQuizIds.filter((v): v is number => typeof v === "number")
+    : [];
+  const correctQuizIds = [...new Set(rawCorrect)];
+
   return {
     version: 1,
     currentLevel,
@@ -202,6 +226,9 @@ export function normalizeTraderRoadProgress(raw: unknown): TraderRoadProgress {
     unlockedAgents,
     levelFailCounts,
     failureRecords,
+    coins,
+    learnedCards,
+    correctQuizIds,
     updatedAt,
   };
 }
@@ -421,10 +448,56 @@ export function useTraderRoadProgress() {
     setProgress(getDefaultTraderRoadProgress());
   }, []);
 
+  /** 增加炒币 */
+  const addCoins = useCallback((amount: number) => {
+    setProgress((prev: TraderRoadProgress) => {
+      const updated: TraderRoadProgress = {
+        ...prev,
+        coins: prev.coins + Math.max(0, amount),
+        updatedAt: new Date().toISOString(),
+      };
+      saveTraderRoadProgress(updated);
+      return updated;
+    });
+  }, []);
+
+  /** 标记学习卡片为已学 */
+  const markCardLearned = useCallback((cardId: number) => {
+    setProgress((prev: TraderRoadProgress) => {
+      if (prev.learnedCards.includes(cardId)) return prev;
+      const updated: TraderRoadProgress = {
+        ...prev,
+        learnedCards: [...prev.learnedCards, cardId],
+        coins: prev.coins + 5, // 学一张卡 +5 炒币
+        updatedAt: new Date().toISOString(),
+      };
+      saveTraderRoadProgress(updated);
+      return updated;
+    });
+  }, []);
+
+  /** 记录答对的题目 */
+  const markQuizCorrect = useCallback((quizId: number) => {
+    setProgress((prev: TraderRoadProgress) => {
+      if (prev.correctQuizIds.includes(quizId)) return prev;
+      const updated: TraderRoadProgress = {
+        ...prev,
+        correctQuizIds: [...prev.correctQuizIds, quizId],
+        coins: prev.coins + 10, // 答对一题 +10 炒币
+        updatedAt: new Date().toISOString(),
+      };
+      saveTraderRoadProgress(updated);
+      return updated;
+    });
+  }, []);
+
   return {
     progress,
     completeLevel,
     isLevelUnlocked,
     resetProgress,
+    addCoins,
+    markCardLearned,
+    markQuizCorrect,
   };
 }

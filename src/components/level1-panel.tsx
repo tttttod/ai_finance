@@ -32,6 +32,9 @@ const DEFAULT_PROGRESS: TraderRoadProgress = {
   unlockedAgents: [],
   levelFailCounts: {},
   failureRecords: [],
+  coins: 0,
+  learnedCards: [],
+  correctQuizIds: [],
   updatedAt: new Date().toISOString(),
 };
 

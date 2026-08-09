@@ -11,6 +11,8 @@ import { DialogueGame } from "./DialogueGame";
 import { QuizGame } from "./QuizGame";
 import { BrainGame } from "./BrainGame";
 import { MiniGame } from "./MiniGame";
+import { LearningCards } from "./LearningCards";
+import { QuizChoice } from "./QuizChoice";
 import {
   loadTraderRoadProgress,
   completeTraderRoadLevel,
@@ -90,6 +92,50 @@ export function GameMapPlayer({ levelId, isOpen, onClose, onLevelComplete }: Gam
       case "minigame":
         if (!miniGameData) return <div className="p-6 text-center text-[#64748B]">关卡数据加载中...</div>;
         return <MiniGame key={`${levelId}-${gamePhase}`} data={miniGameData} onComplete={handleGameComplete} />;
+      case "learning":
+        return (
+          <LearningCards
+            key={`${levelId}-${gamePhase}`}
+            cardIndices={levelConfig.learningCardIndices || []}
+            learnedCards={progress.learnedCards}
+            onCardLearned={(cardId) => {
+              const updated: TraderRoadProgress = {
+                ...progress,
+                learnedCards: [...progress.learnedCards, cardId],
+                coins: progress.coins + 5,
+                updatedAt: new Date().toISOString(),
+              };
+              if (typeof window !== "undefined") {
+                try { localStorage.setItem("tradeti_game_progress", JSON.stringify(updated)); } catch {}
+              }
+              setProgress(updated);
+            }}
+            onComplete={() => handleGameComplete(true)}
+            onClose={handleClose}
+          />
+        );
+      case "quiz_choice":
+        return (
+          <QuizChoice
+            key={`${levelId}-${gamePhase}`}
+            questionIndices={levelConfig.quizQuestionIndices || []}
+            correctQuizIds={progress.correctQuizIds}
+            onQuizCorrect={(quizId) => {
+              const updated: TraderRoadProgress = {
+                ...progress,
+                correctQuizIds: [...progress.correctQuizIds, quizId],
+                coins: progress.coins + 10,
+                updatedAt: new Date().toISOString(),
+              };
+              if (typeof window !== "undefined") {
+                try { localStorage.setItem("tradeti_game_progress", JSON.stringify(updated)); } catch {}
+              }
+              setProgress(updated);
+            }}
+            onComplete={() => handleGameComplete(true)}
+            onClose={handleClose}
+          />
+        );
       default:
         return <div className="p-6 text-center text-[#64748B]">关卡类型未知</div>;
     }
@@ -100,6 +146,8 @@ export function GameMapPlayer({ levelId, isOpen, onClose, onLevelComplete }: Gam
     quiz: { label: "知识翻牌", color: "text-[#8B5CF6]", bg: "bg-violet-50" },
     brain: { label: "脑力挑战", color: "text-[#0D9488]", bg: "bg-teal-50" },
     minigame: { label: "快速反应", color: "text-[#D97706]", bg: "bg-amber-50" },
+    learning: { label: "知识学习", color: "text-[#059669]", bg: "bg-emerald-50" },
+    quiz_choice: { label: "答题闯关", color: "text-[#EC4899]", bg: "bg-pink-50" },
   };
 
   const typeInfo = gameTypeLabels[levelConfig.type] || gameTypeLabels.dialogue;
