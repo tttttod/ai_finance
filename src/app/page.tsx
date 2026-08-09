@@ -57,10 +57,13 @@ import {
   getDefaultTraderRoadProgress,
   isTraderRoadAgentUnlocked,
   getTraderRoadLevelsWithStatus,
+  TRADER_ROAD_LEVELS,
 } from "@/lib/trader-road-progress";
 import type { TraderRoadProgress } from "@/lib/trader-road-progress";
+import type { AgentInfo } from "@/lib/mini-types";
 import AgentAvatar from "@/components/agent-avatar";
 import AgentTeamCard from "@/components/agent-team-card";
+import AgentUnlockAnimation from "@/components/agent-unlock-animation";
 
 type TabId = "market" | "research" | "review" | "profile";
 
@@ -794,50 +797,100 @@ function ResearchTab({
           )}
         </div>
 
-        {/* 金融华尔界 — 地图入口圆钮 */}
-        <div className="bg-white rounded-3xl p-4 border border-[#E2E8F0] shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-[#1E293B]">金融华尔界</h3>
-            <span className="text-[10px] font-bold text-[#64748B] bg-[#F1F5F9] px-2 py-0.5 rounded-full">
-              {traderRoadProgress.completedLevels.length}/10 关
-            </span>
+      {/* 3. 交易员的正确之路 — Agent 解锁地图 */}
+      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-xl border border-slate-700/50 shadow-sm overflow-hidden">
+        <div className="p-3 border-b border-slate-700/50">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-sm">🗺️</span>
+            <span className="text-sm font-bold text-white">交易员的正确之路</span>
+            <span className="text-[10px] text-slate-400 ml-auto">补完你的投研 Agent 链路</span>
           </div>
-          <p className="text-[11px] text-[#64748B] mb-4">完成地图关卡，解锁 Agent 研究员</p>
-          <div className="flex flex-col items-center">
+          <p className="text-[10px] text-slate-400 mt-1">
+            10 个关卡，解锁你的投研 Agent 团队
+          </p>
+        </div>
+        <div className="p-3">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            {getTraderRoadLevelsWithStatus(traderRoadProgress).map((node, idx) => {
+              const nodeIcons = ["🎯", "📊", "🌪️", "📜", "📑", "⚖️", "📈", "🔥", "🏛️", "🛡️"];
+              const icon = nodeIcons[node.id - 1] || "🎯";
+              const status = node.status;
+              const isCompleted = status === "completed";
+              const isAvailable = status === "available";
+              const isComingSoon = status === "coming_soon";
+              const isAccessible = isCompleted || isAvailable;
+              return (
+                <div key={node.id} className="flex items-center flex-shrink-0">
+                  <button
+                    onClick={() => {
+                      if (isAccessible) {
+                        setActiveGameLevel(node.id);
+                      } else if (isComingSoon) {
+                        alert(`${node.title} — 即将开放，先完成当前关卡`);
+                      } else {
+                        alert("先完成前置关卡。");
+                      }
+                    }}
+                    className={`relative flex flex-col items-center justify-center w-16 h-16 rounded-xl border-2 transition-all ${
+                      isCompleted
+                        ? "bg-emerald-500/20 border-emerald-400/60 shadow-[0_0_12px_rgba(16,185,129,0.4)] cursor-pointer hover:scale-105"
+                        : isAvailable
+                        ? "bg-blue-500/20 border-blue-400/60 shadow-[0_0_12px_rgba(59,130,246,0.4)] cursor-pointer hover:scale-105"
+                        : "bg-slate-700/30 border-slate-600/40 opacity-50 cursor-not-allowed"
+                    }`}
+                  >
+                    <span className="text-xl mb-0.5">{icon}</span>
+                    <span className={`text-[8px] font-bold leading-tight text-center ${
+                      isCompleted ? "text-emerald-200" : isAvailable ? "text-blue-200" : "text-slate-500"
+                    }`}>
+                      {node.title}
+                    </span>
+                    {isCompleted && (
+                      <span className="absolute -top-1 -right-1 text-[10px]">✅</span>
+                    )}
+                    {!isCompleted && !isAvailable && (
+                      <span className="absolute -top-1 -right-1 text-[10px]">🔒</span>
+                    )}
+                  </button>
+                  {idx < 9 && (
+                    <div className={`w-3 h-0.5 mx-0.5 ${
+                      isCompleted ? "bg-emerald-400/60" : isAvailable ? "bg-blue-400/60" : "bg-slate-600/40"
+                    }`} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {/* 开发调试按钮 */}
+          <div className="flex gap-2 mt-2 pt-2 border-t border-slate-700/30">
             <button
-              onClick={() => setResearchTabGameLevel(1)}
-              className="relative w-20 h-20 rounded-full bg-gradient-to-br from-[#3B82F6] to-[#8B5CF6] shadow-lg shadow-[#3B82F6]/30 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+              onClick={() => {
+                // 先触发解锁动画，再更新进度
+                const leadAgent = AGENT_TEAM.find((a) => a.role === "lead");
+                if (leadAgent) {
+                  setUnlockingAgent(leadAgent);
+                }
+                completeTraderRoadLevel(1);
+                reloadProgress();
+              }}
+              className="flex-1 py-1.5 text-[9px] font-bold text-blue-300 bg-blue-500/10 border border-blue-500/30 rounded-lg hover:bg-blue-500/20 transition-colors"
             >
-              <span className="text-3xl">🗺️</span>
-              {traderRoadProgress.completedLevels.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-[#059669] text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">
-                  {traderRoadProgress.completedLevels.length}
-                </span>
-              )}
+              测试：解锁 Lead Agent
             </button>
-            <span className="mt-2 text-xs font-semibold text-[#3B82F6]">进入地图</span>
-          </div>
-          <div className="mt-3 flex items-center justify-between px-1">
-            <span className="text-[10px] text-[#64748B]">学习知识、答对题目 earn 炒币</span>
-            <span className="text-xs font-bold text-[#D97706]">
-              🪙 {traderRoadProgress.coins}
-            </span>
+            <button
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  localStorage.removeItem("tradeti_game_progress");
+                }
+                setTraderRoadProgress(getDefaultTraderRoadProgress());
+              }}
+              className="flex-1 py-1.5 text-[9px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-lg hover:bg-amber-500/20 transition-colors"
+            >
+              测试：重置交易之路进度
+            </button>
           </div>
         </div>
-
-        {/* 游戏地图弹窗 */}
-        {researchTabGameLevel !== null && (
-          <GameMapPlayer
-            initialLevelId={researchTabGameLevel}
-            onClose={() => {
-              setResearchTabGameLevel(null);
-              setTraderRoadProgress({ ...loadTraderRoadProgress() });
-            }}
-            onLevelComplete={(levelId) => {
-              setTraderRoadProgress({ ...loadTraderRoadProgress() });
-            }}
-          />
-        )}
+      </div>
       </div>
     );
   }
@@ -2351,6 +2404,9 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIR
     setTraderRoadProgress(loadTraderRoadProgress());
   };
 
+  // 解锁动画状态
+  const [unlockingAgent, setUnlockingAgent] = useState<AgentInfo | null>(null);
+
   // 人格身份
   const personalityId = tradeTIResult?.result_type || null;
 
@@ -2558,95 +2614,50 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIR
         {snapshotError && <p className="text-[10px] text-amber-500 mt-1">{snapshotError}</p>}
       </div>
 
-      {/* 3. 交易员的正确之路 — Agent 解锁地图 */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-xl border border-slate-700/50 shadow-sm overflow-hidden">
-        <div className="p-3 border-b border-slate-700/50">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm">🗺️</span>
-            <span className="text-sm font-bold text-white">交易员的正确之路</span>
-            <span className="text-[10px] text-slate-400 ml-auto">补完你的投研 Agent 链路</span>
+        {/* 金融华尔界 — 地图入口圆钮 */}
+        <div className="bg-white rounded-3xl p-4 border border-[#E2E8F0] shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-[#1E293B]">金融华尔界</h3>
+            <span className="text-[10px] font-bold text-[#64748B] bg-[#F1F5F9] px-2 py-0.5 rounded-full">
+              {traderRoadProgress.completedLevels.length}/10 关
+            </span>
           </div>
-          <p className="text-[10px] text-slate-400 mt-1">
-            10 个关卡，解锁你的投研 Agent 团队
-          </p>
-        </div>
-        <div className="p-3">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {getTraderRoadLevelsWithStatus(traderRoadProgress).map((node, idx) => {
-              const nodeIcons = ["🎯", "📊", "🌪️", "📜", "📑", "⚖️", "📈", "🔥", "🏛️", "🛡️"];
-              const icon = nodeIcons[node.id - 1] || "🎯";
-              const status = node.status;
-              const isCompleted = status === "completed";
-              const isAvailable = status === "available";
-              const isComingSoon = status === "coming_soon";
-              const isAccessible = isCompleted || isAvailable;
-              return (
-                <div key={node.id} className="flex items-center flex-shrink-0">
-                  <button
-                    onClick={() => {
-                      if (isAccessible) {
-                        setActiveGameLevel(node.id);
-                      } else if (isComingSoon) {
-                        alert(`${node.title} — 即将开放，先完成当前关卡`);
-                      } else {
-                        alert("先完成前置关卡。");
-                      }
-                    }}
-                    className={`relative flex flex-col items-center justify-center w-16 h-16 rounded-xl border-2 transition-all ${
-                      isCompleted
-                        ? "bg-emerald-500/20 border-emerald-400/60 shadow-[0_0_12px_rgba(16,185,129,0.4)] cursor-pointer hover:scale-105"
-                        : isAvailable
-                        ? "bg-blue-500/20 border-blue-400/60 shadow-[0_0_12px_rgba(59,130,246,0.4)] cursor-pointer hover:scale-105"
-                        : "bg-slate-700/30 border-slate-600/40 opacity-50 cursor-not-allowed"
-                    }`}
-                  >
-                    <span className="text-xl mb-0.5">{icon}</span>
-                    <span className={`text-[8px] font-bold leading-tight text-center ${
-                      isCompleted ? "text-emerald-200" : isAvailable ? "text-blue-200" : "text-slate-500"
-                    }`}>
-                      {node.title}
-                    </span>
-                    {isCompleted && (
-                      <span className="absolute -top-1 -right-1 text-[10px]">✅</span>
-                    )}
-                    {!isCompleted && !isAvailable && (
-                      <span className="absolute -top-1 -right-1 text-[10px]">🔒</span>
-                    )}
-                  </button>
-                  {idx < 9 && (
-                    <div className={`w-3 h-0.5 mx-0.5 ${
-                      isCompleted ? "bg-emerald-400/60" : isAvailable ? "bg-blue-400/60" : "bg-slate-600/40"
-                    }`} />
-                  )}
-                </div>
-              );
-            })}
+          <p className="text-[11px] text-[#64748B] mb-4">完成地图关卡，解锁 Agent 研究员</p>
+          <div className="flex flex-col items-center">
+            <button
+              onClick={() => setResearchTabGameLevel(1)}
+              className="relative w-20 h-20 rounded-full bg-gradient-to-br from-[#3B82F6] to-[#8B5CF6] shadow-lg shadow-[#3B82F6]/30 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+            >
+              <span className="text-3xl">🗺️</span>
+              {traderRoadProgress.completedLevels.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-[#059669] text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">
+                  {traderRoadProgress.completedLevels.length}
+                </span>
+              )}
+            </button>
+            <span className="mt-2 text-xs font-semibold text-[#3B82F6]">进入地图</span>
           </div>
-          {/* 开发调试按钮 */}
-          <div className="flex gap-2 mt-2 pt-2 border-t border-slate-700/30">
-            <button
-              onClick={() => {
-                completeTraderRoadLevel(1);
-                reloadProgress();
-              }}
-              className="flex-1 py-1.5 text-[9px] font-bold text-blue-300 bg-blue-500/10 border border-blue-500/30 rounded-lg hover:bg-blue-500/20 transition-colors"
-            >
-              测试：解锁 Lead Agent
-            </button>
-            <button
-              onClick={() => {
-                if (typeof window !== "undefined") {
-                  localStorage.removeItem("tradeti_game_progress");
-                }
-                setTraderRoadProgress(getDefaultTraderRoadProgress());
-              }}
-              className="flex-1 py-1.5 text-[9px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-lg hover:bg-amber-500/20 transition-colors"
-            >
-              测试：重置交易之路进度
-            </button>
+          <div className="mt-3 flex items-center justify-between px-1">
+            <span className="text-[10px] text-[#64748B]">学习知识、答对题目 earn 炒币</span>
+            <span className="text-xs font-bold text-[#D97706]">
+              🪙 {traderRoadProgress.coins}
+            </span>
           </div>
         </div>
-      </div>
+
+        {/* 游戏地图弹窗 */}
+        {researchTabGameLevel !== null && (
+          <GameMapPlayer
+            initialLevelId={researchTabGameLevel}
+            onClose={() => {
+              setResearchTabGameLevel(null);
+              setTraderRoadProgress({ ...loadTraderRoadProgress() });
+            }}
+            onLevelComplete={(levelId) => {
+              setTraderRoadProgress({ ...loadTraderRoadProgress() });
+            }}
+          />
+        )}
 
       {/* 4. 主线任务 — 人格成长故事线 */}
       <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
@@ -3046,8 +3057,27 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch }: { tradeTIR
             setActiveGameLevel(null);
             reloadProgress();
           }}
-          onLevelComplete={() => {
+          onLevelComplete={(levelId) => {
+            // 查找该关卡解锁的 Agent 并触发动画
+            const level = TRADER_ROAD_LEVELS.find((l) => l.id === levelId);
+            if (level && level.unlockAgents.length > 0) {
+              const agentRole = level.unlockAgents[0];
+              const agent = AGENT_TEAM.find((a) => a.role === agentRole);
+              if (agent) {
+                setUnlockingAgent(agent);
+              }
+            }
             reloadProgress();
+          }}
+        />
+      )}
+
+      {/* Agent 解锁动画 */}
+      {unlockingAgent && (
+        <AgentUnlockAnimation
+          agent={unlockingAgent}
+          onComplete={() => {
+            setUnlockingAgent(null);
           }}
         />
       )}
