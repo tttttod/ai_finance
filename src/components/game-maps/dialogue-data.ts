@@ -354,41 +354,320 @@ export const DIALOGUE_DATA: Record<number, DialogueLevelData> = {
       "账户中的亏损数字快速扩大。\n\nLead Agent：\n「昨天那次上涨，让我以为风暴已经结束了。」\n\nData Agent：\n「仓位增加后，今天的损失也跟着增加。」\n\nMarket Agent：\n「你判断了明天的涨跌，却忘了自己还站在风暴里。」\n\n结局：「逆风开满帆」\n\n玩家可以返回制定行动的环节重新选择。",
   },
   4: {
-    opening: "\u4E00\u5C01\u5BC6\u5C01\u653E\u5728\u4F60\u684C\u4E0A\u3002\n\u4FE1\u5C01\u4E0A\u5199\u7740\uFF1A\u201C\u884C\u4E1A\u653F\u7B56\u8C03\u6574\u901A\u77E5\u201D\u3002\n\n\u4F60\u6253\u5F00\u4FE1\u5C01\uFF0C\u91CC\u9762\u53EA\u6709\u4E00\u53E5\u8BDD\uFF1A\n\u201C\u81EA\u4E0B\u6708\u8D77\uFF0C\u65B0\u80FD\u6E90\u8865\u8D34\u9000\u5761\uFF0C\u8BD5\u70B9\u57CE\u5E02\u6269\u5927\u81F3 30 \u4E2A\u3002\u201D\n\n\u884C\u4E1A\u5206\u6790\u5E08\u7AD9\u5728\u65C1\u8FB9\uFF0C\u7B49\u4F60\u7684\u5224\u65AD\u3002",
+    opening: `玩家正在团队办公室看盘，手机弹出政策通知。中央屏幕上的冷链板块快速上涨，鲜达生活接近涨停。
+
+Lead Agent 神情兴奋，身体靠近行情屏幕。
+
+Lead Agent：
+"政策刚发布，冷链板块已经涨了 7%。鲜达生活快涨停了，我们要不要跟上？"
+
+Market Agent 神情平静，双手抱在胸前。
+
+Market Agent：
+"市场已经读完标题，正文读到哪一页还不好说。"
+
+Data Agent 打开政策文件，轻推眼镜。
+
+Data Agent：
+"文件签章有效，发布时间是今天上午九点。原文共有六页，群聊里只转发了第一页。"
+
+Lead Agent 的笑容收住了一些。
+
+Lead Agent：
+"六页？我刚才只看见了'支持冷链发展'。"
+
+办公室侧门打开，里面是一间堆满文件的档案室。
+
+Industry Agent 坐在文件堆后，手中拿着政策原文。他神情平静，抬眼看向玩家。
+
+Industry Agent：
+"标题负责把人叫进来，第四页才告诉你钱准备给谁。"
+
+系统提示：
+进入政策档案室，找出政策真正支持的对象。`,
     nodes: [
+      // 场景二：阅读政策原文
       {
-        id: 1,
-        scene: "\u884C\u4E1A\u5206\u6790\u5E08\u95EE\uFF1A\n\u201C\u8FD9\u6761\u653F\u7B56\u5BF9\u65B0\u80FD\u6E90\u677F\u5757\u662F\u5229\u597D\u8FD8\u662F\u5229\u7A7A\uFF1F\u201D",
+        scene: `【场景二 阅读政策原文】
+
+档案室使用暖黄色灯光，墙上贴着城市地图和行业关系图。中央桌面放着六页政策文件。
+
+Industry Agent 将三段文字推到玩家面前：
+
+• 支持冷链产业发展
+• 开展五座城市试点
+• 补贴完成备案的公共冷库改造项目
+
+系统提问：
+这份政策直接支持什么？`,
         options: [
-          { id: "4-1A", text: "\u5F53\u7136\u5229\u597D\uFF0C\u8BD5\u70B9\u6269\u5927\u610F\u5473\u7740\u66F4\u5927\u5E02\u573A\u3002", correct: false, feedback: "\u201C\u4F60\u53EA\u770B\u5230\u8865\u8D34\u6269\u5927\uFF0C\u6CA1\u770B\u5230\u9000\u5761\u3002\u8FD9\u662F\u5178\u578B\u7684\u2018\u5229\u597D\u5DF2\u51FA\u2019\u4FE1\u53F7\u3002\u201D" },
-          { id: "4-1B", text: "\u5206\u5F00\u770B\uFF1A\u8865\u8D34\u9000\u5761\u662F\u77ED\u671F\u5229\u7A7A\uFF0C\u8BD5\u70B9\u6269\u5927\u662F\u957F\u671F\u5229\u597D\u3002", correct: true, feedback: "\u201C\u4E0D\u9519\u3002\u653F\u7B56\u89E3\u8BFB\u4E0D\u80FD\u53EA\u770B\u4E00\u9762\u3002\u201D" },
-          { id: "4-1C", text: "\u5229\u7A7A\uFF0C\u8865\u8D34\u9000\u5761\u610F\u5473\u7740\u4F01\u4E1A\u5229\u6DA6\u4E0B\u964D\u3002", correct: false, feedback: "\u201C\u4F60\u53EA\u770B\u5230\u9000\u5761\uFF0C\u6CA1\u770B\u5230\u5E02\u573A\u6269\u5BB9\u3002\u201D" },
-          { id: "4-1D", text: "\u6CA1\u5F71\u54CD\uFF0C\u653F\u7B56\u53D8\u5316\u4E0D\u91CD\u8981\u3002", correct: false, feedback: "\u201C\u653F\u7B56\u662F\u884C\u4E1A\u5206\u6790\u7684\u6838\u5FC3\u53D8\u91CF\uFF0C\u4E0D\u53EF\u80FD\u6CA1\u5F71\u54CD\u3002\u201D" },
-        ],
+          {
+            id: "r1_correct",
+            text: "五座城市的备案冷库改造项目",
+            correct: true,
+            feedback: `玩家：
+"政策直接支持五座试点城市中完成备案的公共冷库改造项目。"
+
+Data Agent 微微点头：
+"内容与原文一致。"
+
+Industry Agent 露出轻微笑意：
+"范围找到了。现在看看谁站在这个范围里。"
+
+玩家获得政策标签：
+• 五座试点城市
+• 备案项目
+• 验收后补贴`
+          },
+          {
+            id: "r1_wrong1",
+            text: "所有冷链相关公司",
+            correct: false,
+            feedback: `Lead Agent 神情期待：
+"文件里确实写了支持冷链产业。"
+
+Industry Agent 抬起一侧眉毛：
+"前面是方向，后面才是范围。五座城市和备案项目都被你跳过去了。"`
+          },
+          {
+            id: "r1_wrong2",
+            text: "生鲜购物平台",
+            correct: false,
+            feedback: `Data Agent 指向文件内容：
+"原文没有出现购物平台，也没有提供平台补贴。"
+
+Industry Agent 轻轻敲了一下第四页：
+"名字里有生鲜，和拿到补贴隔着几道门。"`
+          }
+        ]
       },
+      // 场景三：完成受益关系图 - 北港仓储
       {
-        id: 2,
-        scene: "\u201C\u5982\u679C\u4F60\u8981\u7814\u7A76\u8FD9\u6761\u653F\u7B56\u7684\u5F71\u54CD\uFF0C\u7B2C\u4E00\u6B65\u505A\u4EC0\u4E48\uFF1F\u201D",
+        scene: `【场景三 完成受益关系图】
+
+墙上的行业图亮起。中心位置是"公共冷库改造"，周围有三个空位，分别标注"直接相关""间接相关"和"关系较弱"。
+
+【北港仓储】公司卡显示：
+• 在四座试点城市经营冷库
+• 拥有六个备案项目
+• 计划升级制冷设备
+
+Industry Agent：
+"它经营政策支持的项目。应该放在哪个位置？"`,
         options: [
-          { id: "4-2A", text: "\u7ACB\u523B\u4E70\u5165\u65B0\u80FD\u6E90\u9F99\u5934\u3002", correct: false, feedback: "\u201C\u8FD8\u6CA1\u7814\u7A76\u5C31\u4E0B\u5355\uFF0C\u8FD9\u662F\u8D4C\u535A\u3002\u201D" },
-          { id: "4-2B", text: "\u67E5\u770B\u653F\u7B56\u539F\u6587\uFF0C\u5BF9\u6BD4\u5386\u53F2\u7C7B\u4F3C\u653F\u7B56\u7684\u5E02\u573A\u53CD\u5E94\u3002", correct: true, feedback: "\u201C\u5148\u770B\u539F\u6587\uFF0C\u518D\u770B\u5386\u53F2\uFF0C\u6700\u540E\u4E0B\u7ED3\u8BBA\u3002\u201D" },
-          { id: "4-2C", text: "\u95EE\u670B\u53CB\u5708\u91CC\u7684\u5927 V \u600E\u4E48\u770B\u3002", correct: false, feedback: "\u201C\u4F60\u7684\u7814\u7A76\u4E0D\u5E94\u5EFA\u7ACB\u5728\u522B\u4EBA\u89C2\u70B9\u4E0A\u3002\u201D" },
-          { id: "4-2D", text: "\u7B49\u5E02\u573A\u6D88\u5316\u5B8C\u518D\u8BF4\u3002", correct: false, feedback: "\u201C\u88AB\u52A8\u7B49\u5F85\u4E0D\u662F\u7814\u7A76\uFF0C\u662F\u653E\u5F03\u4E3B\u52A8\u6743\u3002\u201D" },
-        ],
+          {
+            id: "r2_correct",
+            text: "放在"直接相关"位置",
+            correct: true,
+            feedback: `Industry Agent：
+"它经营政策支持的项目，位置最近。"
+
+北港仓储被放置在"直接相关"位置。`
+          },
+          {
+            id: "r2_wrong1",
+            text: "放在"间接相关"位置",
+            correct: false,
+            feedback: `Industry Agent 摇头：
+"它直接经营政策支持的项目，不是间接受益。"`
+          },
+          {
+            id: "r2_wrong2",
+            text: "放在"关系较弱"位置",
+            correct: false,
+            feedback: `Industry Agent 摇头：
+"它拥有六个备案项目，关系不弱。"`
+          }
+        ]
       },
+      // 场景三：完成受益关系图 - 霜塔设备
       {
-        id: 3,
-        scene: "\u201C\u4E00\u6761\u653F\u7B56\u51FA\u6765\u540E\uFF0C\u6700\u5BB9\u6613\u72AF\u7684\u9519\u8BEF\u662F\u4EC0\u4E48\uFF1F\u201D",
+        scene: `【霜塔设备】公司卡显示：
+• 生产冷库压缩机
+• 尚未获得新订单
+• 客户包括冷库建设单位
+
+Industry Agent：
+"项目开始采购后，它才可能获得订单。应该放在哪个位置？"`,
         options: [
-          { id: "4-3A", text: "\u628A\u653F\u7B56\u7B49\u540C\u4E8E\u7ED3\u679C\uFF0C\u8BA4\u4E3A\u201C\u653F\u7B56\u51FA\u4E86=\u4E00\u5B9A\u6DA8\u201D\u3002", correct: true, feedback: "\u201C\u6B63\u786E\u3002\u653F\u7B56\u662F\u53D8\u91CF\uFF0C\u4E0D\u662F\u7ED3\u679C\u3002\u5E02\u573A\u5DF2\u5728\u4EF7\u683C\u91CC\u53CD\u6620\u4E86\u9884\u671F\u3002\u201D" },
-          { id: "4-3B", text: "\u53EA\u770B\u653F\u7B56\u6807\u9898\u4E0D\u770B\u539F\u6587\u3002", correct: false, feedback: "\u201C\u8FD9\u4E5F\u662F\u5E38\u89C1\u9519\u8BEF\uFF0C\u4F46\u6700\u6838\u5FC3\u7684\u662F\u628A\u653F\u7B56\u7B49\u540C\u4E8E\u7ED3\u679C\u3002\u201D" },
-          { id: "4-3C", text: "\u53EA\u7814\u7A76\u4E00\u4E2A\u884C\u4E1A\u4E0D\u770B\u5168\u5C40\u3002", correct: false, feedback: "\u201C\u8FD9\u662F\u89C6\u91CE\u95EE\u9898\uFF0C\u4E0D\u662F\u6700\u5BB9\u6613\u72AF\u7684\u9519\u3002\u201D" },
-          { id: "4-3D", text: "\u4E0D\u5173\u6CE8\u653F\u7B56\u53D8\u5316\u3002", correct: false, feedback: "\u201C\u5B8C\u5168\u4E0D\u5173\u6CE8\u662F\u653E\u5F03\uFF0C\u4E0D\u662F\u9519\u8BEF\u3002\u201D" },
-        ],
+          {
+            id: "r3_correct",
+            text: "放在"间接相关"位置",
+            correct: true,
+            feedback: `Industry Agent：
+"项目开始采购后，它才可能获得订单。箭头多走了一步。"
+
+霜塔设备被放置在"间接相关"位置。`
+          },
+          {
+            id: "r3_wrong1",
+            text: "放在"直接相关"位置",
+            correct: false,
+            feedback: `Industry Agent 摇头：
+"它还没有获得新订单，不是直接受益。"`
+          },
+          {
+            id: "r3_wrong2",
+            text: "放在"关系较弱"位置",
+            correct: false,
+            feedback: `Industry Agent 摇头：
+"它的客户包括冷库建设单位，关系不弱。"`
+          }
+        ]
       },
+      // 场景三：完成受益关系图 - 鲜达生活
+      {
+        scene: `【鲜达生活】公司卡显示：
+• 经营生鲜购物平台
+• 使用第三方冷库
+• 没有备案改造项目
+
+Lead Agent 看着鲜达生活的涨停价格，神情困惑。
+
+Lead Agent：
+"它和政策关系最远，今天却涨得最快。"
+
+Market Agent 看向行情屏幕：
+"市场喜欢容易记住的名字。鲜达、冷链，两个词已经够热闹了。"
+
+Industry Agent：
+"股价跑在前面，政策文件仍然留在原地。应该放在哪个位置？"`,
+        options: [
+          {
+            id: "r4_correct",
+            text: "放在"关系较弱"位置",
+            correct: true,
+            feedback: `Industry Agent：
+"名字里有生鲜，不等于拿到补贴。"
+
+鲜达生活被放置在"关系较弱"位置。
+
+玩家完成受益关系图。`
+          },
+          {
+            id: "r4_wrong1",
+            text: "放在"直接相关"位置",
+            correct: false,
+            feedback: `Industry Agent 摇头：
+"它没有自营冷库和备案改造项目。"`
+          },
+          {
+            id: "r4_wrong2",
+            text: "放在"间接相关"位置",
+            correct: false,
+            feedback: `Industry Agent 摇头：
+"它使用第三方冷库，连间接关系都算不上。"`
+          }
+        ]
+      },
+      // 场景四：处理投资选择
+      {
+        scene: `【场景四 处理投资选择】
+
+画面回到团队办公室。中央屏幕同时显示三家公司和当日涨幅。
+
+| 公司 | 当日涨幅 | 当前信息 |
+| 北港仓储 | +2.1% | 六个备案项目，等待地方项目名单 |
+| 霜塔设备 | +5.4% | 暂无新增订单 |
+| 鲜达生活 | +9.8% | 公司没有自营冷库 |
+
+系统提问：
+你准备如何处理这份政策信息？`,
+        options: [
+          {
+            id: "r5_correct",
+            text: "将北港仓储加入研究清单",
+            correct: true,
+            feedback: `玩家：
+"北港仓储处在政策支持范围内，但补贴需要等项目验收。我先记录项目名单和进度。"
+
+Lead Agent 神情有些遗憾：
+"所以这次什么都不买？"
+
+Data Agent：
+"公司与政策关系已经确认，项目收入和财务影响仍需后续检查。"
+
+Market Agent 露出认可神情：
+"市场今天已经给了它一个价格，你还可以给自己一点时间。"
+
+Industry Agent 站起身，将政策关系图收进文件夹。
+"政策告诉你资金可能流向哪里，也告诉你需要等待多久。你读到了完整的句子。"`
+          },
+          {
+            id: "r5_wrong1",
+            text: "追涨鲜达生活",
+            correct: false,
+            feedback: `玩家：
+"它涨得最快，市场肯定认为它最受益。"
+
+Lead Agent 神情兴奋：
+"涨停附近的股票，通常最容易吸引注意。"
+
+Data Agent：
+"公司业务已经核对，它没有自营冷库和备案改造项目。"
+
+Industry Agent 神情失望，合上政策文件。
+"你选择了股价的反应，却放下了刚刚完成的关系图。"
+
+第二天，鲜达生活发布说明：
+公司仓储服务全部由第三方提供，本次政策预计不会直接影响公司经营。
+
+鲜达生活下跌 8%。
+
+结局：「文件还没读完，股价已经读完」`
+          },
+          {
+            id: "r5_wrong2",
+            text: "买入整个冷链板块",
+            correct: false,
+            feedback: `玩家：
+"政策影响范围还在扩大，买一组公司更稳妥。"
+
+Market Agent 眉头轻皱：
+"板块里的公司共享一个名字，收入来源却各不相同。"
+
+Industry Agent 指向关系图：
+"你刚刚把它们放在三个位置，现在又用一个价格判断它们。"
+
+第二天，板块热度下降。关系较弱的公司跌幅明显。
+
+结局：「一张文件买了一篮子名字」`
+          }
+        ]
+      }
     ],
-    goodEnding: "\u884C\u4E1A\u5206\u6790\u5E08\u70B9\u70B9\u5934\uFF1A\n\u201C\u4F60\u80FD\u533A\u5206\u653F\u7B56\u4FE1\u53F7\u548C\u5E02\u573A\u7ED3\u679C\uFF0C\u8FD9\u5F88\u91CD\u8981\u3002\u201D\n\u201C\u6211\u662F\u4F60\u7684 Industry Agent\uFF0C\u4ECE\u73B0\u5728\u8D77\u8DDF\u4F60\u4E00\u8D77\u89E3\u8BFB\u653F\u7B56\u5BC6\u51FD\u3002\u201D\n\n\uD83C\uDFED Industry Agent \u5DF2\u89E3\u9501\uFF01",
-    badEnding: "\u884C\u4E1A\u5206\u6790\u5E08\u6447\u5934\uFF1A\n\u201C\u4F60\u8FD8\u6CA1\u5B66\u4F1A\u8BFB\u61C2\u653F\u7B56\u8BED\u8A00\u3002\u201D\n\u201C\u56DE\u53BB\u7EC3\u4E60\u5206\u6790\u653F\u7B56\u539F\u6587\u5427\u3002\u201D",
+    goodEnding: `档案室的文件柜依次亮起，墙上的政策关系图变成蓝色。Industry Agent 从文件堆后走到玩家面前。
+
+Industry Agent 神情温和，手中拿着整理好的政策文件。
+
+Industry Agent：
+"政策从来不只是一句口号。范围、对象和时间，少看一个，意思都会改变。"
+
+Lead Agent 露出轻松笑容：
+"以后看到政策概念，我会先找文件里的具体对象。"
+
+Data Agent 微微点头：
+"文件真实，范围明确，缺失信息也已经标出。"
+
+Market Agent：
+"等市场开始讲故事时，我们至少知道故事从哪一页开始走样。"
+
+「Industry Agent 已加入队伍」
+
+角色介绍：
+"他会检查政策从哪里来、支持谁、以及什么时候落地。"
+
+玩家解锁技能：「政策地图」
+
+技能可以查看：
+• 政策影响范围
+• 直接与间接受益方向
+• 政策执行条件
+• 可能的落地时间`,
+    badEnding: `文件还在这里。愿意从第一页重读，随时回来。
+
+Industry Agent 恢复平静神情：
+"文件还在这里。愿意从第一页重读，随时回来。"`
   },
   9: {
     opening: "\u5706\u5F62\u8BAE\u4E8B\u5385\uFF0C\u4E24\u65B9\u5BF9\u5750\u3002\n\u5DE6\u8FB9\u662F\u725B\u65B9\u7814\u7A76\u5458\uFF0C\u53F3\u8FB9\u662F\u718A\u65B9\u7814\u7A76\u5458\u3002\n\n\u725B\u65B9\u8BF4\uFF1A\u201C\u6536\u5165\u8FDE\u7EED\u4E09\u5B63\u5EA6\u589E\u957F 30%\uFF0C\u8FD9\u662F\u6210\u957F\u80A1\u3002\u201D\n\u718A\u65B9\u8BF4\uFF1A\u201C\u4F46 PE \u5DF2\u7ECF 80 \u500D\uFF0C\u8FD9\u662F\u6CE1\u6CAB\u3002\u201D\n\n\u4ED6\u4EEC\u540C\u65F6\u770B\u5411\u4F60\uFF1A\u201C\u4F60\u600E\u4E48\u770B\uFF1F\u201D",

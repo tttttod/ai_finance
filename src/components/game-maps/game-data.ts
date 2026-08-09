@@ -23,7 +23,7 @@ export const GAME_MAP_LEVELS: GameMapLevel[] = [
   { id: 1, title: "开户日", subtitle: "Lead Agent", icon: "\u{1F3AF}", type: "dialogue", unlockAgents: ["lead"], color: "#3B82F6", description: "废弃交易大厅里，前基金经理问你：你会不会立刻下单？" },
   { id: 2, title: "数据黑市", subtitle: "Data Agent", icon: "\u{1F4CA}", type: "dialogue", unlockAgents: ["data"], color: "#8B5CF6", description: "地下交易厅里三块屏幕同时亮起，用行情扫描器找出能用于交易的那一张。" },
   { id: 3, title: "市场风暴", subtitle: "Market Agent", icon: "\u{1F32A}\uFE0F", type: "dialogue", unlockAgents: ["market"], color: "#06B6D4", description: "地下交易大厅响起警报，用市场观察仪拉远镜头，判断眼前的下跌来自个股、行业还是整个市场。" },
-  { id: 4, title: "政策密函", subtitle: "Industry Agent", icon: "\u{1F4DC}", type: "learning", unlockAgents: ["industry"], color: "#F59E0B", description: "学习A股交易机制进阶知识卡片", learningCardIndices: Array.from({ length: 10 }, (_, i) => i + 10) },
+  { id: 4, title: "政策密函", subtitle: "Industry Agent", icon: "\u{1F4DC}", type: "dialogue", unlockAgents: ["industry"], color: "#F59E0B", description: "冷链升级政策发布，在档案室里读懂文件，找出政策真正支持的对象。" },
   { id: 5, title: "财报夜审", subtitle: "Fundamental Agent", icon: "\u{1F4D1}", type: "quiz_choice", unlockAgents: ["fundamental"], color: "#10B981", description: "交易规则知识选择题", quizQuestionIndices: Array.from({ length: 10 }, (_, i) => i + 10) },
   { id: 6, title: "价格审判庭", subtitle: "Valuation Agent", icon: "\u2696\uFE0F", type: "learning", unlockAgents: ["valuation"], color: "#EC4899", description: "学习盘面资金与主力逻辑知识卡片", learningCardIndices: Array.from({ length: 10 }, (_, i) => i + 20) },
   { id: 7, title: "K线神谕", subtitle: "Technical Agent", icon: "\u{1F4C8}", type: "quiz_choice", unlockAgents: ["technical"], color: "#F97316", description: "基础概念与估值指标选择题", quizQuestionIndices: Array.from({ length: 10 }, (_, i) => i + 20) },
