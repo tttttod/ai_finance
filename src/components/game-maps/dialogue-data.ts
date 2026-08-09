@@ -2,6 +2,7 @@ import type { DialogueLevelData } from "./game-data";
 
 export const DIALOGUE_DATA: Record<number, DialogueLevelData> = {
   1: {
+    sceneImage: "/dialogue-scene-level1.webp",
     opening:
       "你第一次打开交易软件，手指悬在「买入」按钮上，迟迟不敢落下。\n\n屏幕上的 K 线像心电图一样跳动，每一条都像是在告诉你不同的故事。\n\nLead Agent 的声音从耳机里传来：\n\n「别急着下单。先看看你面前这三条线，它们讲的是同一个故事吗？」",
     nodes: [
