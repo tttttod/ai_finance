@@ -5,6 +5,7 @@ import type { AgentInfo } from "@/lib/mini-types";
 import { AGENT_UNLOCK_META } from "@/lib/mini-types";
 import AgentAvatar from "./agent-avatar";
 import AgentDetailModal from "./agent-detail-modal";
+import AgentUnlockAnimation from "./agent-unlock-animation";
 
 interface AgentTeamCardProps {
   agent: AgentInfo;
@@ -13,6 +14,7 @@ interface AgentTeamCardProps {
 
 export default function AgentTeamCard({ agent, unlocked }: AgentTeamCardProps) {
   const [showModal, setShowModal] = useState(false);
+  const [showUnlockPreview, setShowUnlockPreview] = useState(false);
   const meta = AGENT_UNLOCK_META[agent.role];
 
   // 预加载全身立绘，点击时秒开
@@ -26,7 +28,11 @@ export default function AgentTeamCard({ agent, unlocked }: AgentTeamCardProps) {
   return (
     <>
       <button
-        onClick={() => unlocked && setShowModal(true)}
+        onClick={() => {
+          if (unlocked) {
+            setShowUnlockPreview(true);
+          }
+        }}
         className={`flex items-center gap-2 p-2 rounded-2xl border-2 transition-all text-left w-full ${
           unlocked
             ? "hover:scale-[1.05] shadow-sm cursor-pointer active:scale-[0.98]"
@@ -60,6 +66,17 @@ export default function AgentTeamCard({ agent, unlocked }: AgentTeamCardProps) {
           )}
         </div>
       </button>
+
+      {/* 解锁预览动画 */}
+      {showUnlockPreview && (
+        <AgentUnlockAnimation
+          agent={agent}
+          onComplete={() => {
+            setShowUnlockPreview(false);
+            setShowModal(true);
+          }}
+        />
+      )}
 
       {/* 弹窗 — 仅已解锁可点击 */}
       {unlocked && showModal && (
