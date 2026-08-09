@@ -18,7 +18,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
     const isPublicPath = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
 
-    if (!isAuthenticated && !isPublicPath) {
+    // Check if user chose to skip login
+    const authSkipped = typeof window !== 'undefined' && localStorage.getItem('auth_skipped') === 'true';
+
+    if (!isAuthenticated && !isPublicPath && !authSkipped) {
       router.replace('/login');
     }
   }, [isConfigLoading, isAuthLoading, isAuthenticated, pathname, router]);
@@ -26,24 +29,25 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   // Loading state
   if (isConfigLoading || isAuthLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F5F7]">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#FFF8E1] via-[#FFF3CD] to-white">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm text-[#64748B]">加载中...</span>
+          <div className="w-10 h-10 rounded-full border-3 border-[#FFD93D] border-t-transparent animate-spin" />
+          <span className="text-sm font-bold text-[#64748B]">加载中...</span>
         </div>
       </div>
     );
   }
 
   const isPublicPath = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+  const authSkipped = typeof window !== 'undefined' && localStorage.getItem('auth_skipped') === 'true';
 
-  // Show login page for public paths when not authenticated
-  if (!isAuthenticated && isPublicPath) {
+  // Show login page for public paths when not authenticated (and not skipped)
+  if (!isAuthenticated && isPublicPath && !authSkipped) {
     return <>{children}</>;
   }
 
-  // Show content only if authenticated
-  if (isAuthenticated) {
+  // Show content if authenticated OR if user skipped login
+  if (isAuthenticated || authSkipped) {
     return <>{children}</>;
   }
 

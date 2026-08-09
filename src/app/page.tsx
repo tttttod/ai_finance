@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { WORLD_MAP_PATHS } from "@/lib/world-map-paths";
 import Level1Panel from "@/components/level1-panel";
@@ -1980,6 +1981,8 @@ const STOCK_REPORTS: Record<string, {
 };
 
 function ProfileTab({ profile, tradeTIResult, onRetakeSurvey, watchlist, onRemoveFromWatchlist }: { profile: UserProfileSurvey; tradeTIResult: TradeTIState | null; onRetakeSurvey: () => void; watchlist: WatchlistItem[]; onRemoveFromWatchlist: (code: string) => void }) {
+  const { isAuthenticated, signOut } = useAuth();
+  const router = useRouter();
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -2152,6 +2155,37 @@ function ProfileTab({ profile, tradeTIResult, onRetakeSurvey, watchlist, onRemov
 
   return (
     <div className="p-4 space-y-4">
+      {/* 未登录提示 */}
+      {!isAuthenticated && (
+        <div className="bg-gradient-to-r from-[#FF6B6B] via-[#FFD93D] to-[#4ECDC4] rounded-3xl p-4 shadow-lg">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 text-center">
+            <div className="text-2xl mb-2">👋</div>
+            <h3 className="text-sm font-black text-slate-800 mb-1">你正在以游客模式浏览</h3>
+            <p className="text-xs font-bold text-slate-500 mb-3">登录后享受完整功能，数据云端同步</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  localStorage.removeItem('auth_skipped');
+                  router.push('/login');
+                }}
+                className="flex-1 py-2.5 text-xs font-black bg-gradient-to-r from-[#FF6B6B] via-[#FFD93D] to-[#4ECDC4] text-white rounded-2xl shadow-md transition-all hover:scale-[1.02] active:scale-95"
+              >
+                🔑 去登录
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('auth_skipped');
+                  router.push('/login');
+                }}
+                className="flex-1 py-2.5 text-xs font-black border-2 border-slate-200 text-slate-500 rounded-2xl transition-all hover:border-slate-300 active:scale-95"
+              >
+                🚀 去注册
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 用户信息 - 多巴胺风格 */}
       <div className="bg-white rounded-3xl p-4 border-2 border-[#FFD93D] shadow-md">
         <div className="flex items-center gap-3">
@@ -2431,6 +2465,7 @@ function ProfileAccountSection() {
   const handleSignOut = async () => {
     setSigningOut(true);
     try {
+      localStorage.removeItem('auth_skipped');
       await signOut();
       window.location.href = '/login';
     } finally {

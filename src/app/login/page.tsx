@@ -341,8 +341,19 @@ export default function LoginPage() {
           </div>
         </div>
 
+        {/* Skip Login Button */}
+        <button
+          onClick={() => {
+            localStorage.setItem('auth_skipped', 'true');
+            router.replace('/');
+          }}
+          className="mt-6 w-full py-3 text-sm font-black text-slate-400 border-2 border-dashed border-slate-200 rounded-2xl hover:border-slate-300 hover:text-slate-500 transition-all active:scale-95"
+        >
+          👀 跳过登录，先逛逛
+        </button>
+
         {/* Footer */}
-        <p className="mt-6 text-[10px] font-bold text-slate-300">
+        <p className="mt-4 text-[10px] font-bold text-slate-300 text-center">
           登录即表示同意《市场冒险局用户协议》
         </p>
       </div>
