@@ -42,6 +42,17 @@ src/
 │   └── globals.css               # 全局样式
 ├── components/
 │   ├── ui/                       # shadcn/ui 组件库
+│   ├── game-maps/                # 游戏地图系统（10关关卡）
+│   │   ├── game-data.ts          # 关卡类型定义 + 10关配置
+│   │   ├── dialogue-data.ts      # 对话关卡数据（1/4/9关）
+│   │   ├── quiz-data.ts          # 知识翻牌数据（2/6关）
+│   │   ├── brain-data.ts         # 脑力配对数据（3/8关）
+│   │   ├── minigame-data.ts      # 快速反应数据（5/7/10关）
+│   │   ├── DialogueGame.tsx      # 对话闯关组件
+│   │   ├── QuizGame.tsx          # 知识翻牌组件
+│   │   ├── BrainGame.tsx         # 脑力配对组件
+│   │   ├── MiniGame.tsx          # 快速反应组件
+│   │   └── GameMapPlayer.tsx     # 地图主控制器
 │   ├── ai-chat.tsx               # 全局AI对话浮动组件
 │   ├── news-feed.tsx             # 资讯组件
 │   ├── market-overview.tsx       # 市场概览条
@@ -83,6 +94,14 @@ src/
 
 ### 全局功能
 - **AI 浮动对话** — 右下角浮动按钮，自由对话问答
+
+### 交易员的正确之路 — 游戏地图系统
+- **10 个关卡**，4 种游戏类型：对话闯关 (dialogue)、知识翻牌 (quiz)、脑力配对 (brain)、快速反应 (minigame)
+- 关卡数据集中在 `src/components/game-maps/` 目录
+- 进度通过 `src/lib/trader-road-progress.ts` 管理（localStorage，SSR 安全）
+- 每关完成后解锁对应 Agent，下一关自动解锁
+- `GameMapPlayer.tsx` 是统一入口，根据关卡类型分发到对应游戏组件
+- 扩展新关卡：在 `game-data.ts` 的 `GAME_MAP_LEVELS` 添加配置，在对应 data 文件添加内容即可
 
 ## 数据说明
 
