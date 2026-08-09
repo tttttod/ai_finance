@@ -21,7 +21,7 @@ export interface GameMapLevel {
 
 export const GAME_MAP_LEVELS: GameMapLevel[] = [
   { id: 1, title: "开户日", subtitle: "Lead Agent", icon: "\u{1F3AF}", type: "dialogue", unlockAgents: ["lead"], color: "#3B82F6", description: "废弃交易大厅里，前基金经理问你：你会不会立刻下单？" },
-  { id: 2, title: "数据黑市", subtitle: "Data Agent", icon: "\u{1F4CA}", type: "learning", unlockAgents: ["data"], color: "#8B5CF6", description: "学习估值与基本面进阶知识卡片", learningCardIndices: Array.from({ length: 10 }, (_, i) => i) },
+  { id: 2, title: "数据黑市", subtitle: "Data Agent", icon: "\u{1F4CA}", type: "dialogue", unlockAgents: ["data"], color: "#8B5CF6", description: "同一只股票三张不同的 K 线图，找出能用于交易的那一张。" },
   { id: 3, title: "市场风暴", subtitle: "Market Agent", icon: "\u{1F32A}\uFE0F", type: "quiz_choice", unlockAgents: ["market"], color: "#06B6D4", description: "股票入门知识选择题测试", quizQuestionIndices: Array.from({ length: 10 }, (_, i) => i) },
   { id: 4, title: "政策密函", subtitle: "Industry Agent", icon: "\u{1F4DC}", type: "learning", unlockAgents: ["industry"], color: "#F59E0B", description: "学习A股交易机制进阶知识卡片", learningCardIndices: Array.from({ length: 10 }, (_, i) => i + 10) },
   { id: 5, title: "财报夜审", subtitle: "Fundamental Agent", icon: "\u{1F4D1}", type: "quiz_choice", unlockAgents: ["fundamental"], color: "#10B981", description: "交易规则知识选择题", quizQuestionIndices: Array.from({ length: 10 }, (_, i) => i + 10) },

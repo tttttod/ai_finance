@@ -7,6 +7,48 @@ export const DIALOGUE_DATA: Record<number, DialogueLevelData> = {
     goodEnding: "欢迎进入市场冒险局！\n\n🎯 Lead Agent 已解锁！",
     badEnding: "",
   },
+  2: {
+    opening: "你准备进入第一场 K 线交易，却发现同一只股票——岚海科技——出现了三张走势完全不同的图。\n\nData Agent 坐在行情修复台前，抬头看你：\n\n「先别急着下单。这三张图里，只有一张能用于交易。找出它。」\n\n背景：虚构股票「岚海科技」昨天收盘价为 30 元。公司今天执行每十股转增五股，除权参考价变为 20 元。",
+    nodes: [
+      {
+        id: 1,
+        scene: "【行情 A：断崖图】\n\n• 昨日收盘价：30 元\n• 今日开盘价：20.20 元\n• 图表显示跌幅：32.7%\n• 更新时间：今日 15 点\n• 复权方式：未复权\n\nK 线上出现一根巨大的阴线。\n\nLead Agent：\n「一天跌掉三成，这根线看着像公司出了大事。」",
+        options: [
+          { id: "a1", text: "检查复权方式——把「每十股转增五股」拖到缺口处", correct: true, feedback: "K 线重新计算，所谓暴跌变成上涨 1%。\n\nData Agent：\n「股价变低了，持股数量同时增加。图表忘了处理这件事。」\n\nLead Agent：\n「原来这根吓人的阴线，是数据画出来的。」\n\n行情 A 获得标签：「复权错误」" },
+          { id: "a2", text: "出现这么大的阴线，准备卖出", correct: false, feedback: "Data Agent 皱眉：\n「你还没检查复权方式，就要交出持仓？」\n\nLead Agent：\n「图表吓你一下，你就把持仓交出去了？」" },
+          { id: "a3", text: "忽略这根阴线，继续看下一张图", correct: false, feedback: "Data Agent 摇头：\n「不弄清楚原因就跳过？万一这是真的暴跌呢？」" },
+        ],
+      },
+      {
+        id: 2,
+        scene: "【行情 B：完整图】\n\n• 昨日复权价格：20 元\n• 今日开盘价：20.20 元\n• 今日收盘价：20.80 元\n• 更新时间：今日 15 点\n• 成交量：完整\n• 停牌与除权记录：完整\n\n这张图显示股票上涨 4%，成交量温和增加。",
+        options: [
+          { id: "b1", text: "时间对齐，除权已处理，成交量完整——可用于交易", correct: true, feedback: "Data Agent 点头：\n「时间对齐，除权已经处理，价格和成交量也能互相核对。」\n\n行情 B 获得标签：「可用于交易」" },
+          { id: "b2", text: "涨幅太小，不值得关注", correct: false, feedback: "Data Agent 摇头：\n「涨幅大小不是重点。重点是数据是否可靠。」" },
+        ],
+      },
+      {
+        id: 3,
+        scene: "【行情 C：突破图】\n\n• 当前价格：21.60 元\n• 图表显示涨幅：8%\n• 更新时间：今日 14 点 50 分\n• 14 点 50 分后的成交量：空白\n• 收盘价格：系统自动估算\n\nK 线显示价格在收盘前突然突破。",
+        options: [
+          { id: "c1", text: "检查最后十分钟——把「行情延迟十分钟」拖到末尾 K 线上", correct: true, feedback: "最后一根 K 线随即消失。\n\nLead Agent：\n「我刚才已经开始想象明天继续上涨了。」\n\nData Agent：\n「市场还在走，图表替它写了结局。」\n\n行情 C 获得标签：「数据延迟」" },
+          { id: "c2", text: "突破信号明确，准备追涨", correct: false, feedback: "Data Agent 拦住你：\n「最后十分钟的数据还没传回来，这根突破线来自系统估算。」\n\nLead Agent：\n「价格还没走完，你已经替它庆祝了。」" },
+          { id: "c3", text: "忽略延迟问题，直接采用", correct: false, feedback: "Data Agent 摇头：\n「用不完整的数据做决策，和闭着眼睛过马路没区别。」" },
+        ],
+      },
+      {
+        id: 4,
+        scene: "三张图摆在面前。\n\n• 行情 A：「复权错误」— 所谓暴跌是送股记录\n• 行情 B：「可用于交易」— 时间对齐，数据完整\n• 行情 C：「数据延迟」— 最后十分钟是系统估算\n\nData Agent：\n「现在，选一张图用于交易。」",
+        options: [
+          { id: "s1", text: "选择行情 B — 处理了除权，更新时间到收盘，成交量完整", correct: true, feedback: "Data Agent 微微一笑：\n「现在你看到的，才是同一把尺子量出来的价格。」\n\nLead Agent：\n「以后看见奇怪的 K 线，我得先问问图表做过什么。」" },
+          { id: "s2", text: "选择行情 A — 出现大阴线，准备卖出", correct: false, feedback: "Data Agent：\n「你交易的是一次送股记录。」\n\nLead Agent：\n「图表吓你一下，你就把持仓交出去了。」\n\n——结局：「虚假暴跌」——" },
+          { id: "s3", text: "选择行情 C — 突破信号明确，准备追涨", correct: false, feedback: "Data Agent：\n「最后十分钟的数据还没传回来，这根突破线来自系统估算。」\n\nLead Agent：\n「价格还没走完，你已经替它庆祝了。」\n\n——结局：「幽灵突破」——" },
+        ],
+      },
+    ],
+    goodEnding: "Data Agent 离开修复台，正式加入队伍。\n\n你解锁了技能「行情校验」：\n• K 线复权状态\n• 行情更新时间\n• 成交量缺失\n• 停牌与除权标记\n\n下一关进入 K 线交易。",
+    badEnding: "你带着错误行情进入交易。\n\nData Agent 摇头：\n「三张图里有一张是对的，你没选到它。」\n\nLead Agent：\n「别灰心，下次先看数据再决策。」",
+  },
   4: {
     opening: "\u4E00\u5C01\u5BC6\u5C01\u653E\u5728\u4F60\u684C\u4E0A\u3002\n\u4FE1\u5C01\u4E0A\u5199\u7740\uFF1A\u201C\u884C\u4E1A\u653F\u7B56\u8C03\u6574\u901A\u77E5\u201D\u3002\n\n\u4F60\u6253\u5F00\u4FE1\u5C01\uFF0C\u91CC\u9762\u53EA\u6709\u4E00\u53E5\u8BDD\uFF1A\n\u201C\u81EA\u4E0B\u6708\u8D77\uFF0C\u65B0\u80FD\u6E90\u8865\u8D34\u9000\u5761\uFF0C\u8BD5\u70B9\u57CE\u5E02\u6269\u5927\u81F3 30 \u4E2A\u3002\u201D\n\n\u884C\u4E1A\u5206\u6790\u5E08\u7AD9\u5728\u65C1\u8FB9\uFF0C\u7B49\u4F60\u7684\u5224\u65AD\u3002",
     nodes: [
