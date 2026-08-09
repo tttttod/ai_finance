@@ -43,12 +43,15 @@ export default function AgentAvatar({ agent, unlocked, size = "sm" }: AgentAvata
       }}
     >
       {showImg ? (
-        <img
-          src={src}
-          alt={agent.name}
-          onError={() => setImgError(true)}
-          className="object-cover w-full h-full"
-        />
+        <picture>
+          <source srcSet={src} type="image/webp" />
+          <img
+            src={src.replace(/\.webp$/, ".png")}
+            alt={agent.name}
+            onError={() => setImgError(true)}
+            className="object-cover w-full h-full"
+          />
+        </picture>
       ) : (
         <span style={{ fontSize: px * 0.5 }}>{agent.icon}</span>
       )}

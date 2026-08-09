@@ -95,12 +95,16 @@ export default function AgentDetailModal({ agent, unlocked, onClose }: AgentDeta
           )}
 
           {loaded ? (
-            <img
-              src={imageSrc}
-              alt={agent.name}
-              className="w-full h-auto max-h-[70vh] object-contain animate-in fade-in slide-in-from-bottom-4 duration-500"
-              style={{ imageRendering: "auto" }}
-            />
+            <picture>
+              <source srcSet={imageSrc} type="image/webp" />
+              <img
+                src={imageSrc.replace(/\.webp$/, ".png")}
+                alt={agent.name}
+                fetchPriority="high"
+                className="w-full h-auto max-h-[70vh] object-contain animate-in fade-in slide-in-from-bottom-4 duration-500"
+                style={{ imageRendering: "auto" }}
+              />
+            </picture>
           ) : (
             <div className="w-full aspect-[3/5] flex items-center justify-center bg-slate-100 animate-pulse rounded-t-3xl">
               <span className="text-slate-300 text-sm">加载中...</span>
