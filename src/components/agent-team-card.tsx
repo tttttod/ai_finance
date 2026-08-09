@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { AgentInfo } from "@/lib/mini-types";
 import { AGENT_UNLOCK_META } from "@/lib/mini-types";
 import AgentAvatar from "./agent-avatar";
@@ -14,6 +14,14 @@ interface AgentTeamCardProps {
 export default function AgentTeamCard({ agent, unlocked }: AgentTeamCardProps) {
   const [showModal, setShowModal] = useState(false);
   const meta = AGENT_UNLOCK_META[agent.role];
+
+  // 预加载全身立绘，点击时秒开
+  useEffect(() => {
+    if (unlocked && meta?.fullBody) {
+      const img = new Image();
+      img.src = meta.fullBody;
+    }
+  }, [unlocked, meta]);
 
   return (
     <>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { AgentInfo } from "@/lib/mini-types";
 import { AGENT_UNLOCK_META } from "@/lib/mini-types";
 
@@ -13,6 +13,7 @@ interface AgentDetailModalProps {
 export default function AgentDetailModal({ agent, unlocked, onClose }: AgentDetailModalProps) {
   const meta = AGENT_UNLOCK_META[agent.role];
   const overlayRef = useRef<HTMLDivElement>(null);
+  const [loaded, setLoaded] = useState(false);
 
   // 点击遮罩关闭
   useEffect(() => {
@@ -24,14 +25,17 @@ export default function AgentDetailModal({ agent, unlocked, onClose }: AgentDeta
     };
     document.addEventListener("mousedown", handleClick);
     document.addEventListener("keydown", handleEsc);
-    // 禁止滚动
     document.body.style.overflow = "hidden";
+    // 预加载图片
+    const img = new Image();
+    img.onload = () => setLoaded(true);
+    img.src = unlocked ? meta.fullBody : meta.lockedAvatar;
     return () => {
       document.removeEventListener("mousedown", handleClick);
       document.removeEventListener("keydown", handleEsc);
       document.body.style.overflow = "";
     };
-  }, [onClose]);
+  }, [onClose, unlocked, meta]);
 
   // 角色对应的描述文案
   const roleDescriptions: Record<string, string> = {
@@ -56,22 +60,29 @@ export default function AgentDetailModal({ agent, unlocked, onClose }: AgentDeta
       ref={overlayRef}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
     >
-      <div className="relative bg-white rounded-3xl max-w-sm w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative bg-white rounded-3xl max-w-sm w-full shadow-2xl overflow-hidden">
         {/* 关闭按钮 */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 shadow-md text-slate-500 hover:text-slate-800 hover:bg-white transition-all"
+          className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 shadow-md text-slate-500 hover:text-slate-800 hover:bg-white transition-all text-sm"
         >
           ✕
         </button>
 
-        {/* 图片区域 */}
+        {/* 图片区域 - 使用原始尺寸确保清晰度 */}
         <div className="flex justify-center bg-gradient-to-b from-blue-50 to-white">
-          <img
-            src={imageSrc}
-            alt={agent.name}
-            className="w-full h-auto max-h-[70vh] object-contain"
-          />
+          {loaded ? (
+            <img
+              src={imageSrc}
+              alt={agent.name}
+              className="w-full h-auto max-h-[70vh] object-contain"
+              style={{ imageRendering: "auto" }}
+            />
+          ) : (
+            <div className="w-full aspect-[3/5] flex items-center justify-center bg-slate-100 animate-pulse rounded-t-3xl">
+              <span className="text-slate-300 text-sm">加载中...</span>
+            </div>
+          )}
         </div>
 
         {/* 信息区域 */}
