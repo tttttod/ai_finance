@@ -2910,12 +2910,16 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
             title="今日任务"
             desc="主线任务与成长目标"
             badge={`${storyline?.tasks.length || 0}项`}
+            active={activePanel === "tasks"}
+            onClick={() => setActivePanel(activePanel === "tasks" ? null : "tasks")}
           />
           <AdventureEntryCard
             icon="🎯"
             title="研究标的"
             desc="今日可研究机会"
             badge={`${recommendedTargets.length}个`}
+            active={activePanel === "targets"}
+            onClick={() => setActivePanel(activePanel === "targets" ? null : "targets")}
           />
           <AdventureEntryCard
             icon="⚡"
@@ -2930,6 +2934,8 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
             title="研究总结"
             desc="今日进度与认知经验"
             badge="今日"
+            active={activePanel === "summary"}
+            onClick={() => setActivePanel(activePanel === "summary" ? null : "summary")}
           />
         </div>
       </div>
