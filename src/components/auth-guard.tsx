@@ -41,8 +41,8 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const isPublicPath = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
   const authSkipped = typeof window !== 'undefined' && localStorage.getItem('auth_skipped') === 'true';
 
-  // Show login page for public paths when not authenticated (and not skipped)
-  if (!isAuthenticated && isPublicPath && !authSkipped) {
+  // Always show login page when accessing /login directly
+  if (isPublicPath) {
     return <>{children}</>;
   }
 

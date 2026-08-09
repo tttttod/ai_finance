@@ -39,6 +39,11 @@ export default function LoginPage() {
     }
   }, [isConfigLoading, isAuthLoading, isAuthenticated, router]);
 
+  // Clear auth_skipped flag when visiting login page
+  useEffect(() => {
+    localStorage.removeItem('auth_skipped');
+  }, []);
+
   const getErrorMessage = (err: { message?: string }): string => {
     const msg = err.message?.toLowerCase() ?? '';
     if (msg.includes('invalid login credentials') || msg.includes('email or password')) {
