@@ -4,6 +4,14 @@ import { useState, useEffect, useRef } from "react";
 import { WORLD_MAP_PATHS } from "@/lib/world-map-paths";
 import Level1Panel from "@/components/level1-panel";
 import {
+  loadTraderRoadProgress,
+  getDefaultTraderRoadProgress,
+  isTraderRoadAgentUnlocked,
+  getTraderRoadLevelsWithStatus,
+  TRADER_ROAD_LEVELS as CENTRALIZED_TRADER_ROAD_LEVELS,
+} from "@/lib/trader-road-progress";
+import type { TraderRoadProgress } from "@/lib/trader-road-progress";
+import {
   InvestmentStyle,
   StepStatus,
   WorkflowStepInfo,
@@ -463,17 +471,11 @@ function ResearchTab({
   const [contextCacheStatus, setContextCacheStatus] = useState<"hit" | "miss" | null>(null);
   const researchCompletedRef = useRef(false);
   
-  // 游戏进度 - Agent 解锁状态
-  const [unlockedAgents, setUnlockedAgents] = useState<string[]>([]);
+  // 游戏进度 - Agent 解锁状态（使用集中式进度模块）
+  const [traderRoadProgress, setTraderRoadProgress] = useState<TraderRoadProgress>(getDefaultTraderRoadProgress());
   
   useEffect(() => {
-    const saved = localStorage.getItem("tradeti_game_progress");
-    if (saved) {
-      try {
-        const progress = JSON.parse(saved);
-        setUnlockedAgents(progress.unlockedAgents || []);
-      } catch {}
-    }
+    setTraderRoadProgress(loadTraderRoadProgress());
   }, []);
 
   useEffect(() => {
@@ -678,19 +680,20 @@ function ResearchTab({
           <h3 className="text-sm font-semibold text-slate-800 mb-3">Agent 研究团队</h3>
           <div className="grid grid-cols-3 gap-2">
             {AGENT_TEAM.map((agent) => {
-              const isUnlocked = unlockedAgents.includes(agent.role);
+              const isUnlocked = isTraderRoadAgentUnlocked(traderRoadProgress, agent.role);
               return (
                 <div key={agent.role} className={`flex items-center gap-2 p-2 rounded-lg border ${isUnlocked ? 'bg-slate-900 border-slate-700' : 'bg-slate-100 border-slate-200 opacity-50'}`}>
                   <span className="text-lg">{isUnlocked ? agent.icon : '🔒'}</span>
                   <div>
                     <div className={`text-[10px] font-medium ${isUnlocked ? 'text-blue-400' : 'text-slate-400'}`}>{agent.name}</div>
                     <div className={`text-[10px] font-medium ${isUnlocked ? 'text-slate-300' : 'text-slate-400'}`}>{agent.title}</div>
+                    {!isUnlocked && <div className="text-[8px] text-slate-400">未解锁</div>}
                   </div>
                 </div>
               );
             })}
           </div>
-          {unlockedAgents.length === 0 && (
+          {traderRoadProgress.unlockedAgents.length === 0 && (
             <p className="mt-2 text-[10px] text-slate-400 text-center">完成地图关卡，逐步点亮完整 Agent 链路</p>
           )}
         </div>
@@ -1964,19 +1967,8 @@ function ProfileTab({ profile, tradeTIResult, watchlist, onRemoveFromWatchlist, 
   );
 }
 
-// ===== 交易员的正确之路 — 关卡定义 =====
-const TRADER_ROAD_LEVELS = [
-  { id: 1, title: "开户日", subtitle: "Lead Agent", agent: "lead", icon: "🎯" },
-  { id: 2, title: "数据黑市", subtitle: "Data Agent", agent: "data", icon: "📊" },
-  { id: 3, title: "市场风暴", subtitle: "Market Agent", agent: "market", icon: "🌪️" },
-  { id: 4, title: "政策密函", subtitle: "Industry Agent", agent: "industry", icon: "📜" },
-  { id: 5, title: "财报夜审", subtitle: "Fundamental Agent", agent: "fundamental", icon: "📑" },
-  { id: 6, title: "价格审判庭", subtitle: "Valuation Agent", agent: "valuation", icon: "⚖️" },
-  { id: 7, title: "K线神谕", subtitle: "Technical Agent", agent: "technical", icon: "📈" },
-  { id: 8, title: "舆论火场", subtitle: "Sentiment Agent", agent: "sentiment", icon: "🔥" },
-  { id: 9, title: "多空议会", subtitle: "Bull / Bear Analyst", agent: "debate", icon: "🏛️" },
-  { id: 10, title: "回撤之门", subtitle: "Risk Officer / Research Manager", agent: "risk_manager", icon: "🛡️" },
-];
+// ===== 交易员的正确之路 — 使用集中式关卡定义 =====
+// TRADER_ROAD_LEVELS 已从 @/lib/trader-road-progress 导入为 CENTRALIZED_TRADER_ROAD_LEVELS
 
 // ===== 市场 Tab =====
 function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTIState | null; onFillResearch: (target: RecommendedTarget) => void }) {
@@ -1985,39 +1977,15 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
   const [snapshotLoading, setSnapshotLoading] = useState(true);
   const [snapshotError, setSnapshotError] = useState<string | null>(null);
   const [level1Open, setLevel1Open] = useState(false);
-  const [gameProgress, setGameProgress] = useState<{ currentLevel: number; unlockedAgents: string[]; completedLevels: number[] }>({
-    currentLevel: 1,
-    unlockedAgents: [],
-    completedLevels: [],
-  });
+  const [traderRoadProgress, setTraderRoadProgress] = useState<TraderRoadProgress>(getDefaultTraderRoadProgress());
 
-  // 加载游戏进度
+  // 加载游戏进度（使用集中式进度模块）
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("tradeti_game_progress");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        setGameProgress({
-          currentLevel: parsed.currentLevel || 1,
-          unlockedAgents: parsed.unlockedAgents || [],
-          completedLevels: parsed.completedLevels || [],
-        });
-      }
-    } catch {}
+    setTraderRoadProgress(loadTraderRoadProgress());
   }, []);
 
   const reloadProgress = () => {
-    try {
-      const raw = localStorage.getItem("tradeti_game_progress");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        setGameProgress({
-          currentLevel: parsed.currentLevel || 1,
-          unlockedAgents: parsed.unlockedAgents || [],
-          completedLevels: parsed.completedLevels || [],
-        });
-      }
-    } catch {}
+    setTraderRoadProgress(loadTraderRoadProgress());
   };
 
   // 人格身份
@@ -2215,10 +2183,15 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
         </div>
         <div className="p-3">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {TRADER_ROAD_LEVELS.map((node, idx) => {
-              const isCompleted = gameProgress.completedLevels.includes(node.id);
-              const isUnlocked = node.id <= gameProgress.currentLevel;
-              const isNext = node.id === gameProgress.currentLevel + 1;
+            {getTraderRoadLevelsWithStatus(traderRoadProgress).map((node, idx) => {
+              const nodeIcons = ["🎯", "📊", "🌪️", "📜", "📑", "⚖️", "📈", "🔥", "🏛️", "🛡️"];
+              const icon = nodeIcons[node.id - 1] || "🎯";
+              const status = node.status;
+              const isCompleted = status === "completed";
+              const isAvailable = status === "available";
+              const isComingSoon = status === "coming_soon";
+              const isUnlocked = isCompleted || isAvailable;
+              const isNext = isComingSoon;
               return (
                 <div key={node.id} className="flex items-center flex-shrink-0">
                   <button
@@ -2239,7 +2212,7 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
                         : "bg-slate-700/30 border-slate-600/40 opacity-50 cursor-not-allowed"
                     }`}
                   >
-                    <span className="text-xl mb-0.5">{isCompleted ? '✅' : isUnlocked ? node.icon : '🔒'}</span>
+                    <span className="text-xl mb-0.5">{isCompleted ? '✅' : isUnlocked ? icon : '🔒'}</span>
                     <span className={`text-[8px] font-bold leading-tight text-center ${
                       isCompleted ? "text-emerald-200" : isUnlocked ? "text-blue-200" : "text-slate-500"
                     }`}>
@@ -2249,7 +2222,7 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
                       <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[8px] text-amber-400 whitespace-nowrap">即将开放</span>
                     )}
                   </button>
-                  {idx < TRADER_ROAD_LEVELS.length - 1 && (
+                  {idx < CENTRALIZED_TRADER_ROAD_LEVELS.length - 1 && (
                     <div className={`w-3 h-0.5 mx-0.5 ${
                       isCompleted ? "bg-emerald-400/60" : isUnlocked ? "bg-blue-400/60" : "bg-slate-600/40"
                     }`} />

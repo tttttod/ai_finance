@@ -2,7 +2,7 @@
 
 > **工作流规则**：所有功能改动必须先更新本 Spec 文档，经确认后再按 Spec 修改代码。
 > 最后更新：2026-08-08
-> 本次变更：研究报告动态生成、历史研究档案数量动态化、研究完成计数联动 localStorage
+> 本次变更：新增「交易员的正确之路」进度与解锁系统，集中式进度模块、Agent 锁定态视觉
 
 ---
 
@@ -111,6 +111,130 @@
 - 点击第 1 关弹出简介弹窗，提示"即将开放"
 - 游戏进度使用 localStorage 保存，key: `tradeti_game_progress`
 - 视觉风格：深色地图背景 + 蓝色脉冲光效 + 节点连线，与"全球冒险地图"风格呼应
+
+##### 3.1 进度与解锁系统（v1）
+
+**核心模块**：`src/lib/trader-road-progress.ts`
+
+**localStorage key**：`tradeti_game_progress`
+
+**数据结构**：
+```ts
+interface TraderRoadProgress {
+  version: 1;
+  currentLevel: number;           // 当前可挑战关卡（最小 1）
+  completedLevels: number[];      // 已完成关卡 ID（去重排序）
+  unlockedAgents: TraderRoadAgentId[];  // 已解锁 Agent（去重）
+  levelFailCounts: Record<string, number>;  // 每关失败次数
+  failureRecords: TraderRoadFailureRecord[]; // 失败记录
+  updatedAt: string;              // ISO 时间戳
+}
+```
+
+**关卡与 Agent 映射**（10 关 → 12 Agent）：
+| 关卡 | 标题 | 解锁 Agent |
+|------|------|-----------|
+| 1 | 开户日 | lead |
+| 2 | 数据黑市 | data |
+| 3 | 市场风暴 | market |
+| 4 | 政策密函 | industry |
+| 5 | 财报夜审 | fundamental |
+| 6 | 价格审判庭 | valuation |
+| 7 | K线神谕 | technical |
+| 8 | 舆论火场 | sentiment |
+| 9 | 多空议会 | bull, bear |
+| 10 | 回撤之门 | risk, manager |
+
+**关卡状态判定**：
+- `completed`：completedLevels 包含该 levelId
+- `available`：levelId === currentLevel
+- `coming_soon`：levelId === currentLevel + 1
+- `locked`：其他情况
+
+**核心函数**：
+- `loadTraderRoadProgress()` — SSR 安全读取
+- `saveTraderRoadProgress(progress)` — SSR 安全写入
+- `completeTraderRoadLevel(levelId)` — 完成关卡 + 解锁 Agent
+- `unlockTraderRoadAgents(agentIds)` — 手动解锁 Agent
+- `addTraderRoadFailure(levelId, reason, endingId)` — 记录失败
+- `resetTraderRoadLevelFailures(levelId)` — 重置失败次数
+- `isTraderRoadAgentUnlocked(progress, agentId)` — 判断 Agent 是否解锁
+- `getTraderRoadLevelStatus(progress, levelId)` — 判断关卡状态
+- `getTraderRoadLevelsWithStatus(progress)` — 返回带状态的关卡列表
+
+**页面接入规则**：
+- Agent 团队展示区：已解锁正常显示，未解锁降低透明度 + 灰色 + 🔒标记
+- 第一版不阻断研究流程，仅做视觉提示
+- tradeTI 状态（人格测试）与 traderRoadProgress（地图解锁）独立共存，互不覆盖
+
+**与 tradeTI 的关系**：
+- `tradeti_state`：用户人格测试结果（is_unlocked 表示人格测试是否通关）
+- `tradeti_game_progress`：Agent 地图解锁进度（unlockedAgents 表示哪些 Agent 已解锁）
+- 两套状态独立，不互相覆盖
+
+##### 3.2 游戏地图系统（v2）
+
+**概述**：10 个关卡各有独立的游戏地图，地图之间相互衔接，视觉风格保持一致。每关使用不同的交互玩法，融合人物对话、金融知识科普（Quiz 翻牌卡片弹窗）、金融知识考核、脑力闯关和轻松小游戏。
+
+**核心模块**：`src/components/game-maps/`
+
+**统一视觉风格**：
+- 深色地图背景：`bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900`
+- 蓝色脉冲光效边框：`border-blue-500/30` + `shadow-[0_0_15px_rgba(59,130,246,0.2)]`
+- 节点连线：渐变蓝紫色，已完成段为实线绿色
+- 弹窗统一全屏覆盖，`bg-slate-950/95` 背景
+
+**四种游戏类型**：
+
+| 类型 | 玩法 | 使用关卡 |
+|------|------|---------|
+| `dialogue` | 角色对话 + 多选分支，错误累计 >=2 触发坏结局 | 1, 4, 9 |
+| `quiz` | 金融知识翻牌卡片，逐张翻开判断对错，即时反馈 | 2, 6 |
+| `brain` | 记忆翻牌配对，将金融术语与释义匹配 | 3, 8 |
+| `minigame` | 快速判断/反应类小游戏，限时多轮 | 5, 7, 10 |
+
+**10 关地图内容**：
+
+| 关卡 | 标题 | 类型 | 核心玩法 | 解锁 Agent |
+|------|------|------|---------|-----------|
+| 1 | 开户日 | dialogue | 顾明澈对话，学习提问框架 | lead |
+| 2 | 数据黑市 | quiz | 8 张翻牌，判断数据来源/方法正误 | data |
+| 3 | 市场风暴 | brain | 8 张记忆翻牌，配对金融术语 | market |
+| 4 | 政策密函 | dialogue | 解读政策信号，选择正确理解 | industry |
+| 5 | 财报夜审 | minigame | 快速识别财报中的危险信号 | fundamental |
+| 6 | 价格审判庭 | quiz | 8 张翻牌，估值基础知识判断 | valuation |
+| 7 | K线神谕 | minigame | 限时识别 K 线形态 | technical |
+| 8 | 舆论火场 | brain | 8 张翻牌，配对新闻术语 | sentiment |
+| 9 | 多空议会 | dialogue | 多空辩论场景，选择合理观点 | bull, bear |
+| 10 | 回撤之门 | minigame | 风险管理场景快速决策 | risk, manager |
+
+**通关条件**：
+- `dialogue`：错误选择 < 2 次即通关
+- `quiz`：正确率 >= 70% 即通关
+- `brain`：完成所有配对即通关
+- `minigame`：正确率 >= 60% 即通关
+
+**地图衔接逻辑**：
+- 通关后自动更新 `tradeti_game_progress`，`currentLevel` +1
+- 下一关在地图条上变为 `available` 状态
+- 通关弹窗显示解锁的 Agent 信息
+- 失败不阻断，可重复挑战
+
+**组件结构**：
+```
+src/components/game-maps/
++-- game-data.ts          # 10关完整数据（对话/题目/配对/场景）
++-- DialogueGame.tsx      # 对话闯关组件
++-- QuizGame.tsx          # 知识翻牌测验组件
++-- BrainGame.tsx         # 脑力翻牌配对组件
++-- MiniGame.tsx          # 快速判断小游戏组件
++-- GameMapPlayer.tsx     # 主控制器（根据关卡类型分发）
+```
+
+**页面接入**：
+- `src/app/page.tsx` 的 MarketTab 中，点击关卡节点 -> 设置 `activeGameLevel` -> 渲染 `<GameMapPlayer>`
+- 替换原有的 `alert()` 为实际游戏弹窗
+- `onLevelComplete` 回调调用 `completeTraderRoadLevel()` 更新进度
 
 ##### 4. 主线任务
 - 替代原"AI推荐研究标的"
@@ -614,6 +738,7 @@ NewsFeed                              // 信息面数据
 | 2026-08-03 | 完整产品设计：12 步 Agent 工作流 + 3 种投资风格因子权重 + 标准研究报告格式 + 复盘系统 + 行为规则 |
 | 2026-08-03 | 🗺️ 市场冒险局主题改造：首页改为市场冒险局叙事，人格搭子问候、市场天气、主线任务、全球冒险地图、支线任务、认知经验总结，底部 Tab 统一改名（冒险/任务/工坊/档案） |
 | 2026-08-08 | 研究报告动态生成（基于股票名称 hash）、历史研究档案数量动态化（localStorage 联动 ResearchTab 和 ProfileTab）、备用页面 mini/page.tsx 同步更新 |
+| 2026-08-08 | 新增「交易员的正确之路」进度与解锁系统：集中式进度模块 `trader-road-progress.ts`、10 关卡 + 12 Agent 映射、SSR 安全 localStorage 读写、Agent 团队锁定态视觉、开发调试按钮 |
 
 ---
 

@@ -1,10 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import {
+  loadTraderRoadProgress,
+  completeTraderRoadLevel,
+  addTraderRoadFailure,
+} from "@/lib/trader-road-progress";
+import type { TraderRoadProgress } from "@/lib/trader-road-progress";
 
-// ===== 关卡常量 =====
-const TRADER_ROAD_STORAGE_KEY = "tradeti_game_progress";
-
+// ===== 关卡常量（保留导出以兼容旧引用）=====
 export const TRADER_ROAD_LEVELS = [
   { id: 1, title: "开户日", subtitle: "Lead Agent", agent: "lead", icon: "🎯" },
   { id: 2, title: "数据黑市", subtitle: "Data Agent", agent: "data", icon: "📊" },
@@ -18,44 +22,27 @@ export const TRADER_ROAD_LEVELS = [
   { id: 10, title: "回撤之门", subtitle: "Risk Officer", agent: "risk_manager", icon: "🛡️" },
 ];
 
-// ===== 游戏进度类型 =====
-export interface TraderRoadProgress {
-  currentLevel: number;
-  unlockedAgents: string[];
-  completedLevels: number[];
-  failCount: number;
-  endings: string[];
-}
+// 兼容旧类型导出
+export type { TraderRoadProgress };
 
 const DEFAULT_PROGRESS: TraderRoadProgress = {
+  version: 1,
   currentLevel: 1,
-  unlockedAgents: [],
   completedLevels: [],
-  failCount: 0,
-  endings: [],
+  unlockedAgents: [],
+  levelFailCounts: {},
+  failureRecords: [],
+  updatedAt: new Date().toISOString(),
 };
 
+// 兼容旧 API
 export function loadProgress(): TraderRoadProgress {
-  try {
-    const raw = localStorage.getItem(TRADER_ROAD_STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      return {
-        currentLevel: parsed.currentLevel || 1,
-        unlockedAgents: parsed.unlockedAgents || [],
-        completedLevels: parsed.completedLevels || [],
-        failCount: parsed.failCount || 0,
-        endings: parsed.endings || [],
-      };
-    }
-  } catch {
-    // ignore
-  }
-  return { ...DEFAULT_PROGRESS };
+  return loadTraderRoadProgress();
 }
 
-export function saveProgress(progress: TraderRoadProgress) {
-  localStorage.setItem(TRADER_ROAD_STORAGE_KEY, JSON.stringify(progress));
+export function saveProgress(_progress: TraderRoadProgress) {
+  // 不再直接使用，改由 completeTraderRoadLevel / addTraderRoadFailure 处理
+  // 保留空函数以兼容旧引用
 }
 
 // ===== 第1关剧情数据 =====
@@ -212,7 +199,7 @@ export default function Level1Panel({ isOpen, onClose, onLevelComplete, onGoToRe
 
   useEffect(() => {
     if (isOpen) {
-      setProgress(loadProgress());
+      setProgress(loadTraderRoadProgress());
       setNodeIndex(0);
       setFailCount(0);
       setPanelState("opening");
@@ -238,15 +225,8 @@ export default function Level1Panel({ isOpen, onClose, onLevelComplete, onGoToRe
           setNodeIndex((prev) => prev + 1);
           setPanelState("story");
         } else {
-          // 通关
-          const newProgress: TraderRoadProgress = {
-            currentLevel: 2,
-            unlockedAgents: [...new Set([...progress.unlockedAgents, "lead"])],
-            completedLevels: [...new Set([...progress.completedLevels, 1])],
-            failCount: 0,
-            endings: [...progress.endings, "good_1"],
-          };
-          saveProgress(newProgress);
+          // 通关 — 使用集中式进度模块
+          const newProgress = completeTraderRoadLevel(1);
           setProgress(newProgress);
           setPanelState("good_ending");
           onLevelComplete(1);
@@ -259,14 +239,9 @@ export default function Level1Panel({ isOpen, onClose, onLevelComplete, onGoToRe
       setPanelState("feedback");
 
       if (newFailCount >= 2) {
-        // 坏结局
+        // 坏结局 — 记录失败
         setTimeout(() => {
-          const newProgress: TraderRoadProgress = {
-            ...progress,
-            failCount: 0,
-            endings: [...progress.endings, "bad_1"],
-          };
-          saveProgress(newProgress);
+          const newProgress = addTraderRoadFailure(1, `错误选项: ${option.id}`, `bad_${option.id}`);
           setProgress(newProgress);
           setPanelState("bad_ending");
         }, 2500);
@@ -280,7 +255,7 @@ export default function Level1Panel({ isOpen, onClose, onLevelComplete, onGoToRe
         }, 2500);
       }
     }
-  }, [currentNode, failCount, nodeIndex, progress, onLevelComplete]);
+  }, [currentNode, failCount, nodeIndex, onLevelComplete]);
 
   const handleRestart = useCallback(() => {
     setNodeIndex(0);

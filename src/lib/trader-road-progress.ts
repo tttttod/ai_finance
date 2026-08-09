@@ -1,0 +1,384 @@
+// ===== 交易员的正确之路 — 进度与解锁系统 =====
+// localStorage key: tradeti_game_progress
+// 与 tradeti_state（人格测试）独立共存，互不覆盖
+
+// ===== 类型定义 =====
+
+export type TraderRoadAgentId =
+  | "lead"
+  | "data"
+  | "market"
+  | "industry"
+  | "fundamental"
+  | "valuation"
+  | "technical"
+  | "sentiment"
+  | "bull"
+  | "bear"
+  | "risk"
+  | "manager";
+
+export type TraderRoadLevelStatus =
+  | "completed"
+  | "available"
+  | "coming_soon"
+  | "locked";
+
+export interface TraderRoadLevel {
+  id: number;
+  title: string;
+  subtitle: string;
+  unlockAgents: TraderRoadAgentId[];
+  status?: TraderRoadLevelStatus;
+}
+
+export interface TraderRoadFailureRecord {
+  levelId: number;
+  reason: string;
+  endingId: string;
+  createdAt: string;
+}
+
+export interface TraderRoadProgress {
+  version: 1;
+  currentLevel: number;
+  completedLevels: number[];
+  unlockedAgents: TraderRoadAgentId[];
+  levelFailCounts: Record<string, number>;
+  failureRecords: TraderRoadFailureRecord[];
+  updatedAt: string;
+}
+
+// ===== 常量 =====
+
+const STORAGE_KEY = "tradeti_game_progress";
+
+export const TRADER_ROAD_LEVELS: TraderRoadLevel[] = [
+  {
+    id: 1,
+    title: "开户日",
+    subtitle: "Lead Agent",
+    unlockAgents: ["lead"],
+  },
+  {
+    id: 2,
+    title: "数据黑市",
+    subtitle: "Data Agent",
+    unlockAgents: ["data"],
+  },
+  {
+    id: 3,
+    title: "市场风暴",
+    subtitle: "Market Agent",
+    unlockAgents: ["market"],
+  },
+  {
+    id: 4,
+    title: "政策密函",
+    subtitle: "Industry Agent",
+    unlockAgents: ["industry"],
+  },
+  {
+    id: 5,
+    title: "财报夜审",
+    subtitle: "Fundamental Agent",
+    unlockAgents: ["fundamental"],
+  },
+  {
+    id: 6,
+    title: "价格审判庭",
+    subtitle: "Valuation Agent",
+    unlockAgents: ["valuation"],
+  },
+  {
+    id: 7,
+    title: "K线神谕",
+    subtitle: "Technical Agent",
+    unlockAgents: ["technical"],
+  },
+  {
+    id: 8,
+    title: "舆论火场",
+    subtitle: "Sentiment Agent",
+    unlockAgents: ["sentiment"],
+  },
+  {
+    id: 9,
+    title: "多空议会",
+    subtitle: "Bull / Bear Analyst",
+    unlockAgents: ["bull", "bear"],
+  },
+  {
+    id: 10,
+    title: "回撤之门",
+    subtitle: "Risk Officer / Research Manager",
+    unlockAgents: ["risk", "manager"],
+  },
+];
+
+// ===== 工具函数 =====
+
+/**
+ * 判断是否浏览器环境（SSR 安全）
+ */
+export function isBrowser(): boolean {
+  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+}
+
+/**
+ * 返回默认进度（updatedAt 在调用时生成）
+ */
+export function getDefaultTraderRoadProgress(): TraderRoadProgress {
+  return {
+    version: 1,
+    currentLevel: 1,
+    completedLevels: [],
+    unlockedAgents: [],
+    levelFailCounts: {},
+    failureRecords: [],
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * 规范化进度数据，兼容损坏的 localStorage 数据
+ */
+export function normalizeTraderRoadProgress(raw: unknown): TraderRoadProgress {
+  const defaults = getDefaultTraderRoadProgress();
+
+  if (!raw || typeof raw !== "object") {
+    return defaults;
+  }
+
+  const obj = raw as Record<string, unknown>;
+
+  // completedLevels: 去重并排序
+  const rawCompleted = Array.isArray(obj.completedLevels)
+    ? obj.completedLevels.filter((v): v is number => typeof v === "number")
+    : [];
+  const completedLevels = [...new Set(rawCompleted)].sort((a, b) => a - b);
+
+  // unlockedAgents: 去重
+  const validAgentIds: TraderRoadAgentId[] = [
+    "lead", "data", "market", "industry", "fundamental", "valuation",
+    "technical", "sentiment", "bull", "bear", "risk", "manager",
+  ];
+  const rawAgents = Array.isArray(obj.unlockedAgents)
+    ? obj.unlockedAgents.filter((v): v is TraderRoadAgentId =>
+        typeof v === "string" && validAgentIds.includes(v as TraderRoadAgentId)
+      )
+    : [];
+  const unlockedAgents = [...new Set(rawAgents)];
+
+  // currentLevel: 至少为 1
+  const rawCurrentLevel = typeof obj.currentLevel === "number" ? obj.currentLevel : 1;
+  const currentLevel = Math.max(1, Math.floor(rawCurrentLevel));
+
+  // levelFailCounts
+  const levelFailCounts = (obj.levelFailCounts && typeof obj.levelFailCounts === "object" && !Array.isArray(obj.levelFailCounts))
+    ? obj.levelFailCounts as Record<string, number>
+    : {};
+
+  // failureRecords
+  const rawRecords = Array.isArray(obj.failureRecords) ? obj.failureRecords : [];
+  const failureRecords: TraderRoadFailureRecord[] = rawRecords
+    .filter((r): r is TraderRoadFailureRecord =>
+      r && typeof r === "object" && typeof (r as TraderRoadFailureRecord).levelId === "number"
+    )
+    .map((r) => ({
+      levelId: r.levelId,
+      reason: typeof r.reason === "string" ? r.reason : "",
+      endingId: typeof r.endingId === "string" ? r.endingId : "",
+      createdAt: typeof r.createdAt === "string" ? r.createdAt : new Date().toISOString(),
+    }));
+
+  // updatedAt
+  const updatedAt = typeof obj.updatedAt === "string" ? obj.updatedAt : new Date().toISOString();
+
+  return {
+    version: 1,
+    currentLevel,
+    completedLevels,
+    unlockedAgents,
+    levelFailCounts,
+    failureRecords,
+    updatedAt,
+  };
+}
+
+// ===== 读写函数 =====
+
+/**
+ * 从 localStorage 读取进度
+ * SSR 安全 / JSON 解析失败时返回默认进度
+ */
+export function loadTraderRoadProgress(): TraderRoadProgress {
+  if (!isBrowser()) {
+    return getDefaultTraderRoadProgress();
+  }
+
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      return getDefaultTraderRoadProgress();
+    }
+    const parsed = JSON.parse(raw);
+    return normalizeTraderRoadProgress(parsed);
+  } catch {
+    return getDefaultTraderRoadProgress();
+  }
+}
+
+/**
+ * 写入 localStorage
+ * SSR 安全：非浏览器环境直接返回 progress，不报错
+ */
+export function saveTraderRoadProgress(progress: TraderRoadProgress): TraderRoadProgress {
+  if (!isBrowser()) {
+    return progress;
+  }
+
+  const toSave = {
+    ...progress,
+    updatedAt: new Date().toISOString(),
+  };
+
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+  } catch {
+    // ignore quota errors
+  }
+
+  return toSave;
+}
+
+// ===== 业务函数 =====
+
+/**
+ * 完成某一关：
+ * - 将 levelId 加入 completedLevels
+ * - 解锁该关对应 unlockAgents
+ * - currentLevel 更新为 Math.max(currentLevel, levelId + 1)
+ * - 清空该关失败次数
+ * - 保存并返回新 progress
+ */
+export function completeTraderRoadLevel(levelId: number): TraderRoadProgress {
+  const progress = loadTraderRoadProgress();
+
+  // 加入 completedLevels（去重）
+  if (!progress.completedLevels.includes(levelId)) {
+    progress.completedLevels.push(levelId);
+    progress.completedLevels.sort((a, b) => a - b);
+  }
+
+  // 解锁该关对应 Agent
+  const level = TRADER_ROAD_LEVELS.find((l) => l.id === levelId);
+  if (level) {
+    const newAgents = level.unlockAgents.filter(
+      (a) => !progress.unlockedAgents.includes(a)
+    );
+    progress.unlockedAgents.push(...newAgents);
+  }
+
+  // 更新 currentLevel
+  progress.currentLevel = Math.max(progress.currentLevel, levelId + 1);
+
+  // 清空该关失败次数
+  delete progress.levelFailCounts[String(levelId)];
+
+  return saveTraderRoadProgress(progress);
+}
+
+/**
+ * 手动解锁一个或多个 Agent
+ */
+export function unlockTraderRoadAgents(agentIds: TraderRoadAgentId[]): TraderRoadProgress {
+  const progress = loadTraderRoadProgress();
+
+  const newAgents = agentIds.filter(
+    (a) => !progress.unlockedAgents.includes(a)
+  );
+  progress.unlockedAgents.push(...newAgents);
+
+  return saveTraderRoadProgress(progress);
+}
+
+/**
+ * 记录一次失败
+ */
+export function addTraderRoadFailure(
+  levelId: number,
+  reason: string,
+  endingId: string
+): TraderRoadProgress {
+  const progress = loadTraderRoadProgress();
+
+  // levelFailCounts[levelId] + 1
+  const key = String(levelId);
+  progress.levelFailCounts[key] = (progress.levelFailCounts[key] || 0) + 1;
+
+  // 追加失败记录
+  progress.failureRecords.push({
+    levelId,
+    reason,
+    endingId,
+    createdAt: new Date().toISOString(),
+  });
+
+  return saveTraderRoadProgress(progress);
+}
+
+/**
+ * 重置某一关失败次数
+ */
+export function resetTraderRoadLevelFailures(levelId: number): TraderRoadProgress {
+  const progress = loadTraderRoadProgress();
+
+  const key = String(levelId);
+  delete progress.levelFailCounts[key];
+
+  return saveTraderRoadProgress(progress);
+}
+
+// ===== 查询函数 =====
+
+/**
+ * 判断 Agent 是否已解锁
+ */
+export function isTraderRoadAgentUnlocked(
+  progress: TraderRoadProgress,
+  agentId: TraderRoadAgentId | string
+): boolean {
+  return progress.unlockedAgents.includes(agentId as TraderRoadAgentId);
+}
+
+/**
+ * 判断关卡状态
+ */
+export function getTraderRoadLevelStatus(
+  progress: TraderRoadProgress,
+  levelId: number
+): TraderRoadLevelStatus {
+  if (progress.completedLevels.includes(levelId)) {
+    return "completed";
+  }
+  if (levelId === progress.currentLevel) {
+    return "available";
+  }
+  if (levelId === progress.currentLevel + 1) {
+    return "coming_soon";
+  }
+  return "locked";
+}
+
+/**
+ * 返回带状态的关卡列表
+ */
+export function getTraderRoadLevelsWithStatus(
+  progress: TraderRoadProgress
+): (TraderRoadLevel & { status: TraderRoadLevelStatus })[] {
+  return TRADER_ROAD_LEVELS.map((level) => ({
+    ...level,
+    status: getTraderRoadLevelStatus(progress, level.id),
+  }));
+}
