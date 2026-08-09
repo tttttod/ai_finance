@@ -2,10 +2,14 @@ import { config } from 'dotenv';
 import { resolve } from 'path';
 import { existsSync } from 'fs';
 
-// Load .env.local for production custom server (dev mode auto-loads via Next.js)
+// Load env files for production custom server (dev mode auto-loads via Next.js)
+// Priority: .env.local > .env
 const envLocalPath = resolve(process.cwd(), '.env.local');
+const envPath = resolve(process.cwd(), '.env');
 if (existsSync(envLocalPath)) {
   config({ path: envLocalPath, override: true });
+} else if (existsSync(envPath)) {
+  config({ path: envPath, override: true });
 }
 
 import { createServer } from 'http';
