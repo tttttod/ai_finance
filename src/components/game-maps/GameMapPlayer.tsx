@@ -187,7 +187,7 @@ export function GameMapPlayer({
     <div className="relative w-full" style={{ aspectRatio: "3/2" }}>
       <img
         src="/map-world-v2.jpeg"
-        alt="金融华二街世界地图"
+        alt="金融华尔界世界地图"
         className="w-full h-full object-cover rounded-2xl"
         draggable={false}
       />
@@ -500,7 +500,7 @@ export function GameMapPlayer({
             )}
             <h2 className="text-base font-bold text-[#1E293B]">
               {view === "world"
-                ? "🗺️ 金融华二街"
+                ? "🗺️ 金融华尔界"
                 : view === "zone"
                 ? MAP_ZONES.find((z) => z.id === activeZoneId)?.name ?? ""
                 : `第${activeLevelId}关`}

@@ -794,10 +794,10 @@ function ResearchTab({
           )}
         </div>
 
-        {/* 金融华二街 — 地图入口圆钮 */}
+        {/* 金融华尔界 — 地图入口圆钮 */}
         <div className="bg-white rounded-3xl p-4 border border-[#E2E8F0] shadow-sm">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-[#1E293B]">金融华二街</h3>
+            <h3 className="text-sm font-bold text-[#1E293B]">金融华尔界</h3>
             <span className="text-[10px] font-bold text-[#64748B] bg-[#F1F5F9] px-2 py-0.5 rounded-full">
               {traderRoadProgress.completedLevels.length}/10 关
             </span>
