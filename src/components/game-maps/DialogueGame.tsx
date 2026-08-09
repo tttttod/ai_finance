@@ -91,7 +91,7 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
             <img
               src={data.sceneImage}
               alt="场景"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-top"
             />
             {/* 从下到上的渐变遮罩：底部全黑→顶部半透明 */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/30" />
@@ -165,9 +165,9 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
           <img
             src={data.sceneImage}
             alt="场景"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-top"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/50" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
         </div>
       )}
 
