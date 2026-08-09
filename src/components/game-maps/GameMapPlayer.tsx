@@ -1,609 +1,565 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { getLevelConfig, GAME_MAP_LEVELS } from "./game-data";
 import { DIALOGUE_DATA } from "./dialogue-data";
 import { QUIZ_DATA } from "./quiz-data";
 import { BRAIN_DATA } from "./brain-data";
 import { MINIGAME_DATA } from "./minigame-data";
-import { LEARNING_CARDS } from "./learning-cards-data";
-import { QUIZ_QUESTIONS } from "./quiz-choice-data";
 import { DialogueGame } from "./DialogueGame";
 import { QuizGame } from "./QuizGame";
 import { BrainGame } from "./BrainGame";
 import { MiniGame } from "./MiniGame";
 import { LearningCards } from "./LearningCards";
 import { QuizChoice } from "./QuizChoice";
-import { useTraderRoadProgress } from "@/lib/trader-road-progress";
+import {
+  loadTraderRoadProgress,
+  saveTraderRoadProgress,
+  type TraderRoadAgentId,
+} from "@/lib/trader-road-progress";
 
-// ===== 区域定义 =====
-interface MapArea {
-  id: string;
+// ===== Zone definitions =====
+interface MapZone {
+  id: number;
   name: string;
   subtitle: string;
-  levels: number[];
+  image: string;
   color: string;
   colorLight: string;
-  icon: string;
-  bgGradient: string;
+  levels: number[];
+  // Marker positions as percentages of image (x%, y%)
+  markers: { levelId: number; x: number; y: number }[];
 }
 
-const MAP_AREAS: MapArea[] = [
+const MAP_ZONES: MapZone[] = [
   {
-    id: "academy",
+    id: 1,
     name: "金融学院区",
-    subtitle: "基础入门",
-    levels: [1, 2, 3, 4],
+    subtitle: "基础入门 · 关卡 1-4",
+    image: "/map-zone-1.jpeg",
     color: "#D97706",
     colorLight: "#FEF3C7",
-    icon: "\u{1F393}",
-    bgGradient: "from-amber-50 to-orange-50",
+    levels: [1, 2, 3, 4],
+    markers: [
+      { levelId: 1, x: 12, y: 72 },
+      { levelId: 2, x: 32, y: 55 },
+      { levelId: 3, x: 55, y: 38 },
+      { levelId: 4, x: 78, y: 25 },
+    ],
   },
   {
-    id: "exchange",
+    id: 2,
     name: "交易所区",
-    subtitle: "进阶实战",
-    levels: [5, 6, 7],
+    subtitle: "进阶实战 · 关卡 5-7",
+    image: "/map-zone-2.jpeg",
     color: "#3B82F6",
     colorLight: "#DBEAFE",
-    icon: "\u{1F3DB}\uFE0F",
-    bgGradient: "from-blue-50 to-indigo-50",
+    levels: [5, 6, 7],
+    markers: [
+      { levelId: 5, x: 15, y: 65 },
+      { levelId: 6, x: 48, y: 45 },
+      { levelId: 7, x: 80, y: 30 },
+    ],
   },
   {
-    id: "valley",
+    id: 3,
     name: "风险山谷",
-    subtitle: "高阶挑战",
-    levels: [8, 9, 10],
+    subtitle: "高阶挑战 · 关卡 8-10",
+    image: "/map-zone-3.jpeg",
     color: "#DC2626",
     colorLight: "#FEE2E2",
-    icon: "\u{1F30B}",
-    bgGradient: "from-red-50 to-rose-50",
+    levels: [8, 9, 10],
+    markers: [
+      { levelId: 8, x: 15, y: 60 },
+      { levelId: 9, x: 48, y: 40 },
+      { levelId: 10, x: 82, y: 25 },
+    ],
   },
 ];
 
-// ===== 关卡类型图标 =====
-const TYPE_ICONS: Record<string, string> = {
-  dialogue: "\u{1F4AC}",
-  quiz: "\u{1F0CF}",
-  brain: "\u{1F9E0}",
-  minigame: "\u{26A1}",
-  learning: "\u{1F4DA}",
-  quiz_choice: "\u{270D}\uFE0F",
-};
+// World map zone hotspot positions (percentages)
+const WORLD_ZONE_HOTSPOTS = [
+  { zoneId: 1, x: 22, y: 70 }, // 金融学院区 - lower left
+  { zoneId: 2, x: 50, y: 48 }, // 交易所区 - center
+  { zoneId: 3, x: 82, y: 30 }, // 风险山谷 - upper right
+];
 
-// ===== 根据关卡配置解析游戏数据 =====
-function resolveGameData(levelId: number) {
-  const config = getLevelConfig(levelId);
-  if (!config) return null;
-
-  switch (config.type) {
-    case "dialogue":
-      return { type: "dialogue" as const, data: DIALOGUE_DATA[levelId] };
-    case "quiz":
-      return { type: "quiz" as const, data: QUIZ_DATA[levelId] };
-    case "brain":
-      return { type: "brain" as const, data: BRAIN_DATA[levelId] };
-    case "minigame":
-      return { type: "minigame" as const, data: MINIGAME_DATA[levelId] };
-    case "learning": {
-      const indices = config.learningCardIndices ?? [];
-      const cards = indices.map((i) => LEARNING_CARDS[i]).filter(Boolean);
-      return { type: "learning" as const, data: cards };
-    }
-    case "quiz_choice": {
-      const indices = config.quizQuestionIndices ?? [];
-      const questions = indices.map((i) => QUIZ_QUESTIONS[i]).filter(Boolean);
-      return { type: "quiz_choice" as const, data: questions };
-    }
-    default:
-      return null;
-  }
-}
-
-interface GameMapPlayerProps {
-  initialLevelId?: number;
+// ===== Props =====
+export interface GameMapPlayerProps {
+  initialLevelId: number | null;
   onClose: () => void;
   onLevelComplete?: (levelId: number) => void;
 }
 
+// ===== Main Component =====
 export function GameMapPlayer({
   initialLevelId,
   onClose,
   onLevelComplete,
 }: GameMapPlayerProps) {
-  const { progress, addCoins } = useTraderRoadProgress();
-  const [view, setView] = useState<"world" | "area" | "game">(
+  const [view, setView] = useState<"world" | "zone" | "game">(
     initialLevelId ? "game" : "world"
   );
-  const [currentAreaId, setCurrentAreaId] = useState<string | null>(null);
-  const [activeLevelId, setActiveLevelId] = useState<number | null>(
-    initialLevelId ?? null
+  const [activeZoneId, setActiveZoneId] = useState<number | null>(
+    initialLevelId
+      ? MAP_ZONES.find((z) => z.levels.includes(initialLevelId))?.id ?? null
+      : null
   );
-  const [slideDir, setSlideDir] = useState<"left" | "right">("right");
+  const [activeLevelId, setActiveLevelId] = useState<number | null>(
+    initialLevelId
+  );
+  const [hoveredMarker, setHoveredMarker] = useState<number | null>(null);
+  const [hoveredZone, setHoveredZone] = useState<number | null>(null);
+  const [progress, setProgress] = useState(() => loadTraderRoadProgress());
 
   useEffect(() => {
-    if (initialLevelId) {
-      const area = MAP_AREAS.find((a) => a.levels.includes(initialLevelId));
-      if (area) setCurrentAreaId(area.id);
-    }
-  }, [initialLevelId]);
+    saveTraderRoadProgress(progress);
+  }, [progress]);
 
-  const currentArea = MAP_AREAS.find((a) => a.id === currentAreaId);
+  const addCoins = useCallback(
+    (amount: number) => {
+      setProgress((prev) => ({ ...prev, coins: prev.coins + amount }));
+    },
+    []
+  );
 
-  const getLevelStatus = (levelId: number) => {
-    const isCompleted = progress.completedLevels.includes(levelId);
-    const isUnlocked =
-      levelId === 1 || progress.completedLevels.includes(levelId - 1);
-    return { isCompleted, isUnlocked };
-  };
-
-  const getAreaStatus = (area: MapArea) => {
-    const completed = area.levels.filter(
-      (l) => progress.completedLevels.includes(l)
-    ).length;
-    const isUnlocked =
-      area.levels[0] === 1 ||
-      progress.completedLevels.includes(area.levels[0] - 1);
-    return { completed, total: area.levels.length, isUnlocked, isAllDone: completed === area.levels.length };
-  };
-
-  // ===== 世界地图视图 =====
-  if (view === "world") {
-    return (
-      <div className="fixed inset-0 z-50 bg-black/30 flex items-end justify-center" onClick={onClose}>
-        <div
-          className="bg-white w-full max-w-[430px] rounded-t-3xl overflow-hidden flex flex-col animate-[slideUp_0.3s_ease-out]"
-          style={{ height: "90vh" }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* 头部 */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0]">
-            <div>
-              <h2 className="text-lg font-bold text-[#1E293B]">金融华二街</h2>
-              <p className="text-[11px] text-[#64748B] mt-0.5">完成关卡，解锁 Agent 研究员</p>
-            </div>
-            <button
-              onClick={onClose}
-              className="w-9 h-9 rounded-full bg-[#F1F5F9] flex items-center justify-center text-[#64748B] text-xl hover:bg-[#E2E8F0] transition-colors"
-            >
-              ×
-            </button>
-          </div>
-
-          {/* 地图路径 SVG */}
-          <div className="relative flex-1 overflow-hidden bg-gradient-to-b from-[#F8FAFC] to-[#F1F5F9]">
-            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 600" preserveAspectRatio="xMidYMid meet">
-              {/* 背景装饰 - 云朵 */}
-              <circle cx="60" cy="80" r="30" fill="#E2E8F0" opacity="0.4" />
-              <circle cx="90" cy="70" r="25" fill="#E2E8F0" opacity="0.3" />
-              <circle cx="320" cy="120" r="35" fill="#E2E8F0" opacity="0.3" />
-              <circle cx="350" cy="110" r="20" fill="#E2E8F0" opacity="0.4" />
-              <circle cx="200" cy="500" r="40" fill="#E2E8F0" opacity="0.2" />
-
-              {/* 连接路径 - 蜿蜒小路 */}
-              <path
-                d="M 200 130 Q 120 200 130 280 Q 140 340 200 370 Q 280 400 270 480"
-                fill="none"
-                stroke="#CBD5E1"
-                strokeWidth="6"
-                strokeDasharray="8 6"
-                strokeLinecap="round"
-              />
-              {/* 路径光效 */}
-              <path
-                d="M 200 130 Q 120 200 130 280 Q 140 340 200 370 Q 280 400 270 480"
-                fill="none"
-                stroke="#3B82F6"
-                strokeWidth="2"
-                strokeDasharray="4 12"
-                strokeLinecap="round"
-                opacity="0.4"
-              >
-                <animate attributeName="stroke-dashoffset" from="0" to="-32" dur="3s" repeatCount="indefinite" />
-              </path>
-
-              {/* 路径上的小圆点装饰 */}
-              {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => {
-                const t = (i + 1) / 10;
-                // Approximate positions along the path
-                const positions = [
-                  { x: 185, y: 165 },
-                  { x: 155, y: 210 },
-                  { x: 135, y: 250 },
-                  { x: 133, y: 290 },
-                  { x: 145, y: 330 },
-                  { x: 170, y: 355 },
-                  { x: 210, y: 370 },
-                  { x: 250, y: 390 },
-                  { x: 268, y: 430 },
-                ];
-                const pos = positions[i];
-                return (
-                  <circle
-                    key={i}
-                    cx={pos.x}
-                    cy={pos.y}
-                    r="3"
-                    fill="#94A3B8"
-                    opacity="0.5"
-                  />
-                );
-              })}
-            </svg>
-
-            {/* 区域卡片 */}
-            <div className="relative z-10 flex flex-col items-center gap-6 py-8 px-6 h-full justify-center">
-              {MAP_AREAS.map((area, idx) => {
-                const status = getAreaStatus(area);
-                return (
-                  <button
-                    key={area.id}
-                    onClick={() => {
-                      if (!status.isUnlocked) return;
-                      setSlideDir(idx > (MAP_AREAS.findIndex(a => a.id === currentAreaId) ?? -1) ? "right" : "left");
-                      setCurrentAreaId(area.id);
-                      setView("area");
-                    }}
-                    className="w-full max-w-[340px] transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                    style={{ opacity: status.isUnlocked ? 1 : 0.5 }}
-                  >
-                    <div
-                      className="rounded-2xl border-2 p-4 flex items-center gap-4 transition-all"
-                      style={{
-                        borderColor: status.isAllDone ? "#059669" : status.isUnlocked ? area.color : "#CBD5E1",
-                        backgroundColor: status.isUnlocked ? area.colorLight : "#F8FAFC",
-                        boxShadow: status.isUnlocked ? `0 4px 14px ${area.color}20` : "none",
-                      }}
-                    >
-                      {/* 区域图标 */}
-                      <div
-                        className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl shrink-0"
-                        style={{
-                          backgroundColor: status.isUnlocked ? area.color : "#CBD5E1",
-                          color: "white",
-                        }}
-                      >
-                        {area.icon}
-                      </div>
-
-                      {/* 区域信息 */}
-                      <div className="flex-1 text-left">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-[#1E293B]">{area.name}</span>
-                          {status.isAllDone && (
-                            <span className="w-5 h-5 rounded-full bg-[#059669] text-white text-[10px] flex items-center justify-center">✓</span>
-                          )}
-                          {!status.isUnlocked && (
-                            <span className="text-xs">{"\u{1F512}"}</span>
-                          )}
-                        </div>
-                        <span className="text-[11px] text-[#64748B]">{area.subtitle} · 关卡 {area.levels[0]}-{area.levels[area.levels.length - 1]}</span>
-                        {/* 进度条 */}
-                        <div className="mt-2 h-1.5 rounded-full bg-white/60 overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all duration-500"
-                            style={{
-                              width: `${(status.completed / status.total) * 100}%`,
-                              backgroundColor: area.color,
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* 进度数字 */}
-                      <div className="text-right shrink-0">
-                        <span className="text-lg font-bold" style={{ color: area.color }}>
-                          {status.completed}
-                        </span>
-                        <span className="text-[11px] text-[#94A3B8]">/{status.total}</span>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* 底部 */}
-          <div className="px-5 py-3 border-t border-[#E2E8F0] bg-[#FAFAF9] flex items-center justify-between">
-            <span className="text-[11px] text-[#64748B]">
-              总进度 {progress.completedLevels.length}/10 关
-            </span>
-            <span className="text-sm font-bold text-[#D97706]">
-              {"\u{1FA99}"} {progress.coins} 炒币
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ===== 区域子地图视图 =====
-  if (view === "area" && currentArea) {
-    const areaLevels = currentArea.levels;
-
-    return (
-      <div className="fixed inset-0 z-50 bg-black/30 flex items-end justify-center" onClick={() => setView("world")}>
-        <div
-          className="bg-white w-full max-w-[430px] rounded-t-3xl overflow-hidden flex flex-col animate-[slideUp_0.3s_ease-out]"
-          style={{ height: "90vh" }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* 头部 */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0]">
-            <button
-              onClick={() => setView("world")}
-              className="flex items-center gap-1 text-sm text-[#3B82F6] font-medium hover:opacity-80"
-            >
-              ← 返回
-            </button>
-            <div className="flex items-center gap-2">
-              <span className="text-lg">{currentArea.icon}</span>
-              <h2 className="text-sm font-bold text-[#1E293B]">{currentArea.name}</h2>
-            </div>
-            <button
-              onClick={onClose}
-              className="w-9 h-9 rounded-full bg-[#F1F5F9] flex items-center justify-center text-[#64748B] text-xl hover:bg-[#E2E8F0] transition-colors"
-            >
-              ×
-            </button>
-          </div>
-
-          {/* 子地图 - 棋盘路径 */}
-          <div className={`flex-1 relative overflow-hidden bg-gradient-to-b ${currentArea.bgGradient}`}>
-            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 600" preserveAspectRatio="xMidYMid meet">
-              {/* 背景装饰 */}
-              <circle cx="50" cy="100" r="60" fill={currentArea.color} opacity="0.04" />
-              <circle cx="350" cy="400" r="80" fill={currentArea.color} opacity="0.04" />
-              <circle cx="200" cy="550" r="50" fill={currentArea.color} opacity="0.03" />
-
-              {/* 蜿蜒路径 */}
-              {areaLevels.length > 1 && (() => {
-                const nodePositions = areaLevels.map((_, i) => {
-                  const total = areaLevels.length;
-                  const yStart = 100;
-                  const yEnd = 500;
-                  const yStep = (yEnd - yStart) / (total - 1);
-                  const y = yStart + i * yStep;
-                  const x = i % 2 === 0 ? 130 : 270;
-                  return { x, y };
-                });
-
-                let pathD = `M ${nodePositions[0].x} ${nodePositions[0].y}`;
-                for (let i = 1; i < nodePositions.length; i++) {
-                  const prev = nodePositions[i - 1];
-                  const curr = nodePositions[i];
-                  const midY = (prev.y + curr.y) / 2;
-                  pathD += ` Q ${prev.x} ${midY} ${(prev.x + curr.x) / 2} ${midY} T ${curr.x} ${curr.y}`;
-                }
-
-                return (
-                  <>
-                    <path
-                      d={pathD}
-                      fill="none"
-                      stroke={currentArea.color}
-                      strokeWidth="5"
-                      strokeDasharray="10 6"
-                      strokeLinecap="round"
-                      opacity="0.25"
-                    />
-                    <path
-                      d={pathD}
-                      fill="none"
-                      stroke={currentArea.color}
-                      strokeWidth="2"
-                      strokeDasharray="4 12"
-                      strokeLinecap="round"
-                      opacity="0.5"
-                    >
-                      <animate attributeName="stroke-dashoffset" from="0" to="-32" dur="2s" repeatCount="indefinite" />
-                    </path>
-                  </>
-                );
-              })()}
-            </svg>
-
-            {/* 关卡节点 */}
-            <div className="relative z-10 flex flex-col items-center gap-8 py-10 px-6 h-full">
-              {areaLevels.map((levelId, idx) => {
-                const { isCompleted, isUnlocked } = getLevelStatus(levelId);
-                const config = getLevelConfig(levelId);
-                const total = areaLevels.length;
-                const yPercent = 15 + (idx / Math.max(total - 1, 1)) * 70;
-                const xPercent = idx % 2 === 0 ? 28 : 68;
-
-                return (
-                  <button
-                    key={levelId}
-                    onClick={() => {
-                      if (!isUnlocked) return;
-                      setActiveLevelId(levelId);
-                      setView("game");
-                    }}
-                    className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center transition-transform hover:scale-110 active:scale-95"
-                    style={{ left: `${xPercent}%`, top: `${yPercent}%` }}
-                  >
-                    {/* 脉冲动画 */}
-                    {isUnlocked && !isCompleted && (
-                      <span
-                        className="absolute w-14 h-14 rounded-full animate-ping opacity-15"
-                        style={{ backgroundColor: currentArea.color }}
-                      />
-                    )}
-
-                    {/* 节点圆圈 */}
-                    <div
-                      className="relative w-12 h-12 rounded-full flex items-center justify-center shadow-lg border-[3px] transition-all"
-                      style={{
-                        backgroundColor: isCompleted ? "#059669" : isUnlocked ? currentArea.color : "#CBD5E1",
-                        borderColor: "white",
-                      }}
-                    >
-                      {isCompleted ? (
-                        <span className="text-white text-lg font-bold">✓</span>
-                      ) : isUnlocked ? (
-                        <span className="text-white text-base">{TYPE_ICONS[config?.type || ""] || levelId}</span>
-                      ) : (
-                        <span className="text-white/60 text-sm">{"\u{1F512}"}</span>
-                      )}
-                    </div>
-
-                    {/* 关卡标签 */}
-                    <div
-                      className="mt-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap shadow-sm"
-                      style={{
-                        backgroundColor: isCompleted ? "#059669" : isUnlocked ? currentArea.color : "#CBD5E1",
-                        color: "white",
-                      }}
-                    >
-                      {config?.title || `关卡${levelId}`}
-                    </div>
-
-                    {/* 玩法标签 */}
-                    {isUnlocked && (
-                      <span className="text-[9px] text-[#94A3B8] mt-0.5">
-                        {config?.type === "learning" ? "知识学习" : config?.type === "quiz_choice" ? "答题闯关" : config?.type === "dialogue" ? "对话闯关" : config?.type === "quiz" ? "知识翻牌" : config?.type === "brain" ? "脑力配对" : "快速反应"}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* 底部区域切换 */}
-          <div className="px-5 py-3 border-t border-[#E2E8F0] bg-[#FAFAF9]">
-            <div className="flex items-center justify-between">
-              <div className="flex gap-2">
-                {MAP_AREAS.map((area) => {
-                  const isActive = area.id === currentAreaId;
-                  return (
-                    <button
-                      key={area.id}
-                      onClick={() => {
-                        if (area.id === currentAreaId) return;
-                        setSlideDir(MAP_AREAS.indexOf(area) > MAP_AREAS.indexOf(currentArea) ? "right" : "left");
-                        setCurrentAreaId(area.id);
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all"
-                      style={{
-                        backgroundColor: isActive ? area.color : "#E2E8F0",
-                        color: isActive ? "white" : "#64748B",
-                      }}
-                    >
-                      <span>{area.icon}</span>
-                      <span>{area.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ===== 游戏视图 =====
-  if (view === "game" && activeLevelId) {
-    const config = getLevelConfig(activeLevelId);
-    const gameData = resolveGameData(activeLevelId);
-    if (!config || !gameData) return null;
-
-    const handleStandardComplete = (passed: boolean) => {
-      if (passed) {
-        addCoins(10);
-        onLevelComplete?.(activeLevelId);
+  const handleLevelComplete = useCallback(
+    (levelId: number) => {
+      if (progress.completedLevels.includes(levelId)) return;
+      const config = getLevelConfig(levelId);
+      if (!config) return;
+      const newCompleted = [...progress.completedLevels, levelId];
+      const newAgents = [...progress.unlockedAgents];
+      if (config.unlockAgents) {
+        for (const agent of config.unlockAgents) {
+          if (!newAgents.includes(agent as TraderRoadAgentId)) {
+            newAgents.push(agent as TraderRoadAgentId);
+          }
+        }
       }
-      setView("area");
-      setActiveLevelId(null);
-    };
+      const newProgress = {
+        ...progress,
+        completedLevels: newCompleted,
+        unlockedAgents: newAgents,
+      };
+      setProgress(newProgress);
+      onLevelComplete?.(levelId);
+    },
+    [progress, onLevelComplete]
+  );
 
-    const handleLearningComplete = () => {
-      addCoins(20);
-      onLevelComplete?.(activeLevelId);
-      setView("area");
-      setActiveLevelId(null);
-    };
+  const getLevelStatus = useCallback(
+    (levelId: number): "completed" | "available" | "locked" => {
+      if (progress.completedLevels.includes(levelId)) return "completed";
+      if (levelId === 1) return "available";
+      if (progress.completedLevels.includes(levelId - 1)) return "available";
+      return "locked";
+    },
+    [progress]
+  );
 
-    const handleQuizChoiceComplete = () => {
-      addCoins(20);
-      onLevelComplete?.(activeLevelId);
-      setView("area");
-      setActiveLevelId(null);
-    };
+  const getZoneProgress = useCallback(
+    (zoneId: number) => {
+      const zone = MAP_ZONES.find((z) => z.id === zoneId);
+      if (!zone) return { done: 0, total: 0 };
+      const done = zone.levels.filter((l) =>
+        progress.completedLevels.includes(l)
+      ).length;
+      return { done, total: zone.levels.length };
+    },
+    [progress]
+  );
 
-    const areaForLevel = MAP_AREAS.find((a) => a.levels.includes(activeLevelId));
+  const isZoneUnlocked = useCallback(
+    (zoneId: number) => {
+      if (zoneId === 1) return true;
+      const prevZone = MAP_ZONES.find((z) => z.id === zoneId - 1);
+      if (!prevZone) return false;
+      return prevZone.levels.some((l) =>
+        progress.completedLevels.includes(l)
+      );
+    },
+    [progress]
+  );
+
+  // ===== Render: World Map =====
+  const renderWorldMap = () => (
+    <div className="relative w-full" style={{ aspectRatio: "3/2" }}>
+      <img
+        src="/map-world-v2.jpeg"
+        alt="金融华二街世界地图"
+        className="w-full h-full object-cover rounded-2xl"
+        draggable={false}
+      />
+      {/* Zone hotspots */}
+      {WORLD_ZONE_HOTSPOTS.map((hotspot) => {
+        const zone = MAP_ZONES.find((z) => z.id === hotspot.zoneId)!;
+        const zoneProgress = getZoneProgress(hotspot.zoneId);
+        const unlocked = isZoneUnlocked(hotspot.zoneId);
+        const allDone = zoneProgress.done === zoneProgress.total;
+        const isHovered = hoveredZone === hotspot.zoneId;
+
+        return (
+          <button
+            key={hotspot.zoneId}
+            className="absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 group"
+            style={{
+              left: `${hotspot.x}%`,
+              top: `${hotspot.y}%`,
+            }}
+            onClick={() => {
+              if (unlocked) {
+                setActiveZoneId(hotspot.zoneId);
+                setView("zone");
+              }
+            }}
+            onMouseEnter={() => setHoveredZone(hotspot.zoneId)}
+            onMouseLeave={() => setHoveredZone(null)}
+          >
+            {/* Pulsing ring */}
+            {unlocked && !allDone && (
+              <span
+                className="absolute inset-0 rounded-full animate-ping opacity-30"
+                style={{ backgroundColor: zone.color }}
+              />
+            )}
+            {/* Hotspot circle */}
+            <span
+              className="relative flex items-center justify-center rounded-full border-3 shadow-lg transition-all duration-300"
+              style={{
+                width: isHovered ? 56 : 44,
+                height: isHovered ? 56 : 44,
+                backgroundColor: unlocked ? zone.color : "#94A3B8",
+                borderColor: "white",
+                borderWidth: 3,
+                opacity: unlocked ? 1 : 0.5,
+              }}
+            >
+              {allDone ? (
+                <span className="text-white text-lg">✓</span>
+              ) : (
+                <span className="text-white text-sm font-bold">
+                  {zoneProgress.done}/{zoneProgress.total}
+                </span>
+              )}
+            </span>
+            {/* Tooltip */}
+            {isHovered && unlocked && (
+              <div
+                className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-white rounded-xl shadow-xl border px-3 py-2 whitespace-nowrap z-50"
+                style={{ borderColor: zone.color }}
+              >
+                <p className="text-sm font-bold text-[#1E293B]">
+                  {zone.name}
+                </p>
+                <p className="text-[10px] text-[#64748B]">{zone.subtitle}</p>
+                <p className="text-[10px] font-semibold mt-0.5" style={{ color: zone.color }}>
+                  进度 {zoneProgress.done}/{zoneProgress.total}
+                </p>
+              </div>
+            )}
+            {/* Lock icon for locked zones */}
+            {!unlocked && (
+              <span className="absolute -top-1 -right-1 text-xs">🔒</span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  // ===== Render: Zone Map =====
+  const renderZoneMap = () => {
+    const zone = MAP_ZONES.find((z) => z.id === activeZoneId);
+    if (!zone) return null;
 
     return (
-      <div className="fixed inset-0 z-[60] bg-black/30 flex items-end justify-center">
-        <div
-          className="bg-white w-full max-w-[430px] rounded-t-3xl overflow-hidden flex flex-col animate-[slideUp_0.3s_ease-out]"
-          style={{ height: "92vh" }}
-        >
-          {/* 头部 */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0]">
+      <div className="relative w-full" style={{ aspectRatio: "3/2" }}>
+        <img
+          src={zone.image}
+          alt={zone.name}
+          className="w-full h-full object-cover rounded-2xl"
+          draggable={false}
+        />
+        {/* Level markers */}
+        {zone.markers.map((marker) => {
+          const status = getLevelStatus(marker.levelId);
+          const config = getLevelConfig(marker.levelId);
+          const isHovered = hoveredMarker === marker.levelId;
+
+          const markerColors = {
+            completed: "#059669",
+            available: zone.color,
+            locked: "#94A3B8",
+          };
+
+          return (
             <button
+              key={marker.levelId}
+              className="absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300"
+              style={{
+                left: `${marker.x}%`,
+                top: `${marker.y}%`,
+              }}
               onClick={() => {
-                setView("area");
+                if (status !== "locked") {
+                  setActiveLevelId(marker.levelId);
+                  setView("game");
+                }
+              }}
+              onMouseEnter={() => setHoveredMarker(marker.levelId)}
+              onMouseLeave={() => setHoveredMarker(null)}
+            >
+              {/* Pulsing ring for available */}
+              {status === "available" && (
+                <span
+                  className="absolute inset-0 rounded-full animate-ping opacity-30"
+                  style={{ backgroundColor: zone.color }}
+                />
+              )}
+              {/* Marker circle */}
+              <span
+                className="relative flex items-center justify-center rounded-full shadow-lg transition-all duration-300"
+                style={{
+                  width: isHovered ? 52 : 40,
+                  height: isHovered ? 52 : 40,
+                  backgroundColor: markerColors[status],
+                  border: "3px solid white",
+                  opacity: status === "locked" ? 0.5 : 1,
+                }}
+              >
+                {status === "completed" ? (
+                  <span className="text-white text-base">✓</span>
+                ) : status === "locked" ? (
+                  <span className="text-white text-sm">🔒</span>
+                ) : (
+                  <span className="text-white text-sm font-bold">
+                    {marker.levelId}
+                  </span>
+                )}
+              </span>
+              {/* Tooltip */}
+              {isHovered && status !== "locked" && config && (
+                <div
+                  className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-white rounded-xl shadow-xl border px-3 py-2 whitespace-nowrap z-50"
+                  style={{ borderColor: zone.color }}
+                >
+                  <p className="text-sm font-bold text-[#1E293B]">
+                    第{marker.levelId}关：{config.title}
+                  </p>
+                  <p className="text-[10px] text-[#64748B]">
+                    {config.type === "learning" ? "知识学习" : config.type === "quiz_choice" ? "答题闯关" : config.type === "dialogue" ? "对话闯关" : config.type === "quiz" ? "知识翻牌" : config.type === "brain" ? "脑力配对" : "快速反应"}
+                  </p>
+                  {status === "available" && (
+                    <p
+                      className="text-[10px] font-semibold mt-0.5"
+                      style={{ color: zone.color }}
+                    >
+                      点击开始挑战 →
+                    </p>
+                  )}
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // ===== Render: Game =====
+  const renderGame = () => {
+    if (!activeLevelId) return null;
+    const config = getLevelConfig(activeLevelId);
+    if (!config) return null;
+    const zone = MAP_ZONES.find((z) => z.levels.includes(activeLevelId));
+
+    return (
+      <div className="flex flex-col h-full">
+        {/* Game header */}
+        <div className="flex items-center gap-2 mb-3 px-1">
+          {zone && (
+            <span
+              className="text-lg"
+              style={{ filter: "grayscale(0)" }}
+            >
+              {zone.id === 1 ? "🏫" : zone.id === 2 ? "🏛️" : "🌋"}
+            </span>
+          )}
+          <h3 className="text-sm font-bold text-[#1E293B]">
+            第{activeLevelId}关：{config.title}
+          </h3>
+          <span className="text-[10px] text-[#64748B] ml-auto">
+            {config.type === "learning" ? "知识学习" : config.type === "quiz_choice" ? "答题闯关" : config.type === "dialogue" ? "对话闯关" : config.type === "quiz" ? "知识翻牌" : config.type === "brain" ? "脑力配对" : "快速反应"}
+          </span>
+        </div>
+        {/* Game content */}
+        <div className="flex-1 min-h-0">
+          {config.type === "dialogue" && (
+            <DialogueGame
+              data={DIALOGUE_DATA[activeLevelId]}
+              onComplete={() => {
+                handleLevelComplete(activeLevelId);
+                setView("zone");
                 setActiveLevelId(null);
               }}
-              className="flex items-center gap-1 text-sm text-[#3B82F6] font-medium hover:opacity-80"
-            >
-              ← 返回地图
-            </button>
-            <div className="flex items-center gap-2">
-              {areaForLevel && <span className="text-base">{areaForLevel.icon}</span>}
-              <h2 className="text-sm font-bold text-[#1E293B]">
-                第{activeLevelId}关 · {config.title}
-              </h2>
-            </div>
-            <button
-              onClick={onClose}
-              className="w-9 h-9 rounded-full bg-[#F1F5F9] flex items-center justify-center text-[#64748B] text-xl hover:bg-[#E2E8F0] transition-colors"
-            >
-              ×
-            </button>
-          </div>
-
-          {/* 游戏内容 */}
-          <div className="flex-1 overflow-y-auto">
-            {gameData.type === "dialogue" && (
-              <DialogueGame data={gameData.data} onComplete={handleStandardComplete} />
-            )}
-            {gameData.type === "quiz" && (
-              <QuizGame data={gameData.data} onComplete={handleStandardComplete} />
-            )}
-            {gameData.type === "brain" && (
-              <BrainGame data={gameData.data} onComplete={handleStandardComplete} />
-            )}
-            {gameData.type === "minigame" && (
-              <MiniGame data={gameData.data} onComplete={handleStandardComplete} />
-            )}
-            {gameData.type === "learning" && config.learningCardIndices && (
-              <LearningCards
-                cardIndices={config.learningCardIndices}
-                learnedCards={progress.learnedCards}
-                onCardLearned={() => {}}
-                onComplete={handleLearningComplete}
-                onClose={() => { setView("area"); setActiveLevelId(null); }}
-              />
-            )}
-            {gameData.type === "quiz_choice" && config.quizQuestionIndices && (
-              <QuizChoice
-                questionIndices={config.quizQuestionIndices}
-                correctQuizIds={progress.correctQuizIds}
-                onQuizCorrect={() => {}}
-                onComplete={handleQuizChoiceComplete}
-                onClose={() => { setView("area"); setActiveLevelId(null); }}
-              />
-            )}
-          </div>
+            />
+          )}
+          {config.type === "quiz" && (
+            <QuizGame
+              data={QUIZ_DATA[activeLevelId]}
+              onComplete={() => {
+                handleLevelComplete(activeLevelId);
+                setView("zone");
+                setActiveLevelId(null);
+              }}
+            />
+          )}
+          {config.type === "brain" && (
+            <BrainGame
+              data={BRAIN_DATA[activeLevelId]}
+              onComplete={() => {
+                handleLevelComplete(activeLevelId);
+                setView("zone");
+                setActiveLevelId(null);
+              }}
+            />
+          )}
+          {config.type === "minigame" && (
+            <MiniGame
+              data={MINIGAME_DATA[activeLevelId]}
+              onComplete={() => {
+                handleLevelComplete(activeLevelId);
+                setView("zone");
+                setActiveLevelId(null);
+              }}
+            />
+          )}
+          {config.type === "learning" && config.learningCardIndices && (
+            <LearningCards
+              cardIndices={config.learningCardIndices}
+              learnedCards={progress.learnedCards}
+              onCardLearned={() => {}}
+              onComplete={() => {
+                addCoins(20);
+                handleLevelComplete(activeLevelId);
+                setView("zone");
+                setActiveLevelId(null);
+              }}
+              onClose={() => {
+                setView("zone");
+                setActiveLevelId(null);
+              }}
+            />
+          )}
+          {config.type === "quiz_choice" && config.quizQuestionIndices && (
+            <QuizChoice
+              questionIndices={config.quizQuestionIndices}
+              correctQuizIds={progress.correctQuizIds}
+              onQuizCorrect={() => {}}
+              onComplete={() => {
+                addCoins(20);
+                handleLevelComplete(activeLevelId);
+                setView("zone");
+                setActiveLevelId(null);
+              }}
+              onClose={() => {
+                setView("zone");
+                setActiveLevelId(null);
+              }}
+            />
+          )}
         </div>
       </div>
     );
-  }
+  };
 
-  return null;
+  // ===== Main Render =====
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      {/* Panel */}
+      <div className="relative bg-[#F5F5F7] rounded-3xl shadow-2xl w-[95vw] max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[#E2E8F0] bg-white rounded-t-3xl">
+          <div className="flex items-center gap-2">
+            {view !== "world" && (
+              <button
+                onClick={() => {
+                  if (view === "game") setView("zone");
+                  else setView("world");
+                }}
+                className="w-7 h-7 rounded-full bg-[#F1F5F9] flex items-center justify-center text-[#64748B] hover:bg-[#E2E8F0] transition-colors text-sm"
+              >
+                ←
+              </button>
+            )}
+            <h2 className="text-base font-bold text-[#1E293B]">
+              {view === "world"
+                ? "🗺️ 金融华二街"
+                : view === "zone"
+                ? MAP_ZONES.find((z) => z.id === activeZoneId)?.name ?? ""
+                : `第${activeLevelId}关`}
+            </h2>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-bold text-[#D97706]">
+              🪙 {progress.coins}
+            </span>
+            <button
+              onClick={onClose}
+              className="w-7 h-7 rounded-full bg-[#F1F5F9] flex items-center justify-center text-[#64748B] hover:bg-[#E2E8F0] transition-colors text-sm"
+            >
+              
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {view === "world" && renderWorldMap()}
+          {view === "zone" && renderZoneMap()}
+          {view === "game" && renderGame()}
+        </div>
+
+        {/* Zone nav bar (zone view) */}
+        {view === "zone" && (
+          <div className="flex items-center gap-2 px-4 py-2 border-t border-[#E2E8F0] bg-white rounded-b-3xl">
+            {MAP_ZONES.map((z) => {
+              const zp = getZoneProgress(z.id);
+              const unlocked = isZoneUnlocked(z.id);
+              const isActive = z.id === activeZoneId;
+              return (
+                <button
+                  key={z.id}
+                  className={`flex-1 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${
+                    isActive
+                      ? "text-white shadow-sm"
+                      : unlocked
+                      ? "bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]"
+                      : "bg-[#F8FAFC] text-[#CBD5E1] cursor-not-allowed"
+                  }`}
+                  style={
+                    isActive ? { backgroundColor: z.color } : undefined
+                  }
+                  onClick={() => {
+                    if (unlocked) setActiveZoneId(z.id);
+                  }}
+                  disabled={!unlocked}
+                >
+                  {z.name} {zp.done}/{zp.total}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
+
+export default GameMapPlayer;
