@@ -35,8 +35,8 @@ const MAP_ZONES: MapZone[] = [
   {
     id: 1,
     name: "金融学院区",
-    subtitle: "基础入门 · 关卡 1-4",
-    image: "/map-zone-1.jpeg",
+    subtitle: "Financial Academy",
+    image: "/map-zone-1-v2.jpeg",
     color: "#D97706",
     colorLight: "#FEF3C7",
     levels: [1, 2, 3, 4],
@@ -50,8 +50,8 @@ const MAP_ZONES: MapZone[] = [
   {
     id: 2,
     name: "交易所区",
-    subtitle: "进阶实战 · 关卡 5-7",
-    image: "/map-zone-2.jpeg",
+    subtitle: "Exchange District",
+    image: "/map-zone-2-v2.jpeg",
     color: "#3B82F6",
     colorLight: "#DBEAFE",
     levels: [5, 6, 7],
@@ -64,8 +64,8 @@ const MAP_ZONES: MapZone[] = [
   {
     id: 3,
     name: "风险山谷",
-    subtitle: "高阶挑战 · 关卡 8-10",
-    image: "/map-zone-3.jpeg",
+    subtitle: "Risk Valley",
+    image: "/map-zone-3-v2.jpeg",
     color: "#DC2626",
     colorLight: "#FEE2E2",
     levels: [8, 9, 10],
