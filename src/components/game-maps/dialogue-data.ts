@@ -100,18 +100,18 @@ export const DIALOGUE_DATA: Record<number, DialogueLevelData> = {
     nodes: [
       {
         id: 1,
-        scene: "【行情 A：断崖图】\n\n• 昨日收盘价：30 元\n• 今日开盘价：20.20 元\n• 图表显示跌幅：32.7%\n• 更新时间：今日 15 点\n• 复权方式：未复权\n\nK 线上出现一根巨大的阴线。\n\nLead Agent：\n「一天跌掉三成，这根线看着像公司出了大事。」",
+        scene: "【行情 A：断崖图】\n\n• 昨日收盘价：30 元\n• 今日开盘价：20.20 元\n• 图表显示跌幅：32.7%\n• 更新时间：今日 15 点\n• 价格调整记录：缺失\n\nK 线上出现一根巨大的阴线。\n\nLead Agent：\n「一天跌掉三成，这根线看着像公司出了大事。」",
         options: [
-          { id: "a1", text: "检查复权方式——把「每十股转增五股」拖到缺口处", correct: true, feedback: "K 线重新计算，所谓暴跌变成上涨 1%。\n\nData Agent：\n「股价变低了，持股数量同时增加。图表忘了处理这件事。」\n\nLead Agent：\n「原来这根吓人的阴线，是数据画出来的。」\n\n行情 A 获得标签：「复权错误」" },
-          { id: "a2", text: "出现这么大的阴线，准备卖出", correct: false, feedback: "Data Agent 皱眉：\n「你还没检查复权方式，就要交出持仓？」\n\nLead Agent：\n「图表吓你一下，你就把持仓交出去了？」" },
+          { id: "a1", text: "检查价格调整——把「每十股转增五股」拖到缺口处", correct: true, feedback: "拖放完成，计算动画开始：\n\n调整前：10 股 × 30 元 = 300 元\n调整后：15 股 × 20 元 = 300 元\n\n图表中的昨日价格从 30 元调整为 20 元，原本显示的下跌 32.7% 变为上涨 1%。\n\nData Agent：\n「公司调整了股数，图表却还拿昨天的旧价格作比较，这条跌幅自然算错了。」\n\nLead Agent：\n「价格看着少了三成，手里的股份其实多了。」\n\n行情 A 获得标签：「价格未调整」" },
+          { id: "a2", text: "出现这么大的阴线，准备卖出", correct: false, feedback: "Data Agent 皱眉：\n「你还没检查价格有没有调整过，就要交出持仓？」\n\nLead Agent：\n「图表吓你一下，你就把持仓交出去了？」" },
           { id: "a3", text: "忽略这根阴线，继续看下一张图", correct: false, feedback: "Data Agent 摇头：\n「不弄清楚原因就跳过？万一这是真的暴跌呢？」" },
         ],
       },
       {
         id: 2,
-        scene: "【行情 B：完整图】\n\n• 昨日复权价格：20 元\n• 今日开盘价：20.20 元\n• 今日收盘价：20.80 元\n• 更新时间：今日 15 点\n• 成交量：完整\n• 停牌与除权记录：完整\n\n这张图显示股票上涨 4%，成交量温和增加。",
+        scene: "【行情 B：完整图】\n\n• 昨日可比价格：20 元\n• 今日开盘价：20.20 元\n• 今日收盘价：20.80 元\n• 更新时间：今日 15 点\n• 成交量：完整\n• 停牌与股本变动记录：完整\n\n这张图显示股票上涨 4%，成交量温和增加。",
         options: [
-          { id: "b1", text: "时间对齐，除权已处理，成交量完整——可用于交易", correct: true, feedback: "Data Agent 点头：\n「时间对齐，除权已经处理，价格和成交量也能互相核对。」\n\n行情 B 获得标签：「可用于交易」" },
+          { id: "b1", text: "时间对齐，价格调整记录也在，成交量完整——可用于交易", correct: true, feedback: "Data Agent 点头：\n「时间已经对齐，价格调整记录也在，价格和成交量能互相核对。」\n\n行情 B 获得标签：「可用于交易」" },
           { id: "b2", text: "涨幅太小，不值得关注", correct: false, feedback: "Data Agent 摇头：\n「涨幅大小不是重点。重点是数据是否可靠。」" },
         ],
       },
@@ -126,15 +126,15 @@ export const DIALOGUE_DATA: Record<number, DialogueLevelData> = {
       },
       {
         id: 4,
-        scene: "三张图摆在面前。\n\n• 行情 A：「复权错误」— 所谓暴跌是送股记录\n• 行情 B：「可用于交易」— 时间对齐，数据完整\n• 行情 C：「数据延迟」— 最后十分钟是系统估算\n\nData Agent：\n「现在，选一张图用于交易。」",
+        scene: "三张图摆在面前。\n\n• 行情 A：「价格未调整」— 所谓暴跌是送股记录\n• 行情 B：「可用于交易」— 时间对齐，数据完整\n• 行情 C：「数据延迟」— 最后十分钟是系统估算\n\nData Agent：\n「现在，选一张图用于交易。」",
         options: [
-          { id: "s1", text: "选择行情 B — 处理了除权，更新时间到收盘，成交量完整", correct: true, feedback: "Data Agent 微微一笑：\n「现在你看到的，才是同一把尺子量出来的价格。」\n\nLead Agent：\n「以后看见奇怪的 K 线，我得先问问图表做过什么。」" },
+          { id: "s1", text: "选择行情 B — 处理了股数变化，更新时间到收盘，成交量完整", correct: true, feedback: "Data Agent 微微一笑：\n「现在你看到的，才是同一把尺子量出来的价格。」\n\nLead Agent：\n「以后看见奇怪的 K 线，我得先查查价格有没有调整，数据有没有到齐。」" },
           { id: "s2", text: "选择行情 A — 出现大阴线，准备卖出", correct: false, feedback: "Data Agent：\n「你交易的是一次送股记录。」\n\nLead Agent：\n「图表吓你一下，你就把持仓交出去了。」\n\n——结局：「虚假暴跌」——" },
           { id: "s3", text: "选择行情 C — 突破信号明确，准备追涨", correct: false, feedback: "Data Agent：\n「最后十分钟的数据还没传回来，这根突破线来自系统估算。」\n\nLead Agent：\n「价格还没走完，你已经替它庆祝了。」\n\n——结局：「幽灵突破」——" },
         ],
       },
     ],
-    goodEnding: "Data Agent 离开修复台，正式加入队伍。\n\n你解锁了技能「行情校验」：\n• K 线复权状态\n• 行情更新时间\n• 成交量缺失\n• 停牌与除权标记\n\n下一关进入 K 线交易。",
+    goodEnding: "Data Agent 离开修复台，正式加入队伍。\n\n你解锁了技能「行情校验」：\n• 检查价格调整记录\n• 检查行情更新时间\n• 检查成交量是否完整\n• 检查停牌和股本变动记录\n\n下一关进入 K 线交易。",
     badEnding: "你带着错误行情进入交易。\n\nData Agent 摇头：\n「三张图里有一张是对的，你没选到它。」\n\nLead Agent：\n「别灰心，下次先看数据再决策。」",
   },
   4: {
