@@ -57,6 +57,50 @@ interface StockBasicRow {
   list_date: string;
 }
 
+// Built-in fallback stock list for when Tushare API is unavailable
+const FALLBACK_STOCK_LIST: StockBasicRow[] = [
+  { ts_code: "600519.SH", symbol: "600519", name: "贵州茅台", industry: "白酒", market: "主板", list_date: "20010827" },
+  { ts_code: "000858.SZ", symbol: "000858", name: "五粮液", industry: "白酒", market: "主板", list_date: "19980427" },
+  { ts_code: "000568.SZ", symbol: "000568", name: "泸州老窖", industry: "白酒", market: "主板", list_date: "19940509" },
+  { ts_code: "600036.SH", symbol: "600036", name: "招商银行", industry: "银行", market: "主板", list_date: "20020409" },
+  { ts_code: "601318.SH", symbol: "601318", name: "中国平安", industry: "保险", market: "主板", list_date: "20070301" },
+  { ts_code: "000333.SZ", symbol: "000333", name: "美的集团", industry: "家用电器", market: "主板", list_date: "20130930" },
+  { ts_code: "000651.SZ", symbol: "000651", name: "格力电器", industry: "家用电器", market: "主板", list_date: "19961118" },
+  { ts_code: "002594.SZ", symbol: "002594", name: "比亚迪", industry: "汽车整车", market: "主板", list_date: "20110630" },
+  { ts_code: "600104.SH", symbol: "600104", name: "上汽集团", industry: "汽车整车", market: "主板", list_date: "19971125" },
+  { ts_code: "601012.SH", symbol: "601012", name: "隆基绿能", industry: "光伏设备", market: "主板", list_date: "20120411" },
+  { ts_code: "300750.SZ", symbol: "300750", name: "宁德时代", industry: "电池", market: "创业板", list_date: "20180611" },
+  { ts_code: "600900.SH", symbol: "600900", name: "长江电力", industry: "电力", market: "主板", list_date: "20031118" },
+  { ts_code: "601899.SH", symbol: "601899", name: "紫金矿业", industry: "贵金属", market: "主板", list_date: "20080425" },
+  { ts_code: "600030.SH", symbol: "600030", name: "中信证券", industry: "证券", market: "主板", list_date: "20030106" },
+  { ts_code: "000001.SZ", symbol: "000001", name: "平安银行", industry: "银行", market: "主板", list_date: "19910403" },
+  { ts_code: "600276.SH", symbol: "600276", name: "恒瑞医药", industry: "化学制药", market: "主板", list_date: "20001018" },
+  { ts_code: "000002.SZ", symbol: "000002", name: "万科A", industry: "房地产开发", market: "主板", list_date: "19910129" },
+  { ts_code: "600048.SH", symbol: "600048", name: "保利发展", industry: "房地产开发", market: "主板", list_date: "20060731" },
+  { ts_code: "002415.SZ", symbol: "002415", name: "海康威视", industry: "安防设备", market: "中小板", list_date: "20100528" },
+  { ts_code: "000725.SZ", symbol: "000725", name: "京东方A", industry: "光学光电子", market: "主板", list_date: "20010112" },
+  { ts_code: "601888.SH", symbol: "601888", name: "中国中免", industry: "旅游零售", market: "主板", list_date: "20091015" },
+  { ts_code: "600585.SH", symbol: "600585", name: "海螺水泥", industry: "水泥", market: "主板", list_date: "20020228" },
+  { ts_code: "002714.SZ", symbol: "002714", name: "牧原股份", industry: "养殖", market: "中小板", list_date: "20140128" },
+  { ts_code: "600887.SH", symbol: "600887", name: "伊利股份", industry: "乳业", market: "主板", list_date: "19960312" },
+  { ts_code: "000063.SZ", symbol: "000063", name: "中兴通讯", industry: "通信设备", market: "主板", list_date: "19971118" },
+  { ts_code: "601398.SH", symbol: "601398", name: "工商银行", industry: "银行", market: "主板", list_date: "20061027" },
+  { ts_code: "601288.SH", symbol: "601288", name: "农业银行", industry: "银行", market: "主板", list_date: "20100715" },
+  { ts_code: "600000.SH", symbol: "600000", name: "浦发银行", industry: "银行", market: "主板", list_date: "19991110" },
+  { ts_code: "002304.SZ", symbol: "002304", name: "洋河股份", industry: "白酒", market: "中小板", list_date: "20091106" },
+  { ts_code: "600809.SH", symbol: "600809", name: "山西汾酒", industry: "白酒", market: "主板", list_date: "19940106" },
+  { ts_code: "002352.SZ", symbol: "002352", name: "顺丰控股", industry: "物流", market: "中小板", list_date: "20100226" },
+  { ts_code: "601816.SH", symbol: "601816", name: "京沪高铁", industry: "铁路运输", market: "主板", list_date: "20200116" },
+  { ts_code: "688981.SH", symbol: "688981", name: "中芯国际", industry: "半导体", market: "科创板", list_date: "20200716" },
+  { ts_code: "300059.SZ", symbol: "300059", name: "东方财富", industry: "互联网券商", market: "创业板", list_date: "20100319" },
+  { ts_code: "002475.SZ", symbol: "002475", name: "立讯精密", industry: "消费电子", market: "中小板", list_date: "20100915" },
+  { ts_code: "600309.SH", symbol: "600309", name: "万华化学", industry: "化学制品", market: "主板", list_date: "20010105" },
+  { ts_code: "300760.SZ", symbol: "300760", name: "迈瑞医疗", industry: "医疗器械", market: "创业板", list_date: "20181016" },
+  { ts_code: "603259.SH", symbol: "603259", name: "药明康德", industry: "CXO", market: "主板", list_date: "20180508" },
+  { ts_code: "002049.SZ", symbol: "002049", name: "紫光国微", industry: "芯片", market: "中小板", list_date: "20050606" },
+  { ts_code: "688012.SH", symbol: "688012", name: "中微公司", industry: "半导体设备", market: "科创板", list_date: "20190722" },
+];
+
 async function getStockBasicList(): Promise<StockBasicRow[]> {
   // Check cache first (7-day TTL)
   const cached = await getLatestStockBasicCache();
@@ -75,7 +119,8 @@ async function getStockBasicList(): Promise<StockBasicRow[]> {
     await saveStockBasicCache(rows as unknown as Record<string, unknown>[]);
     return rows;
   } catch {
-    return [];
+    // Fallback to built-in stock list when Tushare is unavailable
+    return FALLBACK_STOCK_LIST;
   }
 }
 
