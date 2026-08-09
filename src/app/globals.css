@@ -320,3 +320,51 @@ body {
 .animate-glow-pulse {
   animation: glowPulse 2.5s ease-in-out infinite;
 }
+
+/* ===== Onboarding Guide 动画 ===== */
+
+/* 金色扫光 */
+@keyframes onboarding-shine {
+  0% { transform: translateX(-100%) skewX(-12deg); }
+  40% { transform: translateX(200%) skewX(-12deg); }
+  100% { transform: translateX(200%) skewX(-12deg); }
+}
+.animate-onboarding-shine {
+  animation: onboarding-shine 2.5s ease-in-out infinite;
+}
+
+/* 粒子漂浮 */
+@keyframes onboarding-float {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.4; }
+  50% { transform: translateY(-20px) scale(1.2); opacity: 0.8; }
+}
+.animate-onboarding-float {
+  animation: onboarding-float 3s ease-in-out infinite;
+}
+
+/* 头像光环呼吸 */
+@keyframes onboarding-avatar-glow {
+  0%, 100% { box-shadow: 0 0 16px rgba(251, 191, 36, 0.3), 0 0 32px rgba(251, 191, 36, 0.1); }
+  50% { box-shadow: 0 0 24px rgba(251, 191, 36, 0.5), 0 0 48px rgba(251, 191, 36, 0.2); }
+}
+.animate-onboarding-avatar-glow {
+  animation: onboarding-avatar-glow 2.5s ease-in-out infinite;
+}
+
+/* 弹窗进入 */
+@keyframes onboarding-enter {
+  0% { opacity: 0; transform: scale(0.92) translateY(20px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-onboarding-enter {
+  animation: onboarding-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 任务卡脉冲边框 */
+@keyframes onboarding-task-pulse {
+  0%, 100% { border-color: rgba(251, 191, 36, 0.25); }
+  50% { border-color: rgba(251, 191, 36, 0.5); }
+}
+.animate-onboarding-task-pulse {
+  animation: onboarding-task-pulse 2s ease-in-out infinite;
+}

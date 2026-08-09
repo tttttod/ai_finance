@@ -296,6 +296,7 @@ export default function MiniProgramPage() {
       {/* 新手引导弹窗 */}
       <OnboardingGuideModal
         isOpen={showOnboardingGuide}
+        tradeTIResult={tradeTIResult}
         onClose={() => {
           if (typeof window !== "undefined") {
             localStorage.setItem("market_adventure_onboarding_seen", "true");
