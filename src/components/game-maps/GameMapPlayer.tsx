@@ -121,7 +121,6 @@ export function GameMapPlayer({
   const [activeZoneId, setActiveZoneId] = useState<number | null>(null);
   const [activeLevelId, setActiveLevelId] = useState<number | null>(null);
   const [hoveredMarker, setHoveredMarker] = useState<number | null>(null);
-  const [hoveredZone, setHoveredZone] = useState<number | null>(null);
   const [hoveredWorldLoc, setHoveredWorldLoc] = useState<number | null>(null);
   const [clickedWorldLoc, setClickedWorldLoc] = useState<number | null>(null);
   const [progress, setProgress] = useState(() => loadTraderRoadProgress());
