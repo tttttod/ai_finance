@@ -3148,7 +3148,7 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
       )}
 
       {/* 6. 今日认知经验 */}
-      {(adventureDetailsExpanded || activePanel === "tasks") && (
+      {(adventureDetailsExpanded || activePanel === "summary") && (
       <div className="rounded-xl p-4 border" style={{ background: `linear-gradient(135deg, ${meta.color}08, ${meta.color}02)`, borderColor: `${meta.color}20` }}>
         <div className="flex items-center gap-2 mb-3">
           <span className="text-sm">📊</span>
