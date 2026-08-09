@@ -1130,83 +1130,53 @@ function ModelTab() {
         </div>
       </div>
 
-      {/* 因子选择区 */}
+      {/* 已选因子 */}
       <div className="bg-white rounded-lg p-4 border border-slate-100">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-slate-800">因子选择</h3>
-          <span className="text-[10px] text-slate-500">已选 {selectedFactors.length} 个</span>
-        </div>
-        <p className="text-[10px] text-slate-500 mb-3 leading-relaxed">
-          你可以选择自己信任的因子，系统会随机抽取10只股票进行拟合测试。因子越多不一定越好，过多因子可能导致过拟合。
-        </p>
-
-        <div className="space-y-2">
-          {FACTOR_LIBRARY.map((group) => (
-            <div key={group.group} className="border border-slate-100 rounded-lg overflow-hidden">
+          <h3 className="text-sm font-semibold text-slate-800">已选因子</h3>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-slate-500">共 {selectedFactors.length} 个</span>
+            {selectedFactors.length > 0 && (
               <button
-                className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 transition-colors"
-                onClick={() => setExpandedFactorGroup(expandedFactorGroup === group.group ? null : group.group)}
+                className="text-[10px] text-red-500 hover:text-red-600"
+                onClick={() => setSelectedFactors([])}
               >
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-slate-700">{group.group}</span>
-                  <span className="text-[10px] text-slate-500">{group.metrics.length}个指标</span>
-                </div>
-                <svg
-                  className={`w-3 h-3 text-slate-400 transition-transform ${expandedFactorGroup === group.group ? "rotate-180" : ""}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                清空
               </button>
-              {expandedFactorGroup === group.group && (
-                <div className="p-3 space-y-2 bg-white">
-                  <p className="text-[10px] text-slate-500 mb-2">{group.description}</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {group.metrics.map((metric) => (
-                      <button
-                        key={metric}
-                        className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
-                          isFactorSelected(metric)
-                            ? "bg-blue-50 border-blue-200 text-blue-700"
-                            : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
-                        }`}
-                        onClick={() => toggleFactor(metric)}
-                      >
-                        {isFactorSelected(metric) ? "✓ " : ""}{metric}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+            )}
+          </div>
         </div>
 
-        <div className="flex gap-2 mt-4">
-          <button
-            className="flex-1 text-[10px] py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
-            onClick={handleUseRecommended}
-          >
-            使用推荐因子组合
-          </button>
-          <button
-            className="flex-1 text-[10px] py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
-            onClick={handleStartTest}
-            disabled={isTesting || selectedFactors.length === 0}
-          >
-            {isTesting ? "测试中..." : "开始拟合测试"}
-          </button>
-        </div>
+        {selectedFactors.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {selectedFactors.map((factor) => (
+              <button
+                key={factor}
+                className="text-[10px] px-2 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors group"
+                onClick={() => toggleFactor(factor)}
+              >
+                <span className="group-hover:hidden">✓ {factor}</span>
+                <span className="hidden group-hover:inline">✕ {factor}</span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="text-[10px] text-slate-400 mb-3">
+            从上方因子库中选择，或使用推荐因子组合
+          </p>
+        )}
+
+        <button
+          className="w-full text-[10px] py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+          onClick={handleUseRecommended}
+        >
+          使用推荐因子组合
+        </button>
       </div>
 
-      {/* 选股模式选择 */}
+      {/* 选股方式 */}
       <div className="bg-white rounded-lg p-4 border border-slate-100">
         <h3 className="text-sm font-semibold text-slate-800 mb-3">选股方式</h3>
-        <p className="text-[10px] text-slate-500 mb-3 leading-relaxed">
-          选择随机股票或输入你关注的股票，系统会将选定的因子应用到这些股票上进行拟合测试。
-        </p>
 
         <div className="flex gap-2 mb-3">
           <button
@@ -1215,7 +1185,7 @@ function ModelTab() {
                 ? "bg-blue-50 border-blue-200 text-blue-700"
                 : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
             }`}
-            onClick={() => setStockMode("random")}
+            onClick={() => { setStockMode("random"); setCustomStocks(""); setParsedCustomStocks([]); }}
           >
             随机股票（10只）
           </button>
@@ -1231,6 +1201,12 @@ function ModelTab() {
           </button>
         </div>
 
+        {stockMode === "random" && (
+          <p className="text-[10px] text-slate-500">
+            系统将随机抽取 10 只股票作为测试样本
+          </p>
+        )}
+
         {stockMode === "custom" && (
           <div>
             <label className="text-[10px] text-slate-600 mb-1 block">
@@ -1238,7 +1214,7 @@ function ModelTab() {
             </label>
             <textarea
               className="w-full text-xs p-3 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-300 resize-none"
-              rows={5}
+              rows={4}
               placeholder={"贵州茅台 600519\n宁德时代 300750\n比亚迪 002594\n招商银行 600036"}
               value={customStocks}
               onChange={(e) => handleCustomStocksChange(e.target.value)}
@@ -1261,6 +1237,32 @@ function ModelTab() {
           </div>
         )}
       </div>
+
+      {/* 开始拟合测试 — 页面底部主按钮 */}
+      {(() => {
+        const hasFactors = selectedFactors.length > 0;
+        const hasStockScope = stockMode === "random" || (stockMode === "custom" && parsedCustomStocks.length > 0);
+        const canStart = hasFactors && hasStockScope;
+
+        let hint = "";
+        if (!hasFactors) hint = "请至少选择一个因子";
+        else if (stockMode === "custom" && parsedCustomStocks.length === 0) hint = "请添加至少一只股票";
+
+        return (
+          <div className="space-y-2">
+            {!canStart && hint && (
+              <p className="text-[10px] text-amber-600 text-center">{hint}</p>
+            )}
+            <button
+              className="w-full py-3 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleStartTest}
+              disabled={!canStart || isTesting}
+            >
+              {isTesting ? "测试中..." : "开始拟合测试"}
+            </button>
+          </div>
+        );
+      })()}
 
       {/* 测试结果 */}
       {modelData && (

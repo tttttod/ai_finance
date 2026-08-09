@@ -1402,19 +1402,12 @@ function ModelTab() {
           </div>
         )}
 
-        <div className="flex gap-2 mt-4 pt-3 border-t border-slate-100">
+        <div className="mt-4 pt-3 border-t border-slate-100">
           <button
-            className="flex-1 text-[10px] py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+            className="w-full text-[10px] py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
             onClick={handleUseRecommended}
           >
             使用推荐因子
-          </button>
-          <button
-            className="flex-1 text-[10px] py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
-            onClick={handleStartTest}
-            disabled={isTesting || selectedFactors.length === 0}
-          >
-            {isTesting ? "测试中..." : "开始拟合测试"}
           </button>
         </div>
       </div>
@@ -1478,6 +1471,30 @@ function ModelTab() {
             </p>
           </div>
         )}
+      </div>
+
+      {/* 开始拟合测试 - 页面底部主按钮 */}
+      <div className="bg-white rounded-lg p-4 border border-slate-100">
+        {(() => {
+          const needsFactors = selectedFactors.length === 0;
+          const needsStocks = stockMode === "custom" && parsedCustomStocks.length === 0;
+          const isDisabled = isTesting || needsFactors || needsStocks;
+          const hint = needsFactors ? "请至少选择一个因子" : needsStocks ? "请添加至少一只股票" : "";
+          return (
+            <>
+              {hint && (
+                <p className="text-[10px] text-amber-600 text-center mb-2">{hint}</p>
+              )}
+              <button
+                className="w-full text-xs py-3 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleStartTest}
+                disabled={isDisabled}
+              >
+                {isTesting ? "测试中..." : "开始拟合测试"}
+              </button>
+            </>
+          );
+        })()}
       </div>
 
       {/* 测试结果 */}
