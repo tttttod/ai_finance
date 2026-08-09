@@ -64,6 +64,7 @@ export const DIALOGUE_DATA: Record<number, DialogueLevelData> = {
       },
       {
         id: 3,
+        sceneImage: "/dialogue-level1-node3.webp",
         scene:
           "最后一道题。\n\n你看到一只股票今天涨停了，页面上全是红色的数字和欢呼的评论。\n\n你的手指再次悬在「买入」按钮上。\n\n这一次，你会怎么做？",
         options: [

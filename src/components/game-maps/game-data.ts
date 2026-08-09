@@ -52,6 +52,8 @@ export interface DialogueNode {
   id: number;
   scene: string;
   options: DialogueOption[];
+  /** 节点专属场景背景图片（可选），优先级高于 level 级 sceneImage */
+  sceneImage?: string;
 }
 
 export interface DialogueLevelData {

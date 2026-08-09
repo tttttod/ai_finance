@@ -19,7 +19,9 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
 
   const currentNode = data.nodes[nodeIndex];
   const totalNodes = data.nodes.length;
-  const hasScene = !!data.sceneImage;
+  // 节点级 sceneImage 优先级高于 level 级
+  const currentSceneImage = currentNode?.sceneImage || data.sceneImage;
+  const hasScene = !!currentSceneImage;
 
   // Auto-complete if no nodes (empty level)
   useEffect(() => {
@@ -109,7 +111,7 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
         {hasScene && (
           <div className="absolute inset-0">
             <img
-              src={data.sceneImage}
+              src={currentSceneImage}
               alt="场景"
               className="w-full h-full object-cover"
             />
@@ -189,7 +191,7 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
       {hasScene && (
         <div className="absolute inset-0">
           <img
-            src={data.sceneImage}
+            src={currentSceneImage}
             alt="场景"
             className="w-full h-full object-cover"
           />
