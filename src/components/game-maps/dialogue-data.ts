@@ -210,6 +210,149 @@ export const DIALOGUE_DATA: Record<number, DialogueLevelData> = {
     badEnding:
       "你带着错误的行情进入交易。\n\nData Agent 摇头：\n「三张图里有一张是对的，你没选到它。」\n\nLead Agent：\n「别灰心，下次先看数据再决策。」\n\n点击「重新鉴定」返回最终选择。",
   },
+  3: {
+    opening:
+      "地下交易大厅响起警报，窗外下着大雨。\n\n屏幕中央显示：\n• 沧海指数下跌 4.8%\n• 青禾零售下跌 0.8%\n\nLead Agent 靠近买入按钮：\n「整个市场跌了快 5%，青禾零售只跌了 0.8%。它明显更强，我想趁现在多买一点。」\n\nData Agent 检查行情：\n「数据已经更新到收盘，价格记录完整。」\n\nLead Agent：\n「数据是真的，机会应该也是真的。」\n\n大厅角落里，Market Agent 正在喝茶：\n「你现在只看见一只股票。把镜头拉远一点。」\n\nMarket Agent 打开一台市场观察仪。\n\n仪器中央显示青禾零售，旁边有一根「观察范围」拉杆。\n\n拉杆分成三档：\n• 青禾零售\n• 零售行业\n• 全市场",
+    nodes: [
+      {
+        id: 1,
+        scene:
+          "【第一档 青禾零售】\n\n屏幕上只显示青禾零售。\n\n• 今日跌幅为 0.8%\n• 成交量有所减少\n• 表现强于沧海指数\n\nLead Agent：\n「单看这张图，它确实挺稳。」",
+        options: [
+          {
+            id: "m1",
+            text: "把拉杆拉到「零售行业」，继续拉远",
+            correct: true,
+            feedback:
+              "Market Agent：\n「继续拉远。」",
+          },
+          {
+            id: "m1w",
+            text: "它比大盘强，直接加大仓位",
+            correct: false,
+            feedback:
+              "Market Agent 摇头：\n「你还没看清楚周围是什么。」",
+          },
+        ],
+      },
+      {
+        id: 2,
+        scene:
+          "【第二档 零售行业】\n\n镜头拉远，青禾零售周围出现其他零售股票。\n\n十只零售股票中，有八只正在下跌。\n\n青禾零售像一把暂时保持完整的雨伞，周围不断落雨。\n\nLead Agent：\n「它比同行跌得少，可整个零售行业都在下跌。」\n\nData Agent：\n「行业数据已经更新到今天收盘。」",
+        options: [
+          {
+            id: "m2",
+            text: "把拉杆推到「全市场」，看看行业外面",
+            correct: true,
+            feedback:
+              "Market Agent：\n「再看看行业外面。」",
+          },
+          {
+            id: "m2w",
+            text: "行业在跌但它最强，足够了",
+            correct: false,
+            feedback:
+              "Market Agent：\n「你只看见了一把伞，没看见雨有多大。」",
+          },
+        ],
+      },
+      {
+        id: 3,
+        scene:
+          "【第三档 全市场】\n\n玩家把拉杆推到「全市场」。\n\n屏幕变成由一百个股票方格组成的市场地图。\n\n• 84 只股票下跌\n• 9 只股票持平\n• 7 只股票上涨\n• 10 个行业中有 8 个下跌\n\n大厅里的红灯全部亮起，窗外雨声加重。\n\n青禾零售只占市场地图中的一个小方格。\n\nLead Agent：\n「刚才它占满了整块屏幕。现在看起来，它只是风暴里的一只股票。」\n\nMarket Agent：\n「镜头离得太近，任何股票都像整个世界。」",
+        options: [
+          {
+            id: "m3",
+            text: "确认当前状态：全市场风暴",
+            correct: true,
+            feedback:
+              "观察仪发出确认声。\n\nMarket Agent：\n「青禾零售表现较强，这条信息值得保留。整个市场还在摇晃，这条信息更加重要。」",
+          },
+          {
+            id: "m3w1",
+            text: "只是个股下雨，青禾零售没问题",
+            correct: false,
+            feedback:
+              "Market Agent 指向屏幕：\n「雨已经落满整个大厅了。」",
+          },
+          {
+            id: "m3w2",
+            text: "只是行业下雨，零售行业的问题",
+            correct: false,
+            feedback:
+              "Data Agent：\n「下跌同时出现在多个行业，不只是零售。」",
+          },
+        ],
+      },
+      {
+        id: 4,
+        scene:
+          "【制定行动】\n\nLead Agent 原本准备大幅增加青禾零售的仓位。\n\n屏幕出现两个计划：\n• 现在加大仓位\n• 保留小仓位，观察三天\n\nMarket Agent：\n「市场每天都会给你一个改变计划的理由。」",
+        options: [
+          {
+            id: "m4",
+            text: "保留小仓位，观察三天",
+            correct: true,
+            feedback:
+              "玩家取消加仓，保留原有小仓位。\n\nLead Agent：\n「它继续上涨时，我们手里还有一些。市场继续下跌时，大部分资金也还在。」\n\nData Agent：\n「三天观察计划已经记录。」",
+          },
+          {
+            id: "m4w",
+            text: "现在加大仓位，趁它比市场强",
+            correct: false,
+            feedback:
+              "玩家买入青禾零售。\n\nLead Agent：\n「它比市场强，等风暴过去，它应该会先涨。」\n\nMarket Agent：\n「你看见了一把暂时完整的伞，于是把所有行李都放到了伞下。」",
+          },
+        ],
+      },
+      {
+        id: 5,
+        scene:
+          "【第二天 绿色诱饵】\n\n大厅警报停止，所有屏幕突然转绿。\n\n• 沧海指数上涨 1.8%\n• 青禾零售上涨 2.6%\n\n买入按钮发出金色光芒，并不断跳动。\n\nLead Agent 立刻站起来：\n「它真的涨了。昨天多买一点就好了。」\n\n屏幕出现两个按钮：\n• 现在追涨\n• 继续观察",
+        options: [
+          {
+            id: "m5",
+            text: "继续观察，遵守三天计划",
+            correct: true,
+            feedback:
+              "玩家点击「继续观察」。\n\n买入按钮的光芒逐渐变暗。\n\nLead Agent：\n「看着它上涨却不追，确实有点难受。」\n\nMarket Agent：\n「难受会过去，买入记录会留下。」",
+          },
+          {
+            id: "m5w",
+            text: "现在追涨，别错过机会",
+            correct: false,
+            feedback:
+              "玩家按下买入按钮。\n\nMarket Agent 看向墙上的三天计划：\n「市场只用一天上涨，就换走了你的计划。」",
+          },
+        ],
+      },
+      {
+        id: 6,
+        scene:
+          "【第三天 风暴返回】\n\n大厅再次响起警报。\n\n• 沧海指数下跌 3.1%\n• 青禾零售下跌 5.4%\n• 全市场有 79 只股票下跌\n\n第二天的绿色画面被雨水冲掉。",
+        options: [
+          {
+            id: "m6",
+            text: "坚持观察计划，保留小仓位",
+            correct: true,
+            feedback:
+              "账户只出现小幅变化，大部分资金仍然保留。\n\nLead Agent：\n「青禾零售确实比市场强，可这三天里，它仍然被市场带着走。」\n\nData Agent：\n「三天数据完整，市场风险仍然存在。」",
+          },
+          {
+            id: "m6w",
+            text: "风暴来了，全部清仓",
+            correct: false,
+            feedback:
+              "Market Agent：\n「风暴来的时候清仓，风暴走的时候追涨。你在替市场做贡献。」",
+          },
+        ],
+      },
+    ],
+    goodEnding:
+      "Market Agent 放下茶杯，走到队伍面前。\n\n「看一只股票，你会找到故事。看整个市场，你才知道这个故事遇上了什么天气。」\n\nLead Agent：\n「下次我看见一只逆势股票，会先把镜头拉远。」\n\nMarket Agent 正式加入队伍。\n\n屏幕显示：\n「Market Agent 已加入队伍」\n\n角色介绍：\n「他观察资金正在躲避什么，也观察整个市场正在相信什么。」\n\n玩家获得技能：「市场天气」\n\n使用技能后，观察范围会从个股扩大到全市场，并显示：\n• 上涨和下跌股票的比例\n• 行业整体表现\n• 个股与市场的差异\n\n窗外的雨逐渐减小。\n\nMarket Agent 拿起外套，走向交易室：\n「雨停之前，先学会控制仓位。雨停之后，再判断哪把伞真的结实。」\n\n下一关开启：「行业迷雾」",
+    badEnding:
+      "账户中的亏损数字快速扩大。\n\nLead Agent：\n「昨天那次上涨，让我以为风暴已经结束了。」\n\nData Agent：\n「仓位增加后，今天的损失也跟着增加。」\n\nMarket Agent：\n「你判断了明天的涨跌，却忘了自己还站在风暴里。」\n\n结局：「逆风开满帆」\n\n玩家可以返回制定行动的环节重新选择。",
+  },
   4: {
     opening: "\u4E00\u5C01\u5BC6\u5C01\u653E\u5728\u4F60\u684C\u4E0A\u3002\n\u4FE1\u5C01\u4E0A\u5199\u7740\uFF1A\u201C\u884C\u4E1A\u653F\u7B56\u8C03\u6574\u901A\u77E5\u201D\u3002\n\n\u4F60\u6253\u5F00\u4FE1\u5C01\uFF0C\u91CC\u9762\u53EA\u6709\u4E00\u53E5\u8BDD\uFF1A\n\u201C\u81EA\u4E0B\u6708\u8D77\uFF0C\u65B0\u80FD\u6E90\u8865\u8D34\u9000\u5761\uFF0C\u8BD5\u70B9\u57CE\u5E02\u6269\u5927\u81F3 30 \u4E2A\u3002\u201D\n\n\u884C\u4E1A\u5206\u6790\u5E08\u7AD9\u5728\u65C1\u8FB9\uFF0C\u7B49\u4F60\u7684\u5224\u65AD\u3002",
     nodes: [
