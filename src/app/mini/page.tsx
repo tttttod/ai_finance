@@ -462,6 +462,19 @@ function ResearchTab({
   const [contextError, setContextError] = useState<string | null>(null);
   const [contextCacheStatus, setContextCacheStatus] = useState<"hit" | "miss" | null>(null);
   const researchCompletedRef = useRef(false);
+  
+  // 游戏进度 - Agent 解锁状态
+  const [unlockedAgents, setUnlockedAgents] = useState<string[]>([]);
+  
+  useEffect(() => {
+    const saved = localStorage.getItem("tradeti_game_progress");
+    if (saved) {
+      try {
+        const progress = JSON.parse(saved);
+        setUnlockedAgents(progress.unlockedAgents || []);
+      } catch {}
+    }
+  }, []);
 
   useEffect(() => {
     if (!isRunning && currentStep === 16 && target && !researchCompletedRef.current) {
@@ -664,16 +677,22 @@ function ResearchTab({
         <div className="bg-white rounded-lg p-4 border border-slate-100">
           <h3 className="text-sm font-semibold text-slate-800 mb-3">Agent 研究团队</h3>
           <div className="grid grid-cols-3 gap-2">
-            {AGENT_TEAM.map((agent) => (
-              <div key={agent.role} className="flex items-center gap-2 p-2 rounded-lg bg-slate-900 border border-slate-700">
-                <span className="text-lg">{agent.icon}</span>
-                <div>
-                  <div className="text-[10px] font-medium text-blue-400">{agent.name}</div>
-                  <div className="text-[10px] text-slate-300 font-medium">{agent.title}</div>
+            {AGENT_TEAM.map((agent) => {
+              const isUnlocked = unlockedAgents.includes(agent.role);
+              return (
+                <div key={agent.role} className={`flex items-center gap-2 p-2 rounded-lg border ${isUnlocked ? 'bg-slate-900 border-slate-700' : 'bg-slate-100 border-slate-200 opacity-50'}`}>
+                  <span className="text-lg">{isUnlocked ? agent.icon : '🔒'}</span>
+                  <div>
+                    <div className={`text-[10px] font-medium ${isUnlocked ? 'text-blue-400' : 'text-slate-400'}`}>{agent.name}</div>
+                    <div className={`text-[10px] font-medium ${isUnlocked ? 'text-slate-300' : 'text-slate-400'}`}>{agent.title}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+          {unlockedAgents.length === 0 && (
+            <p className="mt-2 text-[10px] text-slate-400 text-center">完成地图关卡，逐步点亮完整 Agent 链路</p>
+          )}
         </div>
       </div>
     );
@@ -1945,6 +1964,20 @@ function ProfileTab({ profile, tradeTIResult, watchlist, onRemoveFromWatchlist, 
   );
 }
 
+// ===== 交易员的正确之路 — 关卡定义 =====
+const TRADER_ROAD_LEVELS = [
+  { id: 1, title: "开户日", subtitle: "Lead Agent", agent: "lead", icon: "🎯" },
+  { id: 2, title: "数据黑市", subtitle: "Data Agent", agent: "data", icon: "📊" },
+  { id: 3, title: "市场风暴", subtitle: "Market Agent", agent: "market", icon: "🌪️" },
+  { id: 4, title: "政策密函", subtitle: "Industry Agent", agent: "industry", icon: "📜" },
+  { id: 5, title: "财报夜审", subtitle: "Fundamental Agent", agent: "fundamental", icon: "📑" },
+  { id: 6, title: "价格审判庭", subtitle: "Valuation Agent", agent: "valuation", icon: "⚖️" },
+  { id: 7, title: "K线神谕", subtitle: "Technical Agent", agent: "technical", icon: "📈" },
+  { id: 8, title: "舆论火场", subtitle: "Sentiment Agent", agent: "sentiment", icon: "🔥" },
+  { id: 9, title: "多空议会", subtitle: "Bull / Bear Analyst", agent: "debate", icon: "🏛️" },
+  { id: 10, title: "回撤之门", subtitle: "Risk Officer / Research Manager", agent: "risk_manager", icon: "🛡️" },
+];
+
 // ===== 市场 Tab =====
 function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTIState | null; onFillResearch: (target: RecommendedTarget) => void }) {
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
@@ -1952,7 +1985,11 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
   const [snapshotLoading, setSnapshotLoading] = useState(true);
   const [snapshotError, setSnapshotError] = useState<string | null>(null);
   const [level1Open, setLevel1Open] = useState(false);
-  const [gameProgress, setGameProgress] = useState<{ unlockedLevels: number[] }>({ unlockedLevels: [1] });
+  const [gameProgress, setGameProgress] = useState<{ currentLevel: number; unlockedAgents: string[]; completedLevels: number[] }>({
+    currentLevel: 1,
+    unlockedAgents: [],
+    completedLevels: [],
+  });
 
   // 加载游戏进度
   useEffect(() => {
@@ -1960,10 +1997,28 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
       const raw = localStorage.getItem("tradeti_game_progress");
       if (raw) {
         const parsed = JSON.parse(raw);
-        setGameProgress({ unlockedLevels: parsed.unlockedLevels || [1] });
+        setGameProgress({
+          currentLevel: parsed.currentLevel || 1,
+          unlockedAgents: parsed.unlockedAgents || [],
+          completedLevels: parsed.completedLevels || [],
+        });
       }
     } catch {}
   }, []);
+
+  const reloadProgress = () => {
+    try {
+      const raw = localStorage.getItem("tradeti_game_progress");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setGameProgress({
+          currentLevel: parsed.currentLevel || 1,
+          unlockedAgents: parsed.unlockedAgents || [],
+          completedLevels: parsed.completedLevels || [],
+        });
+      }
+    } catch {}
+  };
 
   // 人格身份
   const personalityId = tradeTIResult?.result_type || null;
@@ -2160,19 +2215,10 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
         </div>
         <div className="p-3">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {[
-              { id: 1, name: "开户日 Lead Agent", desc: "你的第一个 Agent", icon: "🎯" },
-              { id: 2, name: "数据黑市", desc: "学会获取和筛选数据", icon: "📊" },
-              { id: 3, name: "市场风暴", desc: "理解市场情绪与波动", icon: "🌪️" },
-              { id: 4, name: "政策密函", desc: "解读宏观政策影响", icon: "📜" },
-              { id: 5, name: "财报夜审", desc: "基本面分析入门", icon: "📑" },
-              { id: 6, name: "价格审判庭", desc: "估值与定价逻辑", icon: "⚖️" },
-              { id: 7, name: "K线神谕", desc: "技术面分析基础", icon: "📈" },
-              { id: 8, name: "舆论火场", desc: "信息面与情绪管理", icon: "🔥" },
-              { id: 9, name: "多空议会", desc: "多空观点对比与决策", icon: "🏛️" },
-              { id: 10, name: "回撤之门", desc: "风险管理与复盘", icon: "🛡️" },
-            ].map((node, idx) => {
-              const isUnlocked = gameProgress.unlockedLevels.includes(node.id);
+            {TRADER_ROAD_LEVELS.map((node, idx) => {
+              const isCompleted = gameProgress.completedLevels.includes(node.id);
+              const isUnlocked = node.id <= gameProgress.currentLevel;
+              const isNext = node.id === gameProgress.currentLevel + 1;
               return (
                 <div key={node.id} className="flex items-center flex-shrink-0">
                   <button
@@ -2180,28 +2226,32 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
                       if (node.id === 1 && isUnlocked) {
                         setLevel1Open(true);
                       } else if (!isUnlocked) {
-                        alert("请先完成前置关卡");
+                        alert("先完成前置关卡。");
                       }
                     }}
                     className={`relative flex flex-col items-center justify-center w-16 h-16 rounded-xl border-2 transition-all ${
-                      isUnlocked
+                      isCompleted
+                        ? "bg-emerald-500/20 border-emerald-400/60 shadow-[0_0_12px_rgba(16,185,129,0.4)]"
+                        : isUnlocked
                         ? "bg-blue-500/20 border-blue-400/60 shadow-[0_0_12px_rgba(59,130,246,0.4)] cursor-pointer hover:scale-105"
+                        : isNext
+                        ? "bg-amber-500/10 border-amber-400/40 opacity-70"
                         : "bg-slate-700/30 border-slate-600/40 opacity-50 cursor-not-allowed"
                     }`}
                   >
-                    <span className="text-xl mb-0.5">{node.icon}</span>
+                    <span className="text-xl mb-0.5">{isCompleted ? '✅' : isUnlocked ? node.icon : '🔒'}</span>
                     <span className={`text-[8px] font-bold leading-tight text-center ${
-                      isUnlocked ? "text-blue-200" : "text-slate-500"
+                      isCompleted ? "text-emerald-200" : isUnlocked ? "text-blue-200" : "text-slate-500"
                     }`}>
-                      {node.name.split(" ")[0]}
+                      {node.title}
                     </span>
-                    {!isUnlocked && (
-                      <span className="absolute -top-1 -right-1 text-[10px]">🔒</span>
+                    {isNext && (
+                      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[8px] text-amber-400 whitespace-nowrap">即将开放</span>
                     )}
                   </button>
-                  {idx < 9 && (
+                  {idx < TRADER_ROAD_LEVELS.length - 1 && (
                     <div className={`w-3 h-0.5 mx-0.5 ${
-                      isUnlocked ? "bg-blue-400/60" : "bg-slate-600/40"
+                      isCompleted ? "bg-emerald-400/60" : isUnlocked ? "bg-blue-400/60" : "bg-slate-600/40"
                     }`} />
                   )}
                 </div>
@@ -2561,22 +2611,10 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
         isOpen={level1Open}
         onClose={() => {
           setLevel1Open(false);
-          try {
-            const raw = localStorage.getItem("tradeti_game_progress");
-            if (raw) {
-              const parsed = JSON.parse(raw);
-              setGameProgress({ unlockedLevels: parsed.unlockedLevels || [1] });
-            }
-          } catch {}
+          reloadProgress();
         }}
         onLevelComplete={() => {
-          try {
-            const raw = localStorage.getItem("tradeti_game_progress");
-            if (raw) {
-              const parsed = JSON.parse(raw);
-              setGameProgress({ unlockedLevels: parsed.unlockedLevels || [1] });
-            }
-          } catch {}
+          reloadProgress();
         }}
       />
     </div>
