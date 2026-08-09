@@ -119,20 +119,27 @@ export default function AgentUnlockAnimation({
     };
   }, []);
 
-  // 点击跳过
+  // 点击跳过（仅在动画播放完成后允许）
   const handleSkip = useCallback(() => {
-    setPhase("done");
-    onComplete();
-  }, [onComplete]);
+    if (phase === "revealed") {
+      setPhase("done");
+      onComplete();
+    }
+  }, [onComplete, phase]);
 
   const isFlipped = phase === "revealed" || phase === "done";
   const isMystery = phase === "mystery";
+  // 动画播放完成后才允许点击跳过
+  const canSkip = phase === "revealed";
 
   return (
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center"
-      onClick={handleSkip}
-      style={{ backgroundColor: "rgba(0,0,0,0.85)" }}
+      onClick={canSkip ? handleSkip : undefined}
+      style={{
+        backgroundColor: "rgba(0,0,0,0.85)",
+        cursor: canSkip ? "pointer" : "default",
+      }}
     >
       {/* 背景光晕 */}
       <div
