@@ -21,6 +21,16 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
   const totalNodes = data.nodes.length;
   const hasScene = !!data.sceneImage;
 
+  // Auto-complete if no nodes (empty level)
+  useEffect(() => {
+    if (totalNodes === 0 && phase === "opening") {
+      const timer = setTimeout(() => {
+        onComplete(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [totalNodes, phase, onComplete]);
+
   // Typewriter effect
   useEffect(() => {
     if (phase === "opening" || phase === "dialogue") {

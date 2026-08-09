@@ -142,17 +142,22 @@ export default function MiniProgramPage() {
     setIsLoadingProfile(false);
   }, []);
 
-  // 首次进入引导弹窗：tradeTI 完成后才弹出
+  // 主界面显示条件：tradeTI 完成且解锁，或跳过测试，且加载完成
+  const shouldShowMainApp = ((tradeTICompleted && tradeTIUnlocked) || tradeTISkipped) && !isLoadingProfile;
+
+  // 首次进入引导弹窗：主界面显示后检查
   useEffect(() => {
+    if (!shouldShowMainApp) return;
     if (typeof window === "undefined") return;
-    if (isLoadingProfile) return;
-    // tradeTI 未完成时不弹引导
-    if (!tradeTICompleted && !tradeTISkipped) return;
     const seen = localStorage.getItem("market_adventure_onboarding_seen");
     if (!seen) {
-      setShowOnboardingGuide(true);
+      // 延迟弹出，确保组件已渲染
+      const timer = setTimeout(() => {
+        setShowOnboardingGuide(true);
+      }, 300);
+      return () => clearTimeout(timer);
     }
-  }, [isLoadingProfile, tradeTICompleted, tradeTISkipped]);
+  }, [shouldShowMainApp]);
 
   const [selectedResearchTarget, setSelectedResearchTarget] = useState<RecommendedTarget | null>(null);
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
@@ -199,12 +204,7 @@ export default function MiniProgramPage() {
   };
 
   // 未做 tradeTI 或非通关人格时显示测试（加载中默认显示测试，避免闪烁）
-  if ((!tradeTICompleted || !tradeTIUnlocked) && !tradeTISkipped && !isLoadingProfile) {
-    return <TradeTITest onComplete={completeTradeTI} onSkip={() => setTradeTISkipped(true)} />;
-  }
-
-  // 加载中显示测试骨架
-  if (isLoadingProfile) {
+  if (!shouldShowMainApp) {
     return <TradeTITest onComplete={completeTradeTI} onSkip={() => setTradeTISkipped(true)} />;
   }
 
@@ -262,7 +262,9 @@ export default function MiniProgramPage() {
               setTradeTIUnlocked(false);
               setTradeTICompleted(false);
               setTradeTIResult(null);
-            }} />}
+            }}
+            onShowOnboardingGuide={() => setShowOnboardingGuide(true)}
+        />}
       </div>
 
       {/* 底部 Tab 栏 - 市场冒险局 */}
@@ -2013,7 +2015,7 @@ const STOCK_REPORTS: Record<string, {
   }
 };
 
-function ProfileTab({ profile, tradeTIResult, onRetakeSurvey, watchlist, onRemoveFromWatchlist }: { profile: UserProfileSurvey; tradeTIResult: TradeTIState | null; onRetakeSurvey: () => void; watchlist: WatchlistItem[]; onRemoveFromWatchlist: (code: string) => void }) {
+function ProfileTab({ profile, tradeTIResult, onRetakeSurvey, watchlist, onRemoveFromWatchlist, onShowOnboardingGuide }: { profile: UserProfileSurvey; tradeTIResult: TradeTIState | null; onRetakeSurvey: () => void; watchlist: WatchlistItem[]; onRemoveFromWatchlist: (code: string) => void; onShowOnboardingGuide?: () => void }) {
   const { isAuthenticated, signOut } = useAuth();
   const router = useRouter();
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -2256,6 +2258,21 @@ function ProfileTab({ profile, tradeTIResult, onRetakeSurvey, watchlist, onRemov
         )}
         <button onClick={onRetakeSurvey} className="w-full mt-3 py-3 text-sm font-black bg-gradient-to-r from-[#FF6B35] to-[#FFD93D] text-white rounded-2xl shadow-lg shadow-[#FF6B35]/20 transition-all hover:scale-[1.02] active:scale-95">🔄 重新测试</button>
       </div>
+
+      {/* 玩法指引 */}
+      {onShowOnboardingGuide && (
+        <button
+          onClick={onShowOnboardingGuide}
+          className="w-full bg-white rounded-3xl p-4 border-2 border-amber-300/50 shadow-md flex items-center gap-3 transition-all hover:border-amber-400 hover:shadow-lg active:scale-[0.98]"
+        >
+          <span className="text-2xl">🗺️</span>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-black text-slate-800">查看玩法指引</p>
+            <p className="text-[10px] text-slate-500">了解市场冒险局怎么玩</p>
+          </div>
+          <span className="text-slate-400 text-lg">›</span>
+        </button>
+      )}
 
       {/* 关注股票 */}
       <div className="bg-white rounded-3xl p-4 border-2 border-[#4ECDC4] shadow-md">

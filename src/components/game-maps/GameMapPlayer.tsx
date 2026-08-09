@@ -109,6 +109,14 @@ export function GameMapPlayer({
   const [hoveredZone, setHoveredZone] = useState<number | null>(null);
   const [progress, setProgress] = useState(() => loadTraderRoadProgress());
 
+  // Auto-start level 1 when entering the map (if not completed)
+  useEffect(() => {
+    if (!progress.completedLevels.includes(1) && view === "world") {
+      setActiveLevelId(1);
+      setView("game");
+    }
+  }, []); // Only run on mount
+
   useEffect(() => {
     saveTraderRoadProgress(progress);
   }, [progress]);
