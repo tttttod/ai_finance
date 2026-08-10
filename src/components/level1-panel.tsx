@@ -13,13 +13,14 @@ export const TRADER_ROAD_LEVELS = [
   { id: 1, title: "开户日", subtitle: "Lead Agent", agent: "lead", icon: "🎯" },
   { id: 2, title: "数据黑市", subtitle: "Data Agent", agent: "data", icon: "📊" },
   { id: 3, title: "市场风暴", subtitle: "Market Agent", agent: "market", icon: "🌪️" },
-  { id: 4, title: "政策密函", subtitle: "Industry Agent", agent: "industry", icon: "📜" },
-  { id: 5, title: "财报夜审", subtitle: "Fundamental Agent", agent: "fundamental", icon: "📑" },
-  { id: 6, title: "价格审判庭", subtitle: "Valuation Agent", agent: "valuation", icon: "⚖️" },
-  { id: 7, title: "K线神谕", subtitle: "Technical Agent", agent: "technical", icon: "📈" },
-  { id: 8, title: "舆论火场", subtitle: "Sentiment Agent", agent: "sentiment", icon: "🔥" },
-  { id: 9, title: "多空议会", subtitle: "Bull / Bear Analyst", agent: "debate", icon: "🏛️" },
-  { id: 10, title: "回撤之门", subtitle: "Risk Officer", agent: "risk_manager", icon: "🛡️" },
+  { id: 4, title: "财报夜审", subtitle: "Fundamental Agent", agent: "fundamental", icon: "📑" },
+  { id: 5, title: "政策密函", subtitle: "Valuation Agent", agent: "valuation", icon: "📜" },
+  { id: 6, title: "价格审判庭", subtitle: "Technical Agent", agent: "technical", icon: "⚖️" },
+  { id: 7, title: "K线神谕", subtitle: "Sentiment Agent", agent: "sentiment", icon: "📈" },
+  { id: 8, title: "多空议会", subtitle: "Bull Analyst", agent: "bull", icon: "🏛️" },
+  { id: 9, title: "舆论火场", subtitle: "Bear Analyst", agent: "bear", icon: "🔥" },
+  { id: 10, title: "回撤之门", subtitle: "Risk Officer", agent: "risk", icon: "🛡️" },
+  { id: 11, title: "最终关", subtitle: "Research Manager", agent: "manager", icon: "🏆" },
 ];
 
 // 兼容旧类型导出

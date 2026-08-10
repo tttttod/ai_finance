@@ -93,51 +93,51 @@ export const TRADER_ROAD_LEVELS: TraderRoadLevel[] = [
   },
   {
     id: 4,
+    title: "财报夜审",
+    subtitle: "Fundamental Agent",
+    unlockAgents: ["fundamental"],
+  },
+  {
+    id: 5,
     title: "政策密函",
     subtitle: "Valuation Agent",
     unlockAgents: ["valuation"],
   },
   {
-    id: 5,
+    id: 6,
     title: "价格审判庭",
     subtitle: "Technical Agent",
     unlockAgents: ["technical"],
   },
   {
-    id: 6,
+    id: 7,
     title: "K线神谕",
     subtitle: "Sentiment Agent",
     unlockAgents: ["sentiment"],
   },
   {
-    id: 7,
+    id: 8,
     title: "多空议会",
     subtitle: "Bull Analyst",
     unlockAgents: ["bull"],
   },
   {
-    id: 8,
+    id: 9,
     title: "舆论火场",
     subtitle: "Bear Analyst",
     unlockAgents: ["bear"],
   },
   {
-    id: 9,
+    id: 10,
     title: "回撤之门",
     subtitle: "Risk Officer",
     unlockAgents: ["risk"],
   },
   {
-    id: 10,
+    id: 11,
     title: "最终关",
     subtitle: "Research Manager",
     unlockAgents: ["manager"],
-  },
-  {
-    id: 11,
-    title: "财报夜审",
-    subtitle: "Fundamental Agent",
-    unlockAgents: ["fundamental"],
   },
 ];
 

@@ -229,7 +229,7 @@ export default function ManualPage() {
                 <tbody>
                   <tr className="border-b border-slate-100"><td className="py-2 px-3 font-medium text-slate-700">金融学院区</td><td className="py-2 px-3 text-slate-600">第 1-4 关</td></tr>
                   <tr className="border-b border-slate-100"><td className="py-2 px-3 font-medium text-slate-700">交易所区</td><td className="py-2 px-3 text-slate-600">第 5-7 关</td></tr>
-                  <tr><td className="py-2 px-3 font-medium text-slate-700">风险山谷</td><td className="py-2 px-3 text-slate-600">第 8-10 关</td></tr>
+                  <tr><td className="py-2 px-3 font-medium text-slate-700">风险山谷</td><td className="py-2 px-3 text-slate-600">第 8-11 关</td></tr>
                 </tbody>
               </table>
             </div>
@@ -252,16 +252,17 @@ export default function ManualPage() {
                 </thead>
                 <tbody>
                   {[
-                    ["第 1 关", "开户日", "剧情对话", "Lead Agent"],
-                    ["第 2 关", "数据黑市", "剧情对话", "Data Agent"],
-                    ["第 3 关", "市场风暴", "剧情对话", "Market Agent"],
-                    ["第 4 关", "政策密函", "知识学习", "Industry Agent"],
-                    ["第 5 关", "财报夜审", "答题闯关", "Fundamental Agent"],
-                    ["第 6 关", "价格审判庭", "知识学习", "Valuation Agent"],
-                    ["第 7 关", "K线神谕", "答题闯关", "Technical Agent"],
-                    ["第 8 关", "舆论火场", "知识学习", "Sentiment Agent"],
-                    ["第 9 关", "多空议会", "答题闯关", "Bull / Bear Analyst"],
-                    ["第 10 关", "回撤之门", "快速决策", "Risk Officer / Research Manager"],
+                    ["第 1 关", "开户日", "剧情对话", "Data Agent"],
+                    ["第 2 关", "数据黑市", "剧情对话", "Market Agent"],
+                    ["第 3 关", "市场风暴", "剧情对话", "Industry Agent"],
+                    ["第 4 关", "财报夜审", "剧情对话", "Fundamental Agent"],
+                    ["第 5 关", "政策密函", "剧情对话", "Valuation Agent"],
+                    ["第 6 关", "价格审判庭", "剧情对话", "Technical Agent"],
+                    ["第 7 关", "K线神谕", "剧情对话", "Sentiment Agent"],
+                    ["第 8 关", "多空议会", "答题闯关", "Bull Analyst"],
+                    ["第 9 关", "舆论火场", "知识学习", "Bear Analyst"],
+                    ["第 10 关", "回撤之门", "快速决策", "Risk Officer"],
+                    ["第 11 关", "最终关", "快速决策", "Research Manager"],
                   ].map(([lv, name, play, unlock]) => (
                     <tr key={lv} className="border-b border-slate-100">
                       <td className="py-2 px-3 font-medium text-slate-700 whitespace-nowrap">{lv}</td>
