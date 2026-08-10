@@ -101,6 +101,7 @@ const WORLD_LOCATIONS: WorldLocation[] = [
   { id: 10, levelId: 10, name: "验证灯塔", subtitle: "Verification Lighthouse", x: 30, y: 60 },
   { id: 11, levelId: 1, name: "复盘营地", subtitle: "Review Camp", x: 58, y: 70 },
   { id: 12, levelId: 3, name: "脑力训练场", subtitle: "Brain Training Ground", x: 74, y: 68 },
+  { id: 13, levelId: 1, name: "金融 Quiz 营", subtitle: "Financial Quiz Camp", x: 42, y: 80 },
 ];
 
 // ===== Props =====
@@ -124,10 +125,17 @@ export function GameMapPlayer({
   const [hoveredWorldLoc, setHoveredWorldLoc] = useState<number | null>(null);
   const [clickedWorldLoc, setClickedWorldLoc] = useState<number | null>(null);
   const [progress, setProgress] = useState(() => loadTraderRoadProgress());
+  // Welcome + guided tour state
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [showTour, setShowTour] = useState(false);
+  const [tourVisited, setTourVisited] = useState(false);
 
-  // Start from world map view
+  // Check if first visit
   useEffect(() => {
-    // Just ensure we start at world view
+    const hasSeen = localStorage.getItem("financia-waltz-tour-seen");
+    if (!hasSeen) {
+      setShowWelcome(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -247,6 +255,12 @@ export function GameMapPlayer({
               zIndex: isHovered ? 50 : 10,
             }}
             onClick={() => {
+              if (showTour && !tourVisited && loc.id === 13) {
+                // Tour mode: clicking the Quiz Camp completes the tour
+                setTourVisited(true);
+                localStorage.setItem("financia-waltz-tour-seen", "true");
+                return;
+              }
               if (isAvailable) {
                 setClickedWorldLoc(loc.id);
                 setTimeout(() => {
@@ -288,6 +302,22 @@ export function GameMapPlayer({
                 }}
               />
             )}
+            {/* Tour highlight glow on Quiz Camp (id: 13) */}
+            {showTour && !tourVisited && loc.id === 13 && (
+              <span
+                className="absolute rounded-full animate-ping"
+                style={{
+                  width: 60,
+                  height: 60,
+                  left: "50%",
+                  top: "50%",
+                  transform: "translate(-50%, -50%)",
+                  border: "3px solid #FFD700",
+                  boxShadow: "0 0 20px 8px rgba(255, 215, 0, 0.6)",
+                  animationDuration: "1.5s",
+                }}
+              />
+            )}
             {/* Main location marker */}
             <span
               className="relative flex items-center justify-center rounded-full transition-all duration-300"
@@ -295,8 +325,12 @@ export function GameMapPlayer({
                 width: 36,
                 height: 36,
                 backgroundColor: status === "completed" ? "#059669" : isAvailable ? "#DAA520" : "#94A3B8",
-                border: "2px solid rgba(255, 248, 220, 0.8)",
-                boxShadow: isHovered && isAvailable
+                border: showTour && !tourVisited && loc.id === 13
+                  ? "3px solid #FFD700"
+                  : "2px solid rgba(255, 248, 220, 0.8)",
+                boxShadow: showTour && !tourVisited && loc.id === 13
+                  ? "0 0 20px 6px rgba(255, 215, 0, 0.8), 0 4px 8px rgba(0,0,0,0.3)"
+                  : isHovered && isAvailable
                   ? "0 0 16px 4px rgba(218, 165, 32, 0.6), 0 4px 8px rgba(0,0,0,0.3)"
                   : "0 2px 4px rgba(0,0,0,0.2)",
                 opacity: isAvailable ? 1 : 0.5,
@@ -654,11 +688,129 @@ export function GameMapPlayer({
         </div>
 
         {/* Content */}
-        <div className={`flex-1 overflow-y-auto ${view === "world" ? "p-0" : "p-4"}`}>
+        <div className={`flex-1 ${view === "world" ? "overflow-hidden" : "overflow-y-auto"} ${view === "world" ? "p-0" : "p-4"}`}>
           {view === "world" && renderWorldMap()}
           {view === "zone" && renderZoneMap()}
           {view === "game" && renderGame()}
         </div>
+
+        {/* Welcome Popup */}
+        {showWelcome && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white rounded-2xl max-w-sm w-[90%] p-6 shadow-2xl animate-in fade-in zoom-in duration-300">
+              <h2 className="text-xl font-bold text-center text-[#1E293B]">✨ 欢迎来到「金融华尔界」</h2>
+              <div className="mt-4 text-sm text-[#475569] leading-relaxed space-y-2">
+                <p>这里不是普通的金融课堂。</p>
+                <p>在这片大陆上，你会通过一次次任务，建立属于自己的投资判断力。</p>
+                <div className="mt-3 space-y-1.5">
+                  <p className="flex items-center gap-2"><span className="text-base">🧠</span> 做 Quiz，赚取第一桶金币</p>
+                  <p className="flex items-center gap-2"><span className="text-base">💰</span> 模拟投资，在涨跌里练习决策</p>
+                  <p className="flex items-center gap-2"><span className="text-base">🔍</span> 搜集证据，破解市场迷雾</p>
+                  <p className="flex items-center gap-2"><span className="text-base">🏆</span> 完成挑战，登上城市排行榜</p>
+                </div>
+                <p className="mt-3">每一次选择，都会让你的交易人格继续成长。</p>
+                <p className="font-semibold text-[#D97706]">准备好了吗？先从你的第一笔启动资金开始。</p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowWelcome(false);
+                  setShowTour(true);
+                }}
+                className="mt-5 w-full py-2.5 rounded-xl text-white font-bold text-sm"
+                style={{ background: "linear-gradient(135deg, #D97706, #F59E0B)" }}
+              >
+                出发！
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Guided Tour Overlay */}
+        {showTour && !tourVisited && (
+          <div className="absolute inset-0 z-40 pointer-events-none">
+            {/* Dim overlay - full screen, but with hole for quiz camp */}
+            <div className="absolute inset-0 bg-black/40" />
+            {/* Highlight glow around quiz camp */}
+            <div
+              className="absolute pointer-events-auto animate-pulse"
+              style={{
+                left: "42%",
+                top: "80%",
+                width: 80,
+                height: 80,
+                transform: "translate(-50%, -50%)",
+              }}
+            >
+              <span
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background: "radial-gradient(circle, rgba(255, 215, 0, 0.6) 0%, transparent 70%)",
+                  animation: "pulse 1.5s ease-in-out infinite",
+                }}
+              />
+              {/* Arrow pointing down */}
+              <span
+                className="absolute -top-8 left-1/2 -translate-x-1/2 text-2xl animate-bounce"
+                style={{ filter: "drop-shadow(0 0 4px rgba(255,215,0,0.8))" }}
+              >
+                👆
+              </span>
+            </div>
+            {/* Speech bubble */}
+            <div
+              className="absolute pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-500"
+              style={{
+                left: "42%",
+                top: "75%",
+                transform: "translate(-50%, -100%)",
+              }}
+            >
+              <div
+                className="bg-white rounded-xl p-4 shadow-xl max-w-[220px]"
+                style={{ border: "2px solid #DAA520" }}
+              >
+                <p className="text-xs font-bold text-[#3D2B1F]">👀 看这里！</p>
+                <p className="text-xs text-[#475569] mt-1">
+                  冒险开始之前，先去赚点启动资金吧。
+                </p>
+                <p className="text-[10px] font-semibold text-[#D97706] mt-2">👇 点击「金融 Quiz 营」</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* NPC Explanation after clicking Quiz Camp */}
+        {showTour && tourVisited && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white rounded-2xl max-w-sm w-[90%] p-6 shadow-2xl animate-in fade-in zoom-in duration-300">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-3xl">🧭</span>
+                <div>
+                  <p className="text-sm font-bold text-[#1E293B]">Lead Agent</p>
+                  <p className="text-[10px] text-[#64748B]">你的市场搭子</p>
+                </div>
+              </div>
+              <p className="text-sm text-[#475569] leading-relaxed">
+                「欢迎来到金融华尔界，<span className="font-semibold">tradeTI</span>。
+              </p>
+              <p className="text-sm text-[#475569] leading-relaxed mt-2">
+                在这片大陆上，每个角落都藏着市场的秘密。从金融 Quiz 营开始，一步步积累你的知识和资金。
+              </p>
+              <p className="text-sm text-[#475569] leading-relaxed mt-2">
+                准备好了就出发吧——记住，独立思考是你最强大的武器。」
+              </p>
+              <button
+                onClick={() => {
+                  setShowTour(false);
+                }}
+                className="mt-5 w-full py-2.5 rounded-xl text-white font-bold text-sm"
+                style={{ background: "linear-gradient(135deg, #3B82F6, #2563EB)" }}
+              >
+                开始冒险！
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Zone nav bar (zone view) */}
         {view === "zone" && (
