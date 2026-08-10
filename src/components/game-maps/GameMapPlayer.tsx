@@ -381,6 +381,12 @@ export function GameMapPlayer({
     const zone = MAP_ZONES.find((z) => z.id === activeZoneId);
     if (!zone) return null;
 
+    // 找出当前区域第一个可挑战的关卡（作为"当前任务"）
+    const firstAvailable = zone.markers
+      .filter((m) => getLevelStatus(m.levelId) === "available")
+      .sort((a, b) => a.levelId - b.levelId)[0];
+    const currentLevelId = firstAvailable?.levelId ?? null;
+
     return (
       <div className="relative w-full h-full">
         <img
@@ -389,25 +395,25 @@ export function GameMapPlayer({
           className="absolute inset-0 w-full h-full object-cover"
           draggable={false}
         />
-        {/* Level markers - 多巴胺风格 */}
+        {/* Level markers - 冒险徽章风格 */}
         {zone.markers.map((marker) => {
           const status = getLevelStatus(marker.levelId);
           const config = getLevelConfig(marker.levelId);
           const isHovered = hoveredMarker === marker.levelId;
+          const isCurrent = status === "available" && marker.levelId === currentLevelId;
 
-          // 多巴胺配色：每个关卡一个荧光色
-          const dopamineColors: Record<string, { bg: string; glow: string; emoji: string }> = {
-            "1": { bg: "#FF6B35", glow: "rgba(255, 107, 53, 0.5)", emoji: "🎯" }, // 荧光橙
-            "2": { bg: "#00D4FF", glow: "rgba(0, 212, 255, 0.5)", emoji: "📚" }, // 荧光蓝
-            "3": { bg: "#FFD93D", glow: "rgba(255, 217, 61, 0.5)", emoji: "" }, // 荧光黄
-            "4": { bg: "#00FF88", glow: "rgba(0, 255, 136, 0.5)", emoji: "🔍" }, // 荧光绿
-          };
-          const colorInfo = dopamineColors[String(marker.levelId)] || { bg: zone.color, glow: "rgba(59, 130, 246, 0.5)", emoji: "🎮" };
+          // 随机旋转角度（-3deg ~ 3deg），让每个徽章有手绘感
+          const rotAngles: Record<number, number> = {};
+          marker.levelId % 2 === 0 ? (rotAngles[marker.levelId] = 2) : (rotAngles[marker.levelId] = -2);
+          const rotate = marker.levelId % 2 === 0 ? 2 : -2;
+
+          // 徽章尺寸
+          const badgeSize = status === "locked" ? 40 : status === "completed" ? 40 : isCurrent ? 56 : 48;
 
           return (
             <button
               key={marker.levelId}
-              className="absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300"
+              className="absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 cursor-pointer"
               style={{
                 left: `${marker.x}%`,
                 top: `${marker.y}%`,
@@ -421,85 +427,121 @@ export function GameMapPlayer({
               onMouseEnter={() => setHoveredMarker(marker.levelId)}
               onMouseLeave={() => setHoveredMarker(null)}
             >
-              {/* 弹跳动画 for available */}
-              {status === "available" && (
-                <span className="absolute inset-0 animate-bounce" style={{ animationDuration: "2s" }}>
+              {/* ===== 当前任务：箭头指示器 ===== */}
+              {isCurrent && (
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 animate-bounce" style={{ animationDuration: "1.5s" }}>
+                  <div className="flex flex-col items-center">
+                    <span className="text-orange-400 text-xs font-black whitespace-nowrap drop-shadow-md">
+                      先点我！
+                    </span>
+                    <svg className="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M10 3a1 1 0 011 1v10.586l3.293-3.293a1 1 0 111.414 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 111.414-1.414L9 14.586V4a1 1 0 011-1z" />
+                    </svg>
+                  </div>
+                </div>
+              )}
+
+              {/* ===== 当前任务：呼吸光晕 ===== */}
+              {isCurrent && (
+                <span className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ animationDuration: "2s" }}>
                   <span
-                    className="absolute inset-0 rounded-full opacity-40"
-                    style={{ backgroundColor: colorInfo.glow, filter: "blur(8px)" }}
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      backgroundColor: "#F59E0B",
+                      filter: "blur(10px)",
+                      width: badgeSize + 24,
+                      height: badgeSize + 24,
+                      left: "50%",
+                      top: "50%",
+                      transform: "translate(-50%, -50%)",
+                    }}
                   />
                 </span>
               )}
-              {/* 脉冲光环 for available */}
-              {status === "available" && (
-                <span
-                  className="absolute inset-0 rounded-full animate-ping opacity-40"
-                  style={{ backgroundColor: colorInfo.bg }}
-                />
-              )}
-              {/* 外圈发光 */}
+
+              {/* ===== 徽章主体 ===== */}
               <span
-                className="absolute rounded-full transition-all duration-300"
+                className="relative flex items-center justify-center shadow-lg transition-all duration-300 select-none"
                 style={{
-                  width: isHovered ? 68 : 60,
-                  height: isHovered ? 68 : 60,
-                  left: "50%",
-                  top: "50%",
-                  transform: "translate(-50%, -50%)",
-                  backgroundColor: colorInfo.glow,
-                  filter: "blur(6px)",
-                  opacity: status === "locked" ? 0.3 : 0.6,
-                }}
-              />
-              {/* 主按钮 */}
-              <span
-                className="relative flex items-center justify-center rounded-full shadow-lg transition-all duration-300"
-                style={{
-                  width: isHovered ? 60 : 52,
-                  height: isHovered ? 60 : 52,
-                  backgroundColor: status === "completed" ? "#059669" : status === "locked" ? "#94A3B8" : colorInfo.bg,
-                  border: "3px solid white",
-                  boxShadow: status === "locked" ? "none" : `0 0 20px ${colorInfo.glow}, 0 4px 12px rgba(0,0,0,0.2)`,
-                  opacity: status === "locked" ? 0.5 : 1,
+                  width: isHovered && !isCurrent ? badgeSize + 4 : badgeSize,
+                  height: isHovered && !isCurrent ? badgeSize + 4 : badgeSize,
+                  transform: `rotate(${rotate}deg)`,
+                  ...(status === "locked" && {
+                    backgroundColor: "#C4B5A5",
+                    border: "2px solid #A8A29E",
+                    borderRadius: "50%",
+                    opacity: 0.55,
+                    boxShadow: "none",
+                  }),
+                  ...(status === "available" && !isCurrent && {
+                    backgroundColor: "#D4A853",
+                    border: "2.5px solid #C9953A",
+                    borderRadius: "50%",
+                    opacity: 1,
+                    boxShadow: "0 0 12px rgba(212, 168, 83, 0.4), 0 2px 8px rgba(0,0,0,0.15)",
+                  }),
+                  ...(isCurrent && {
+                    backgroundColor: "#F59E0B",
+                    border: "3px solid #FBBF24",
+                    borderRadius: "50%",
+                    opacity: 1,
+                    boxShadow: "0 0 20px rgba(245, 158, 11, 0.5), 0 0 40px rgba(245, 158, 11, 0.2), 0 2px 8px rgba(0,0,0,0.15)",
+                  }),
+                  ...(status === "completed" && {
+                    backgroundColor: "#0D9488",
+                    border: "2px solid #14B8A6",
+                    borderRadius: "50%",
+                    opacity: 0.85,
+                    boxShadow: "0 0 8px rgba(13, 148, 136, 0.3), 0 2px 6px rgba(0,0,0,0.1)",
+                  }),
                 }}
               >
-                {status === "completed" ? (
-                  <span className="text-white text-xl drop-shadow-md">✓</span>
-                ) : status === "locked" ? (
-                  <span className="text-white text-lg">🔒</span>
-                ) : (
-                  <span className="text-2xl drop-shadow-md">{colorInfo.emoji}</span>
+                {/* 徽章内图案 */}
+                {status === "locked" && (
+                  <svg className="w-4 h-4 text-[#8B7D6B]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0110 0v4" />
+                  </svg>
+                )}
+                {status === "completed" && (
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                    <path d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+                {status === "available" && !isCurrent && (
+                  <span className="text-white font-black text-sm drop-shadow-sm">{marker.levelId}</span>
+                )}
+                {isCurrent && (
+                  <span className="text-white font-black text-base drop-shadow-md">{marker.levelId}</span>
                 )}
               </span>
-              {/* 关卡数字标签 */}
+
+              {/* ===== 关卡名称标签 ===== */}
               {status !== "locked" && (
-                <span
-                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-white rounded-full px-2 py-0.5 shadow-md border-2 font-black text-[10px]"
-                  style={{
-                    borderColor: status === "completed" ? "#059669" : colorInfo.bg,
-                    color: status === "completed" ? "#059669" : colorInfo.bg,
-                  }}
-                >
-                  Lv.{marker.levelId}
-                </span>
+                <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                  <span
+                    className="text-[10px] font-bold px-1.5 py-0.5 rounded-sm"
+                    style={{
+                      backgroundColor: isCurrent ? "rgba(245, 158, 11, 0.2)" : "rgba(255,255,255,0.6)",
+                      color: isCurrent ? "#D97706" : "#78716C",
+                      backdropFilter: "blur(2px)",
+                    }}
+                  >
+                    {config?.title ?? `第${marker.levelId}关`}
+                  </span>
+                </div>
               )}
-              {/* Tooltip */}
+
+              {/* ===== Tooltip ===== */}
               {isHovered && status !== "locked" && config && (
-                <div
-                  className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-xl border-2 px-4 py-2.5 whitespace-nowrap z-50"
-                  style={{ borderColor: colorInfo.bg }}
+                <div className="absolute bottom-full mb-6 left-1/2 -translate-x-1/2 bg-white rounded-xl shadow-xl border px-3 py-2 whitespace-nowrap z-50"
+                  style={{ borderColor: isCurrent ? "#F59E0B" : "#D4A853" }}
                 >
-                  <p className="text-sm font-black text-[#1E293B]">
-                    {colorInfo.emoji} 第{marker.levelId}关：{config.title}
-                  </p>
-                  <p className="text-[10px] text-[#64748B] mt-0.5">
+                  <p className="text-xs font-bold text-[#1E293B]">
                     {config.type === "dialogue" ? "🎭 对话闯关" : config.type === "quiz" ? "🃏 知识翻牌" : config.type === "brain" ? "🧠 脑力配对" : " 快速反应"}
                   </p>
                   {status === "available" && (
-                    <p
-                      className="text-[10px] font-bold mt-1"
-                      style={{ color: colorInfo.bg }}
-                    >
+                    <p className="text-[10px] font-bold mt-0.5" style={{ color: isCurrent ? "#F59E0B" : "#D4A853" }}>
                       点击开始挑战 →
                     </p>
                   )}
