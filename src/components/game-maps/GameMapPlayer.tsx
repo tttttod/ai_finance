@@ -318,30 +318,56 @@ export function GameMapPlayer({
                 }}
               />
             )}
-            {/* Main location marker */}
+            {/* Main location marker - 冒险徽章风格 */}
             <span
-              className="relative flex items-center justify-center rounded-full transition-all duration-300"
+              className="relative flex items-center justify-center transition-all duration-300 select-none"
               style={{
-                width: 36,
-                height: 36,
-                backgroundColor: status === "completed" ? "#059669" : isAvailable ? "#DAA520" : "#94A3B8",
-                border: showTour && !tourVisited && loc.id === 13
-                  ? "3px solid #FFD700"
-                  : "2px solid rgba(255, 248, 220, 0.8)",
-                boxShadow: showTour && !tourVisited && loc.id === 13
-                  ? "0 0 20px 6px rgba(255, 215, 0, 0.8), 0 4px 8px rgba(0,0,0,0.3)"
-                  : isHovered && isAvailable
-                  ? "0 0 16px 4px rgba(218, 165, 32, 0.6), 0 4px 8px rgba(0,0,0,0.3)"
-                  : "0 2px 4px rgba(0,0,0,0.2)",
-                opacity: isAvailable ? 1 : 0.5,
+                width: 40,
+                height: 40,
+                transform: `rotate(${loc.id % 2 === 0 ? 2 : -2}deg)`,
+                ...(status === "completed" && {
+                  backgroundColor: "#0D9488",
+                  border: "2px solid #14B8A6",
+                  borderRadius: "50%",
+                  opacity: 0.85,
+                  boxShadow: "0 0 8px rgba(13, 148, 136, 0.3), 0 2px 6px rgba(0,0,0,0.1)",
+                }),
+                ...(status === "available" && !showTour && {
+                  backgroundColor: "#D4A853",
+                  border: "2.5px solid #C9953A",
+                  borderRadius: "50%",
+                  opacity: 1,
+                  boxShadow: isHovered
+                    ? "0 0 16px 4px rgba(212, 168, 83, 0.6), 0 4px 8px rgba(0,0,0,0.3)"
+                    : "0 0 10px rgba(212, 168, 83, 0.4), 0 2px 6px rgba(0,0,0,0.15)",
+                }),
+                ...(showTour && !tourVisited && loc.id === 13 && {
+                  backgroundColor: "#F59E0B",
+                  border: "3px solid #FBBF24",
+                  borderRadius: "50%",
+                  opacity: 1,
+                  boxShadow: "0 0 20px 6px rgba(245, 158, 11, 0.6), 0 0 40px rgba(245, 158, 11, 0.3), 0 4px 8px rgba(0,0,0,0.3)",
+                }),
+                ...(status === "locked" && {
+                  backgroundColor: "#C4B5A5",
+                  border: "2px solid #A8A29E",
+                  borderRadius: "50%",
+                  opacity: 0.5,
+                  boxShadow: "none",
+                }),
               }}
             >
               {status === "completed" ? (
-                <span className="text-white text-sm font-bold">✓</span>
-              ) : isAvailable ? (
-                <span className="text-white text-xs font-bold">{loc.levelId}</span>
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                  <path d="M5 13l4 4L19 7" />
+                </svg>
+              ) : status === "available" ? (
+                <span className="text-white font-black text-sm drop-shadow-sm">{loc.levelId}</span>
               ) : (
-                <span className="text-white text-xs">🔒</span>
+                <svg className="w-4 h-4 text-[#8B7D6B]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0110 0v4" />
+                </svg>
               )}
             </span>
             {/* Location name tooltip on hover */}
