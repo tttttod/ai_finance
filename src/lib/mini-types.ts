@@ -221,8 +221,8 @@ export const AGENT_UNLOCK_META: Record<AgentRole, AgentUnlockMeta> = {
     avatar: "/agent-fundamental.webp",
     fullBody: "/agent-fundamental-full.webp",
     lockedAvatar: "/agent-locked.webp",
-    unlockLevel: 0,
-    unlockHint: "通过完成特定研究任务解锁",
+    unlockLevel: 11,
+    unlockHint: "完成第 11 关「财报夜审」后解锁",
   },
   valuation: {
     avatar: "/agent-valuation.webp",

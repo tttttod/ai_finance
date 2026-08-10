@@ -133,6 +133,12 @@ export const TRADER_ROAD_LEVELS: TraderRoadLevel[] = [
     subtitle: "Research Manager",
     unlockAgents: ["manager"],
   },
+  {
+    id: 11,
+    title: "财报夜审",
+    subtitle: "Fundamental Agent",
+    unlockAgents: ["fundamental"],
+  },
 ];
 
 // ===== XP 成长系统常量 =====

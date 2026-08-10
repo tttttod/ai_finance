@@ -30,6 +30,7 @@ export const GAME_MAP_LEVELS: GameMapLevel[] = [
   { id: 8, title: "舆论火场", subtitle: "Bear Analyst", icon: "\u{1F525}", type: "learning", unlockAgents: ["bear"], color: "#EF4444", description: "学习宏观、周期与风控进阶知识卡片", learningCardIndices: Array.from({ length: 10 }, (_, i) => i + 30) },
   { id: 9, title: "回撤之门", subtitle: "Risk Officer", icon: "\u{1F6E1}\uFE0F", type: "minigame", unlockAgents: ["risk"], color: "#14B8A6", description: "风险管理场景快速决策，守护你的本金。" },
   { id: 10, title: "最终关", subtitle: "Research Manager", icon: "\u{1F3C6}", type: "minigame", unlockAgents: ["manager"], color: "#EC4899", description: "集结所有Agent力量，完成最终的研究报告。" },
+  { id: 11, title: "财报夜审", subtitle: "Fundamental Agent", icon: "\u{1F50D}", type: "dialogue", unlockAgents: ["fundamental"], color: "#8B5CF6", description: "深夜审查财报，从数字中挖掘公司的真实底色。" },
 ];
 
 // Alias for backward compatibility
