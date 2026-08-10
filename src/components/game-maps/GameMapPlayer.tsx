@@ -225,13 +225,11 @@ export function GameMapPlayer({
   // ===== Render: World Map (Vintage Treasure Map Style) =====
   const renderWorldMap = () => {
     return (
-    <div className="relative w-full flex-1 min-h-0 overflow-y-auto">
-      {/* Vintage map background image - full height, scrollable */}
-      <div className="relative w-full" style={{ minHeight: "178vh" }}>
+    <div className="relative w-full" style={{ minHeight: "100%" }}>
       <img
         src="/map-world-new.jpg"
         alt="金融华尔界世界地图"
-        className="w-full h-auto"
+        className="w-full h-auto block"
         draggable={false}
       />
       {/* Dark overlay when hovering a location */}
@@ -401,7 +399,6 @@ export function GameMapPlayer({
           </button>
         );
       })}
-    </div>
     </div>
   );
   };
@@ -760,7 +757,7 @@ export function GameMapPlayer({
         </div>
 
         {/* Content */}
-        <div className={`flex-1 ${view === "world" ? "overflow-hidden" : "overflow-y-auto"} ${view === "world" ? "p-0" : "p-4"}`}>
+        <div className={`flex-1 overflow-y-auto ${view === "world" ? "p-0" : "p-4"}`}>
           {view === "world" && renderWorldMap()}
           {view === "zone" && renderZoneMap()}
           {view === "game" && renderGame()}
