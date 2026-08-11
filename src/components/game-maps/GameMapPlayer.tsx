@@ -89,21 +89,21 @@ interface WorldLocation {
 }
 
 const WORLD_LOCATIONS: WorldLocation[] = [
-  { id: 1, levelId: 1, name: "金融知识入港口", subtitle: "Knowledge Entrance", x: 51, y: 96 },
-  { id: 2, levelId: 2, name: "市场天气谷", subtitle: "Market Weather Valley", x: 15, y: 50 },
-  { id: 3, levelId: 3, name: "信息迷雾群岛", subtitle: "Info Mist Archipelago", x: 18, y: 9 },
-  { id: 4, levelId: 4, name: "证据岔路口", subtitle: "Evidence Crossroads", x: 50, y: 4 },
-  { id: 5, levelId: 5, name: "风险护盾桥", subtitle: "Risk-Shield Bridge", x: 80, y: 59 },
-  { id: 6, levelId: 6, name: "炒币中央塔", subtitle: "Crypto Central Tower", x: 16, y: 32 },
-  { id: 7, levelId: 7, name: "财报考古遗迹", subtitle: "Financial-Report Ruins", x: 81, y: 9 },
-  { id: 8, levelId: 8, name: "热点火山", subtitle: "Hotspot Volcano", x: 79, y: 29 },
-  { id: 9, levelId: 9, name: "模型沼泽", subtitle: "Model Swamp", x: 47, y: 51 },
-  { id: 10, levelId: 10, name: "复盘灯塔", subtitle: "Review Lighthouse", x: 18, y: 69 },
-  { id: 11, levelId: 1, name: "城市排名塔", subtitle: "City Ranking Tower", x: 46, y: 36 },
-  { id: 12, levelId: 1, name: "脑力训练场", subtitle: "Brain Training Arena", x: 83, y: 44 },
-  { id: 13, levelId: 1, name: "金融 Quiz 营", subtitle: "Financial Quiz Camp", x: 52, y: 84 },
-  { id: 14, levelId: 1, name: "华尔堡", subtitle: "Wall Castle", x: 48, y: 21 },
-  { id: 15, levelId: 1, name: "K线图学习", subtitle: "K-Line Study", x: 77, y: 75 },
+  { id: 1, levelId: 1, name: "金融知识入港口", subtitle: "Knowledge Entrance", x: 52, y: 97 },
+  { id: 2, levelId: 2, name: "市场天气谷", subtitle: "Market Weather Valley", x: 17, y: 52 },
+  { id: 3, levelId: 3, name: "信息迷雾群岛", subtitle: "Info Mist Archipelago", x: 20, y: 11 },
+  { id: 4, levelId: 4, name: "证据岔路口", subtitle: "Evidence Crossroads", x: 52, y: 6 },
+  { id: 5, levelId: 5, name: "风险护盾桥", subtitle: "Risk-Shield Bridge", x: 82, y: 61 },
+  { id: 6, levelId: 6, name: "炒币中央塔", subtitle: "Crypto Central Tower", x: 18, y: 34 },
+  { id: 7, levelId: 7, name: "财报考古遗迹", subtitle: "Financial-Report Ruins", x: 83, y: 11 },
+  { id: 8, levelId: 8, name: "热点火山", subtitle: "Hotspot Volcano", x: 81, y: 31 },
+  { id: 9, levelId: 9, name: "模型沼泽", subtitle: "Model Swamp", x: 49, y: 53 },
+  { id: 10, levelId: 10, name: "复盘灯塔", subtitle: "Review Lighthouse", x: 20, y: 71 },
+  { id: 11, levelId: 1, name: "城市排名塔", subtitle: "City Ranking Tower", x: 48, y: 38 },
+  { id: 12, levelId: 1, name: "脑力训练场", subtitle: "Brain Training Arena", x: 85, y: 46 },
+  { id: 13, levelId: 1, name: "金融 Quiz 营", subtitle: "Financial Quiz Camp", x: 54, y: 86 },
+  { id: 14, levelId: 1, name: "华尔堡", subtitle: "Wall Castle", x: 50, y: 23 },
+  { id: 15, levelId: 1, name: "K线图学习", subtitle: "K-Line Study", x: 79, y: 77 },
 ];
 
 // ===== Props =====
@@ -353,7 +353,7 @@ export function GameMapPlayer({
                   backgroundColor: "#C4B5A5",
                   border: "2px solid #A8A29E",
                   borderRadius: "50%",
-                  opacity: 0.5,
+                  opacity: 0.75,
                   boxShadow: "none",
                 }),
               }}
@@ -499,7 +499,7 @@ export function GameMapPlayer({
                     backgroundColor: "#C4B5A5",
                     border: "2px solid #A8A29E",
                     borderRadius: "50%",
-                    opacity: 0.55,
+                    opacity: 0.75,
                     boxShadow: "none",
                   }),
                   ...(status === "available" && !isCurrent && {
