@@ -128,6 +128,7 @@ export function GameMapPlayer({
   const [clickedWorldLoc, setClickedWorldLoc] = useState<number | null>(null);
   const [progress, setProgress] = useState(() => loadTraderRoadProgress());
   // Welcome + guided tour state
+  const [mapLoaded, setMapLoaded] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [showTour, setShowTour] = useState(false);
   const [tourVisited, setTourVisited] = useState(false);
@@ -228,11 +229,45 @@ export function GameMapPlayer({
   const renderWorldMap = () => {
     return (
     <div className="relative w-full" style={{ minHeight: "100%" }}>
+      {/* 加载遮罩：地图未加载时显示 */}
+      {!mapLoaded && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center overflow-hidden" style={{ minHeight: "100vh" }}>
+          {/* 模糊地图背景 */}
+          <img
+            src="/map-world-new.jpg"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover scale-110"
+            style={{ filter: "blur(20px) brightness(0.5)" }}
+            draggable={false}
+          />
+          {/* 暖黄光晕 */}
+          <div className="absolute inset-0 bg-amber-900/30" />
+          {/* 云雾纹理 */}
+          <div className="absolute inset-0 opacity-20" style={{
+            backgroundImage: "radial-gradient(ellipse at 50% 50%, rgba(255,200,100,0.3) 0%, transparent 70%)",
+          }} />
+          {/* 金币罗盘 */}
+          <div className="relative z-10 flex flex-col items-center gap-4">
+            {/* 外圈旋转 */}
+            <div className="relative w-20 h-20">
+              <div className="absolute inset-0 rounded-full border-2 border-amber-400/60 animate-spin-slow" style={{ borderTopColor: "#FBBF24", borderRightColor: "#D97706" }} />
+              <div className="absolute inset-2 rounded-full border border-amber-300/40 animate-spin-slower" style={{ borderLeftColor: "#F59E0B", borderBottomColor: "#B45309" }} />
+              <div className="absolute inset-4 rounded-full bg-gradient-to-br from-amber-200 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                <span className="text-xl font-bold text-amber-900" style={{ fontFamily: "serif" }}>₿</span>
+              </div>
+            </div>
+            <p className="text-amber-200 text-sm font-medium tracking-wider animate-pulse">
+              正在加载地图...
+            </p>
+          </div>
+        </div>
+      )}
       <img
         src="/map-world-new.jpg"
         alt="金融华尔界世界地图"
         className="w-full h-auto block"
         draggable={false}
+        onLoad={() => setMapLoaded(true)}
       />
       {/* Dark overlay when hovering a location */}
       {hoveredWorldLoc !== null && (

@@ -258,6 +258,22 @@ body {
   100% { background-position: 200% 0; }
 }
 
+/* Slow spin for gold coin compass */
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes spinSlower {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+.animate-spin-slow {
+  animation: spinSlow 3s linear infinite;
+}
+.animate-spin-slower {
+  animation: spinSlower 5s linear infinite;
+}
+
 /* 网格背景 */
 .grid-bg {
   background-image:
