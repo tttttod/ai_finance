@@ -227,41 +227,62 @@ export function GameMapPlayer({
 
   // ===== Render: World Map (Vintage Treasure Map Style) =====
   const renderWorldMap = () => {
-    return (
-    <div className="relative w-full" style={{ minHeight: "100%" }}>
-      {/* 加载遮罩：地图未加载时显示 */}
-      {!mapLoaded && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center overflow-hidden" style={{ minHeight: "100vh" }}>
+    // 加载状态：仅显示模糊地图背景 + 金币罗盘，不渲染任何交互元素
+    if (!mapLoaded) {
+      return (
+        <div className="relative w-full flex flex-col items-center justify-center overflow-hidden" style={{ minHeight: "100vh" }}>
           {/* 模糊地图背景 */}
           <img
             src="/map-world-new.jpg"
             alt=""
-            className="absolute inset-0 w-full h-full object-cover scale-110"
-            style={{ filter: "blur(20px) brightness(0.5)" }}
-            draggable={false}
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ filter: "blur(8px) brightness(0.7) saturate(0.5)", transform: "scale(1.1)" }}
           />
-          {/* 暖黄光晕 */}
-          <div className="absolute inset-0 bg-amber-900/30" />
-          {/* 云雾纹理 */}
-          <div className="absolute inset-0 opacity-20" style={{
-            backgroundImage: "radial-gradient(ellipse at 50% 50%, rgba(255,200,100,0.3) 0%, transparent 70%)",
-          }} />
-          {/* 金币罗盘 */}
-          <div className="relative z-10 flex flex-col items-center gap-4">
-            {/* 外圈旋转 */}
-            <div className="relative w-20 h-20">
-              <div className="absolute inset-0 rounded-full border-2 border-amber-400/60 animate-spin-slow" style={{ borderTopColor: "#FBBF24", borderRightColor: "#D97706" }} />
-              <div className="absolute inset-2 rounded-full border border-amber-300/40 animate-spin-slower" style={{ borderLeftColor: "#F59E0B", borderBottomColor: "#B45309" }} />
-              <div className="absolute inset-4 rounded-full bg-gradient-to-br from-amber-200 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
-                <span className="text-xl font-bold text-amber-900" style={{ fontFamily: "serif" }}>₿</span>
-              </div>
+          {/* 羊皮纸色蒙版 */}
+          <div className="absolute inset-0" style={{ backgroundColor: "rgba(245, 235, 220, 0.4)" }} />
+
+          {/* 金币罗盘 loading */}
+          <div className="relative flex flex-col items-center z-10">
+            <div
+              className="w-20 h-20 rounded-full animate-spin-slow"
+              style={{
+                border: "3px dashed #D4A853",
+                boxShadow: "0 0 20px rgba(212, 168, 83, 0.3), inset 0 0 20px rgba(212, 168, 83, 0.1)",
+              }}
+            />
+            <div
+              className="absolute w-14 h-14 rounded-full animate-spin-slower"
+              style={{
+                border: "2px solid rgba(212, 168, 83, 0.3)",
+                borderTop: "2px solid #D4A853",
+                boxShadow: "0 0 12px rgba(212, 168, 83, 0.2)",
+              }}
+            />
+            <div
+              className="absolute w-10 h-10 rounded-full flex items-center justify-center"
+              style={{
+                background: "radial-gradient(circle, #F5E6C8 0%, #D4A853 100%)",
+                border: "2px solid #B8860B",
+                boxShadow: "0 0 16px 4px rgba(212, 168, 83, 0.5)",
+              }}
+            >
+              <span className="text-lg" style={{ fontFamily: "serif", fontWeight: 900, color: "#8B6914" }}>₿</span>
             </div>
-            <p className="text-amber-200 text-sm font-medium tracking-wider animate-pulse">
-              正在加载地图...
+            <p
+              className="mt-6 text-sm font-medium tracking-wider animate-pulse"
+              style={{ fontFamily: "serif", color: "#6B5B4B", letterSpacing: "2px" }}
+            >
+              正在进入金融华尔界...
             </p>
           </div>
         </div>
-      )}
+      );
+    }
+
+    // 加载完成：显示完整地图 + 交互标记
+    return (
+
+    <div className="relative w-full" style={{ minHeight: "100%" }}>
       <img
         src="/map-world-new.jpg"
         alt="金融华尔界世界地图"
