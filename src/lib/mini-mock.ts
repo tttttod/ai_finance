@@ -642,12 +642,13 @@ function generateSampleStockResult(
   const directionCorrect = Math.random() > 0.3; // 70% 正确
   const intervalHit = Math.random() > 0.35; // 65% 命中
 
-  // 模型评分
+  // 模型评分（满分 100）
   const modelScore = Math.round(
-    (directionCorrect ? 0.7 : 0.3) * 30 +
-    (intervalHit ? 0.65 : 0.35) * 25 +
-    r2 * 25 -
-    (rmse / 10) * 20
+    (directionCorrect ? 0.85 : 0.4) * 25 +  // 方向正确性：21.25 或 10
+    (intervalHit ? 0.8 : 0.4) * 20 +         // 区间命中率：16 或 8
+    r2 * 30 +                                 // R²：13.5 到 27
+    (1 - mae / 10) * 15 +                     // MAE 越低越好：7.5 到 12.75
+    (1 - rmse / 15) * 10                      // RMSE 越低越好：5.3 到 8.7
   );
 
   // 因子贡献
@@ -687,7 +688,7 @@ function generateSampleStockResult(
     name: stock.name,
     code: stock.code,
     industry: stock.industry,
-    model_score: Math.max(55, Math.min(90, modelScore)),
+    model_score: Math.max(40, Math.min(95, modelScore)),
     direction_correct: directionCorrect,
     interval_hit: intervalHit,
     mae: Math.round(mae * 100) / 100,
