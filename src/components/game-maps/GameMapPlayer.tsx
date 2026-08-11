@@ -133,13 +133,15 @@ export function GameMapPlayer({
   const [showTour, setShowTour] = useState(false);
   const [tourVisited, setTourVisited] = useState(false);
 
-  // Check if first visit
+  // Check if first visit - ONLY after map is loaded
   useEffect(() => {
-    const hasSeen = localStorage.getItem("financia-waltz-tour-seen");
-    if (!hasSeen) {
-      setShowWelcome(true);
+    if (mapLoaded) {
+      const hasSeen = localStorage.getItem("financia-waltz-tour-seen");
+      if (!hasSeen) {
+        setShowWelcome(true);
+      }
     }
-  }, []);
+  }, [mapLoaded]);
 
   useEffect(() => {
     saveTraderRoadProgress(progress);
@@ -821,8 +823,8 @@ export function GameMapPlayer({
           {view === "game" && renderGame()}
         </div>
 
-        {/* Welcome Popup */}
-        {showWelcome && (
+        {/* Welcome Popup - 仅在地图加载完成后显示 */}
+        {showWelcome && mapLoaded && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="bg-white rounded-2xl max-w-sm w-[90%] p-6 shadow-2xl animate-in fade-in zoom-in duration-300">
               <h2 className="text-xl font-bold text-center text-[#1E293B]">✨ 欢迎来到「金融华尔界」</h2>
@@ -852,8 +854,8 @@ export function GameMapPlayer({
           </div>
         )}
 
-        {/* Guided Tour Overlay */}
-        {showTour && !tourVisited && (
+        {/* Guided Tour Overlay - 仅在地图加载完成后显示 */}
+        {showTour && !tourVisited && mapLoaded && (
           <div className="absolute inset-0 z-40 pointer-events-none">
             {/* Dim overlay - full screen, but with hole for quiz camp */}
             <div className="absolute inset-0 bg-black/40" />
