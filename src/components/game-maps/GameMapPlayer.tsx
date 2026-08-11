@@ -239,6 +239,8 @@ export function GameMapPlayer({
             alt=""
             className="absolute inset-0 w-full h-full object-cover"
             style={{ filter: "blur(8px) brightness(0.7) saturate(0.5)", transform: "scale(1.1)" }}
+            onLoad={() => setMapLoaded(true)}
+            onError={() => setMapLoaded(true)}
           />
           {/* 羊皮纸色蒙版 */}
           <div className="absolute inset-0" style={{ backgroundColor: "rgba(245, 235, 220, 0.4)" }} />
