@@ -131,7 +131,6 @@ export function GameMapPlayer({
   const [showWelcome, setShowWelcome] = useState(false);
   const [showTour, setShowTour] = useState(false);
   const [tourVisited, setTourVisited] = useState(false);
-  const [mapLoaded, setMapLoaded] = useState(false);
 
   // Check if first visit
   useEffect(() => {
@@ -229,32 +228,13 @@ export function GameMapPlayer({
   const renderWorldMap = () => {
     return (
     <div className="relative w-full" style={{ minHeight: "100%" }}>
-      {/* Loading overlay */}
-      {!mapLoaded && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#1a1a2e] z-20">
-          <div className="w-16 h-16 border-4 border-[#D4A853] border-t-transparent rounded-full animate-spin mb-4" />
-          <div className="text-[#D4A853] text-sm font-bold tracking-widest animate-pulse">
-            加载金融华尔界...
-          </div>
-          <div className="mt-3 flex gap-1">
-            {[0,1,2,3,4].map((i) => (
-              <div
-                key={i}
-                className="w-2 h-2 rounded-full bg-[#D4A853] animate-bounce"
-                style={{ animationDelay: `${i * 0.15}s` }}
-              />
-            ))}
-          </div>
-        </div>
-      )}
       <img
-        src="/map-world-new.webp"
+        src="/map-world-new.jpg"
         alt="金融华尔界世界地图"
         className="w-full h-auto block"
         draggable={false}
-        onLoad={() => setMapLoaded(true)}
       />
-      {mapLoaded && <>{/* Dark overlay when hovering a location */}
+      {/* Dark overlay when hovering a location */}
       {hoveredWorldLoc !== null && (
         <div className="absolute inset-0 bg-black/20 transition-opacity duration-300 pointer-events-none" />
       )}
@@ -421,7 +401,6 @@ export function GameMapPlayer({
           </button>
         );
       })}
-    </>}
     </div>
   );
   };
