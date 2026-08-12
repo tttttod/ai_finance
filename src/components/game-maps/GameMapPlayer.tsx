@@ -1306,16 +1306,25 @@ export function GameMapPlayer({
               <button
                 onClick={() => {
                   if (view === "game") {
+                    // 华尔堡子关卡（level 1/2/3）→ 返回 submap
                     // 主线关卡（level-*）从 zone 进入 → 返回 zone
                     // 独立小游戏（无 activeLevelId）从世界地图进入 → 返回 world
-                    if (activeLevelId) {
+                    if (activeLevelId && activeLevelId <= 3) {
+                      setView("submap");
+                      setActiveLevelId(null);
+                      setActiveGameId(null);
+                    } else if (activeLevelId) {
                       setView("zone");
+                      setActiveLevelId(null);
+                      setActiveGameId(null);
                     } else {
                       setView("world");
                       setActiveGameId(null);
                     }
                   } else if (view === "submap" || view === "feature") {
                     setView("world");
+                    setActiveSubmapId(null);
+                    setActiveFeatureId(null);
                   } else {
                     setView("world");
                   }
