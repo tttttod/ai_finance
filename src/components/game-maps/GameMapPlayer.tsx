@@ -1203,9 +1203,20 @@ export function GameMapPlayer({
             {view !== "world" && (
               <button
                 onClick={() => {
-                  if (view === "game") setView("zone");
-                  else if (view === "submap" || view === "feature") setView("world");
-                  else setView("world");
+                  if (view === "game") {
+                    // 主线关卡（level-*）从 zone 进入 → 返回 zone
+                    // 独立小游戏（无 activeLevelId）从世界地图进入 → 返回 world
+                    if (activeLevelId) {
+                      setView("zone");
+                    } else {
+                      setView("world");
+                      setActiveGameId(null);
+                    }
+                  } else if (view === "submap" || view === "feature") {
+                    setView("world");
+                  } else {
+                    setView("world");
+                  }
                 }}
                 className="w-7 h-7 rounded-full bg-[#F1F5F9] flex items-center justify-center text-[#64748B] hover:bg-[#E2E8F0] transition-colors text-sm"
               >
