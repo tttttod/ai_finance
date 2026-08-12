@@ -22,8 +22,6 @@ import {
   UserProfileSurvey,
   ReplayCurveFit,
   ReviewDetail,
-  GeneralPredictionModel,
-  SampleStockResult,
   TradeTIPersonalityId,
   TradeTIState,
   TradeTIResult,
@@ -46,7 +44,6 @@ import {
   mockReviewDetail,
   FACTOR_LIBRARY,
   DEFAULT_SELECTED_FACTORS,
-  generateGeneralPredictionModel,
   TRADETI_QUESTIONS,
   calculateTradeTIResult,
 } from "@/lib/mini-mock";
@@ -72,6 +69,7 @@ import AgentAvatar from "@/components/agent-avatar";
 import AgentTeamCard from "@/components/agent-team-card";
 import AgentUnlockAnimation from "@/components/agent-unlock-animation";
 import OnboardingGuideModal from "@/components/onboarding-guide-modal";
+import ModelRulesModal from "@/components/model-rules-modal";
 import NewsTab from "@/components/news-tab";
 
 type TabId = "market" | "research" | "review" | "news" | "profile";
@@ -1273,49 +1271,98 @@ function AgentCard({ response, unlockedAgents }: { response: AgentResponse; unlo
   );
 }
 
-// ===== 模型 Tab（通用股票预测模型） =====
+// ===== 模型 Tab（通用股票预测模型 - 真实数据版） =====
+
+interface PredictionAPIResponse {
+  stock: { name: string; code: string; tsCode: string; industry: string };
+  dataQuality: { source: string; fetchedAt: string; missing: string[]; stale: boolean };
+  prediction: {
+    direction: "up" | "down" | "neutral";
+    directionLabel: string;
+    probability: number;
+    confidence: "low" | "medium" | "high";
+    expectedReturnPct: number;
+    riskLevel: "low" | "medium" | "high";
+    summary: string;
+    riskWarnings: string[];
+  };
+  backtest: {
+    dates: string[];
+    actualPrices: number[];
+    predictedPrices: number[];
+    upperBand: number[];
+    lowerBand: number[];
+    dailyDirectionCorrect: boolean[];
+    metrics: {
+      directionAccuracy: number;
+      intervalHitRate: number;
+      mae: number;
+      rmse: number;
+      r2: number;
+      mape: number;
+      sampleDays: number;
+    };
+  };
+  factors: {
+    selected: string[];
+    contributions: {
+      factor: string;
+      value: number;
+      contribution: number;
+      direction: "positive" | "negative" | "neutral";
+      explanation: string;
+    }[];
+  };
+}
+
 function ModelTab() {
   const [selectedFactors, setSelectedFactors] = useState<string[]>(DEFAULT_SELECTED_FACTORS);
-  const [modelData, setModelData] = useState<GeneralPredictionModel | null>(null);
-  const [isTesting, setIsTesting] = useState(false);
-  const [expandedStock, setExpandedStock] = useState<string | null>(null);
+  const [predictionResult, setPredictionResult] = useState<PredictionAPIResponse | null>(null);
+  const [isPredicting, setIsPredicting] = useState(false);
+  const [predictError, setPredictError] = useState<string | null>(null);
   const [expandedFactorGroup, setExpandedFactorGroup] = useState<string | null>(null);
+  const [stockQuery, setStockQuery] = useState("");
+  const [showRulesModal, setShowRulesModal] = useState(false);
 
-  // 选股模式：random = 随机股票，custom = 指定股票
-  const [stockMode, setStockMode] = useState<"random" | "custom">("random");
-  // 自定义股票输入
-  const [customStocks, setCustomStocks] = useState<string>("");
-  // 解析后的自定义股票列表
-  const [parsedCustomStocks, setParsedCustomStocks] = useState<{ name: string; code: string }[]>([]);
+  const handleStartPrediction = async () => {
+    if (!stockQuery.trim()) {
+      setPredictError("请输入股票名称或代码");
+      return;
+    }
+    if (selectedFactors.length === 0) {
+      setPredictError("请至少选择一个因子");
+      return;
+    }
 
-  const handleStartTest = () => {
-    setIsTesting(true);
-    setTimeout(() => {
-      if (stockMode === "custom" && parsedCustomStocks.length > 0) {
-        // 使用自定义股票
-        setModelData(generateGeneralPredictionModel(selectedFactors, parsedCustomStocks.map((s) => s.name)));
-      } else {
-        // 使用随机股票
-        setModelData(generateGeneralPredictionModel(selectedFactors));
+    setIsPredicting(true);
+    setPredictError(null);
+    setPredictionResult(null);
+
+    try {
+      const res = await fetch("/api/model/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: stockQuery.trim(),
+          selectedFactors,
+          horizonDays: 10,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!json.success) {
+        setPredictError(json.error || "预测失败，请重试");
+        return;
       }
-      setIsTesting(false);
-    }, 1500);
-  };
 
-  const handleResample = () => {
-    setIsTesting(true);
-    setTimeout(() => {
-      if (stockMode === "custom" && parsedCustomStocks.length > 0) {
-        setModelData(generateGeneralPredictionModel(selectedFactors, parsedCustomStocks.map((s) => s.name)));
-      } else {
-        setModelData(generateGeneralPredictionModel(selectedFactors));
-      }
-      setIsTesting(false);
-    }, 1000);
-  };
-
-  const handleUseRecommended = () => {
-    setSelectedFactors(DEFAULT_SELECTED_FACTORS);
+      setPredictionResult(json.data);
+    } catch (err) {
+      setPredictError("网络请求失败，请检查连接后重试");
+      console.error("[ModelTab] prediction error:", err);
+    } finally {
+      setIsPredicting(false);
+    }
   };
 
   const toggleFactor = (factor: string) => {
@@ -1324,67 +1371,81 @@ function ModelTab() {
     );
   };
 
-  const isFactorSelected = (factor: string) => selectedFactors.includes(factor);
-
-  // 解析自定义股票输入
-  const handleCustomStocksChange = (value: string) => {
-    setCustomStocks(value);
-    const lines = value.split("\n").filter((line) => line.trim());
-    const stocks = lines.map((line) => {
-      const parts = line.trim().split(/[\s,，]+/);
-      if (parts.length >= 2) {
-        return { name: parts[0], code: parts[1] };
-      } else if (parts.length === 1) {
-        return { name: parts[0], code: "" };
-      }
-      return null;
-    }).filter(Boolean) as { name: string; code: string }[];
-    setParsedCustomStocks(stocks);
+  const handleUseRecommended = () => {
+    setSelectedFactors(DEFAULT_SELECTED_FACTORS);
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 85) return "text-emerald-600";
-    if (score >= 70) return "text-blue-600";
-    if (score >= 60) return "text-amber-600";
-    return "text-red-600";
+  const getConfidenceLabel = (c: string) => {
+    if (c === "high") return "高";
+    if (c === "medium") return "中";
+    return "低";
   };
 
-  const getScoreLabel = (score: number) => {
-    if (score >= 85) return "拟合较好";
-    if (score >= 70) return "拟合可用";
-    if (score >= 60) return "拟合一般";
-    return "拟合较差";
+  const getConfidenceColor = (c: string) => {
+    if (c === "high") return "text-emerald-600 bg-emerald-50";
+    if (c === "medium") return "text-amber-600 bg-amber-50";
+    return "text-red-600 bg-red-50";
+  };
+
+  const getRiskColor = (r: string) => {
+    if (r === "high") return "text-red-600";
+    if (r === "medium") return "text-amber-600";
+    return "text-emerald-600";
+  };
+
+  const getDirectionColor = (d: string) => {
+    if (d === "up") return "text-red-600";
+    if (d === "down") return "text-emerald-600";
+    return "text-slate-600";
   };
 
   return (
     <div className="p-4 space-y-4">
-      {/* 模型总览 - 未来感升级 */}
+      {/* 模型总览 */}
       <div className="bg-white rounded-lg p-4 border border-slate-100">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-slate-800">通用股票预测模型</h2>
+              <p className="text-[10px] text-slate-500">真实行情 + 因子评分 + 10日回测</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-sm font-bold text-slate-800">通用股票预测模型</h2>
-            <p className="text-[10px] text-slate-500">多因子回归 + 机器学习拟合 + 蒙特卡洛模拟</p>
-          </div>
+          <button
+            onClick={() => setShowRulesModal(true)}
+            className="text-[10px] px-2.5 py-1 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+          >
+            规则说明
+          </button>
         </div>
-        <p className="text-[10px] text-amber-600 bg-amber-50 px-2 py-1 rounded mt-2">
-          Demo数据，仅用于产品演示，不代表实时行情。
+        <p className="text-[10px] text-slate-500 leading-relaxed">
+          基于 Tushare 真实行情数据，通过多因子打分模型预测涨跌方向，并用近10日回测验证模型准确性。
         </p>
       </div>
 
-      {/* 因子库 - 浏览+选择因子 */}
+      {/* 股票输入 */}
+      <div className="bg-white rounded-lg p-4 border border-slate-100">
+        <h3 className="text-sm font-semibold text-slate-800 mb-2">预测标的</h3>
+        <p className="text-[10px] text-slate-500 mb-2">输入股票名称或代码，系统将基于真实数据进行预测与回测</p>
+        <input
+          type="text"
+          className="w-full text-xs p-3 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-300"
+          placeholder="例如：贵州茅台、600519、宁德时代、300750"
+          value={stockQuery}
+          onChange={(e) => setStockQuery(e.target.value)}
+        />
+      </div>
+
+      {/* 因子库 */}
       <div className="bg-white rounded-lg p-4 border border-slate-100">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-slate-800">因子库</h3>
           <span className="text-[10px] text-slate-400">点击因子名称选择/取消</span>
         </div>
-        <p className="text-[10px] text-slate-500 mb-3 leading-relaxed">
-          浏览因子说明，选择你认为有效的因子加入下方「已选因子」，系统将用它们进行拟合测试。
-        </p>
         <div className="space-y-1.5">
           {FACTOR_LIBRARY.map((group) => {
             const selectedInGroup = group.metrics.filter((m) => selectedFactors.includes(m));
@@ -1415,7 +1476,7 @@ function ModelTab() {
                     <p className="text-[10px] text-slate-400 mb-2">{group.description}</p>
                     <div className="flex flex-wrap gap-1.5">
                       {group.metrics.map((metric) => {
-                        const selected = isFactorSelected(metric);
+                        const selected = selectedFactors.includes(metric);
                         return (
                           <button
                             key={metric}
@@ -1439,7 +1500,7 @@ function ModelTab() {
         </div>
       </div>
 
-      {/* 已选因子汇总 - 紧凑展示 */}
+      {/* 已选因子汇总 */}
       <div className="bg-white rounded-lg p-4 border border-slate-100">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-slate-800">已选因子</h3>
@@ -1457,9 +1518,8 @@ function ModelTab() {
         </div>
 
         {selectedFactors.length === 0 ? (
-          <div className="text-center py-6 text-[10px] text-slate-400">
-            <p>尚未选择因子</p>
-            <p className="mt-1">在上方「因子库」中点击因子即可添加</p>
+          <div className="text-center py-4 text-[10px] text-slate-400">
+            <p>尚未选择因子，在上方「因子库」中点击因子即可添加</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -1487,7 +1547,7 @@ function ModelTab() {
           </div>
         )}
 
-        <div className="mt-4 pt-3 border-t border-slate-100">
+        <div className="mt-3 pt-3 border-t border-slate-100">
           <button
             className="w-full text-[10px] py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
             onClick={handleUseRecommended}
@@ -1497,271 +1557,175 @@ function ModelTab() {
         </div>
       </div>
 
-      {/* 选股模式选择 */}
+      {/* 开始预测按钮 */}
       <div className="bg-white rounded-lg p-4 border border-slate-100">
-        <h3 className="text-sm font-semibold text-slate-800 mb-3">选股方式</h3>
-        <p className="text-[10px] text-slate-500 mb-3 leading-relaxed">
-          选择随机股票或输入你关注的股票，系统会将选定的因子应用到这些股票上进行拟合测试。
-        </p>
+        {predictError && (
+          <p className="text-[10px] text-red-600 text-center mb-2 bg-red-50 rounded p-2">{predictError}</p>
+        )}
+        <button
+          className="w-full text-xs py-3 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={handleStartPrediction}
+          disabled={isPredicting || !stockQuery.trim() || selectedFactors.length === 0}
+        >
+          {isPredicting ? "预测中，正在获取真实行情数据..." : "开始预测与回测"}
+        </button>
+      </div>
 
-        <div className="flex gap-2 mb-3">
-          <button
-            className={`flex-1 text-[10px] py-2 rounded-lg border transition-colors ${
-              stockMode === "random"
-                ? "bg-blue-50 border-blue-200 text-blue-700"
-                : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
-            }`}
-            onClick={() => setStockMode("random")}
-          >
-            随机股票（10只）
-          </button>
-          <button
-            className={`flex-1 text-[10px] py-2 rounded-lg border transition-colors ${
-              stockMode === "custom"
-                ? "bg-blue-50 border-blue-200 text-blue-700"
-                : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
-            }`}
-            onClick={() => setStockMode("custom")}
-          >
-            指定股票
-          </button>
-        </div>
+      {/* 预测结果 */}
+      {predictionResult && (
+        <>
+          {/* 数据来源标识 */}
+          {predictionResult.dataQuality.source !== "tushare" && (
+            <div className="bg-amber-50 rounded-lg p-3 border border-amber-100">
+              <p className="text-[10px] text-amber-700">
+                当前数据来源为演示数据，未接入实时行情。请配置 TUSHARE_TOKEN 后重试。
+              </p>
+            </div>
+          )}
 
-        {stockMode === "custom" && (
-          <div>
-            <label className="text-[10px] text-slate-600 mb-1 block">
-              输入股票（每行一只，格式：股票名称 代码）
-            </label>
-            <textarea
-              className="w-full text-xs p-3 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-300 resize-none"
-              rows={5}
-              placeholder={"贵州茅台 600519\n宁德时代 300750\n比亚迪 002594\n招商银行 600036"}
-              value={customStocks}
-              onChange={(e) => handleCustomStocksChange(e.target.value)}
-            />
-            {parsedCustomStocks.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1">
-                {parsedCustomStocks.map((stock, index) => (
+          {/* 预测结论卡片 */}
+          <div className="bg-white rounded-lg p-4 border border-slate-100">
+            <h3 className="text-sm font-semibold text-slate-800 mb-3">预测结论</h3>
+            <div className="flex items-center gap-3 mb-3">
+              <div className={`text-lg font-bold ${getDirectionColor(predictionResult.prediction.direction)}`}>
+                {predictionResult.prediction.directionLabel}
+              </div>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${getConfidenceColor(predictionResult.prediction.confidence)}`}>
+                置信度：{getConfidenceLabel(predictionResult.prediction.confidence)}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="text-center p-2 bg-slate-50 rounded">
+                <div className={`text-lg font-mono font-bold ${getDirectionColor(predictionResult.prediction.direction)}`}>
+                  {Math.round(predictionResult.prediction.probability * 100)}%
+                </div>
+                <div className="text-[10px] text-slate-600">上涨概率</div>
+              </div>
+              <div className="text-center p-2 bg-slate-50 rounded">
+                <div className={`text-lg font-mono font-bold ${predictionResult.prediction.expectedReturnPct >= 0 ? "text-red-600" : "text-emerald-600"}`}>
+                  {predictionResult.prediction.expectedReturnPct >= 0 ? "+" : ""}{predictionResult.prediction.expectedReturnPct}%
+                </div>
+                <div className="text-[10px] text-slate-600">预期收益率</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[10px] text-slate-500">风险等级：</span>
+              <span className={`text-[10px] font-medium ${getRiskColor(predictionResult.prediction.riskLevel)}`}>
+                {predictionResult.prediction.riskLevel === "high" ? "高风险" : predictionResult.prediction.riskLevel === "medium" ? "中风险" : "低风险"}
+              </span>
+            </div>
+
+            <p className="text-[10px] text-slate-600 leading-relaxed mb-2">
+              {predictionResult.prediction.summary}
+            </p>
+
+            {/* 风险提示 */}
+            <div className="bg-red-50 rounded-lg p-2.5 border border-red-100">
+              <p className="text-[10px] font-medium text-red-700 mb-1">风险提示</p>
+              <ul className="text-[10px] text-red-600 space-y-0.5">
+                {predictionResult.prediction.riskWarnings.map((w, i) => (
+                  <li key={i}>• {w}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* 10日回测曲线 */}
+          {predictionResult.backtest.dates.length > 0 && (
+            <div className="bg-white rounded-lg p-4 border border-slate-100">
+              <h3 className="text-sm font-semibold text-slate-800 mb-1">近10日回测对比</h3>
+              <p className="text-[10px] text-slate-500 mb-3">真实价格 vs 模型预测价格</p>
+              <BacktestChart data={predictionResult.backtest} />
+
+              {/* 每日方向正确标记 */}
+              <div className="mt-3 flex items-center gap-1 flex-wrap">
+                {predictionResult.backtest.dailyDirectionCorrect.map((correct, i) => (
                   <span
-                    key={index}
-                    className="text-[10px] px-2 py-1 bg-blue-50 text-blue-700 rounded-full"
+                    key={i}
+                    className={`text-[9px] px-1.5 py-0.5 rounded ${correct ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"}`}
                   >
-                    {stock.name} {stock.code && `(${stock.code})`}
+                    {predictionResult.backtest.dates[i]?.slice(-4) || `D${i+1}`} {correct ? "✓" : "✗"}
                   </span>
                 ))}
               </div>
-            )}
-            <p className="text-[10px] text-slate-500 mt-2">
-              已识别 {parsedCustomStocks.length} 只股票
-            </p>
-          </div>
-        )}
-      </div>
+            </div>
+          )}
 
-      {/* 开始拟合测试 - 页面底部主按钮 */}
-      <div className="bg-white rounded-lg p-4 border border-slate-100">
-        {(() => {
-          const needsFactors = selectedFactors.length === 0;
-          const needsStocks = stockMode === "custom" && parsedCustomStocks.length === 0;
-          const isDisabled = isTesting || needsFactors || needsStocks;
-          const hint = needsFactors ? "请至少选择一个因子" : needsStocks ? "请添加至少一只股票" : "";
-          return (
-            <>
-              {hint && (
-                <p className="text-[10px] text-amber-600 text-center mb-2">{hint}</p>
-              )}
-              <button
-                className="w-full text-xs py-3 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={handleStartTest}
-                disabled={isDisabled}
-              >
-                {isTesting ? "测试中..." : "开始拟合测试"}
-              </button>
-            </>
-          );
-        })()}
-      </div>
-
-      {/* 测试结果 */}
-      {modelData && (
-        <>
-          {/* 总体评分 */}
-          <div className="bg-white rounded-lg p-4 border border-slate-100">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-slate-800">本次测试总体评分</h3>
-              <button
-                className="text-[10px] text-blue-600 hover:text-blue-700"
-                onClick={handleResample}
-              >
-                {stockMode === "custom" ? "重新测试" : "重新抽样10只股票"}
-              </button>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="text-center p-2 bg-slate-50 rounded">
-                <div className={`text-lg font-mono font-bold ${getScoreColor(modelData.model_summary.average_score)}`}>
-                  {modelData.model_summary.average_score}
-                </div>
-                <div className="text-[10px] text-slate-600">平均评分</div>
-              </div>
-              <div className="text-center p-2 bg-slate-50 rounded">
-                <div className="text-lg font-mono font-bold text-blue-600">
-                  {Math.round(modelData.model_summary.average_direction_accuracy * 100)}%
-                </div>
-                <div className="text-[10px] text-slate-600">方向准确率</div>
-              </div>
-              <div className="text-center p-2 bg-slate-50 rounded">
-                <div className="text-lg font-mono font-bold text-emerald-600">
-                  {Math.round(modelData.model_summary.average_interval_hit_rate * 100)}%
-                </div>
-                <div className="text-[10px] text-slate-600">区间命中率</div>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-2 mt-3">
-              <div className="text-center p-2 bg-slate-50 rounded">
-                <div className="text-xs font-mono font-bold text-slate-700">{modelData.model_summary.average_mae}</div>
-                <div className="text-[10px] text-slate-600">MAE</div>
-              </div>
-              <div className="text-center p-2 bg-slate-50 rounded">
-                <div className="text-xs font-mono font-bold text-slate-700">{modelData.model_summary.average_rmse}</div>
-                <div className="text-[10px] text-slate-600">RMSE</div>
-              </div>
-              <div className="text-center p-2 bg-slate-50 rounded">
-                <div className="text-xs font-mono font-bold text-blue-600">{modelData.model_summary.average_r2}</div>
-                <div className="text-[10px] text-slate-600">R²</div>
-              </div>
-            </div>
-          </div>
-
-          {/* 样本股票结果列表 */}
-          <div className="bg-white rounded-lg p-4 border border-slate-100">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-slate-800">
-                {stockMode === "custom" ? "指定股票结果" : "十只样本股票结果"}
-              </h3>
-              <span className="text-[10px] text-slate-500">
-                {modelData.sample_results.length} 只股票
-              </span>
-            </div>
-            <div className="space-y-3">
-              {modelData.sample_results.map((stock) => (
-                <div key={stock.code} className="border border-slate-100 rounded-lg overflow-hidden">
-                  <div
-                    className="p-3 cursor-pointer hover:bg-slate-50 transition-colors"
-                    onClick={() => setExpandedStock(expandedStock === stock.code ? null : stock.code)}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <span className="text-xs font-medium text-slate-700">{stock.name}</span>
-                        <span className="text-[10px] text-slate-500 ml-2">{stock.code}</span>
-                      </div>
-                      <span className={`text-xs font-mono font-bold ${getScoreColor(stock.model_score)}`}>
-                        {stock.model_score}分
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 text-[10px]">
-                      <span className="text-slate-500">{stock.industry}</span>
-                      <span className={stock.direction_correct ? "text-emerald-600" : "text-red-600"}>
-                        {stock.direction_correct ? "✅ 方向正确" : "❌ 方向错误"}
-                      </span>
-                      <span className={stock.interval_hit ? "text-emerald-600" : "text-amber-600"}>
-                        {stock.interval_hit ? "✅ 区间命中" : "⚠️ 区间偏离"}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 mt-1 text-[10px] text-slate-500">
-                      <span>R²: {stock.r2}</span>
-                      <span>MAE: {stock.mae}</span>
-                      <span>RMSE: {stock.rmse}</span>
-                    </div>
+          {/* 模型准确性指标 */}
+          {predictionResult.backtest.metrics.sampleDays > 0 && (
+            <div className="bg-white rounded-lg p-4 border border-slate-100">
+              <h3 className="text-sm font-semibold text-slate-800 mb-3">模型准确性评价</h3>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="text-center p-2 bg-slate-50 rounded">
+                  <div className="text-sm font-mono font-bold text-blue-600">
+                    {Math.round(predictionResult.backtest.metrics.directionAccuracy * 100)}%
                   </div>
-                  {expandedStock === stock.code && (
-                    <div className="p-3 border-t border-slate-100 bg-slate-50 space-y-3">
-                      {/* 因子贡献 */}
-                      <div>
-                        <p className="text-[10px] font-medium text-slate-700 mb-2">因子贡献</p>
-                        <div className="space-y-1">
-                          {stock.factor_contributions.map((fc) => (
-                            <div key={fc.factor} className="flex items-center gap-2">
-                              <span className="text-[10px] text-slate-600 w-20 truncate">{fc.factor}</span>
-                              <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-blue-500 rounded-full"
-                                  style={{ width: `${fc.contribution * 100}%` }}
-                                />
-                              </div>
-                              <span className="text-[10px] font-mono text-slate-700 w-8">
-                                {Math.round(fc.contribution * 100)}%
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      {/* 价格拟合图 */}
-                      <div>
-                        <p className="text-[10px] font-medium text-slate-700 mb-2">价格拟合图</p>
-                        <StockCurveChart stock={stock} />
-                      </div>
-                      {/* 蒙特卡洛结果 */}
-                      <div>
-                        <p className="text-[10px] font-medium text-slate-700 mb-2">蒙特卡洛模拟</p>
-                        <div className="grid grid-cols-3 gap-2">
-                          <div className="text-center p-2 bg-white rounded">
-                            <div className="text-xs font-mono font-bold text-red-600">
-                              {Math.round(stock.monte_carlo_result.up_probability * 100)}%
-                            </div>
-                            <div className="text-[10px] text-slate-600">上涨概率</div>
-                          </div>
-                          <div className="text-center p-2 bg-white rounded">
-                            <div className="text-xs font-mono font-bold text-emerald-600">
-                              {Math.round(stock.monte_carlo_result.down_probability * 100)}%
-                            </div>
-                            <div className="text-[10px] text-slate-600">下跌概率</div>
-                          </div>
-                          <div className="text-center p-2 bg-white rounded">
-                            <div className="text-xs font-mono font-bold text-amber-600">
-                              {Math.round(stock.monte_carlo_result.risk_line_break_probability * 100)}%
-                            </div>
-                            <div className="text-[10px] text-slate-600">跌破风险线</div>
-                          </div>
-                        </div>
-                      </div>
-                      {/* 误差原因 */}
-                      <div>
-                        <p className="text-[10px] font-medium text-slate-700 mb-1">误差原因</p>
-                        <p className="text-[10px] text-slate-600 leading-relaxed">{stock.error_reason}</p>
-                      </div>
+                  <div className="text-[10px] text-slate-600">方向准确率</div>
+                </div>
+                <div className="text-center p-2 bg-slate-50 rounded">
+                  <div className="text-sm font-mono font-bold text-emerald-600">
+                    {Math.round(predictionResult.backtest.metrics.intervalHitRate * 100)}%
+                  </div>
+                  <div className="text-[10px] text-slate-600">区间命中率</div>
+                </div>
+                <div className="text-center p-2 bg-slate-50 rounded">
+                  <div className="text-sm font-mono font-bold text-slate-700">
+                    {predictionResult.backtest.metrics.sampleDays}
+                  </div>
+                  <div className="text-[10px] text-slate-600">回测天数</div>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                <div className="text-center p-2 bg-slate-50 rounded">
+                  <div className="text-xs font-mono font-bold text-slate-700">{predictionResult.backtest.metrics.mae}</div>
+                  <div className="text-[10px] text-slate-600">MAE</div>
+                </div>
+                <div className="text-center p-2 bg-slate-50 rounded">
+                  <div className="text-xs font-mono font-bold text-slate-700">{predictionResult.backtest.metrics.rmse}</div>
+                  <div className="text-[10px] text-slate-600">RMSE</div>
+                </div>
+                <div className="text-center p-2 bg-slate-50 rounded">
+                  <div className="text-xs font-mono font-bold text-blue-600">{predictionResult.backtest.metrics.r2}</div>
+                  <div className="text-[10px] text-slate-600">R²</div>
+                </div>
+              </div>
+              <div className="mt-2 text-center p-2 bg-slate-50 rounded">
+                <div className="text-xs font-mono font-bold text-slate-700">{predictionResult.backtest.metrics.mape}%</div>
+                <div className="text-[10px] text-slate-600">MAPE（平均绝对百分比误差）</div>
+              </div>
+            </div>
+          )}
+
+          {/* 因子贡献 */}
+          <div className="bg-white rounded-lg p-4 border border-slate-100">
+            <h3 className="text-sm font-semibold text-slate-800 mb-3">因子贡献分析</h3>
+            <div className="space-y-2.5">
+              {predictionResult.factors.contributions.map((fc) => (
+                <div key={fc.factor} className="border border-slate-100 rounded-lg p-2.5">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-medium text-slate-700">{fc.factor}</span>
+                    <span className={`text-[10px] font-medium ${
+                      fc.direction === "positive" ? "text-red-600" : fc.direction === "negative" ? "text-emerald-600" : "text-slate-500"
+                    }`}>
+                      {fc.direction === "positive" ? "↑ 偏多" : fc.direction === "negative" ? "↓ 偏空" : "— 中性"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${fc.direction === "positive" ? "bg-red-400" : fc.direction === "negative" ? "bg-emerald-400" : "bg-slate-400"}`}
+                        style={{ width: `${Math.min(fc.contribution * 100, 100)}%` }}
+                      />
                     </div>
-                  )}
+                    <span className="text-[10px] font-mono text-slate-600 w-8 text-right">
+                      {Math.round(fc.contribution * 100)}%
+                    </span>
+                  </div>
+                  <p className="text-[9px] text-slate-500 leading-relaxed">{fc.explanation}</p>
                 </div>
               ))}
-            </div>
-          </div>
-
-          {/* 模型总结汇总 */}
-          <div className="bg-white rounded-lg p-4 border border-slate-100">
-            <h3 className="text-sm font-semibold text-slate-800 mb-3">本次模型测试总结</h3>
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-2 bg-slate-50 rounded">
-                  <div className="text-[10px] text-slate-500">使用因子数量</div>
-                  <div className="text-sm font-mono font-bold text-slate-700">{modelData.selected_factors.length}</div>
-                </div>
-                <div className="p-2 bg-slate-50 rounded">
-                  <div className="text-[10px] text-slate-500">样本股票数量</div>
-                  <div className="text-sm font-mono font-bold text-slate-700">{modelData.sample_size}</div>
-                </div>
-              </div>
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <p className="text-[10px] text-slate-700 leading-relaxed">
-                  本次随机抽取{modelData.sample_size}只股票进行拟合测试，平均模型评分为{modelData.model_summary.average_score}分，
-                  方向准确率为{Math.round(modelData.model_summary.average_direction_accuracy * 100)}%，
-                  区间命中率为{Math.round(modelData.model_summary.average_interval_hit_rate * 100)}%。
-                  {modelData.model_summary.top_contributing_factors.join("、")}贡献较高，
-                  {modelData.model_summary.noisy_factors.join("、")}在短周期预测中的解释力较弱。
-                  表现最好的股票是{modelData.model_summary.best_stock}，
-                  表现最差的是{modelData.model_summary.worst_stock}。
-                  过拟合风险：{modelData.model_summary.overfitting_risk}。
-                </p>
-              </div>
             </div>
           </div>
 
@@ -1769,75 +1733,101 @@ function ModelTab() {
           <div className="bg-amber-50 rounded-lg p-3 border border-amber-100">
             <p className="text-[10px] text-amber-700 leading-relaxed">
               以上模型结果仅用于研究和演示，不构成投资建议。股票市场存在风险，历史拟合不代表未来表现。
-              本页展示的是模型测试过程，不是股票买卖建议。拟合效果好不代表未来一定准确。
+              模型只提供概率判断，不保证预测准确。突发政策、财报、黑天鹅事件可能导致预测失效。
+              用户需结合基本面、市场环境和风险承受能力独立判断。
             </p>
           </div>
         </>
       )}
 
-      {/* 未测试时的提示 */}
-      {!modelData && !isTesting && (
+      {/* 未预测时的提示 */}
+      {!predictionResult && !isPredicting && (
         <div className="bg-slate-50 rounded-lg p-6 border border-slate-100 text-center">
           <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-slate-100 flex items-center justify-center">
             <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-          <p className="text-xs text-slate-600 mb-1">选择因子后开始测试</p>
-          <p className="text-[10px] text-slate-500">系统会随机抽取10只股票进行拟合测试</p>
+          <p className="text-xs text-slate-600 mb-1">输入股票并选择因子后开始预测</p>
+          <p className="text-[10px] text-slate-500">系统将获取真实行情数据，进行多因子评分与10日回测</p>
         </div>
       )}
+
+      {/* 规则说明弹窗 */}
+      <ModelRulesModal isOpen={showRulesModal} onClose={() => setShowRulesModal(false)} />
     </div>
   );
 }
 
-// 股票曲线图组件
-function StockCurveChart({ stock }: { stock: SampleStockResult }) {
-  const width = 280;
-  const height = 120;
-  const padding = 15;
+// 回测曲线图组件
+function BacktestChart({ data }: { data: PredictionAPIResponse["backtest"] }) {
+  const width = 300;
+  const height = 140;
+  const padding = 20;
+
+  if (data.dates.length === 0) return null;
 
   const allPrices = [
-    ...stock.curve_data.actual_price,
-    ...stock.curve_data.forecast_mid,
-    ...stock.curve_data.monte_carlo_p10,
-    ...stock.curve_data.monte_carlo_p90,
+    ...data.actualPrices,
+    ...data.predictedPrices,
+    ...data.upperBand,
+    ...data.lowerBand,
   ];
-  const minPrice = Math.min(...allPrices) * 0.98;
-  const maxPrice = Math.max(...allPrices) * 1.02;
+  const minPrice = Math.min(...allPrices) * 0.995;
+  const maxPrice = Math.max(...allPrices) * 1.005;
 
-  const scaleX = (i: number) => padding + (i / (stock.curve_data.dates.length - 1)) * (width - 2 * padding);
+  const scaleX = (i: number) => padding + (i / (data.dates.length - 1)) * (width - 2 * padding);
   const scaleY = (price: number) => height - padding - ((price - minPrice) / (maxPrice - minPrice)) * (height - 2 * padding);
 
   const createPath = (values: number[]) =>
     values.map((v, i) => `${i === 0 ? "M" : "L"} ${scaleX(i)} ${scaleY(v)}`).join(" ");
 
-  const bandPath = stock.curve_data.monte_carlo_p90
+  // Confidence band path
+  const bandPath = data.upperBand
     .map((v, i) => `${i === 0 ? "M" : "L"} ${scaleX(i)} ${scaleY(v)}`)
     .join(" ");
-  const bandPathReverse = stock.curve_data.monte_carlo_p10
+  const bandPathReverse = data.lowerBand
     .slice()
     .reverse()
-    .map((v, i) => `L ${scaleX(stock.curve_data.dates.length - 1 - i)} ${scaleY(v)}`)
+    .map((v, i) => `L ${scaleX(data.dates.length - 1 - i)} ${scaleY(v)}`)
     .join(" ");
 
   return (
     <div className="w-full overflow-x-auto">
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
-        <path d={`${bandPath} ${bandPathReverse} Z`} fill="rgba(59, 130, 246, 0.1)" />
-        <path d={createPath(stock.curve_data.forecast_mid)} fill="none" stroke="#3b82f6" strokeWidth="1" strokeDasharray="3,3" />
-        <path d={createPath(stock.curve_data.ml_fitted_price)} fill="none" stroke="#f59e0b" strokeWidth="1.5" />
-        <path d={createPath(stock.curve_data.actual_price)} fill="none" stroke="#1e293b" strokeWidth="1.5" />
+        {/* Confidence band */}
+        <path d={`${bandPath} ${bandPathReverse} Z`} fill="rgba(59, 130, 246, 0.08)" />
+        {/* Upper band */}
+        <path d={createPath(data.upperBand)} fill="none" stroke="#93c5fd" strokeWidth="0.5" strokeDasharray="2,2" />
+        {/* Lower band */}
+        <path d={createPath(data.lowerBand)} fill="none" stroke="#93c5fd" strokeWidth="0.5" strokeDasharray="2,2" />
+        {/* Predicted price */}
+        <path d={createPath(data.predictedPrices)} fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="4,2" />
+        {/* Actual price */}
+        <path d={createPath(data.actualPrices)} fill="none" stroke="#1e293b" strokeWidth="2" />
+        {/* Data points for actual */}
+        {data.actualPrices.map((price, i) => (
+          <circle key={i} cx={scaleX(i)} cy={scaleY(price)} r="2" fill="#1e293b" />
+        ))}
+        {/* Date labels */}
+        {data.dates.filter((_, i) => i % 3 === 0 || i === data.dates.length - 1).map((date, idx) => {
+          const i = data.dates.indexOf(date);
+          return (
+            <text key={idx} x={scaleX(i)} y={height - 2} textAnchor="middle" className="text-[7px] fill-slate-400">
+              {date.slice(-4)}
+            </text>
+          );
+        })}
       </svg>
       <div className="flex items-center justify-center gap-3 mt-1">
         <span className="flex items-center gap-1 text-[9px] text-slate-500">
           <span className="w-3 h-0.5 bg-slate-800 inline-block" /> 实际价格
         </span>
         <span className="flex items-center gap-1 text-[9px] text-slate-500">
-          <span className="w-3 h-0.5 bg-blue-500 inline-block border-dashed" style={{ borderTop: "1px dashed #3b82f6" }} /> 预测中位
+          <span className="w-3 h-0.5 inline-block" style={{ borderTop: "1.5px dashed #3b82f6" }} /> 预测价格
         </span>
         <span className="flex items-center gap-1 text-[9px] text-slate-500">
-          <span className="w-3 h-0.5 bg-amber-500 inline-block" /> ML拟合
+          <span className="w-3 h-2 bg-blue-100 inline-block rounded-sm" /> 预测区间
         </span>
       </div>
     </div>
