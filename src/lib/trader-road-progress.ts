@@ -942,12 +942,26 @@ export function saveWallCastleProgress(progress: WallCastleProgress): void {
   localStorage.setItem(WC_STORAGE_KEY, JSON.stringify(progress));
 }
 
+// 华尔堡子关卡 → Agent 映射
+const WALL_CASTLE_AGENT_MAP: Record<WallCastleSubLevelId, TraderRoadAgentId> = {
+  "data-black-market": "data",
+  "market-storm": "market",
+  "policy-letter": "industry",
+};
+
 export function completeWallCastleSubLevel(subLevelId: WallCastleSubLevelId): WallCastleProgress {
   const progress = loadWallCastleProgress();
   if (progress.completedSubLevels.includes(subLevelId)) return progress;
   progress.completedSubLevels.push(subLevelId);
   progress.updatedAt = new Date().toISOString();
   saveWallCastleProgress(progress);
+
+  // 联动主力：完成子关卡 → 解锁对应 Agent
+  const agentToUnlock = WALL_CASTLE_AGENT_MAP[subLevelId];
+  if (agentToUnlock) {
+    unlockTraderRoadAgents([agentToUnlock]);
+  }
+
   return progress;
 }
 
