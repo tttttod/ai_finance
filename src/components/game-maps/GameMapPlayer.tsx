@@ -771,6 +771,26 @@ export function GameMapPlayer({
   };
 
   // ===== Render: Game =====
+  // 完成华尔堡子关卡后回到二级地图
+  const completeWallCastleSubLevelAndReturn = (levelId: number) => {
+    const mainLevelToSubLevel: Record<number, WallCastleSubLevelId> = {
+      1: "data-black-market",
+      2: "market-storm",
+      3: "policy-letter",
+    };
+    const subLevelId = mainLevelToSubLevel[levelId];
+    if (subLevelId) {
+      const newProgress = completeWallCastleSubLevel(subLevelId);
+      saveWallCastleProgress(newProgress);
+      setWallCastleRefreshKey((k) => k + 1);
+      setView("submap");
+      setActiveLevelId(null);
+      setActiveGameId(null);
+      return true;
+    }
+    return false;
+  };
+
   const renderGame = () => {
     // 独立小游戏（金融Quiz营、K线图学习等）- 无 activeLevelId
     if (!activeLevelId && activeGameId) {
@@ -893,8 +913,10 @@ export function GameMapPlayer({
               onComplete={(passed) => {
                 if (passed) {
                   handleLevelComplete(activeLevelId);
-                  setView("zone");
-                  setActiveLevelId(null);
+                  if (!completeWallCastleSubLevelAndReturn(activeLevelId)) {
+                    setView("zone");
+                    setActiveLevelId(null);
+                  }
                 } else {
                   // 失败时不解锁，回到 zone 让玩家重新尝试
                   setView("zone");
@@ -908,8 +930,10 @@ export function GameMapPlayer({
               data={QUIZ_DATA[activeLevelId]}
               onComplete={() => {
                 handleLevelComplete(activeLevelId);
-                setView("zone");
-                setActiveLevelId(null);
+                if (!completeWallCastleSubLevelAndReturn(activeLevelId)) {
+                  setView("zone");
+                  setActiveLevelId(null);
+                }
               }}
             />
           )}
@@ -918,8 +942,10 @@ export function GameMapPlayer({
               data={BRAIN_DATA[activeLevelId]}
               onComplete={() => {
                 handleLevelComplete(activeLevelId);
-                setView("zone");
-                setActiveLevelId(null);
+                if (!completeWallCastleSubLevelAndReturn(activeLevelId)) {
+                  setView("zone");
+                  setActiveLevelId(null);
+                }
               }}
             />
           )}
@@ -928,8 +954,10 @@ export function GameMapPlayer({
               data={MINIGAME_DATA[activeLevelId]}
               onComplete={() => {
                 handleLevelComplete(activeLevelId);
-                setView("zone");
-                setActiveLevelId(null);
+                if (!completeWallCastleSubLevelAndReturn(activeLevelId)) {
+                  setView("zone");
+                  setActiveLevelId(null);
+                }
               }}
             />
           )}
@@ -941,12 +969,16 @@ export function GameMapPlayer({
               onComplete={() => {
                 addCoins(20);
                 handleLevelComplete(activeLevelId);
-                setView("zone");
-                setActiveLevelId(null);
+                if (!completeWallCastleSubLevelAndReturn(activeLevelId)) {
+                  setView("zone");
+                  setActiveLevelId(null);
+                }
               }}
               onClose={() => {
-                setView("zone");
-                setActiveLevelId(null);
+                if (!completeWallCastleSubLevelAndReturn(activeLevelId)) {
+                  setView("zone");
+                  setActiveLevelId(null);
+                }
               }}
             />
           )}
@@ -958,12 +990,16 @@ export function GameMapPlayer({
               onComplete={() => {
                 addCoins(20);
                 handleLevelComplete(activeLevelId);
-                setView("zone");
-                setActiveLevelId(null);
+                if (!completeWallCastleSubLevelAndReturn(activeLevelId)) {
+                  setView("zone");
+                  setActiveLevelId(null);
+                }
               }}
               onClose={() => {
-                setView("zone");
-                setActiveLevelId(null);
+                if (!completeWallCastleSubLevelAndReturn(activeLevelId)) {
+                  setView("zone");
+                  setActiveLevelId(null);
+                }
               }}
             />
           )}
@@ -973,8 +1009,6 @@ export function GameMapPlayer({
   };
   // ===== Render: 华尔堡二级地图 =====
   const renderWallCastleMap = () => {
-    // 重置进度到初始状态，让三个关卡从金色开始
-    if (typeof window !== "undefined") localStorage.removeItem("tpti_wallcastle_progress");
     const progress = loadWallCastleProgress();
     const subLevels = WALL_CASTLE_SUB_LEVELS;
 
@@ -991,16 +1025,11 @@ export function GameMapPlayer({
       
       const mainLevelId = subLevelToMainLevel[levelId];
       if (mainLevelId) {
-        // 进入关卡游戏
+        // 进入关卡游戏（不提前标记完成）
         setActiveLevelId(mainLevelId);
         setActiveGameId(`level-${mainLevelId}`);
         setView("game");
       }
-      
-      // 同时完成子关卡进度
-      const newProgress = completeWallCastleSubLevel(levelId);
-      saveWallCastleProgress(newProgress);
-      setWallCastleRefreshKey((k) => k + 1);
     };
 
     const getNodeStyle = (status: string) => {
