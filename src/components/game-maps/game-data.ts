@@ -61,7 +61,7 @@ export const GAME_MAP_LEVELS: GameMapLevel[] = [
   { id: 5, title: "财报考古遗迹", subtitle: "Valuation Agent", icon: "📋", type: "dialogue", unlockAgents: ["valuation"], color: "#8B5CF6", description: "深夜审查财报，从数字中挖掘公司的真实底色。" },
   { id: 6, title: "模型沼泽", subtitle: "Technical Agent", icon: "📈", type: "dialogue", unlockAgents: ["technical"], color: "#8B5CF6", description: "好公司也有价签 — 判断公司质量与买入价格能否同时成立。" },
   { id: 7, title: "K线图学习", subtitle: "Sentiment Agent", icon: "📊", type: "learning", unlockAgents: ["sentiment"], color: "#F97316", description: "图形会说话吗 — 检查价格位置和成交变化，决定入场时机与投入资金。", learningCardIndices: [0, 1, 2, 3, 4] },
-  { id: 8, title: "市场天气谷", subtitle: "Bull & Bear Analyst", icon: "🌤️", type: "quiz_choice", unlockAgents: ["bull", "bear"], color: "#6366F1", description: "多空观点对决，判断市场的晴雨方向。", quizQuestionIndices: Array.from({ length: 10 }, (_, i) => i + 30) },
+  { id: 8, title: "市场天气谷", subtitle: "Bull & Bear Analyst", icon: "🌤️", type: "dialogue", unlockAgents: ["bull", "bear"], color: "#6366F1", description: "多空观点对决，判断市场的晴雨方向。" },
   { id: 9, title: "证据岔路口", subtitle: "Risk Officer", icon: "🛡️", type: "quiz_choice", unlockAgents: ["risk"], color: "#EF4444", description: "风险管理场景快速决策，守护你的本金。", quizQuestionIndices: Array.from({ length: 10 }, (_, i) => i + 40) },
   { id: 10, title: "风险护盾桥", subtitle: "Research Manager", icon: "🏆", type: "minigame", unlockAgents: ["manager"], color: "#14B8A6", description: "集结所有 Agent 力量，完成最终的研究报告。" },
 ];

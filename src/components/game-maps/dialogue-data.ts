@@ -1407,4 +1407,351 @@ Technical Agent 拒绝加入。
     goodEnding: "Fundamental Agent 合上财报，露出难得的微笑：\n\n\"你通过了。三张表，你看到了别人看不到的勾稽关系。\n星辉科技的财报里确实有水分——应收虚增、非经常性收益、现金流和分红不匹配。\n这些都是基本面分析最经典的陷阱。\"\n\nLead Agent 拍拍你的肩：\n\"恭喜，你学会了读财报的真相。\"\n\n📊 Fundamental Agent 已解锁！",
     badEnding: "Fundamental Agent 叹了口气：\n\n\"你还没学会看穿数字背后的真相。\n财报不是阅读理解，是侦探工作。\n每一条数据，都要问一句：为什么？\n回去再练练吧。\"",
   },
+  8: {
+    sceneImage: "/dialogue-scene-level8.webp",
+    opening:
+      "虚构上市公司「星湾娱乐」刚刚开放新项目「云鲸岛乐园」。\n\n公司股价在一周内上涨 18%。你账户里持有两千元星湾娱乐，正在考虑增加八千元投入。\n\n议会厅中央放着一张圆桌。左侧屏幕显示绿色的订票曲线，右侧屏幕循环播放游客投诉。\n\nBull Analyst 坐在左侧，手里握着绿色激光笔。Bear Analyst 坐在右侧，面前摆着一枚红色印章。\n\nSentiment Agent 站在信息台后，身旁放着一台热搜粉碎机。\n\nLead Agent 抱着一桶爆米花坐在你旁边。\n\n议会钟声响起，中央屏幕弹出两条热搜：\n\n• 云鲸岛排队五小时\n• 云鲸岛游客集体退款",
+    nodes: [
+      {
+        id: 1,
+        scene:
+          "Bull Analyst 站起身，将订票页面推到你面前：\n\n「连续两个周末门票售罄，这个项目已经火了。公司的增长才刚开始。」\n\nBear Analyst 在投诉视频上盖下红色印章：\n\n「排队、退款、服务混乱。热度正在透支游客的耐心。」\n\nLead Agent 放下爆米花：\n\n「左边让我想加仓，右边让我现在就卖。他们说得都挺像真的。」\n\nSentiment Agent 启动信息台：\n\n「两边都在用热搜讲故事。先看看这些声音来自多少件真实事件。」\n\n【信息 A：排队视频】\n• 相关帖子：5200 条\n• 使用相同视频的帖子：3600 条\n• 拍摄时间：开业第一天\n• 视频来源：同一位游客\n\nLead Agent：\n「我刷了十几次，还以为十几家门店都排成这样。」\n\n请为这条信息选择标签。",
+        options: [
+          {
+            id: "8-1a",
+            text: "重复传播 — 同一视频被转发 3600 次",
+            correct: true,
+            feedback:
+              "Sentiment Agent 将重复视频送入粉碎机：\n\n「一件事被转发三千次，热度增加了，事件数量仍然是一件。」\n\nBear Analyst 抱起双臂：\n\n「排队问题真实存在，传播规模无法直接代表问题范围。」",
+          },
+          {
+            id: "8-1b",
+            text: "付费推广 — 有人花钱推这条视频",
+            correct: false,
+            feedback:
+              "Sentiment Agent 摇头：\n「没有商业推广标记，这是游客自发拍摄的内容。」",
+          },
+          {
+            id: "8-1c",
+            text: "可核对信号 — 数据来自订票系统",
+            correct: false,
+            feedback:
+              "Sentiment Agent 摇头：\n「这是视频内容，不是经营数据。」",
+          },
+        ],
+      },
+      {
+        id: 2,
+        scene:
+          "【信息 B：打卡推荐】\n• 推荐帖子：3000 条\n• 标注商业推广：1800 条\n• 文案相似度：82%\n• 主要发布者：旅游博主\n\nBull Analyst：\n「这么多人推荐，乐园的口碑已经打开了。」\n\n请为这条信息选择标签。",
+        options: [
+          {
+            id: "8-2a",
+            text: "付费推广 — 1800 条帖子标注商业推广",
+            correct: true,
+            feedback:
+              "Sentiment Agent 按下按钮，推广帖统一显示赞助标记：\n\n「这些内容能够带来关注。判断游客是否愿意再来，还得看消费记录。」\n\nBull Analyst 轻咳一声，收起了几张博主截图。",
+          },
+          {
+            id: "8-2b",
+            text: "重复传播 — 文案相似度 82%",
+            correct: false,
+            feedback:
+              "Sentiment Agent 摇头：\n「文案相似是因为商业模板，不是用户自发转发。」",
+          },
+          {
+            id: "8-2c",
+            text: "可核对信号 — 来自旅游博主",
+            correct: false,
+            feedback:
+              "Sentiment Agent 摇头：\n「博主推荐带有商业标记，不是独立的经营数据。」",
+          },
+        ],
+      },
+      {
+        id: 3,
+        scene:
+          "【信息 C：经营记录】\n• 未来十四天订票率：92%\n• 二次到访券使用率：27%\n• 公司旧乐园二次到访券使用率：18%\n• 云鲸岛退款率：8%\n• 公司旧乐园退款率：3%\n• 平均排队时间：95 分钟\n• 公司计划排队时间：45 分钟\n\n请为这条信息选择标签。",
+        options: [
+          {
+            id: "8-3a",
+            text: "可核对信号 — 数据来自订票和退款系统",
+            correct: true,
+            feedback:
+              "Sentiment Agent 将记录投到中央屏幕：\n\n「这些数据来自订票和退款系统，能够同时支持机会与风险。」\n\nBull Analyst 和 Bear Analyst 同时伸手拿向屏幕。\n\n议会主持人：\n「有效证据已经出现。接下来，由玩家决定证据交给谁。」",
+          },
+          {
+            id: "8-3b",
+            text: "重复传播 — 数据被多次引用",
+            correct: false,
+            feedback:
+              "Sentiment Agent 摇头：\n「这是原始经营数据，不是传播内容。」",
+          },
+          {
+            id: "8-3c",
+            text: "付费推广 — 公司发布的数据",
+            correct: false,
+            feedback:
+              "Sentiment Agent 摇头：\n「数据来自订票和退款系统，不是商业推广。」",
+          },
+        ],
+      },
+      {
+        id: 4,
+        scene:
+          "桌面出现六张证据卡片。请将每张卡片分类到正确的区域。\n\n【卡片 1】未来十四天订票率达到 92%\n\n应该放到哪个区域？",
+        options: [
+          {
+            id: "8-4a",
+            text: "看多证据 — 订票率接近满额",
+            correct: true,
+            feedback:
+              "Bull Analyst 眼睛亮了起来：\n「短期需求确实存在，游客也表达了再次到访的兴趣。」",
+          },
+          {
+            id: "8-4b",
+            text: "看空证据 — 订票率可能下降",
+            correct: false,
+            feedback:
+              "Bear Analyst 摇头：\n「订票率高是需求信号，不是风险。」",
+          },
+          {
+            id: "8-4c",
+            text: "热度噪声 — 只是热搜数据",
+            correct: false,
+            feedback:
+              "Sentiment Agent 摇头：\n「这是经营系统数据，不是热搜传播。」",
+          },
+        ],
+      },
+      {
+        id: 5,
+        scene:
+          "【卡片 2】退款率高于旧乐园（8% vs 3%）\n\n应该放到哪个区域？",
+        options: [
+          {
+            id: "8-5a",
+            text: "看空证据 — 退款率是旧乐园两倍以上",
+            correct: true,
+            feedback:
+              "Bear Analyst 将红色印章放到一旁：\n「我需要证明的是经营压力，热搜里的愤怒表情帮不了我。」",
+          },
+          {
+            id: "8-5b",
+            text: "看多证据 — 退款率绝对值不高",
+            correct: false,
+            feedback:
+              "Bull Analyst 摇头：\n「退款率翻倍是风险信号，不能忽视。」",
+          },
+          {
+            id: "8-5c",
+            text: "热度噪声 — 退款视频被大量转发",
+            correct: false,
+            feedback:
+              "Sentiment Agent 摇头：\n「这是经营系统数据，不是热搜传播。」",
+          },
+        ],
+      },
+      {
+        id: 6,
+        scene:
+          "【卡片 3】同一段排队视频被转发 3600 次\n\n应该放到哪个区域？",
+        options: [
+          {
+            id: "8-6a",
+            text: "热度噪声 — 同一视频被大量转发",
+            correct: true,
+            feedback:
+              "Sentiment Agent 看着被清空的热搜区：\n「现在他们讨论的是同一家公司，而不是两个互相吵架的话题。」",
+          },
+          {
+            id: "8-6b",
+            text: "看空证据 — 排队问题严重",
+            correct: false,
+            feedback:
+              "Sentiment Agent 摇头：\n「传播规模不代表问题范围，这是噪声。」",
+          },
+          {
+            id: "8-6c",
+            text: "看多证据 — 说明关注度高",
+            correct: false,
+            feedback:
+              "Sentiment Agent 摇头：\n「重复传播不是需求信号。」",
+          },
+        ],
+      },
+      {
+        id: 7,
+        scene:
+          "Bull Analyst 将两张看多证据并排展示：\n\n「门票预订接近满额，二次到访券使用率也超过旧项目。云鲸岛已经表现出真实需求。」\n\n请评价这段发言。",
+        options: [
+          {
+            id: "8-7a",
+            text: "证据支持 — 使用了可核对记录",
+            correct: true,
+            feedback:
+              "Sentiment Agent：\n「这段判断使用了可核对记录，也保留了适当范围。」\n\nBull Analyst 露出笑容：\n「终于有人允许我讲增长了。」",
+          },
+          {
+            id: "8-7b",
+            text: "表述过头 — 需求不能证明股价上涨",
+            correct: false,
+            feedback:
+              "Bull Analyst 摇头：\n「我只说了需求存在，没有预测股价。」",
+          },
+          {
+            id: "8-7c",
+            text: "信息过期 — 数据是一周前的",
+            correct: false,
+            feedback:
+              "Sentiment Agent 摇头：\n「数据来自订票系统，是最新的。」",
+          },
+        ],
+      },
+      {
+        id: 8,
+        scene:
+          "Bear Analyst 展示退款率和排队时间：\n\n「退款率达到旧项目的两倍以上，排队时间也超过计划。服务能力还没有跟上热度。」\n\n请评价这段发言。",
+        options: [
+          {
+            id: "8-8a",
+            text: "证据支持 — 使用了可核对记录",
+            correct: true,
+            feedback:
+              "Lead Agent：\n「奇怪，我同时同意了两个人。」\n\nBear Analyst 微微点头：\n「同一家公司可以同时拥有需求和问题。」",
+          },
+          {
+            id: "8-8b",
+            text: "表述过头 — 问题不严重",
+            correct: false,
+            feedback:
+              "Bear Analyst 摇头：\n「退款率翻倍、排队超时，这些都是事实。」",
+          },
+          {
+            id: "8-8c",
+            text: "信息过期 — 数据是一周前的",
+            correct: false,
+            feedback:
+              "Sentiment Agent 摇头：\n「数据来自退款系统，是最新的。」",
+          },
+        ],
+      },
+      {
+        id: 9,
+        scene:
+          "Bull Analyst 再次发言：\n\n「既然需求这么强，股价接下来一定会继续上涨。」\n\n请评价这段发言。",
+        options: [
+          {
+            id: "8-9a",
+            text: "表述过头 — 需求不能证明股价一定上涨",
+            correct: true,
+            feedback:
+              "Bull Analyst 停顿了一下：\n「好吧，需求能够支持我的判断，股价仍有自己的脾气。」",
+          },
+          {
+            id: "8-9b",
+            text: "证据支持 — 需求强股价就会涨",
+            correct: false,
+            feedback:
+              "Sentiment Agent 摇头：\n「需求是基本面，股价还受市场情绪影响。」",
+          },
+          {
+            id: "8-9c",
+            text: "信息过期 — 股价已经涨了",
+            correct: false,
+            feedback:
+              "Sentiment Agent 摇头：\n「问题不是信息过期，是逻辑跳跃。」",
+          },
+        ],
+      },
+      {
+        id: 10,
+        scene:
+          "Bear Analyst 再次发言：\n\n「退款率这么高，这个项目已经失败了。」\n\n请评价这段发言。",
+        options: [
+          {
+            id: "8-10a",
+            text: "表述过头 — 问题存在但不能说已经失败",
+            correct: true,
+            feedback:
+              "Bear Analyst 收回印章：\n「当前问题值得观察，现在给整个项目写结局确实太早。」",
+          },
+          {
+            id: "8-10b",
+            text: "证据支持 — 退款率确实很高",
+            correct: false,
+            feedback:
+              "Sentiment Agent 摇头：\n「退款率高是问题，但不能直接得出项目失败的结论。」",
+          },
+          {
+            id: "8-10c",
+            text: "信息过期 — 退款率在下降",
+            correct: false,
+            feedback:
+              "Sentiment Agent 摇头：\n「问题不是信息过期，是结论跳跃。」",
+          },
+        ],
+      },
+      {
+        id: 11,
+        scene:
+          "玩家需要为两位分析师选择一份观察计划。\n\n【方案 A：看股价】\n• 股价下跌 5%，看多观点失效\n• 股价上涨 5%，看空观点失效\n\nBull Analyst：\n「股价每天都在投票，它无法单独解释游客还会不会来。」",
+        options: [
+          {
+            id: "8-11a",
+            text: "方案 B：看经营变化 — 订票率、二次到访、退款率、排队时间",
+            correct: true,
+            feedback:
+              "Bull Analyst 将条件写进绿色报告：\n「需求消失时，我会承认增长故事失效。」\n\nBear Analyst 将条件写进红色报告：\n「经营问题改善时，我也会撤回警告。」",
+          },
+          {
+            id: "8-11b",
+            text: "方案 A：看股价 — 简单直接",
+            correct: false,
+            feedback:
+              "Sentiment Agent 摇头：\n「股价受太多因素影响，不能单独作为判断依据。」",
+          },
+          {
+            id: "8-11c",
+            text: "方案 C：继续看热搜 — 跟踪舆情",
+            correct: false,
+            feedback:
+              "Sentiment Agent 把两条热搜送入粉碎机：\n「这样研究下去，两位分析师每天都得跟着手机通知改口。」",
+          },
+        ],
+      },
+      {
+        id: 12,
+        scene:
+          "现在做出你的最终决定。\n\n你持有两千元星湾娱乐，正在考虑增加八千元投入。\n\n• 订票率 92%，二次到访券使用率 27%\n• 退款率 8%，排队时间 95 分钟\n• 两周后检查经营数据\n\n你会怎么做？",
+        options: [
+          {
+            id: "8-12a",
+            text: "提交双向计划 — 保留持仓，暂不加仓，两周后根据经营数据决定",
+            correct: true,
+            feedback:
+              "Lead Agent 点开日历：\n「这次两边都有发言时间，也都有退场条件。」\n\nBull Analyst 合上绿色报告，向你伸出手：\n「你愿意研究机会，也要求我拿出持续成立的证据。」\n\nBear Analyst 嘴角露出一点笑意：\n「你愿意检查风险，也给了公司改善问题的时间。」",
+          },
+          {
+            id: "8-12b",
+            text: "大幅加仓 — 订票接近满额，投入八千元",
+            correct: false,
+            feedback:
+              "Bull Analyst 兴奋地举起激光笔：\n「市场终于看懂这个项目了。」\n\n两周后，订票率降至 63%，退款率升至 11%。公司宣布暂时限制入园人数。\n\nBull Analyst 看着屏幕：\n「也许下一条热搜能把游客带回来。」\n\n结局：「热搜追高团」",
+          },
+          {
+            id: "8-12c",
+            text: "卖出持仓 — 退款率太高，全部卖出",
+            correct: false,
+            feedback:
+              "Bear Analyst 在报告上盖下印章：\n「风险已经足够明显。」\n\n两周后，园区增加服务人员，平均排队时间降到 48 分钟，退款率回落到 4%。订票率保持在 86%。\n\nBear Analyst 沉默地收起印章。\n\nLead Agent：\n「问题改善了，我们的结论却留在开业第一天。」\n\n结局：「一条差评退场」",
+          },
+        ],
+      },
+    ],
+    goodEnding:
+      "议会厅两侧的灯同时亮起。中央屏幕将看多报告和看空报告并排保存。\n\nSentiment Agent 关闭热搜粉碎机：\n「我的工作到这里。声音已经清理干净，接下来该由他们讨论未来了。」\n\nLead Agent：\n「我以前听谁说得顺耳，就容易坐到谁那边。现在我会问，他的观点靠什么成立，又会在什么时候失效。」\n\nBull Analyst 与 Bear Analyst 正式加入团队。\n\n你解锁了技能「多空辩论」，能够：\n• 生成看多逻辑\n• 生成看空逻辑\n• 标出双方使用的证据\n• 设置观点失效条件\n\n🌤️ Bull Analyst & Bear Analyst 已解锁！",
+    badEnding:
+      "议会厅的灯暗了下来。\n\nBull Analyst 和 Bear Analyst 暂时留在议会厅，没有加入团队。\n\nLead Agent 拍拍你的肩：\n「别灰心，下次两边都听完再决定。」",
+  },
 };
