@@ -1338,7 +1338,7 @@ export function GameMapPlayer({
             <div className="absolute inset-0 bg-black/40" />
             {/* Highlight glow around knowledge entrance */}
             <div
-              className="absolute pointer-events-auto animate-pulse"
+              className="absolute pointer-events-none animate-pulse"
               style={{
                 left: "48%",
                 top: "92%",
@@ -1364,15 +1364,15 @@ export function GameMapPlayer({
             </div>
             {/* Speech bubble */}
             <div
-              className="absolute pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-500"
+              className="absolute pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-500"
               style={{
                 left: "48%",
-                top: "87%",
+                top: "80%",
                 transform: "translate(-50%, -100%)",
               }}
             >
               <div
-                className="bg-white rounded-xl p-4 shadow-xl max-w-[220px]"
+                className="bg-white rounded-xl p-4 shadow-xl max-w-[220px] pointer-events-none"
                 style={{ border: "2px solid #DAA520" }}
               >
                 <p className="text-xs font-bold text-[#3D2B1F]">👀 看这里！</p>
@@ -1426,7 +1426,7 @@ export function GameMapPlayer({
           <div className="absolute inset-0 z-40 pointer-events-none">
             <div className="absolute inset-0 bg-black/40" />
             <div
-              className="absolute pointer-events-auto animate-pulse"
+              className="absolute pointer-events-none animate-pulse"
               style={{
                 left: "50%",
                 top: "25%",
@@ -1450,22 +1450,22 @@ export function GameMapPlayer({
               </span>
             </div>
             <div
-              className="absolute pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-500"
+              className="absolute pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-500"
               style={{
                 left: "50%",
-                top: "20%",
+                top: "15%",
                 transform: "translate(-50%, -100%)",
               }}
             >
               <div
-                className="bg-white rounded-xl p-4 shadow-xl max-w-[220px]"
+                className="bg-white rounded-xl p-4 shadow-xl max-w-[220px] pointer-events-none"
                 style={{ border: "2px solid #DAA520" }}
               >
                 <p className="text-xs font-bold text-[#3D2B1F]">🎯 新目标解锁！</p>
                 <p className="text-xs text-[#475569] mt-1">
                   开户完成！接下来前往「华尔堡」——进入二级地图，挑战更深的关卡。
                 </p>
-                <p className="text-[10px] font-semibold text-[#D97706] mt-2">👇 点击「华尔堡」</p>
+                <p className="text-[10px] font-semibold text-[#D97706] mt-2"> 点击「华尔堡」</p>
               </div>
             </div>
             <button
