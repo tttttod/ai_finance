@@ -923,6 +923,15 @@ export function GameMapPlayer({
                   setActiveLevelId(null);
                 }
               }}
+              onRestartWithCoins={() => {
+                // 检查是否有足够的金币
+                if (progress.coins >= 50) {
+                  // 扣除50金币
+                  addCoins(-50);
+                  return true; // 成功扣除金币
+                }
+                return false; // 金币不足
+              }}
             />
           )}
           {config.type === "quiz" && (

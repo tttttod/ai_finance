@@ -6,9 +6,10 @@ import type { DialogueLevelData, DialogueNode } from "./game-data";
 interface DialogueGameProps {
   data: DialogueLevelData;
   onComplete: (passed: boolean) => void;
+  onRestartWithCoins?: () => boolean; // 返回 true 表示成功扣除金币并重新开始
 }
 
-export function DialogueGame({ data, onComplete }: DialogueGameProps) {
+export function DialogueGame({ data, onComplete, onRestartWithCoins }: DialogueGameProps) {
   const [phase, setPhase] = useState<"opening" | "dialogue" | "result">("opening");
   const [nodeIndex, setNodeIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -101,6 +102,15 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
     setIsTyping(false);
   }, []);
 
+  const handleRestartWithCoins = useCallback(() => {
+    if (onRestartWithCoins) {
+      const success = onRestartWithCoins();
+      if (success) {
+        handleRestart();
+      }
+    }
+  }, [onRestartWithCoins, handleRestart]);
+
   const passed = correctCount >= Math.ceil(totalNodes * 0.6);
 
   // ---- Opening phase ----
@@ -169,14 +179,26 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
             onClick={() => onComplete(passed)}
             className="w-full py-3 rounded-lg bg-[#3B82F6] text-white text-sm font-medium hover:bg-blue-600 transition-colors"
           >
-            {passed ? "继续前进" : "重新挑战"}
+            {passed ? "继续前进" : "返回地图"}
           </button>
-          <button
-            onClick={handleRestart}
-            className="w-full py-2.5 mt-2 rounded-lg border-2 border-dashed border-[#FFD93D] text-[#FF6B35] text-sm font-bold hover:bg-[#FFD93D]/10 transition-colors"
-          >
-            🔄 重新开始（免费）
-          </button>
+          {!passed && (
+            <>
+              <button
+                onClick={handleRestart}
+                className="w-full py-2.5 mt-2 rounded-lg border-2 border-dashed border-[#FFD93D] text-[#FF6B35] text-sm font-bold hover:bg-[#FFD93D]/10 transition-colors"
+              >
+                🔄 重新开始（免费）
+              </button>
+              {onRestartWithCoins && (
+                <button
+                  onClick={handleRestartWithCoins}
+                  className="w-full py-2.5 mt-2 rounded-lg bg-gradient-to-r from-[#FFD93D] to-[#FF6B35] text-white text-sm font-bold hover:opacity-90 transition-opacity shadow-lg"
+                >
+                  🪙 支付50金币重新开始
+                </button>
+              )}
+            </>
+          )}
         </div>
       </div>
     );
