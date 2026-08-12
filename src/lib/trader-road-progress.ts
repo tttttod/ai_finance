@@ -877,3 +877,92 @@ export function useTraderRoadProgress() {
     markQuizCorrect,
   };
 }
+
+// ===== 华尔堡二级地图 — 子关卡进度系统 =====
+// localStorage key: tpti_wallcastle_progress
+
+export type WallCastleSubLevelId = "data-black-market" | "market-storm" | "policy-letter";
+
+export interface WallCastleSubLevel {
+  id: WallCastleSubLevelId;
+  name: string;
+  description: string;
+  order: number; // 1, 2, 3
+  status: "completed" | "available" | "locked";
+}
+
+export interface WallCastleProgress {
+  completedSubLevels: WallCastleSubLevelId[];
+  updatedAt: string;
+}
+
+const WC_STORAGE_KEY = "tpti_wallcastle_progress";
+
+export const WALL_CASTLE_LOCATIONS: { id: string; name: string; subLevelId?: WallCastleSubLevelId; status: "active" | "coming_soon" }[] = [
+  // 3个已设计完成的关卡
+  { id: "data-black-market", name: "数据黑市", subLevelId: "data-black-market", status: "active" },
+  { id: "market-storm", name: "市场风暴", subLevelId: "market-storm", status: "active" },
+  { id: "policy-letter", name: "政策密函", subLevelId: "policy-letter", status: "active" },
+  // 待开放地点
+  { id: "bull-bear-exchange", name: "多空交易所", status: "coming_soon" },
+  { id: "capital-flow-pier", name: "资金流码头", status: "coming_soon" },
+  { id: "options-garden", name: "期权花园", status: "coming_soon" },
+  { id: "bond-tower", name: "债券塔楼", status: "coming_soon" },
+  { id: "futures-plaza", name: "期货广场", status: "coming_soon" },
+];
+
+export const WALL_CASTLE_SUB_LEVELS: WallCastleSubLevel[] = [
+  { id: "data-black-market", name: "数据黑市", description: "K线数据解读", order: 1, status: "available" },
+  { id: "market-storm", name: "市场风暴", description: "市场情绪分析", order: 2, status: "locked" },
+  { id: "policy-letter", name: "政策密函", description: "政策解读研判", order: 3, status: "locked" },
+];
+
+export function getDefaultWallCastleProgress(): WallCastleProgress {
+  return {
+    completedSubLevels: [],
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+export function loadWallCastleProgress(): WallCastleProgress {
+  if (!isBrowser()) return getDefaultWallCastleProgress();
+  try {
+    const raw = localStorage.getItem(WC_STORAGE_KEY);
+    if (!raw) return getDefaultWallCastleProgress();
+    return JSON.parse(raw) as WallCastleProgress;
+  } catch {
+    return getDefaultWallCastleProgress();
+  }
+}
+
+export function saveWallCastleProgress(progress: WallCastleProgress): void {
+  if (!isBrowser()) return;
+  localStorage.setItem(WC_STORAGE_KEY, JSON.stringify(progress));
+}
+
+export function completeWallCastleSubLevel(subLevelId: WallCastleSubLevelId): WallCastleProgress {
+  const progress = loadWallCastleProgress();
+  if (progress.completedSubLevels.includes(subLevelId)) return progress;
+  progress.completedSubLevels.push(subLevelId);
+  progress.updatedAt = new Date().toISOString();
+  saveWallCastleProgress(progress);
+  return progress;
+}
+
+export function getWallCastleSubLevelStatus(subLevelId: WallCastleSubLevelId, progress: WallCastleProgress): "completed" | "available" | "locked" {
+  if (progress.completedSubLevels.includes(subLevelId)) return "completed";
+
+  const subLevel = WALL_CASTLE_SUB_LEVELS.find((s) => s.id === subLevelId);
+  if (!subLevel) return "locked";
+
+  if (subLevel.order === 1) return "available";
+
+  // 按顺序解锁：完成前一个才可进入当前
+  const prevOrder = subLevel.order - 1;
+  const prevSubLevel = WALL_CASTLE_SUB_LEVELS.find((s) => s.order === prevOrder);
+  if (prevSubLevel && progress.completedSubLevels.includes(prevSubLevel.id)) {
+    return "available";
+  }
+
+  return "locked";
+}
