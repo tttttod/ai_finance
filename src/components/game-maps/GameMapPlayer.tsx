@@ -239,10 +239,6 @@ export function GameMapPlayer({
 
   const handleLocationClick = useCallback(
     (loc: WorldLocation) => {
-      // 如果是 tour 模式且点击的是特定节点，走 tour 逻辑
-      if (showTour && !tourVisited && loc.id === 1) {
-        return; // tour 逻辑由外部处理
-      }
       // 华尔堡引导：点击华尔堡关闭引导
       if (showWallCastleTour && loc.id === 12) {
         setShowWallCastleTour(false);
@@ -289,7 +285,7 @@ export function GameMapPlayer({
         }
       }, 300);
     },
-    [showTour, tourVisited]
+    [showWallCastleTour]
   );
 
   // 当外部传入 openLocationId 时，自动导航到对应地图地标
