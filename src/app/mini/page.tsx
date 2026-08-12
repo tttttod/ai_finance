@@ -276,7 +276,7 @@ export default function MiniProgramPage() {
 
 // ===== 投资风格问卷 =====
 // ===== SBTI 交易风格测试（多巴胺风格）=====
-// ===== tradeTI 交易抽象人格测试 =====
+// ===== TPTI 交易人格类型指标 =====
 type TradeTIScreen = "intro" | "questions" | "result";
 
 function TradeTITest({ onComplete, onSkip }: { onComplete: () => void; onSkip: () => void }) {
@@ -354,9 +354,9 @@ function TradeTITest({ onComplete, onSkip }: { onComplete: () => void; onSkip: (
         <div className="flex-1 p-6 flex flex-col justify-center">
           <div className="text-center mb-10">
             <div className="text-6xl mb-4 animate-bounce">🏦</div>
-            <h1 className="text-4xl font-black mb-2 bg-gradient-to-r from-[#FF6B35] via-[#FFD93D] to-[#00FF88] bg-clip-text text-transparent">tradeTI</h1>
-            <p className="text-lg font-bold text-slate-700">交易抽象人格测试</p>
-            <p className="text-xs text-slate-500 mt-1">Trade Type Indicator</p>
+            <h1 className="text-4xl font-black mb-2 bg-gradient-to-r from-[#FF6B35] via-[#FFD93D] to-[#00FF88] bg-clip-text text-transparent">TPTI</h1>
+            <p className="text-lg font-bold text-slate-700">交易人格类型指标</p>
+            <p className="text-xs text-slate-500 mt-1">Trading Personality Type Indicator</p>
           </div>
           <div className="bg-white rounded-[24px] p-5 border-2 border-[#FFD93D] shadow-lg mb-6">
             <p className="text-sm text-slate-700 leading-relaxed font-bold">12道题，测出你是华尔街在逃交易员，还是市场需要重点保护的对象。</p>
@@ -401,7 +401,7 @@ function TradeTITest({ onComplete, onSkip }: { onComplete: () => void; onSkip: (
           </div>
           <button onClick={onComplete} className="w-full py-4 rounded-2xl font-black text-white text-lg transition-all hover:scale-[1.02] active:scale-95 shadow-lg" style={{ background: `linear-gradient(135deg, ${p.color}, ${p.color}cc)` }}>进入完整功能区 🚀</button>
           <button onClick={() => { setResultPersonality(null); setResultPassScore(0); setCurrentQ(0); setAnswers([]); setScreen("intro"); }} className="w-full py-3 rounded-2xl font-black text-slate-500 text-sm mt-3 border-2 border-slate-200 bg-white transition-all hover:scale-[1.02] active:scale-95">返回重测</button>
-          <p className="text-[10px] text-slate-400 text-center mt-4">tradeTI仅供娱乐和投资行为自省，不构成投资建议。股票市场存在风险。</p>
+          <p className="text-[10px] text-slate-400 text-center mt-4">TPTI仅供娱乐和投资行为自省，不构成投资建议。股票市场存在风险。</p>
         </div>
       </div>
     );
@@ -418,7 +418,7 @@ function TradeTITest({ onComplete, onSkip }: { onComplete: () => void; onSkip: (
     <div className="min-h-screen bg-gradient-to-b from-[#FFF8E1] to-white flex flex-col max-w-md mx-auto">
       <div className="flex-1 p-6 flex flex-col justify-center">
         <div className="mb-8">
-          <h1 className="text-xl font-black mb-2 bg-gradient-to-r from-[#FF6B35] via-[#FFD93D] to-[#00FF88] bg-clip-text text-transparent">tradeTI · 交易抽象人格测试</h1>
+          <h1 className="text-xl font-black mb-2 bg-gradient-to-r from-[#FF6B35] via-[#FFD93D] to-[#00FF88] bg-clip-text text-transparent">TPTI · 交易人格类型指标</h1>
           <p className="text-xs text-slate-500 leading-relaxed">找到你的交易灵魂人格。只有真正的交易员才能通关。</p>
         </div>
         <div className="mb-6">
@@ -1777,9 +1777,9 @@ function ProfileTab({ profile, tradeTIResult, user, watchlist, onRemoveFromWatch
         </div>
       </div>
 
-      {/* tradeTI 交易人格 */}
+      {/* TPTI 交易人格类型指标 */}
       <div className="bg-white rounded-lg p-4 border border-slate-100">
-        <h3 className="text-sm font-semibold text-slate-800 mb-2">tradeTI 交易抽象人格</h3>
+        <h3 className="text-sm font-semibold text-slate-800 mb-2">TPTI 交易人格类型指标</h3>
         {tradeTIResult && tradeTIResult.result_type ? (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
