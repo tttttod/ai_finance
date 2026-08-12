@@ -192,7 +192,7 @@ export const TRADER_PATH: TraderPathItem[] = [
     step: 0,
     locationId: "knowledge-entrance",
     title: "金融知识入港口",
-    subtitle: "Knowledge Entrance",
+    subtitle: "Lead Agent",
     isPrologue: true,
     // 不解锁 Agent — Lead Agent 已默认拥有
   },
@@ -201,7 +201,7 @@ export const TRADER_PATH: TraderPathItem[] = [
     step: 1,
     locationId: "wall-castle",
     title: "华尔堡",
-    subtitle: "Wall Castle",
+    subtitle: "Data / Market / Industry Agent",
     // 华尔堡内部含 3 个子关卡，依次解锁第 2、3、4 个 Agent
     internalStages: [
       { stage: 1, unlockAgents: ["data"] },
@@ -213,42 +213,42 @@ export const TRADER_PATH: TraderPathItem[] = [
     step: 2,
     locationId: "info-mist-archipelago",
     title: "信息迷雾群岛",
-    subtitle: "Info Mist Archipelago",
+    subtitle: "Fundamental Agent",
     unlockAgents: ["fundamental"],
   },
   {
     step: 3,
     locationId: "financial-report-ruins",
     title: "财报考古遗迹",
-    subtitle: "Financial-Report Ruins",
+    subtitle: "Valuation Agent",
     unlockAgents: ["valuation"],
   },
   {
     step: 4,
     locationId: "model-swamp",
     title: "模型沼泽",
-    subtitle: "Model Swamp",
+    subtitle: "Technical Agent",
     unlockAgents: ["technical"],
   },
   {
     step: 5,
     locationId: "kline-learning",
     title: "K线图学习",
-    subtitle: "K-Line Study",
+    subtitle: "Sentiment Agent",
     unlockAgents: ["sentiment"],
   },
   {
     step: 6,
     locationId: "market-weather-valley",
     title: "市场天气谷",
-    subtitle: "Market Weather Valley",
+    subtitle: "Bull Analyst",
     unlockAgents: ["bull"],
   },
   {
     step: 7,
     locationId: "evidence-crossroads",
     title: "证据岔路口",
-    subtitle: "Evidence Crossroads",
+    subtitle: "Bear + Risk Analyst",
     // 一对多：此地点同时解锁 2 个 Agent
     unlockAgents: ["bear", "risk"],
   },
@@ -256,14 +256,14 @@ export const TRADER_PATH: TraderPathItem[] = [
     step: 8,
     locationId: "risk-shield-bridge",
     title: "风险护盾桥",
-    subtitle: "Risk-Shield Bridge",
+    subtitle: "Research Manager",
     unlockAgents: ["manager"],
   },
   {
     step: 9,
     locationId: "hotspot-volcano",
     title: "热点火山与追涨火箭",
-    subtitle: "Hotspot Volcano & Rocket",
+    subtitle: "Hotspot Volcano",
     // 旧代码中 GAME_MAP_LEVELS id=8 → unlockAgents: ["bull"]
     // 第三阶段再迁移，本阶段暂保留旧逻辑
   },
@@ -732,15 +732,43 @@ export function getTraderRoadLevelStatus(
 }
 
 /**
- * 返回带状态的关卡列表
+ * UI 节点类型（从 TRADER_PATH 派生，兼容旧 UI 结构）
+ */
+export interface TraderRoadUINode {
+  /** UI 兼容 id（1-10，对应 TRADER_PATH step） */
+  id: number;
+  /** 显示名称（来自 TRADER_PATH.title） */
+  title: string;
+  /** Agent 名称（来自 TRADER_PATH.subtitle） */
+  subtitle: string;
+  /** 节点状态 */
+  status: TraderRoadLevelStatus;
+  /** 对应 WORLD_LOCATIONS 的 locationId */
+  locationId: string;
+  /** 主线步骤（0-10） */
+  step: number;
+}
+
+/**
+ * 返回带状态的关卡列表（从 TRADER_PATH 读取，排除序章）
+ *
+ * 注意：本阶段只改展示数据源，不迁移 progress 状态结构。
+ * id 使用 TRADER_PATH.step（1-10）作为 UI 兼容 id，
+ * 用于暂时兼容旧的 completedLevels / currentLevel 数字逻辑。
  */
 export function getTraderRoadLevelsWithStatus(
   progress: TraderRoadProgress
-): (TraderRoadLevel & { status: TraderRoadLevelStatus })[] {
-  return TRADER_ROAD_LEVELS.map((level) => ({
-    ...level,
-    status: getTraderRoadLevelStatus(progress, level.id),
-  }));
+): TraderRoadUINode[] {
+  return TRADER_PATH
+    .filter((item) => !item.isPrologue) // 排除序章
+    .map((item) => ({
+      id: item.step, // step 1-10 作为 UI 兼容 id
+      title: item.title,
+      subtitle: item.subtitle || "",
+      status: getTraderRoadLevelStatus(progress, item.step),
+      locationId: item.locationId,
+      step: item.step,
+    }));
 }
 
 // ===== React Hook =====

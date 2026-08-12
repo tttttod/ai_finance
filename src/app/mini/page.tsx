@@ -10,6 +10,7 @@ import {
   isTraderRoadAgentUnlocked,
   getTraderRoadLevelsWithStatus,
   TRADER_ROAD_LEVELS as CENTRALIZED_TRADER_ROAD_LEVELS,
+  TRADER_PATH,
   calcLevelFromXP,
   calcXPProgress,
   completeDailyTask,
@@ -2284,7 +2285,7 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
                       <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[8px] text-amber-400 whitespace-nowrap">即将开放</span>
                     )}
                   </button>
-                  {idx < CENTRALIZED_TRADER_ROAD_LEVELS.length - 1 && (
+                  {idx < TRADER_PATH.filter(p => !p.isPrologue).length - 1 && (
                     <div className={`w-3 h-0.5 mx-0.5 ${
                       isCompleted ? "bg-emerald-400/60" : isUnlocked ? "bg-blue-400/60" : "bg-slate-600/40"
                     }`} />
