@@ -420,9 +420,11 @@ export function GameMapPlayer({
             }}
             onClick={() => {
               if (showTour && !tourVisited && loc.id === 1) {
-                // Tour mode: clicking the knowledge-entrance completes the tour
+                // Tour mode: clicking the knowledge-entrance completes the tour AND enters the game
                 setTourVisited(true);
                 localStorage.setItem("financia-waltz-tour-seen", "true");
+                // Also enter the game immediately
+                handleLocationClick(loc);
                 return;
               }
               if (isAvailable) {
