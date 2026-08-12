@@ -2237,7 +2237,7 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
         <div className="p-3 border-b-2 border-amber-200/50">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-sm">📜</span>
-            <span className="text-sm font-bold text-amber-900">交易员的正确之路</span>
+            <span className="text-sm font-bold text-amber-900">交易员的进阶之路</span>
             <span className="text-[10px] text-amber-600 ml-auto">补完你的投研 Agent 链路</span>
           </div>
           <p className="text-[10px] text-amber-500/80 mt-1">
@@ -2247,8 +2247,6 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
         <div className="p-3">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {getTraderRoadLevelsWithStatus(traderRoadProgress).map((node, idx) => {
-              const nodeIcons = ["🎯", "📊", "🌪️", "📜", "📑", "⚖️", "📈", "🔥", "🏛️", "🛡️"];
-              const icon = nodeIcons[node.id - 1] || "🎯";
               const status = node.status;
               const isCompleted = status === "completed";
               const isAvailable = status === "available";
@@ -2275,7 +2273,15 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
                         : "bg-amber-50/40 border-amber-200/40 opacity-50 cursor-not-allowed"
                     }`}
                   >
-                    <span className="text-xl mb-0.5">{isCompleted ? '✅' : isUnlocked ? icon : '🔒'}</span>
+                    {isCompleted ? (
+                      <span className="text-xl mb-0.5">✅</span>
+                    ) : isUnlocked ? (
+                      <div className="w-8 h-8 mb-0.5 rounded-full overflow-hidden bg-amber-50/50 flex items-center justify-center">
+                        <img src={node.icon} alt={node.title} className="w-7 h-7 object-contain" loading="lazy" />
+                      </div>
+                    ) : (
+                      <span className="text-xl mb-0.5">🔒</span>
+                    )}
                     <span className={`text-[8px] font-bold leading-tight text-center ${
                       isCompleted ? "text-emerald-700" : isUnlocked ? "text-amber-700" : "text-amber-400"
                     }`}>

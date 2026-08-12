@@ -153,6 +153,8 @@ export interface TraderPathItem {
   /** 显示名称（与 WORLD_LOCATIONS.name 一致） */
   title: string;
   subtitle?: string;
+  /** 图标路径（对应金融华尔界地图地标的手绘图标） */
+  icon?: string;
   /** 是否为序章（Step 0） */
   isPrologue?: boolean;
   /**
@@ -202,6 +204,7 @@ export const TRADER_PATH: TraderPathItem[] = [
     locationId: "wall-castle",
     title: "华尔堡",
     subtitle: "Data / Market / Industry Agent",
+    icon: "/icons/trader-road/wall-castle.webp",
     // 华尔堡内部含 3 个子关卡，依次解锁第 2、3、4 个 Agent
     internalStages: [
       { stage: 1, unlockAgents: ["data"] },
@@ -214,6 +217,7 @@ export const TRADER_PATH: TraderPathItem[] = [
     locationId: "info-mist-archipelago",
     title: "信息迷雾群岛",
     subtitle: "Fundamental Agent",
+    icon: "/icons/trader-road/info-mist-archipelago.webp",
     unlockAgents: ["fundamental"],
   },
   {
@@ -221,6 +225,7 @@ export const TRADER_PATH: TraderPathItem[] = [
     locationId: "financial-report-ruins",
     title: "财报考古遗迹",
     subtitle: "Valuation Agent",
+    icon: "/icons/trader-road/financial-report-ruins.webp",
     unlockAgents: ["valuation"],
   },
   {
@@ -228,6 +233,7 @@ export const TRADER_PATH: TraderPathItem[] = [
     locationId: "model-swamp",
     title: "模型沼泽",
     subtitle: "Technical Agent",
+    icon: "/icons/trader-road/model-swamp.webp",
     unlockAgents: ["technical"],
   },
   {
@@ -235,6 +241,7 @@ export const TRADER_PATH: TraderPathItem[] = [
     locationId: "kline-learning",
     title: "K线图学习",
     subtitle: "Sentiment Agent",
+    icon: "/icons/trader-road/kline-learning.webp",
     unlockAgents: ["sentiment"],
   },
   {
@@ -242,6 +249,7 @@ export const TRADER_PATH: TraderPathItem[] = [
     locationId: "market-weather-valley",
     title: "市场天气谷",
     subtitle: "Bull Analyst",
+    icon: "/icons/trader-road/market-weather-valley.webp",
     unlockAgents: ["bull"],
   },
   {
@@ -249,6 +257,7 @@ export const TRADER_PATH: TraderPathItem[] = [
     locationId: "evidence-crossroads",
     title: "证据岔路口",
     subtitle: "Bear + Risk Analyst",
+    icon: "/icons/trader-road/evidence-crossroads.webp",
     // 一对多：此地点同时解锁 2 个 Agent
     unlockAgents: ["bear", "risk"],
   },
@@ -257,6 +266,7 @@ export const TRADER_PATH: TraderPathItem[] = [
     locationId: "risk-shield-bridge",
     title: "风险护盾桥",
     subtitle: "Research Manager",
+    icon: "/icons/trader-road/risk-shield-bridge.webp",
     unlockAgents: ["manager"],
   },
   {
@@ -264,6 +274,7 @@ export const TRADER_PATH: TraderPathItem[] = [
     locationId: "hotspot-volcano",
     title: "热点火山与追涨火箭",
     subtitle: "Hotspot Volcano",
+    icon: "/icons/trader-road/hotspot-volcano.webp",
     // 旧代码中 GAME_MAP_LEVELS id=8 → unlockAgents: ["bull"]
     // 第三阶段再迁移，本阶段暂保留旧逻辑
   },
@@ -741,6 +752,8 @@ export interface TraderRoadUINode {
   title: string;
   /** Agent 名称（来自 TRADER_PATH.subtitle） */
   subtitle: string;
+  /** 地标图标路径 */
+  icon: string;
   /** 节点状态 */
   status: TraderRoadLevelStatus;
   /** 对应 WORLD_LOCATIONS 的 locationId */
@@ -765,6 +778,7 @@ export function getTraderRoadLevelsWithStatus(
       id: item.step, // step 1-10 作为 UI 兼容 id
       title: item.title,
       subtitle: item.subtitle || "",
+      icon: item.icon || "",
       status: getTraderRoadLevelStatus(progress, item.step),
       locationId: item.locationId,
       step: item.step,
