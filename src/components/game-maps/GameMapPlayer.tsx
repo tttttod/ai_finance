@@ -16,7 +16,13 @@ import { QuizChoice } from "./QuizChoice";
 import {
   loadTraderRoadProgress,
   saveTraderRoadProgress,
+  loadWallCastleProgress,
+  saveWallCastleProgress,
+  completeWallCastleSubLevel,
+  getWallCastleSubLevelStatus,
+  WALL_CASTLE_SUB_LEVELS,
   type TraderRoadAgentId,
+  type WallCastleSubLevelId,
 } from "@/lib/trader-road-progress";
 
 // ===== Zone definitions =====
@@ -151,6 +157,7 @@ export function GameMapPlayer({
   const [showWelcome, setShowWelcome] = useState(false);
   const [showTour, setShowTour] = useState(false);
   const [tourVisited, setTourVisited] = useState(false);
+  const [wallCastleRefreshKey, setWallCastleRefreshKey] = useState(0);
 
   // Check if first visit - ONLY after map is loaded
   useEffect(() => {
@@ -907,35 +914,138 @@ export function GameMapPlayer({
       </div>
     );
   };
+  // ===== Render: 华尔堡二级地图 =====
+  const renderWallCastleMap = () => {
+    const progress = loadWallCastleProgress();
+    const subLevels = WALL_CASTLE_SUB_LEVELS;
 
-  // ===== Render: Submap Placeholder (e.g. 华尔堡) =====
-  const renderSubmapPlaceholder = () => {
-    const submapName = activeSubmapId === "wallCastleMap" ? "华尔堡" : "地图";
+    const handleSubLevelClick = (levelId: WallCastleSubLevelId) => {
+      const status = getWallCastleSubLevelStatus(levelId, progress);
+      if (status !== "available" && status !== "completed") return;
+      const newProgress = completeWallCastleSubLevel(levelId);
+      saveWallCastleProgress(newProgress);
+      setWallCastleRefreshKey((k) => k + 1);
+    };
+
+    const getNodeStyle = (status: string) => {
+      switch (status) {
+        case "completed":
+          return {
+            bg: "bg-gradient-to-br from-[#10B981] to-[#059669]",
+            border: "border-[#34D399] shadow-[0_0_15px_rgba(16,185,129,0.4)]",
+            icon: "✓",
+          };
+        case "available":
+          return {
+            bg: "bg-gradient-to-br from-[#D4A017] to-[#D97706]",
+            border: "border-[#FDE68A] shadow-[0_0_20px_rgba(212,160,23,0.5)]",
+            icon: "▶",
+          };
+        default:
+          return {
+            bg: "bg-[#374151]",
+            border: "border-[#4B5563]",
+            icon: "🔒",
+          };
+      }
+    };
+
     return (
-      <div className="flex flex-col items-center justify-center h-full py-16 px-8 text-center">
-        <div className="w-24 h-24 rounded-full bg-[#FFF8E7] flex items-center justify-center mb-6"
-          style={{ boxShadow: "0 0 30px rgba(212, 168, 83, 0.3)" }}>
-          <span className="text-4xl">🏰</span>
+      <div className="relative w-full h-full overflow-y-auto bg-[#1a1a2e]" key={wallCastleRefreshKey}>
+        <div className="relative w-full max-w-md mx-auto">
+          <img
+            src="/wall-castle-map.png"
+            alt="华尔堡地图"
+            className="w-full h-auto block"
+          />
+
+          {/* 3 Sub-Level Nodes */}
+          {subLevels.map((level) => {
+            const status = getWallCastleSubLevelStatus(level.id, progress);
+            const style = getNodeStyle(status);
+            return (
+              <button
+                key={level.id}
+                onClick={() => handleSubLevelClick(level.id)}
+                className={`absolute cursor-pointer transition-all duration-300 ${
+                  status === "locked" ? "opacity-50" : "hover:scale-110"
+                }`}
+                style={{
+                  left: `${20 + (level.order - 1) * 30}%`,
+                  top: `${30 + (level.order - 1) * 20}%`,
+                  width: "11%",
+                  aspectRatio: "1/1",
+                }}
+                title={level.name}
+              >
+                <div className={`w-full h-full rounded-full flex items-center justify-center text-white font-bold border-2 ${style.border} ${style.bg}`}
+                  style={{ boxShadow: status !== "locked" ? "0 0 20px rgba(212,160,23,0.3)" : "none" }}>
+                  {status === "completed" ? (
+                    <span className="text-white font-black text-lg">✓</span>
+                  ) : status === "locked" ? (
+                    <span className="text-white/60 text-xs">🔒</span>
+                  ) : (
+                    <span className="text-white text-xs font-bold">▶</span>
+                  )}
+                </div>
+                <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                  <span className={`text-[10px] font-bold ${
+                    status === "locked" ? "text-white/40" : "text-white/90"
+                  }`}>
+                    {level.name}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+
+          {/* Other locked locations (待开放) */}
+          {[
+            { id: "trading-hall", name: "交易大厅", x: 48, y: 16 },
+            { id: "skill-workshop", name: "技能工坊", x: 25, y: 62 },
+            { id: "team-base", name: "团队基地", x: 72, y: 55 },
+            { id: "main-gate", name: "城邦主大门", x: 48, y: 68 },
+            { id: "airship", name: "情报空艇", x: 85, y: 82 },
+          ].map((loc) => (
+            <div
+              key={loc.id}
+              className="absolute pointer-events-none"
+              style={{
+                left: `${loc.x}%`,
+                top: `${loc.y}%`,
+                width: "9%",
+                aspectRatio: "1/1",
+              }}
+            >
+              <div className="w-full h-full rounded-full bg-[#374151]/70 border border-[#4B5563]/50 flex items-center justify-center">
+                <span className="text-white/40 text-[10px]">🔒</span>
+              </div>
+              <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                <span className="text-[9px] text-white/30">待开放</span>
+              </div>
+            </div>
+          ))}
+
+          {/* Back Button */}
+          <button
+            onClick={() => {
+              setActiveSubmapId(null);
+              setView("world");
+            }}
+            className="absolute top-3 left-3 z-20 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center hover:bg-black/60 transition-all"
+          >
+            <span className="text-white text-lg">←</span>
+          </button>
+
+          {/* Title */}
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20">
+            <div className="bg-black/40 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/20">
+              <span className="text-white text-sm font-bold tracking-wider" style={{ fontFamily: "serif" }}>
+                🏰 华尔堡
+              </span>
+            </div>
+          </div>
         </div>
-        <h3 className="text-xl font-bold text-[#3D2B1F] mb-2" style={{ fontFamily: "serif" }}>
-          {submapName}
-        </h3>
-        <p className="text-sm text-[#8B7355] mb-6 leading-relaxed">
-          这片区域的地图正在绘制中...
-        </p>
-        <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-xl p-4 max-w-xs">
-          <p className="text-xs text-[#92400E] leading-relaxed">
-            🗺️ 该区域即将开放探索。<br />
-            敬请期待后续更新！
-          </p>
-        </div>
-        <button
-          onClick={() => setView("world")}
-          className="mt-8 px-6 py-2 rounded-lg text-sm font-bold text-white transition-all"
-          style={{ background: "linear-gradient(135deg, #D97706, #F59E0B)" }}
-        >
-          返回世界地图
-        </button>
       </div>
     );
   };
@@ -1080,7 +1190,7 @@ export function GameMapPlayer({
           {view === "world" && renderWorldMap()}
           {view === "zone" && renderZoneMap()}
           {view === "game" && renderGame()}
-          {view === "submap" && renderSubmapPlaceholder()}
+          {view === "submap" && renderWallCastleMap()}
           {view === "feature" && renderFeatureView()}
         </div>
 

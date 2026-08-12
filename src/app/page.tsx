@@ -278,8 +278,8 @@ export default function MiniProgramPage() {
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/90 backdrop-blur-sm border-t-2 border-[#FFE66D] flex rounded-t-3xl shadow-[0_-4px_20px_rgba(255,107,107,0.15)]">
         {[
           { id: "market" as TabId, label: "冒险", icon: "🗺️", color: "#FF6B6B" },
-          { id: "research" as TabId, label: "任务", icon: "", color: "#8B5CF6" },
-          { id: "review" as TabId, label: "工坊", icon: "", color: "#4ECDC4" },
+          { id: "research" as TabId, label: "任务", icon: "📋", color: "#8B5CF6" },
+          { id: "review" as TabId, label: "工坊", icon: "🔧", color: "#4ECDC4" },
           { id: "news" as TabId, label: "时讯", icon: "📡", color: "#FF6B35" },
           { id: "profile" as TabId, label: "档案", icon: "🎒", color: "#FFD93D" },
         ].map((tab) => (
