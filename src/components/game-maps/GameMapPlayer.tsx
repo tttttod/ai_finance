@@ -627,6 +627,11 @@ export function GameMapPlayer({
               }}
               onClick={() => {
                 if (status !== "locked") {
+                  // 模型沼泽（level 6）→ 打开固收挑战游戏（新页面）
+                  if (marker.levelId === 6) {
+                    window.open("/bond-hunter", "_blank");
+                    return;
+                  }
                   setActiveLevelId(marker.levelId);
                   setView("game");
                 }
