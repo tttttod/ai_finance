@@ -252,6 +252,12 @@ export function GameMapPlayer({
       setTimeout(() => {
         setClickedWorldLoc(null);
 
+        // 模型沼泽 → 打开固收挑战游戏（新页面）
+        if (loc.locationId === "model-swamp") {
+          window.open("/bond-hunter", "_blank");
+          return;
+        }
+
         switch (loc.type) {
           case "game": {
             // 如果是主线关卡 (level-*)，使用旧 level 逻辑

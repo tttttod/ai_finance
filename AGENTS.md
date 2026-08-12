@@ -40,6 +40,7 @@ src/
 │   ├── mini/page.tsx             # 小程序MVP（备用路由）
 │   ├── chat/page.tsx             # AI投研对话（万德/Choice风格）
 │   ├── knowledge/page.tsx        # 知识库（Agent分析逻辑框架）
+│   ├── bond-hunter/page.tsx      # 债券猎手：固收挑战游戏入口（/bond-hunter）
 │   ├── layout.tsx                # 根布局（浅灰背景，小程序风格）
 │   └── globals.css               # 全局样式
 ├── components/
@@ -56,6 +57,23 @@ src/
 │   │   ├── BrainGame.tsx         # 脑力配对组件
 │   │   ├── MiniGame.tsx          # 快速反应组件
 │   │   └── GameMapPlayer.tsx     # 地图主控制器
+│   ├── bond-hunter/               # 债券猎手：固收挑战游戏（8关）
+│   │   ├── types.ts              # 游戏类型定义
+│   │   ├── game-engine.ts        # 游戏引擎（债券定价、久期计算、评分、市场生成）
+│   │   ├── BondHunterGame.tsx    # 游戏主控制器
+│   │   ├── GameUI.tsx            # 共享UI组件（GameHeader等）
+│   │   ├── LandingPage.tsx       # 着陆页
+│   │   ├── PlayerProfilePage.tsx # 玩家档案页
+│   │   ├── Level1MacroRadar.tsx  # L1 宏观雷达
+│   │   ├── Level2YieldCurve.tsx  # L2 收益率曲线
+│   │   ├── Level3BondPricing.tsx # L3 债券定价实验室
+│   │   ├── Level4DurationSniper.tsx # L4 久期狙击战
+│   │   ├── Level5CreditDetective.tsx # L5 信用侦探
+│   │   ├── Level6SpreadTrading.tsx  # L6 信用利差交易
+│   │   ├── Level7PortfolioBuilder.tsx # L7 组合构建
+│   │   ├── Level8MarketShock.tsx    # L8 市场危机模拟
+│   │   ├── InvestmentCommittee.tsx  # 投资委员会（最终决策）
+│   │   └── PerformanceReport.tsx    # 成绩单 + 排行榜
 │   ├── ai-chat.tsx               # 全局AI对话浮动组件
 │   ├── news-feed.tsx             # 资讯组件
 │   ├── market-overview.tsx       # 市场概览条
@@ -112,6 +130,15 @@ src/
 - 每关完成后解锁对应 Agent，下一关自动解锁
 - `GameMapPlayer.tsx` 是统一入口，根据关卡类型分发到对应游戏组件
 - 扩展新关卡：在 `game-data.ts` 的 `GAME_MAP_LEVELS` 添加配置，在对应 data 文件添加内容即可
+
+### 债券猎手：Fixed Income Challenge (`/bond-hunter`)
+- 固定收益投资模拟游戏，8个关卡 + 着陆页 + 档案页 + 投委会 + 成绩单
+- 入口：游戏地图中点击"模型沼泽"位置，在新标签页打开
+- 关卡流程：宏观雷达 → 收益率曲线 → 债券定价 → 久期狙击 → 信用侦探 → 利差交易 → 组合构建 → 市场危机
+- 游戏引擎在 `src/components/bond-hunter/game-engine.ts`，包含债券定价、久期/凸性计算、评分系统
+- 游戏状态通过 localStorage 持久化，支持断点续玩
+- 排行榜数据存储在 localStorage
+- 视觉风格：深色金融终端（Bloomberg Terminal 风格）
 
 ## 数据说明
 
