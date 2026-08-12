@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { WORLD_MAP_PATHS } from "@/lib/world-map-paths";
+import { useAuth } from "@/lib/auth-context";
 import Level1Panel from "@/components/level1-panel";
 import {
   loadTraderRoadProgress,
@@ -98,6 +99,7 @@ export default function MiniProgramPage() {
   });
   const [selectedResearchTarget, setSelectedResearchTarget] = useState<RecommendedTarget | null>(null);
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
+  const { user } = useAuth();
 
   // 加载关注列表
   useEffect(() => {
@@ -227,7 +229,7 @@ export default function MiniProgramPage() {
           />
         )}
         {activeTab === "review" && <ModelTab />}
-        {activeTab === "profile" && <ProfileTab profile={userProfile} tradeTIResult={tradeTIResult} watchlist={watchlist} onRemoveFromWatchlist={removeFromWatchlist} onRetakeSurvey={() => {
+        {activeTab === "profile" && <ProfileTab user={user} profile={userProfile} tradeTIResult={tradeTIResult} watchlist={watchlist} onRemoveFromWatchlist={removeFromWatchlist} onRetakeSurvey={() => {
               localStorage.removeItem("tradeti_state");
               localStorage.removeItem("user_profile_survey");
               localStorage.removeItem("sbti_result_v2");
@@ -1680,7 +1682,7 @@ function ReviewDetailPage({ review, onBack }: { review: ReviewDetail; onBack: ()
 }
 
 // ===== 我的 Tab =====
-function ProfileTab({ profile, tradeTIResult, watchlist, onRemoveFromWatchlist, onRetakeSurvey }: { profile: UserProfileSurvey; tradeTIResult: TradeTIState | null; watchlist: WatchlistItem[]; onRemoveFromWatchlist: (code: string) => void; onRetakeSurvey: () => void }) {
+function ProfileTab({ profile, tradeTIResult, user, watchlist, onRemoveFromWatchlist, onRetakeSurvey }: { profile: UserProfileSurvey; tradeTIResult: TradeTIState | null; user: any; watchlist: WatchlistItem[]; onRemoveFromWatchlist: (code: string) => void; onRetakeSurvey: () => void }) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
@@ -1761,9 +1763,15 @@ function ProfileTab({ profile, tradeTIResult, watchlist, onRemoveFromWatchlist, 
             Y
           </div>
           <div>
-            <div className="text-sm font-semibold text-slate-800">投资者</div>
+            <div className="text-sm font-semibold text-slate-800">
+              {user?.user_metadata?.trader_id
+                ? `@${user.user_metadata.trader_id}`
+                : user?.user_metadata?.display_name
+                  ? `@${user.user_metadata.display_name}`
+                  : "游客"}
+            </div>
             <div className="text-xs text-slate-500">
-              默认风格：{profile.recommended_style === "short" ? "短线" : profile.recommended_style === "swing" ? "波段" : "长期"}
+              {tradeTIResult?.result_type ? TRADETI_PERSONALITIES[tradeTIResult.result_type]?.name || "还未测评" : "还未测评"}
             </div>
           </div>
         </div>

@@ -2038,7 +2038,7 @@ const STOCK_REPORTS: Record<string, {
 };
 
 function ProfileTab({ profile, tradeTIResult, onRetakeSurvey, watchlist, onRemoveFromWatchlist }: { profile: UserProfileSurvey; tradeTIResult: TradeTIState | null; onRetakeSurvey: () => void; watchlist: WatchlistItem[]; onRemoveFromWatchlist: (code: string) => void }) {
-  const { isAuthenticated, signOut } = useAuth();
+  const { user, isAuthenticated, signOut } = useAuth();
   const router = useRouter();
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [rating, setRating] = useState(0);
@@ -2250,9 +2250,11 @@ function ProfileTab({ profile, tradeTIResult, onRetakeSurvey, watchlist, onRemov
             Y
           </div>
           <div>
-            <div className="text-base font-black text-slate-800">投资者</div>
+            <div className="text-base font-black text-slate-800">
+              @{user?.user_metadata?.trader_id || user?.user_metadata?.display_name || "游客"}
+            </div>
             <div className="text-xs font-bold text-[#FF6B35]">
-              🎯 {profile.recommended_style === "short" ? "⚡ 短线猎手" : profile.recommended_style === "swing" ? "🎯 波段达人" : "💎 长期价值"}
+              {tradeTIResult && tradeTIResult.result_type ? TRADETI_PERSONALITIES[tradeTIResult.result_type]?.name || tradeTIResult.result_type : "🚀 新手冒险家"}
             </div>
           </div>
         </div>

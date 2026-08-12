@@ -27,6 +27,7 @@ export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [traderId, setTraderId] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -90,16 +91,30 @@ export default function LoginPage() {
   };
 
   const handleRegister = async () => {
-    if (!username.trim() || !password || !confirmPassword) {
+    if (!username.trim() || !password || !confirmPassword || !traderId.trim()) {
       setError('请填写所有字段');
       return;
     }
     if (username.trim().length < 2) {
-      setError('用户名至少 2 个字符');
+      setError('登录用户名至少 2 个字符');
       return;
     }
     if (!/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(username.trim())) {
-      setError('用户名只能包含中英文、数字和下划线');
+      setError('登录用户名只能包含中英文、数字和下划线');
+      return;
+    }
+    const cleanTraderId = traderId.trim();
+    if (cleanTraderId.length < 3 || cleanTraderId.length > 16) {
+      setError('公开交易员 ID 需要 3-16 个字符');
+      return;
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(cleanTraderId)) {
+      setError('公开交易员 ID 只能包含英文字母、数字和下划线');
+      return;
+    }
+    const reserved = ['admin', 'official', 'tradeti', 'system', 'support'];
+    if (reserved.includes(cleanTraderId.toLowerCase())) {
+      setError('该交易员 ID 已被系统保留，请换一个');
       return;
     }
     if (password !== confirmPassword) {
@@ -118,7 +133,7 @@ export default function LoginPage() {
         email: toVirtualEmail(username),
         password,
         options: {
-          data: { display_name: username.trim() },
+          data: { display_name: username.trim(), trader_id: cleanTraderId },
         },
       });
       if (signUpError) {
@@ -143,6 +158,17 @@ export default function LoginPage() {
       if (mode === 'login') handleLogin();
       else handleRegister();
     }
+  };
+
+  const RESERVED_TRADER_IDS = ['admin', 'official', 'tradeti', 'system', 'support'];
+
+  const validateTraderId = (value: string): string | null => {
+    const trimmed = value.trim();
+    if (!trimmed) return '请输入公开交易员 ID';
+    if (trimmed.length < 3 || trimmed.length > 16) return '交易员 ID 长度为 3-16 个字符';
+    if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) return '仅允许英文字母、数字和下划线';
+    if (RESERVED_TRADER_IDS.includes(trimmed.toLowerCase())) return '该 ID 已被保留，请选择其他名称';
+    return null;
   };
 
   if (isConfigLoading || isAuthLoading) {
