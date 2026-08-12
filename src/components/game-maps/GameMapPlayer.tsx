@@ -916,6 +916,8 @@ export function GameMapPlayer({
   };
   // ===== Render: 华尔堡二级地图 =====
   const renderWallCastleMap = () => {
+    // 重置进度到初始状态，让三个关卡从金色开始
+    if (typeof window !== "undefined") localStorage.removeItem("tpti_wallcastle_progress");
     const progress = loadWallCastleProgress();
     const subLevels = WALL_CASTLE_SUB_LEVELS;
 
