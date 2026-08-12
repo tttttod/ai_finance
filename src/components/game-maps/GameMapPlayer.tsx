@@ -971,8 +971,8 @@ export function GameMapPlayer({
                   status === "locked" ? "opacity-50" : "hover:scale-110"
                 }`}
                 style={{
-                  left: `${20 + (level.order - 1) * 30}%`,
-                  top: `${30 + (level.order - 1) * 20}%`,
+                  left: `${level.x}%`,
+                  top: `${level.y}%`,
                   width: "11%",
                   transform: "translate(-50%, -50%)",
                   aspectRatio: "1/1",
