@@ -914,9 +914,9 @@ export const WALL_CASTLE_LOCATIONS: { id: string; name: string; subLevelId?: Wal
 ];
 
 export const WALL_CASTLE_SUB_LEVELS: WallCastleSubLevel[] = [
-  { id: "data-black-market", name: "数据黑市", description: "K线数据解读", order: 1, status: "available", x: 18, y: 35 },
-  { id: "market-storm", name: "市场风暴", description: "市场情绪分析", order: 2, status: "locked", x: 22, y: 55 },
-  { id: "policy-letter", name: "政策密函", description: "政策解读研判", order: 3, status: "locked", x: 78, y: 45 },
+  { id: "data-black-market", name: "数据黑市", description: "K线数据解读", order: 1, status: "available", x: 23, y: 33 },
+  { id: "market-storm", name: "市场风暴", description: "市场情绪分析", order: 2, status: "locked", x: 22, y: 57 },
+  { id: "policy-letter", name: "政策密函", description: "政策解读研判", order: 3, status: "locked", x: 79, y: 41 },
 ];
 
 export function getDefaultWallCastleProgress(): WallCastleProgress {
