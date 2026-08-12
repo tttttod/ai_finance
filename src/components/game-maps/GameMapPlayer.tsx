@@ -398,9 +398,9 @@ export function GameMapPlayer({
       )}
       {/* Location hotspots with micro-interactions */}
       {WORLD_LOCATIONS.map((loc) => {
-        // 独立地点（非主线关卡）始终可点击
+        // 独立地点（非主线关卡）始终可点击；模型沼泽始终显示五角星（引导用户进入固收挑战）
         const isIndependent = loc.type === "feature" || loc.type === "submap" || (loc.type === "game" && loc.gameId && !loc.gameId.startsWith("level-"));
-        const status = isIndependent ? "available" : getLevelStatus(loc.legacyLevelId ?? 0);
+        const status = isIndependent || loc.locationId === "model-swamp" ? "available" : getLevelStatus(loc.legacyLevelId ?? 0);
         const isHovered = hoveredWorldLoc === loc.id;
         const isClicked = clickedWorldLoc === loc.id;
         const isAvailable = status === "available" || status === "completed";
@@ -604,7 +604,8 @@ export function GameMapPlayer({
         />
         {/* Level markers - 冒险徽章风格 */}
         {zone.markers.map((marker) => {
-          const status = getLevelStatus(marker.levelId);
+          // 模型沼泽（level 6）始终显示五角星样式，引导用户进入固收挑战
+          const status = marker.levelId === 6 ? "available" : getLevelStatus(marker.levelId);
           const config = getLevelConfig(marker.levelId);
           const isHovered = hoveredMarker === marker.levelId;
           const isCurrent = status === "available" && marker.levelId === currentLevelId;
