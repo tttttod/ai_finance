@@ -607,6 +607,7 @@ function ResearchTab({
   onResearchComplete?: (name: string) => void;
 }) {
   const [activeGameLevel, setActiveGameLevel] = useState<number | null>(null);
+  const [activeLocationId, setActiveLocationId] = useState<string | null>(null);
   const [unlockingAgent, setUnlockingAgent] = useState<AgentInfo | null>(null);
   const [started, setStarted] = useState(false);
   const [target, setTarget] = useState("");
@@ -873,6 +874,7 @@ function ResearchTab({
                     onClick={() => {
                       if (isAccessible) {
                         setActiveGameLevel(node.id);
+                        setActiveLocationId(node.locationId);
                       } else if (isComingSoon) {
                         alert(`${node.title} — 即将开放，先完成当前关卡`);
                       } else {
@@ -1090,8 +1092,10 @@ function ResearchTab({
       {activeGameLevel !== null && (
         <GameMapPlayer
           initialLevelId={activeGameLevel}
+          openLocationId={activeLocationId}
           onClose={() => {
             setActiveGameLevel(null);
+            setActiveLocationId(null);
             reloadProgress();
           }}
           onLevelComplete={(levelId) => {

@@ -122,6 +122,8 @@ const WORLD_LOCATIONS: WorldLocation[] = [
 // ===== Props =====
 export interface GameMapPlayerProps {
   initialLevelId: number | null;
+  /** 从外部传入的 locationId，用于从正确之路直接导航到对应地图地标 */
+  openLocationId?: string | null;
   onClose: () => void;
   onLevelComplete?: (levelId: number) => void;
 }
@@ -129,6 +131,7 @@ export interface GameMapPlayerProps {
 // ===== Main Component =====
 export function GameMapPlayer({
   initialLevelId,
+  openLocationId,
   onClose,
   onLevelComplete,
 }: GameMapPlayerProps) {
@@ -260,6 +263,18 @@ export function GameMapPlayer({
     },
     [showTour, tourVisited]
   );
+
+  // 当外部传入 openLocationId 时，自动导航到对应地图地标
+  useEffect(() => {
+    if (!openLocationId || !mapLoaded) return;
+    const target = WORLD_LOCATIONS.find(
+      (loc) => loc.locationId === openLocationId
+    );
+    if (target) {
+      // 跳过引导教程，直接导航
+      handleLocationClick(target);
+    }
+  }, [openLocationId, mapLoaded, handleLocationClick]);
 
   const getZoneProgress = useCallback(
     (zoneId: number) => {
