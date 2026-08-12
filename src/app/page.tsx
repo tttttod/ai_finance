@@ -846,15 +846,15 @@ function ResearchTab({
         </div>
 
       {/* 3. 交易员的正确之路 — Agent 解锁地图 */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-xl border border-slate-700/50 shadow-sm overflow-hidden">
-        <div className="p-3 border-b border-slate-700/50">
+      <div className="bg-gradient-to-br from-amber-50 via-yellow-50/60 to-orange-50/40 rounded-xl border-2 border-amber-200/60 shadow-[0_2px_12px_rgba(180,120,50,0.12)] overflow-hidden">
+        <div className="p-3 border-b-2 border-amber-200/50">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm">🗺️</span>
-            <span className="text-sm font-bold text-white">交易员的正确之路</span>
-            <span className="text-[10px] text-slate-400 ml-auto">补完你的投研 Agent 链路</span>
+            <span className="text-sm">📜</span>
+            <span className="text-sm font-bold text-amber-900">交易员的正确之路</span>
+            <span className="text-[10px] text-amber-600 ml-auto">补完你的投研 Agent 链路</span>
           </div>
-          <p className="text-[10px] text-slate-400 mt-1">
-            10 个关卡，解锁你的投研 Agent 团队
+          <p className="text-[10px] text-amber-500/80 mt-1">
+            🧭 10 个主线挑战，解锁你的投研 Agent 团队
           </p>
         </div>
         <div className="p-3">
@@ -881,15 +881,15 @@ function ResearchTab({
                     }}
                     className={`relative flex flex-col items-center justify-center w-16 h-16 rounded-xl border-2 transition-all ${
                       isCompleted
-                        ? "bg-emerald-500/20 border-emerald-400/60 shadow-[0_0_12px_rgba(16,185,129,0.4)] cursor-pointer hover:scale-105"
+                        ? "bg-emerald-100/80 border-emerald-400/70 shadow-[0_0_8px_rgba(16,185,129,0.25)] cursor-pointer hover:scale-105 hover:shadow-[0_0_12px_rgba(16,185,129,0.35)]"
                         : isAvailable
-                        ? "bg-blue-500/20 border-blue-400/60 shadow-[0_0_12px_rgba(59,130,246,0.4)] cursor-pointer hover:scale-105"
-                        : "bg-slate-700/30 border-slate-600/40 opacity-50 cursor-not-allowed"
+                        ? "bg-amber-100/80 border-amber-400/70 shadow-[0_0_8px_rgba(217,119,6,0.2)] cursor-pointer hover:scale-105 hover:shadow-[0_0_12px_rgba(217,119,6,0.3)]"
+                        : "bg-amber-50/40 border-amber-200/40 opacity-50 cursor-not-allowed"
                     }`}
                   >
                     <span className="text-xl mb-0.5">{icon}</span>
                     <span className={`text-[8px] font-bold leading-tight text-center ${
-                      isCompleted ? "text-emerald-200" : isAvailable ? "text-blue-200" : "text-slate-500"
+                      isCompleted ? "text-emerald-700" : isAvailable ? "text-amber-700" : "text-amber-400"
                     }`}>
                       {node.title}
                     </span>
@@ -900,17 +900,25 @@ function ResearchTab({
                       <span className="absolute -top-1 -right-1 text-[10px]">🔒</span>
                     )}
                   </button>
-                  {idx < 9 && (
-                    <div className={`w-3 h-0.5 mx-0.5 ${
-                      isCompleted ? "bg-emerald-400/60" : isAvailable ? "bg-blue-400/60" : "bg-slate-600/40"
-                    }`} />
+                  {idx < TRADER_PATH.filter(p => !p.isPrologue).length - 1 && (
+                    <div className="flex items-center mx-0.5">
+                      <div className={`w-0.5 h-0.5 rounded-full ${
+                        isCompleted ? "bg-emerald-400" : isAvailable ? "bg-amber-400" : "bg-amber-300/40"
+                      }`} />
+                      <div className={`w-2.5 border-t-2 border-dotted ${
+                        isCompleted ? "border-emerald-400/60" : isAvailable ? "border-amber-400/60" : "border-amber-300/30"
+                      }`} />
+                      <div className={`w-0.5 h-0.5 rounded-full ${
+                        isCompleted ? "bg-emerald-400" : isAvailable ? "bg-amber-400" : "bg-amber-300/40"
+                      }`} />
+                    </div>
                   )}
                 </div>
               );
             })}
           </div>
           {/* 开发调试按钮 */}
-          <div className="flex gap-2 mt-2 pt-2 border-t border-slate-700/30">
+          <div className="flex gap-2 mt-2 pt-2 border-t border-amber-200/40">
             <button
               onClick={() => {
                 // 先触发解锁动画，再更新进度
@@ -921,9 +929,9 @@ function ResearchTab({
                 completeTraderRoadLevel(1);
                 reloadProgress();
               }}
-              className="flex-1 py-1.5 text-[9px] font-bold text-blue-300 bg-blue-500/10 border border-blue-500/30 rounded-lg hover:bg-blue-500/20 transition-colors"
+              className="flex-1 py-1 text-[8px] font-medium text-amber-600 bg-amber-100/50 border border-amber-200/40 rounded-lg hover:bg-amber-200/50 transition-colors"
             >
-              测试：解锁 Lead Agent
+              ⚙️ 测试：解锁 Lead Agent
             </button>
             <button
               onClick={() => {
@@ -932,9 +940,9 @@ function ResearchTab({
                 }
                 setTraderRoadProgress(getDefaultTraderRoadProgress());
               }}
-              className="flex-1 py-1.5 text-[9px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-lg hover:bg-amber-500/20 transition-colors"
+              className="flex-1 py-1 text-[8px] font-medium text-amber-500 bg-amber-100/30 border border-amber-200/30 rounded-lg hover:bg-amber-200/40 transition-colors"
             >
-              测试：重置交易之路进度
+              🔄 测试：重置交易之路进度
             </button>
           </div>
         </div>
