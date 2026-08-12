@@ -75,7 +75,7 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
     if (showFeedback) return;
     setSelectedOption(optionId);
     setShowFeedback(true);
-    const option = currentNode.options.find(o => o.id === optionId);
+    const option = currentNode.options.find((o: any) => o.id === optionId);
     if (option?.correct) {
       setCorrectCount(prev => prev + 1);
     }
@@ -183,7 +183,7 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
   }
 
   // ---- Dialogue phase ----
-  const selectedOptionData = currentNode.options.find(o => o.id === selectedOption);
+  const selectedOptionData = currentNode.options.find((o: any) => o.id === selectedOption);
 
   return (
     <div className="relative flex flex-col h-full overflow-y-auto">
@@ -237,7 +237,7 @@ export function DialogueGame({ data, onComplete }: DialogueGameProps) {
           {/* Options */}
           {!isTyping && (
             <div className="space-y-2 mb-1">
-              {currentNode.options.map((option) => {
+              {currentNode.options.map((option: any) => {
                 const isSelected = selectedOption === option.id;
                 const showResult = showFeedback && isSelected;
                 let borderColor = hasScene ? "border-white/20 hover:border-[#3B82F6] hover:bg-white/15" : "border-[#E2E8F0] hover:border-[#3B82F6]";

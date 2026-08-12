@@ -38,7 +38,7 @@ export function BrainGame({ data, onComplete }: BrainGameProps) {
 
   const initCards = useCallback(() => {
     const items: CardItem[] = [];
-    data.pairs.forEach((pair, idx) => {
+    data.pairs.forEach((pair: any, idx: number) => {
       items.push({ id: `t-${idx}`, text: pair.term, pairId: `p-${idx}`, type: "term" });
       items.push({ id: `d-${idx}`, text: pair.definition, pairId: `p-${idx}`, type: "definition" });
     });

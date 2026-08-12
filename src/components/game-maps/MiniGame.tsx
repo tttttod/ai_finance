@@ -151,7 +151,7 @@ export function MiniGame({ data, onComplete }: MiniGameProps) {
 
         {/* Options */}
         <div className="grid grid-cols-2 gap-2">
-          {currentRoundData.options.map((option, idx) => {
+          {currentRoundData.options.map((option: any, idx: number) => {
             let btnClass = "border-[#E2E8F0] bg-white hover:border-[#3B82F6]/40 hover:shadow-sm";
             if (showResult) {
               if (idx === currentRoundData.correctIndex) {

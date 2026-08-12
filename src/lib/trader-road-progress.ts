@@ -182,11 +182,9 @@ export interface TraderPathItem {
  * 第三关 Step 3: 财报考古遗迹 → valuation
  * 第四关 Step 4: 模型沼泽 → technical
  * 第五关 Step 5: K线图学习 → sentiment
- * 第六关 Step 6: 市场天气谷 → bull
- * 第七关 Step 7: 证据岔路口 → bear + risk
+ * 第六关 Step 6: 市场天气谷 → bull + bear
+ * 第七关 Step 7: 证据岔路口 → risk
  * 第八关 Step 8: 风险护盾桥 → manager
- * 第九关 Step 9: 热点火山与追涨火箭（旧代码已有绑定，暂保留）
- * 第十关 Step 10: 复盘灯塔（旧代码已有绑定，暂保留）
  */
 export const TRADER_PATH: TraderPathItem[] = [
   // ===== 序章（Step 0）=====
@@ -248,18 +246,18 @@ export const TRADER_PATH: TraderPathItem[] = [
     step: 6,
     locationId: "market-weather-valley",
     title: "市场天气谷",
-    subtitle: "Bull Analyst",
+    subtitle: "Bull & Bear Analyst",
     icon: "/icons/trader-road/market-weather-valley.webp",
-    unlockAgents: ["bull"],
+    // 一对多：此地点同时解锁 2 个 Agent
+    unlockAgents: ["bull", "bear"],
   },
   {
     step: 7,
     locationId: "evidence-crossroads",
     title: "证据岔路口",
-    subtitle: "Bear + Risk Analyst",
+    subtitle: "Risk Officer",
     icon: "/icons/trader-road/evidence-crossroads.webp",
-    // 一对多：此地点同时解锁 2 个 Agent
-    unlockAgents: ["bear", "risk"],
+    unlockAgents: ["risk"],
   },
   {
     step: 8,
@@ -268,25 +266,6 @@ export const TRADER_PATH: TraderPathItem[] = [
     subtitle: "Research Manager",
     icon: "/icons/trader-road/risk-shield-bridge.webp",
     unlockAgents: ["manager"],
-  },
-  {
-    step: 9,
-    locationId: "hotspot-volcano",
-    title: "热点火山与追涨火箭",
-    subtitle: "Hotspot Volcano",
-    icon: "/icons/trader-road/hotspot-volcano.webp",
-    // 旧代码中 GAME_MAP_LEVELS id=8 → unlockAgents: ["bull"]
-    // 第三阶段再迁移，本阶段暂保留旧逻辑
-  },
-  {
-    step: 10,
-    locationId: "review-lighthouse",
-    title: "复盘灯塔",
-    subtitle: "Review Lighthouse",
-    icon: "/icons/trader-road/review-lighthouse.jpg",
-    // 旧代码中 GAME_MAP_LEVELS id=10 → unlockAgents: ["risk"]
-    // id=11 → unlockAgents: ["manager"]
-    // 第三阶段再迁移，本阶段暂保留旧逻辑
   },
 ];
 

@@ -106,23 +106,21 @@ interface WorldLocation {
 }
 
 const WORLD_LOCATIONS: WorldLocation[] = [
-  // ===== 主线关卡（与 TRADER_ROAD_LEVELS 绑定） =====
+  // ===== 序章（入港口 → 引导进入华尔堡） =====
   { id: 1, locationId: "knowledge-entrance", name: "金融知识入港口", subtitle: "Knowledge Entrance", x: 52, y: 97, type: "game", gameId: "level-1", legacyLevelId: 1 },
-  { id: 2, locationId: "market-weather-valley", name: "市场天气谷", subtitle: "Market Weather Valley", x: 17, y: 52, type: "game", gameId: "level-2", legacyLevelId: 2 },
-  { id: 3, locationId: "info-mist-archipelago", name: "信息迷雾群岛", subtitle: "Info Mist Archipelago", x: 20, y: 11, type: "game", gameId: "level-3", legacyLevelId: 3 },
-  { id: 4, locationId: "evidence-crossroads", name: "证据岔路口", subtitle: "Evidence Crossroads", x: 52, y: 6, type: "game", gameId: "level-4", legacyLevelId: 4 },
-  { id: 5, locationId: "risk-shield-bridge", name: "风险护盾桥", subtitle: "Risk-Shield Bridge", x: 82, y: 61, type: "game", gameId: "level-5", legacyLevelId: 5 },
-  { id: 6, locationId: "crypto-central-tower", name: "炒币中央塔", subtitle: "Crypto Central Tower", x: 18, y: 34, type: "game", gameId: "level-6", legacyLevelId: 6 },
-  { id: 7, locationId: "financial-report-ruins", name: "财报考古遗迹", subtitle: "Financial-Report Ruins", x: 83, y: 11, type: "game", gameId: "level-7", legacyLevelId: 7 },
-  { id: 8, locationId: "hotspot-volcano", name: "热点火山与追涨火箭", subtitle: "Hotspot Volcano & Rocket", x: 81, y: 31, type: "game", gameId: "level-8", legacyLevelId: 8 },
-  { id: 9, locationId: "model-swamp", name: "模型沼泽", subtitle: "Model Swamp", x: 49, y: 53, type: "game", gameId: "level-9", legacyLevelId: 9 },
-  { id: 10, locationId: "review-lighthouse", name: "复盘灯塔", subtitle: "Review Lighthouse", x: 20, y: 71, type: "game", gameId: "level-10", legacyLevelId: 10 },
+  // ===== 主地图关卡 =====
+  { id: 2, locationId: "info-mist-archipelago", name: "信息迷雾群岛", subtitle: "Info Mist Archipelago", x: 20, y: 11, type: "game", gameId: "level-4", legacyLevelId: 4 },
+  { id: 3, locationId: "financial-report-ruins", name: "财报考古遗迹", subtitle: "Financial-Report Ruins", x: 83, y: 11, type: "game", gameId: "level-5", legacyLevelId: 5 },
+  { id: 4, locationId: "model-swamp", name: "模型沼泽", subtitle: "Model Swamp", x: 49, y: 53, type: "game", gameId: "level-6", legacyLevelId: 6 },
+  { id: 5, locationId: "kline-learning", name: "K线图学习", subtitle: "K-Line Study", x: 79, y: 77, type: "game", gameId: "level-7", legacyLevelId: 7 },
+  { id: 6, locationId: "market-weather-valley", name: "市场天气谷", subtitle: "Market Weather Valley", x: 17, y: 52, type: "game", gameId: "level-8", legacyLevelId: 8 },
+  { id: 7, locationId: "evidence-crossroads", name: "证据岔路口", subtitle: "Evidence Crossroads", x: 52, y: 6, type: "game", gameId: "level-9", legacyLevelId: 9 },
+  { id: 8, locationId: "risk-shield-bridge", name: "风险护盾桥", subtitle: "Risk-Shield Bridge", x: 82, y: 61, type: "game", gameId: "level-10", legacyLevelId: 10 },
   // ===== 独立功能节点 =====
-  { id: 11, locationId: "city-ranking-tower", name: "城市排名塔", subtitle: "City Ranking Tower", x: 48, y: 38, type: "feature", featureId: "city-ranking" },
-  { id: 12, locationId: "brain-training-arena", name: "脑力训练场", subtitle: "Brain Training Arena", x: 85, y: 46, type: "game", gameId: "brain-training" },
-  { id: 13, locationId: "finance-quiz-camp", name: "金融 Quiz 营", subtitle: "Financial Quiz Camp", x: 54, y: 86, type: "game", gameId: "finance-quiz" },
-  { id: 14, locationId: "wall-castle", name: "华尔堡", subtitle: "Wall Castle", x: 50, y: 23, type: "submap", mapId: "wallCastleMap" },
-  { id: 15, locationId: "kline-learning", name: "K线图学习", subtitle: "K-Line Study", x: 79, y: 77, type: "game", gameId: "kline-learning" },
+  { id: 9, locationId: "city-ranking-tower", name: "城市排名塔", subtitle: "City Ranking Tower", x: 48, y: 38, type: "feature", featureId: "city-ranking" },
+  { id: 10, locationId: "brain-training-arena", name: "脑力训练场", subtitle: "Brain Training Arena", x: 85, y: 46, type: "game", gameId: "brain-training" },
+  { id: 11, locationId: "finance-quiz-camp", name: "金融 Quiz 营", subtitle: "Financial Quiz Camp", x: 54, y: 86, type: "game", gameId: "finance-quiz" },
+  { id: 12, locationId: "wall-castle", name: "华尔堡", subtitle: "Wall Castle", x: 50, y: 23, type: "submap", mapId: "wallCastleMap" },
 ];
 
 // ===== Props =====
