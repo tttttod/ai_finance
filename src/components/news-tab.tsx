@@ -309,29 +309,6 @@ export default function NewsTab() {
         </div>
       </div>
 
-      {/* 市场概览条 */}
-      <div className="bg-white rounded-2xl p-3 border-2 border-[#FFD93D]/30 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="text-center flex-1">
-            <div className="text-[10px] font-bold text-slate-400">上证指数</div>
-            <div className="text-sm font-mono font-black text-[#DC2626]">3,285.67</div>
-            <div className="text-[10px] font-mono font-bold text-[#DC2626]">+1.00%</div>
-          </div>
-          <div className="w-px h-8 bg-slate-100" />
-          <div className="text-center flex-1">
-            <div className="text-[10px] font-bold text-slate-400">深证成指</div>
-            <div className="text-sm font-mono font-black text-[#DC2626]">10,892</div>
-            <div className="text-[10px] font-mono font-bold text-[#DC2626]">+1.19%</div>
-          </div>
-          <div className="w-px h-8 bg-slate-100" />
-          <div className="text-center flex-1">
-            <div className="text-[10px] font-bold text-slate-400">创业板指</div>
-            <div className="text-sm font-mono font-black text-[#DC2626]">2,156</div>
-            <div className="text-[10px] font-mono font-bold text-[#DC2626]">+2.14%</div>
-          </div>
-        </div>
-      </div>
-
       {/* 热点新闻 */}
       <HotNewsSection />
 
