@@ -154,6 +154,7 @@ export function GameMapPlayer({
   const [progress, setProgress] = useState(() => loadTraderRoadProgress());
   // Welcome + guided tour state
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [wallCastleLoaded, setWallCastleLoaded] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [showTour, setShowTour] = useState(false);
   const [tourVisited, setTourVisited] = useState(false);
@@ -952,13 +953,69 @@ export function GameMapPlayer({
       }
     };
 
+    // 加载状态：仅显示模糊背景 + 金色罗盘，不渲染任何交互元素
+    if (!wallCastleLoaded) {
+      return (
+        <div className="relative w-full flex flex-col items-center justify-center overflow-hidden" style={{ minHeight: "100vh" }}>
+          {/* 模糊背景 */}
+          <img
+            src="/wall-castle-map.png"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ filter: "blur(8px) brightness(0.7) saturate(0.5)", transform: "scale(1.1)" }}
+            onLoad={() => setWallCastleLoaded(true)}
+            onError={() => setWallCastleLoaded(true)}
+          />
+          {/* 暗色蒙版 */}
+          <div className="absolute inset-0" style={{ backgroundColor: "rgba(26, 26, 46, 0.6)" }} />
+
+          {/* 金色罗盘 loading */}
+          <div className="relative flex flex-col items-center z-10">
+            <div
+              className="w-20 h-20 rounded-full animate-spin-slow"
+              style={{
+                border: "3px dashed #D4A853",
+                boxShadow: "0 0 20px rgba(212, 168, 83, 0.3), inset 0 0 20px rgba(212, 168, 83, 0.1)",
+              }}
+            />
+            <div
+              className="absolute w-14 h-14 rounded-full animate-spin-slower"
+              style={{
+                border: "2px solid rgba(212, 168, 83, 0.3)",
+                borderTop: "2px solid #D4A853",
+                boxShadow: "0 0 12px rgba(212, 168, 83, 0.2)",
+              }}
+            />
+            <div
+              className="absolute w-10 h-10 rounded-full flex items-center justify-center"
+              style={{
+                background: "radial-gradient(circle, #F5E6C8 0%, #D4A853 100%)",
+                border: "2px solid #B8860B",
+                boxShadow: "0 0 16px 4px rgba(212, 168, 83, 0.5)",
+              }}
+            >
+              <span className="text-lg" style={{ fontFamily: "serif", fontWeight: 900, color: "#8B6914" }}>₿</span>
+            </div>
+            <p
+              className="mt-6 text-sm font-medium tracking-wider animate-pulse"
+              style={{ fontFamily: "serif", color: "#D4A853", letterSpacing: "2px" }}
+            >
+              正在进入华尔堡...
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="relative w-full h-full overflow-y-auto bg-[#1a1a2e]" key={wallCastleRefreshKey}>
         <div className="relative w-full max-w-md mx-auto">
           <img
             src="/wall-castle-map.png"
             alt="华尔堡地图"
-            className="w-full h-auto block"
+            className={`w-full h-auto block ${!wallCastleLoaded ? "invisible" : ""}`}
+            onLoad={() => setWallCastleLoaded(true)}
+            onError={() => setWallCastleLoaded(true)}
           />
 
           {/* 3 Sub-Level Nodes */}
