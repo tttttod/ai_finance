@@ -974,6 +974,7 @@ export function GameMapPlayer({
                   left: `${20 + (level.order - 1) * 30}%`,
                   top: `${30 + (level.order - 1) * 20}%`,
                   width: "11%",
+                  transform: "translate(-50%, -50%)",
                   aspectRatio: "1/1",
                 }}
                 title={level.name}
@@ -1001,11 +1002,11 @@ export function GameMapPlayer({
 
           {/* Other locked locations (待开放) */}
           {[
-            { id: "trading-hall", name: "交易大厅", x: 48, y: 16 },
-            { id: "skill-workshop", name: "技能工坊", x: 25, y: 62 },
-            { id: "team-base", name: "团队基地", x: 72, y: 55 },
-            { id: "main-gate", name: "城邦主大门", x: 48, y: 68 },
-            { id: "airship", name: "情报空艇", x: 85, y: 82 },
+            { id: "trading-hall", name: "交易大厅", x: 52, y: 24 },
+            { id: "skill-workshop", name: "技能工坊", x: 32, y: 74 },
+            { id: "team-base", name: "团队基地", x: 79, y: 73 },
+            { id: "info-hub", name: "信息中枢", x: 52, y: 54 },
+            { id: "airship", name: "情报空艇", x: 86, y: 8 },
           ].map((loc) => (
             <div
               key={loc.id}
@@ -1014,6 +1015,7 @@ export function GameMapPlayer({
                 left: `${loc.x}%`,
                 top: `${loc.y}%`,
                 width: "9%",
+                transform: "translate(-50%, -50%)",
                 aspectRatio: "1/1",
               }}
             >
