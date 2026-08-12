@@ -146,27 +146,136 @@ export const TRADER_ROAD_LEVELS: TraderRoadLevel[] = [
 // locationId 直接引用 WORLD_LOCATIONS 中的稳定 ID
 
 export interface TraderPathItem {
-  /** 主线步骤（1-based） */
+  /** 主线步骤（0-based；0 = 序章，1-10 = 正式关卡） */
   step: number;
   /** 对应 WORLD_LOCATIONS 中的 locationId */
   locationId: string;
   /** 显示名称（与 WORLD_LOCATIONS.name 一致） */
   title: string;
   subtitle?: string;
+  /** 是否为序章（Step 0） */
+  isPrologue?: boolean;
+  /**
+   * 内部子关卡（用于华尔堡等包含多个子任务的地标）
+   * 每个子关卡可解锁不同 Agent
+   */
+  internalStages?: {
+    stage: number;
+    unlockAgents: TraderRoadAgentId[];
+  }[];
+  /**
+   * 该地标完成后可解锁的 Agent 列表
+   * 支持一对多（如证据岔路口解锁 2 个 Agent）
+   * 注意：华尔堡使用 internalStages，此处留空
+   */
+  unlockAgents?: TraderRoadAgentId[];
 }
 
+/**
+ * TRADER_PATH 主线结构：
+ *
+ * 序章 Step 0: 金融知识入港口（Lead Agent 已默认拥有）
+ * 第一关 Step 1: 华尔堡（内部 3 子关 → 解锁 data/market/industry）
+ * 第二关 Step 2: 信息迷雾群岛 → fundamental
+ * 第三关 Step 3: 财报考古遗迹 → valuation
+ * 第四关 Step 4: 模型沼泽 → technical
+ * 第五关 Step 5: K线图学习 → sentiment
+ * 第六关 Step 6: 市场天气谷 → bull
+ * 第七关 Step 7: 证据岔路口 → bear + risk
+ * 第八关 Step 8: 风险护盾桥 → manager
+ * 第九关 Step 9: 热点火山与追涨火箭（旧代码已有绑定，暂保留）
+ * 第十关 Step 10: 复盘灯塔（旧代码已有绑定，暂保留）
+ */
 export const TRADER_PATH: TraderPathItem[] = [
-  { step: 1,  locationId: "knowledge-entrance",     title: "金融知识入港口",       subtitle: "Knowledge Entrance" },
-  { step: 2,  locationId: "wall-castle",             title: "华尔堡",              subtitle: "Wall Castle" },
-  { step: 3,  locationId: "info-mist-archipelago",   title: "信息迷雾群岛",         subtitle: "Info Mist Archipelago" },
-  { step: 4,  locationId: "financial-report-ruins",  title: "财报考古遗迹",         subtitle: "Financial-Report Ruins" },
-  { step: 5,  locationId: "model-swamp",             title: "模型沼泽",            subtitle: "Model Swamp" },
-  { step: 6,  locationId: "kline-learning",          title: "K线图学习",           subtitle: "K-Line Study" },
-  { step: 7,  locationId: "market-weather-valley",   title: "市场天气谷",           subtitle: "Market Weather Valley" },
-  { step: 8,  locationId: "evidence-crossroads",     title: "证据岔路口",           subtitle: "Evidence Crossroads" },
-  { step: 9,  locationId: "risk-shield-bridge",      title: "风险护盾桥",           subtitle: "Risk-Shield Bridge" },
-  { step: 10, locationId: "hotspot-volcano",          title: "热点火山与追涨火箭",   subtitle: "Hotspot Volcano & Rocket" },
-  { step: 11, locationId: "review-lighthouse",       title: "复盘灯塔",            subtitle: "Review Lighthouse" },
+  // ===== 序章（Step 0）=====
+  {
+    step: 0,
+    locationId: "knowledge-entrance",
+    title: "金融知识入港口",
+    subtitle: "Knowledge Entrance",
+    isPrologue: true,
+    // 不解锁 Agent — Lead Agent 已默认拥有
+  },
+  // ===== 正式主线（Step 1-10）=====
+  {
+    step: 1,
+    locationId: "wall-castle",
+    title: "华尔堡",
+    subtitle: "Wall Castle",
+    // 华尔堡内部含 3 个子关卡，依次解锁第 2、3、4 个 Agent
+    internalStages: [
+      { stage: 1, unlockAgents: ["data"] },
+      { stage: 2, unlockAgents: ["market"] },
+      { stage: 3, unlockAgents: ["industry"] },
+    ],
+  },
+  {
+    step: 2,
+    locationId: "info-mist-archipelago",
+    title: "信息迷雾群岛",
+    subtitle: "Info Mist Archipelago",
+    unlockAgents: ["fundamental"],
+  },
+  {
+    step: 3,
+    locationId: "financial-report-ruins",
+    title: "财报考古遗迹",
+    subtitle: "Financial-Report Ruins",
+    unlockAgents: ["valuation"],
+  },
+  {
+    step: 4,
+    locationId: "model-swamp",
+    title: "模型沼泽",
+    subtitle: "Model Swamp",
+    unlockAgents: ["technical"],
+  },
+  {
+    step: 5,
+    locationId: "kline-learning",
+    title: "K线图学习",
+    subtitle: "K-Line Study",
+    unlockAgents: ["sentiment"],
+  },
+  {
+    step: 6,
+    locationId: "market-weather-valley",
+    title: "市场天气谷",
+    subtitle: "Market Weather Valley",
+    unlockAgents: ["bull"],
+  },
+  {
+    step: 7,
+    locationId: "evidence-crossroads",
+    title: "证据岔路口",
+    subtitle: "Evidence Crossroads",
+    // 一对多：此地点同时解锁 2 个 Agent
+    unlockAgents: ["bear", "risk"],
+  },
+  {
+    step: 8,
+    locationId: "risk-shield-bridge",
+    title: "风险护盾桥",
+    subtitle: "Risk-Shield Bridge",
+    unlockAgents: ["manager"],
+  },
+  {
+    step: 9,
+    locationId: "hotspot-volcano",
+    title: "热点火山与追涨火箭",
+    subtitle: "Hotspot Volcano & Rocket",
+    // 旧代码中 GAME_MAP_LEVELS id=8 → unlockAgents: ["bull"]
+    // 第三阶段再迁移，本阶段暂保留旧逻辑
+  },
+  {
+    step: 10,
+    locationId: "review-lighthouse",
+    title: "复盘灯塔",
+    subtitle: "Review Lighthouse",
+    // 旧代码中 GAME_MAP_LEVELS id=10 → unlockAgents: ["risk"]
+    // id=11 → unlockAgents: ["manager"]
+    // 第三阶段再迁移，本阶段暂保留旧逻辑
+  },
 ];
 
 // ===== XP 成长系统常量 =====

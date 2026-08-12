@@ -2840,7 +2840,7 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold text-[#1E293B]">金融华尔界</h3>
             <span className="text-[10px] font-bold text-[#64748B] bg-[#F1F5F9] px-2 py-0.5 rounded-full">
-              {traderRoadProgress.completedLevels.length}/{TRADER_PATH.length} 关
+              {traderRoadProgress.completedLevels.length}/{TRADER_PATH.filter(p => !p.isPrologue).length} 关
             </span>
           </div>
           <p className="text-[11px] text-[#64748B] mb-4">完成地图关卡，解锁 Agent 研究员</p>
