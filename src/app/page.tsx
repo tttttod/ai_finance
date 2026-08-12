@@ -2830,16 +2830,36 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
 
       {/* 2. 今日市场天气 */}
       <div className="bg-white rounded-xl border border-slate-100 p-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">{weather.icon}</span>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-slate-800">今日市场：{weather.label}</span>
-              <span className="text-[10px] text-slate-400">
-                {marketSnapshot?.tradeDate?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3") || ""}
-              </span>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">{weather.icon}</span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-slate-800">今日市场：{weather.label}</span>
+                <span className="text-[10px] text-slate-400">
+                  {marketSnapshot?.tradeDate?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3") || ""}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">{weather.desc}</p>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">{weather.desc}</p>
+          </div>
+          {/* 数据来源标识 */}
+          <div className="flex items-center gap-1">
+            {marketSnapshot?.source === "tushare" && !marketSnapshot?.stale && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
+                实时行情
+              </span>
+            )}
+            {marketSnapshot?.source === "cache" && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
+                缓存行情
+              </span>
+            )}
+            {marketSnapshot?.source === "mock" && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                演示数据
+              </span>
+            )}
           </div>
         </div>
         {/* 指数快照 */}
@@ -2856,6 +2876,12 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
         </div>
         {snapshotLoading && <div className="animate-pulse h-3 bg-slate-100 rounded w-1/2 mt-2" />}
         {snapshotError && <p className="text-[10px] text-amber-500 mt-1">{snapshotError}</p>}
+        {/* 演示数据提示 */}
+        {marketSnapshot?.source === "mock" && (
+          <p className="text-[9px] text-slate-400 mt-2 text-center">
+            当前暂无真实行情快照，请配置 TUSHARE_TOKEN 并调用 /api/admin/refresh-market 刷新数据
+          </p>
+        )}
       </div>
 
         {/* 金融华尔界 — 地图入口圆钮 */}

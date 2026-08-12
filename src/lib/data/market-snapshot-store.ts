@@ -59,6 +59,22 @@ export async function getLatestMarketSnapshot(): Promise<MiniMarketSnapshot | nu
   return null;
 }
 
+/**
+ * Check if Supabase is configured and available
+ */
+export function isSupabaseConfigured(): boolean {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  return !!(url && key);
+}
+
+/**
+ * Check if Tushare is configured
+ */
+export function isTushareConfigured(): boolean {
+  return !!process.env.TUSHARE_TOKEN;
+}
+
 export async function saveMarketSnapshot(
   snapshot: MiniMarketSnapshot,
 ): Promise<void> {

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getLatestMarketSnapshot } from "@/lib/data/market-snapshot-store";
+import { getLatestMarketSnapshot, isSupabaseConfigured, isTushareConfigured } from "@/lib/data/market-snapshot-store";
 import { mockMarketData, mockRecommendedTargets } from "@/lib/mini-mock";
 import type { MiniMarketSnapshot } from "@/lib/data/market-types";
 
@@ -10,7 +10,24 @@ export async function GET() {
   const snapshot = await getLatestMarketSnapshot();
 
   if (snapshot) {
-    return NextResponse.json({ success: true, data: snapshot });
+    // Add data quality info
+    const dataQuality = {
+      indices: snapshot.indices?.length > 0 ? "tushare" : "mock",
+      hotSectors: snapshot.hotSectors?.length > 0 ? "tushare" : "mock",
+      activeStocks: snapshot.activeStocks?.length > 0 ? "tushare" : "mock",
+      recommendedTargets: snapshot.recommendedTargets?.length > 0 ? "tushare" : "mock",
+    };
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...snapshot,
+        dataQuality,
+        hasRealData: snapshot.source === "tushare",
+        supabaseConfigured: isSupabaseConfigured(),
+        tushareConfigured: isTushareConfigured(),
+      },
+    });
   }
 
   // Fallback to mock data if no snapshot exists
@@ -28,5 +45,19 @@ export async function GET() {
     events: mockMarketData.events as { time: string; title: string; impact: "positive" | "negative" | "neutral" }[],
   };
 
-  return NextResponse.json({ success: true, data: fallback });
+  return NextResponse.json({
+    success: true,
+    data: {
+      ...fallback,
+      dataQuality: {
+        indices: "mock",
+        hotSectors: "mock",
+        activeStocks: "mock",
+        recommendedTargets: "mock",
+      },
+      hasRealData: false,
+      supabaseConfigured: isSupabaseConfigured(),
+      tushareConfigured: isTushareConfigured(),
+    },
+  });
 }

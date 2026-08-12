@@ -37,6 +37,13 @@ export interface MiniRecommendedTarget {
   is_demo_data: boolean;
 }
 
+export interface DataQuality {
+  indices: "tushare" | "mock";
+  hotSectors: "tushare" | "mock";
+  activeStocks: "tushare" | "mock";
+  recommendedTargets: "tushare" | "mock";
+}
+
 export interface MiniMarketSnapshot {
   snapshotDate: string;
   tradeDate: string;
@@ -49,4 +56,5 @@ export interface MiniMarketSnapshot {
   activeStocks: MiniActiveStock[];
   recommendedTargets: MiniRecommendedTarget[];
   events: { time: string; title: string; impact: "positive" | "negative" | "neutral" }[];
+  dataQuality?: DataQuality;
 }
