@@ -283,6 +283,7 @@ export const TRADER_PATH: TraderPathItem[] = [
     locationId: "review-lighthouse",
     title: "复盘灯塔",
     subtitle: "Review Lighthouse",
+    icon: "/icons/trader-road/review-lighthouse.jpg",
     // 旧代码中 GAME_MAP_LEVELS id=10 → unlockAgents: ["risk"]
     // id=11 → unlockAgents: ["manager"]
     // 第三阶段再迁移，本阶段暂保留旧逻辑
