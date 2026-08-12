@@ -11,6 +11,7 @@ import { DialogueGame } from "./DialogueGame";
 import { QuizGame } from "./QuizGame";
 import { BrainGame } from "./BrainGame";
 import { MiniGame } from "./MiniGame";
+import { BondHunterGame } from "../bond-hunter/BondHunterGame";
 import { LearningCards } from "./LearningCards";
 import { QuizChoice } from "./QuizChoice";
 import {
@@ -252,9 +253,11 @@ export function GameMapPlayer({
       setTimeout(() => {
         setClickedWorldLoc(null);
 
-        // 模型沼泽 → 打开固收挑战游戏（新页面）
+        // 模型沼泽 → 打开固收挑战游戏（弹窗内）
         if (loc.locationId === "model-swamp") {
-          window.open("/bond-hunter", "_blank");
+          setActiveGameId("bond-hunter");
+          setActiveLevelId(null);
+          setView("game");
           return;
         }
 
@@ -628,9 +631,11 @@ export function GameMapPlayer({
               }}
               onClick={() => {
                 if (status !== "locked") {
-                  // 模型沼泽（level 6）→ 打开固收挑战游戏（新页面）
+                  // 模型沼泽（level 6）→ 打开固收挑战游戏（弹窗内）
                   if (marker.levelId === 6) {
-                    window.open("/bond-hunter", "_blank");
+                    setActiveGameId("bond-hunter");
+                    setActiveLevelId(null);
+                    setView("game");
                     return;
                   }
                   setActiveLevelId(marker.levelId);
@@ -792,6 +797,13 @@ export function GameMapPlayer({
                 }}
               />
             </div>
+          </div>
+        );
+      }
+      if (activeGameId === "bond-hunter") {
+        return (
+          <div className="h-full w-full overflow-hidden rounded-lg" style={{ background: "#0B0E14" }}>
+            <BondHunterGame />
           </div>
         );
       }
