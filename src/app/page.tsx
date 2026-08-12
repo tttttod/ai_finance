@@ -902,6 +902,7 @@ function ResearchTab({
                       isCompleted ? "text-emerald-700" : isAvailable ? "text-amber-700" : "text-amber-400"
                     }`}>
                       {node.title}
+                      {node.subtitle && <span className="block text-[6px] text-amber-400/60 mt-0.5">{node.subtitle}</span>}
                     </span>
                     {isCompleted && (
                       <span className="absolute -top-1 -right-1 text-[10px]">✅</span>

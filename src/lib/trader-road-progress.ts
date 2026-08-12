@@ -267,6 +267,22 @@ export const TRADER_PATH: TraderPathItem[] = [
     icon: "/icons/trader-road/risk-shield-bridge.webp",
     unlockAgents: ["manager"],
   },
+  {
+    step: 9,
+    locationId: "hotspot-volcano",
+    title: "热点火山与追涨火箭",
+    subtitle: "待开放",
+    icon: "/icons/trader-road/hotspot-volcano.webp",
+    unlockAgents: [],
+  },
+  {
+    step: 10,
+    locationId: "review-lighthouse",
+    title: "复盘灯塔",
+    subtitle: "待开放",
+    icon: "/icons/trader-road/review-lighthouse.jpg",
+    unlockAgents: [],
+  },
 ];
 
 // ===== XP 成长系统常量 =====
@@ -754,15 +770,21 @@ export function getTraderRoadLevelsWithStatus(
 ): TraderRoadUINode[] {
   return TRADER_PATH
     .filter((item) => !item.isPrologue) // 排除序章
-    .map((item) => ({
-      id: item.step, // step 1-10 作为 UI 兼容 id
-      title: item.title,
-      subtitle: item.subtitle || "",
-      icon: item.icon || "",
-      status: getTraderRoadLevelStatus(progress, item.step),
-      locationId: item.locationId,
-      step: item.step,
-    }));
+    .map((item) => {
+      // "待开放" 条目永远锁定，不受进度影响
+      const status = item.subtitle === "待开放"
+        ? "locked" as TraderRoadLevelStatus
+        : getTraderRoadLevelStatus(progress, item.step);
+      return {
+        id: item.step, // step 1-10 作为 UI 兼容 id
+        title: item.title,
+        subtitle: item.subtitle || "",
+        icon: item.icon || "",
+        status,
+        locationId: item.locationId,
+        step: item.step,
+      };
+    });
 }
 
 // ===== React Hook =====

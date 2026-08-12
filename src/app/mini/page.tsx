@@ -2294,6 +2294,7 @@ function MarketTab({ tradeTIResult, onFillResearch }: { tradeTIResult: TradeTISt
                       isCompleted ? "text-emerald-700" : isUnlocked ? "text-amber-700" : "text-amber-400"
                     }`}>
                       {node.title}
+                    {node.subtitle && <span className="text-[6px] text-amber-400/60 mt-0.5">{node.subtitle}</span>}
                     </span>
                     {isNext && (
                       <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[8px] text-amber-500 whitespace-nowrap">即将开放</span>
