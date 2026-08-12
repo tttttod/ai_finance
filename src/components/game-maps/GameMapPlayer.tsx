@@ -158,6 +158,7 @@ export function GameMapPlayer({
   const [showWelcome, setShowWelcome] = useState(false);
   const [showTour, setShowTour] = useState(false);
   const [tourVisited, setTourVisited] = useState(false);
+  const [showWallCastleTour, setShowWallCastleTour] = useState(false);
   const [wallCastleRefreshKey, setWallCastleRefreshKey] = useState(0);
 
   // Check if first visit - ONLY after map is loaded
@@ -216,6 +217,11 @@ export function GameMapPlayer({
       const savedProgress = saveTraderRoadProgress(newProgress);
       setProgress(savedProgress);
       onLevelComplete?.(levelId);
+
+      // 完成金融知识入港口后，显示华尔堡引导
+      if (levelId === 0 || levelId === 1) {
+        setShowWallCastleTour(true);
+      }
     },
     [progress, onLevelComplete]
   );
@@ -233,8 +239,13 @@ export function GameMapPlayer({
   const handleLocationClick = useCallback(
     (loc: WorldLocation) => {
       // 如果是 tour 模式且点击的是特定节点，走 tour 逻辑
-      if (showTour && !tourVisited && loc.id === 13) {
+      if (showTour && !tourVisited && loc.id === 1) {
         return; // tour 逻辑由外部处理
+      }
+      // 华尔堡引导：点击华尔堡关闭引导
+      if (showWallCastleTour && loc.id === 12) {
+        setShowWallCastleTour(false);
+        return; // 让后续正常点击逻辑也生效
       }
 
       setClickedWorldLoc(loc.id);
@@ -399,8 +410,8 @@ export function GameMapPlayer({
               zIndex: isHovered ? 50 : 10,
             }}
             onClick={() => {
-              if (showTour && !tourVisited && loc.id === 13) {
-                // Tour mode: clicking the Quiz Camp completes the tour
+              if (showTour && !tourVisited && loc.id === 1) {
+                // Tour mode: clicking the knowledge-entrance completes the tour
                 setTourVisited(true);
                 localStorage.setItem("financia-waltz-tour-seen", "true");
                 return;
@@ -441,8 +452,24 @@ export function GameMapPlayer({
                 }}
               />
             )}
-            {/* Tour highlight glow on Quiz Camp (id: 13) */}
-            {showTour && !tourVisited && loc.id === 13 && (
+            {/* Tour highlight glow on knowledge-entrance (id: 1) */}
+            {showTour && !tourVisited && loc.id === 1 && (
+              <span
+                className="absolute rounded-full animate-ping"
+                style={{
+                  width: 60,
+                  height: 60,
+                  left: "50%",
+                  top: "50%",
+                  transform: "translate(-50%, -50%)",
+                  border: "3px solid #FFD700",
+                  boxShadow: "0 0 20px 8px rgba(255, 215, 0, 0.6)",
+                  animationDuration: "1.5s",
+                }}
+              />
+            )}
+            {/* Wall Castle tour highlight glow after completing knowledge-entrance */}
+            {showWallCastleTour && loc.id === 12 && (
               <span
                 className="absolute rounded-full animate-ping"
                 style={{
@@ -480,7 +507,14 @@ export function GameMapPlayer({
                     ? "0 0 16px 4px rgba(212, 168, 83, 0.6), 0 4px 8px rgba(0,0,0,0.3)"
                     : "0 0 10px rgba(212, 168, 83, 0.4), 0 2px 6px rgba(0,0,0,0.15)",
                 }),
-                ...(showTour && !tourVisited && loc.id === 13 && {
+                ...(showTour && !tourVisited && loc.id === 1 && {
+                  backgroundColor: "#F59E0B",
+                  border: "3px solid #FBBF24",
+                  borderRadius: "50%",
+                  opacity: 1,
+                  boxShadow: "0 0 20px 6px rgba(245, 158, 11, 0.6), 0 0 40px rgba(245, 158, 11, 0.3), 0 4px 8px rgba(0,0,0,0.3)",
+                }),
+                ...(showWallCastleTour && loc.id === 12 && {
                   backgroundColor: "#F59E0B",
                   border: "3px solid #FBBF24",
                   borderRadius: "50%",
@@ -1275,13 +1309,13 @@ export function GameMapPlayer({
                 <p>这里不是普通的金融课堂。</p>
                 <p>在这片大陆上，你会通过一次次任务，建立属于自己的投资判断力。</p>
                 <div className="mt-3 space-y-1.5">
-                  <p className="flex items-center gap-2"><span className="text-base">🧠</span> 做 Quiz，赚取第一桶金币</p>
+                  <p className="flex items-center gap-2"><span className="text-base">🧠</span> 完成知识关卡，解锁投研 Agent</p>
                   <p className="flex items-center gap-2"><span className="text-base">💰</span> 模拟投资，在涨跌里练习决策</p>
                   <p className="flex items-center gap-2"><span className="text-base">🔍</span> 搜集证据，破解市场迷雾</p>
                   <p className="flex items-center gap-2"><span className="text-base">🏆</span> 完成挑战，登上城市排行榜</p>
                 </div>
                 <p className="mt-3">每一次选择，都会让你的交易人格继续成长。</p>
-                <p className="font-semibold text-[#D97706]">准备好了吗？先从你的第一笔启动资金开始。</p>
+                <p className="font-semibold text-[#D97706]">先从「金融知识入港口」开始，让 Lead Agent 带你入门。</p>
               </div>
               <button
                 onClick={() => {
@@ -1300,14 +1334,14 @@ export function GameMapPlayer({
         {/* Guided Tour Overlay - 仅在地图加载完成后显示 */}
         {showTour && !tourVisited && mapLoaded && (
           <div className="absolute inset-0 z-40 pointer-events-none">
-            {/* Dim overlay - full screen, but with hole for quiz camp */}
+            {/* Dim overlay - full screen, but with hole for knowledge entrance */}
             <div className="absolute inset-0 bg-black/40" />
-            {/* Highlight glow around quiz camp */}
+            {/* Highlight glow around knowledge entrance */}
             <div
               className="absolute pointer-events-auto animate-pulse"
               style={{
-                left: "42%",
-                top: "80%",
+                left: "48%",
+                top: "92%",
                 width: 80,
                 height: 80,
                 transform: "translate(-50%, -50%)",
@@ -1332,8 +1366,8 @@ export function GameMapPlayer({
             <div
               className="absolute pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-500"
               style={{
-                left: "42%",
-                top: "75%",
+                left: "48%",
+                top: "87%",
                 transform: "translate(-50%, -100%)",
               }}
             >
@@ -1343,22 +1377,22 @@ export function GameMapPlayer({
               >
                 <p className="text-xs font-bold text-[#3D2B1F]">👀 看这里！</p>
                 <p className="text-xs text-[#475569] mt-1">
-                  冒险开始之前，先去赚点启动资金吧。
+                  先从「金融知识入港口」开始，让 Lead Agent 带你入门。
                 </p>
-                <p className="text-[10px] font-semibold text-[#D97706] mt-2">👇 点击「金融 Quiz 营」</p>
+                <p className="text-[10px] font-semibold text-[#D97706] mt-2">👇 点击「金融知识入港口」</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* NPC Explanation after clicking Quiz Camp */}
+        {/* Lead Agent Explanation after clicking knowledge-entrance */}
         {showTour && tourVisited && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40">
             <div className="bg-white rounded-2xl max-w-sm w-[90%] p-6 shadow-2xl animate-in fade-in zoom-in duration-300">
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-3xl">🧭</span>
                 <div>
-                  <p className="text-sm font-bold text-[#1E293B]">Lead Agent</p>
+                  <p className="text-sm font-bold text-[#1E293B]">Lead Agent 顾明澈</p>
                   <p className="text-[10px] text-[#64748B]">你的市场搭子</p>
                 </div>
               </div>
@@ -1366,7 +1400,10 @@ export function GameMapPlayer({
                 「欢迎来到金融华尔界，<span className="font-semibold">tradeTI</span>。
               </p>
               <p className="text-sm text-[#475569] leading-relaxed mt-2">
-                在这片大陆上，每个角落都藏着市场的秘密。从金融 Quiz 营开始，一步步积累你的知识和资金。
+                跟我来，先去「金融知识入港口」完成开户。在这里你会学到基础的市场知识，掌握信息的真伪辨别。
+              </p>
+              <p className="text-sm text-[#475569] leading-relaxed mt-2">
+                完成之后，你就可以前往「华尔堡」——那里有更深的挑战等着你。
               </p>
               <p className="text-sm text-[#475569] leading-relaxed mt-2">
                 准备好了就出发吧——记住，独立思考是你最强大的武器。」
@@ -1381,6 +1418,62 @@ export function GameMapPlayer({
                 开始冒险！
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Wall Castle tour after completing knowledge-entrance */}
+        {showWallCastleTour && !showTour && (
+          <div className="absolute inset-0 z-40 pointer-events-none">
+            <div className="absolute inset-0 bg-black/40" />
+            <div
+              className="absolute pointer-events-auto animate-pulse"
+              style={{
+                left: "50%",
+                top: "25%",
+                width: 80,
+                height: 80,
+                transform: "translate(-50%, -50%)",
+              }}
+            >
+              <span
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background: "radial-gradient(circle, rgba(255, 215, 0, 0.6) 0%, transparent 70%)",
+                  animation: "pulse 1.5s ease-in-out infinite",
+                }}
+              />
+              <span
+                className="absolute -top-8 left-1/2 -translate-x-1/2 text-2xl animate-bounce"
+                style={{ filter: "drop-shadow(0 0 4px rgba(255,215,0,0.8))" }}
+              >
+                👆
+              </span>
+            </div>
+            <div
+              className="absolute pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-500"
+              style={{
+                left: "50%",
+                top: "20%",
+                transform: "translate(-50%, -100%)",
+              }}
+            >
+              <div
+                className="bg-white rounded-xl p-4 shadow-xl max-w-[220px]"
+                style={{ border: "2px solid #DAA520" }}
+              >
+                <p className="text-xs font-bold text-[#3D2B1F]">🎯 新目标解锁！</p>
+                <p className="text-xs text-[#475569] mt-1">
+                  开户完成！接下来前往「华尔堡」——进入二级地图，挑战更深的关卡。
+                </p>
+                <p className="text-[10px] font-semibold text-[#D97706] mt-2">👇 点击「华尔堡」</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowWallCastleTour(false)}
+              className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 pointer-events-auto px-4 py-1.5 rounded-full bg-white/80 border border-amber-300/60 text-xs text-amber-700 font-medium shadow-sm"
+            >
+              我知道了
+            </button>
           </div>
         )}
 
