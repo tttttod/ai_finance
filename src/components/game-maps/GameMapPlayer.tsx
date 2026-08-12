@@ -79,31 +79,44 @@ const MAP_ZONES: MapZone[] = [
 ];
 
 // World map location hotspots (percentages of image)
+type LocationType = "game" | "submap" | "feature";
+
 interface WorldLocation {
   id: number;
-  levelId: number;
+  locationId: string;
   name: string;
   subtitle: string;
   x: number;
   y: number;
+  type: LocationType;
+  // 点击后进入对应小游戏
+  gameId?: string;
+  // 点击后进入二级地图
+  mapId?: string;
+  // 点击后进入功能页
+  featureId?: string;
+  /** 仅用于兼容旧主线代码，地图点击逻辑不得使用此字段 */
+  legacyLevelId?: number;
 }
 
 const WORLD_LOCATIONS: WorldLocation[] = [
-  { id: 1, levelId: 1, name: "金融知识入港口", subtitle: "Knowledge Entrance", x: 52, y: 97 },
-  { id: 2, levelId: 2, name: "市场天气谷", subtitle: "Market Weather Valley", x: 17, y: 52 },
-  { id: 3, levelId: 3, name: "信息迷雾群岛", subtitle: "Info Mist Archipelago", x: 20, y: 11 },
-  { id: 4, levelId: 4, name: "证据岔路口", subtitle: "Evidence Crossroads", x: 52, y: 6 },
-  { id: 5, levelId: 5, name: "风险护盾桥", subtitle: "Risk-Shield Bridge", x: 82, y: 61 },
-  { id: 6, levelId: 6, name: "炒币中央塔", subtitle: "Crypto Central Tower", x: 18, y: 34 },
-  { id: 7, levelId: 7, name: "财报考古遗迹", subtitle: "Financial-Report Ruins", x: 83, y: 11 },
-  { id: 8, levelId: 8, name: "热点火山", subtitle: "Hotspot Volcano", x: 81, y: 31 },
-  { id: 9, levelId: 9, name: "模型沼泽", subtitle: "Model Swamp", x: 49, y: 53 },
-  { id: 10, levelId: 10, name: "复盘灯塔", subtitle: "Review Lighthouse", x: 20, y: 71 },
-  { id: 11, levelId: 1, name: "城市排名塔", subtitle: "City Ranking Tower", x: 48, y: 38 },
-  { id: 12, levelId: 1, name: "脑力训练场", subtitle: "Brain Training Arena", x: 85, y: 46 },
-  { id: 13, levelId: 1, name: "金融 Quiz 营", subtitle: "Financial Quiz Camp", x: 54, y: 86 },
-  { id: 14, levelId: 1, name: "华尔堡", subtitle: "Wall Castle", x: 50, y: 23 },
-  { id: 15, levelId: 1, name: "K线图学习", subtitle: "K-Line Study", x: 79, y: 77 },
+  // ===== 主线关卡（与 TRADER_ROAD_LEVELS 绑定） =====
+  { id: 1, locationId: "knowledge-entrance", name: "金融知识入港口", subtitle: "Knowledge Entrance", x: 52, y: 97, type: "game", gameId: "level-1", legacyLevelId: 1 },
+  { id: 2, locationId: "market-weather-valley", name: "市场天气谷", subtitle: "Market Weather Valley", x: 17, y: 52, type: "game", gameId: "level-2", legacyLevelId: 2 },
+  { id: 3, locationId: "info-mist-archipelago", name: "信息迷雾群岛", subtitle: "Info Mist Archipelago", x: 20, y: 11, type: "game", gameId: "level-3", legacyLevelId: 3 },
+  { id: 4, locationId: "evidence-crossroads", name: "证据岔路口", subtitle: "Evidence Crossroads", x: 52, y: 6, type: "game", gameId: "level-4", legacyLevelId: 4 },
+  { id: 5, locationId: "risk-shield-bridge", name: "风险护盾桥", subtitle: "Risk-Shield Bridge", x: 82, y: 61, type: "game", gameId: "level-5", legacyLevelId: 5 },
+  { id: 6, locationId: "crypto-central-tower", name: "炒币中央塔", subtitle: "Crypto Central Tower", x: 18, y: 34, type: "game", gameId: "level-6", legacyLevelId: 6 },
+  { id: 7, locationId: "financial-report-ruins", name: "财报考古遗迹", subtitle: "Financial-Report Ruins", x: 83, y: 11, type: "game", gameId: "level-7", legacyLevelId: 7 },
+  { id: 8, locationId: "hotspot-volcano", name: "热点火山", subtitle: "Hotspot Volcano", x: 81, y: 31, type: "game", gameId: "level-8", legacyLevelId: 8 },
+  { id: 9, locationId: "model-swamp", name: "模型沼泽", subtitle: "Model Swamp", x: 49, y: 53, type: "game", gameId: "level-9", legacyLevelId: 9 },
+  { id: 10, locationId: "review-lighthouse", name: "复盘灯塔", subtitle: "Review Lighthouse", x: 20, y: 71, type: "game", gameId: "level-10", legacyLevelId: 10 },
+  // ===== 独立功能节点 =====
+  { id: 11, locationId: "city-ranking-tower", name: "城市排名塔", subtitle: "City Ranking Tower", x: 48, y: 38, type: "feature", featureId: "city-ranking" },
+  { id: 12, locationId: "brain-training-arena", name: "脑力训练场", subtitle: "Brain Training Arena", x: 85, y: 46, type: "game", gameId: "brain-training" },
+  { id: 13, locationId: "finance-quiz-camp", name: "金融 Quiz 营", subtitle: "Financial Quiz Camp", x: 54, y: 86, type: "game", gameId: "finance-quiz" },
+  { id: 14, locationId: "wall-castle", name: "华尔堡", subtitle: "Wall Castle", x: 50, y: 23, type: "submap", mapId: "wallCastleMap" },
+  { id: 15, locationId: "kline-learning", name: "K线图学习", subtitle: "K-Line Study", x: 79, y: 77, type: "game", gameId: "kline-learning" },
 ];
 
 // ===== Props =====
@@ -120,9 +133,12 @@ export function GameMapPlayer({
   onLevelComplete,
 }: GameMapPlayerProps) {
   // 始终从世界地图开始，initialLevelId 仅用于高亮提示
-  const [view, setView] = useState<"world" | "zone" | "game">("world");
+  const [view, setView] = useState<"world" | "zone" | "game" | "submap" | "feature">("world");
   const [activeZoneId, setActiveZoneId] = useState<number | null>(null);
   const [activeLevelId, setActiveLevelId] = useState<number | null>(null);
+  const [activeGameId, setActiveGameId] = useState<string | null>(null);
+  const [activeFeatureId, setActiveFeatureId] = useState<string | null>(null);
+  const [activeSubmapId, setActiveSubmapId] = useState<string | null>(null);
   const [hoveredMarker, setHoveredMarker] = useState<number | null>(null);
   const [hoveredWorldLoc, setHoveredWorldLoc] = useState<number | null>(null);
   const [clickedWorldLoc, setClickedWorldLoc] = useState<number | null>(null);
@@ -201,6 +217,48 @@ export function GameMapPlayer({
       return "locked";
     },
     [progress]
+  );
+
+  const handleLocationClick = useCallback(
+    (loc: WorldLocation) => {
+      // 如果是 tour 模式且点击的是特定节点，走 tour 逻辑
+      if (showTour && !tourVisited && loc.id === 13) {
+        return; // tour 逻辑由外部处理
+      }
+
+      setClickedWorldLoc(loc.id);
+      setTimeout(() => {
+        setClickedWorldLoc(null);
+
+        switch (loc.type) {
+          case "game": {
+            // 如果是主线关卡 (level-*)，使用旧 level 逻辑
+            if (loc.gameId && loc.gameId.startsWith("level-")) {
+              const levelId = parseInt(loc.gameId.replace("level-", ""), 10);
+              setActiveLevelId(levelId);
+              setActiveGameId(loc.gameId);
+              setView("game");
+            } else if (loc.gameId) {
+              // 独立小游戏（如金融Quiz营、K线图学习等）
+              setActiveGameId(loc.gameId);
+              setView("game");
+            }
+            break;
+          }
+          case "submap": {
+            setActiveSubmapId(loc.mapId || null);
+            setView("submap");
+            break;
+          }
+          case "feature": {
+            setActiveFeatureId(loc.featureId || null);
+            setView("feature");
+            break;
+          }
+        }
+      }, 300);
+    },
+    [showTour, tourVisited]
   );
 
   const getZoneProgress = useCallback(
@@ -300,7 +358,9 @@ export function GameMapPlayer({
       )}
       {/* Location hotspots with micro-interactions */}
       {WORLD_LOCATIONS.map((loc) => {
-        const status = getLevelStatus(loc.levelId);
+        // 独立地点（非主线关卡）始终可点击
+        const isIndependent = loc.type === "feature" || loc.type === "submap" || (loc.type === "game" && loc.gameId && !loc.gameId.startsWith("level-"));
+        const status = isIndependent ? "available" : getLevelStatus(loc.legacyLevelId ?? 0);
         const isHovered = hoveredWorldLoc === loc.id;
         const isClicked = clickedWorldLoc === loc.id;
         const isAvailable = status === "available" || status === "completed";
@@ -323,12 +383,7 @@ export function GameMapPlayer({
                 return;
               }
               if (isAvailable) {
-                setClickedWorldLoc(loc.id);
-                setTimeout(() => {
-                  setClickedWorldLoc(null);
-                  setActiveLevelId(loc.levelId);
-                  setView("game");
-                }, 300);
+                handleLocationClick(loc);
               }
             }}
             onMouseEnter={() => setHoveredWorldLoc(loc.id)}
@@ -645,6 +700,88 @@ export function GameMapPlayer({
 
   // ===== Render: Game =====
   const renderGame = () => {
+    // 独立小游戏（金融Quiz营、K线图学习等）- 无 activeLevelId
+    if (!activeLevelId && activeGameId) {
+      if (activeGameId === "finance-quiz") {
+        return (
+          <div className="flex flex-col h-full">
+            <div className="flex items-center gap-2 mb-3 px-1">
+              <span className="text-lg">🎯</span>
+              <h3 className="text-sm font-bold text-[#1E293B]">金融 Quiz 营</h3>
+            </div>
+            <div className="flex-1 min-h-0">
+              <QuizChoice
+                questionIndices={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
+                correctQuizIds={progress.correctQuizIds}
+                onQuizCorrect={() => {}}
+                onComplete={() => {
+                  addCoins(10);
+                }}
+                onClose={() => {
+                  setView("world");
+                  setActiveGameId(null);
+                }}
+              />
+            </div>
+          </div>
+        );
+      }
+      if (activeGameId === "kline-learning") {
+        return (
+          <div className="flex flex-col h-full">
+            <div className="flex items-center gap-2 mb-3 px-1">
+              <span className="text-lg">📊</span>
+              <h3 className="text-sm font-bold text-[#1E293B]">K线图学习</h3>
+            </div>
+            <div className="flex-1 min-h-0">
+              <LearningCards
+                cardIndices={[0, 1, 2, 3, 4]}
+                learnedCards={progress.learnedCards}
+                onCardLearned={() => {}}
+                onComplete={() => {
+                  addCoins(10);
+                }}
+                onClose={() => {
+                  setView("world");
+                  setActiveGameId(null);
+                }}
+              />
+            </div>
+          </div>
+        );
+      }
+      if (activeGameId === "brain-training") {
+        return (
+          <div className="flex flex-col h-full">
+            <div className="flex items-center gap-2 mb-3 px-1">
+              <span className="text-lg">🧠</span>
+              <h3 className="text-sm font-bold text-[#1E293B]">脑力训练场</h3>
+            </div>
+            <div className="flex-1 min-h-0 flex items-center justify-center">
+              <p className="text-sm text-[#64748B]">脑力训练游戏即将开放</p>
+            </div>
+            <button
+              onClick={() => { setView("world"); setActiveGameId(null); }}
+              className="mt-4 mx-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all"
+              style={{ background: "linear-gradient(135deg, #D97706, #F59E0B)" }}
+            >
+              返回世界地图
+            </button>
+          </div>
+        );
+      }
+      // 兜底
+      return (
+        <div className="flex flex-col items-center justify-center h-full">
+          <p className="text-sm text-[#64748B]">该小游戏加载中...</p>
+          <button onClick={() => { setView("world"); setActiveGameId(null); }} className="mt-4 text-xs text-[#3B82F6] underline">
+            返回世界地图
+          </button>
+        </div>
+      );
+    }
+
+    // 主线关卡（有 activeLevelId）
     if (!activeLevelId) return null;
     const config = getLevelConfig(activeLevelId);
     if (!config) return null;
@@ -756,6 +893,106 @@ export function GameMapPlayer({
     );
   };
 
+  // ===== Render: Submap Placeholder (e.g. 华尔堡) =====
+  const renderSubmapPlaceholder = () => {
+    const submapName = activeSubmapId === "wallCastleMap" ? "华尔堡" : "地图";
+    return (
+      <div className="flex flex-col items-center justify-center h-full py-16 px-8 text-center">
+        <div className="w-24 h-24 rounded-full bg-[#FFF8E7] flex items-center justify-center mb-6"
+          style={{ boxShadow: "0 0 30px rgba(212, 168, 83, 0.3)" }}>
+          <span className="text-4xl">🏰</span>
+        </div>
+        <h3 className="text-xl font-bold text-[#3D2B1F] mb-2" style={{ fontFamily: "serif" }}>
+          {submapName}
+        </h3>
+        <p className="text-sm text-[#8B7355] mb-6 leading-relaxed">
+          这片区域的地图正在绘制中...
+        </p>
+        <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-xl p-4 max-w-xs">
+          <p className="text-xs text-[#92400E] leading-relaxed">
+            🗺️ 该区域即将开放探索。<br />
+            敬请期待后续更新！
+          </p>
+        </div>
+        <button
+          onClick={() => setView("world")}
+          className="mt-8 px-6 py-2 rounded-lg text-sm font-bold text-white transition-all"
+          style={{ background: "linear-gradient(135deg, #D97706, #F59E0B)" }}
+        >
+          返回世界地图
+        </button>
+      </div>
+    );
+  };
+
+  // ===== Render: Feature View (e.g. 城市排名塔) =====
+  const renderFeatureView = () => {
+    if (activeFeatureId === "city-ranking") {
+      return (
+        <div className="flex flex-col h-full py-6 px-4">
+          <div className="text-center mb-6">
+            <span className="text-4xl">🏆</span>
+            <h3 className="text-lg font-bold text-[#1E293B] mt-2">城市排名塔</h3>
+            <p className="text-xs text-[#64748B] mt-1">City Ranking Tower</p>
+          </div>
+          {/* Ranking list placeholder */}
+          <div className="flex-1 space-y-3">
+            {[
+              { rank: 1, name: "交易员A", coins: 5280, level: 11 },
+              { rank: 2, name: "交易员B", coins: 4200, level: 10 },
+              { rank: 3, name: "交易员C", coins: 3850, level: 9 },
+              { rank: 4, name: "你", coins: progress.coins, level: progress.completedLevels.length, isMe: true },
+              { rank: 5, name: "交易员D", coins: 2100, level: 7 },
+            ].map((entry) => (
+              <div
+                key={entry.rank}
+                className={`flex items-center gap-3 p-3 rounded-xl ${
+                  entry.isMe ? "bg-[#FFFBEB] border border-[#FDE68A]" : "bg-white border border-[#E2E8F0]"
+                }`}
+              >
+                <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                  entry.rank <= 3 ? "text-white" : "text-[#64748B]"
+                }`}
+                  style={{
+                    background: entry.rank === 1 ? "linear-gradient(135deg, #FFD700, #FFA500)"
+                      : entry.rank === 2 ? "linear-gradient(135deg, #C0C0C0, #A8A8A8)"
+                      : entry.rank === 3 ? "linear-gradient(135deg, #CD7F32, #B8860B)"
+                      : "#F1F5F9"
+                  }}
+                >
+                  {entry.rank}
+                </span>
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-[#1E293B]">
+                    {entry.name} {entry.isMe && <span className="text-[10px] text-[#D97706]">（你）</span>}
+                  </p>
+                  <p className="text-[10px] text-[#64748B]">Lv.{entry.level}</p>
+                </div>
+                <span className="text-xs font-bold text-[#D97706]">🪙 {entry.coins.toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={() => setView("world")}
+            className="mt-4 w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all"
+            style={{ background: "linear-gradient(135deg, #D97706, #F59E0B)" }}
+          >
+            返回世界地图
+          </button>
+        </div>
+      );
+    }
+    // 其他 feature 占位
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <p className="text-sm text-[#64748B]">功能开发中...</p>
+        <button onClick={() => setView("world")} className="mt-4 text-xs text-[#3B82F6] underline">
+          返回世界地图
+        </button>
+      </div>
+    );
+  };
+
   // ===== Main Render =====
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -781,6 +1018,7 @@ export function GameMapPlayer({
               <button
                 onClick={() => {
                   if (view === "game") setView("zone");
+                  else if (view === "submap" || view === "feature") setView("world");
                   else setView("world");
                 }}
                 className="w-7 h-7 rounded-full bg-[#F1F5F9] flex items-center justify-center text-[#64748B] hover:bg-[#E2E8F0] transition-colors text-sm"
@@ -800,6 +1038,10 @@ export function GameMapPlayer({
                 ? "金融华尔界"
                 : view === "zone"
                 ? MAP_ZONES.find((z) => z.id === activeZoneId)?.name ?? ""
+                : view === "submap"
+                ? activeSubmapId === "wallCastleMap" ? "华尔堡" : "地图"
+                : view === "feature"
+                ? activeFeatureId === "city-ranking" ? "城市排名塔" : "功能"
                 : `第${activeLevelId}关`}
             </h2>
           </div>
@@ -823,6 +1065,8 @@ export function GameMapPlayer({
           {view === "world" && renderWorldMap()}
           {view === "zone" && renderZoneMap()}
           {view === "game" && renderGame()}
+          {view === "submap" && renderSubmapPlaceholder()}
+          {view === "feature" && renderFeatureView()}
         </div>
 
         {/* Welcome Popup - 仅在地图加载完成后显示 */}
