@@ -108,7 +108,7 @@ const WORLD_LOCATIONS: WorldLocation[] = [
   { id: 5, locationId: "risk-shield-bridge", name: "风险护盾桥", subtitle: "Risk-Shield Bridge", x: 82, y: 61, type: "game", gameId: "level-5", legacyLevelId: 5 },
   { id: 6, locationId: "crypto-central-tower", name: "炒币中央塔", subtitle: "Crypto Central Tower", x: 18, y: 34, type: "game", gameId: "level-6", legacyLevelId: 6 },
   { id: 7, locationId: "financial-report-ruins", name: "财报考古遗迹", subtitle: "Financial-Report Ruins", x: 83, y: 11, type: "game", gameId: "level-7", legacyLevelId: 7 },
-  { id: 8, locationId: "hotspot-volcano", name: "热点火山", subtitle: "Hotspot Volcano", x: 81, y: 31, type: "game", gameId: "level-8", legacyLevelId: 8 },
+  { id: 8, locationId: "hotspot-volcano", name: "热点火山与追涨火箭", subtitle: "Hotspot Volcano & Rocket", x: 81, y: 31, type: "game", gameId: "level-8", legacyLevelId: 8 },
   { id: 9, locationId: "model-swamp", name: "模型沼泽", subtitle: "Model Swamp", x: 49, y: 53, type: "game", gameId: "level-9", legacyLevelId: 9 },
   { id: 10, locationId: "review-lighthouse", name: "复盘灯塔", subtitle: "Review Lighthouse", x: 20, y: 71, type: "game", gameId: "level-10", legacyLevelId: 10 },
   // ===== 独立功能节点 =====

@@ -141,6 +141,34 @@ export const TRADER_ROAD_LEVELS: TraderRoadLevel[] = [
   },
 ];
 
+// ===== TRADER_PATH — 主线映射（地图地标 → 主线顺序） =====
+// 作为"哪些地标属于主线 + 主线顺序"的唯一数据源
+// locationId 直接引用 WORLD_LOCATIONS 中的稳定 ID
+
+export interface TraderPathItem {
+  /** 主线步骤（1-based） */
+  step: number;
+  /** 对应 WORLD_LOCATIONS 中的 locationId */
+  locationId: string;
+  /** 显示名称（与 WORLD_LOCATIONS.name 一致） */
+  title: string;
+  subtitle?: string;
+}
+
+export const TRADER_PATH: TraderPathItem[] = [
+  { step: 1,  locationId: "knowledge-entrance",     title: "金融知识入港口",       subtitle: "Knowledge Entrance" },
+  { step: 2,  locationId: "wall-castle",             title: "华尔堡",              subtitle: "Wall Castle" },
+  { step: 3,  locationId: "info-mist-archipelago",   title: "信息迷雾群岛",         subtitle: "Info Mist Archipelago" },
+  { step: 4,  locationId: "financial-report-ruins",  title: "财报考古遗迹",         subtitle: "Financial-Report Ruins" },
+  { step: 5,  locationId: "model-swamp",             title: "模型沼泽",            subtitle: "Model Swamp" },
+  { step: 6,  locationId: "kline-learning",          title: "K线图学习",           subtitle: "K-Line Study" },
+  { step: 7,  locationId: "market-weather-valley",   title: "市场天气谷",           subtitle: "Market Weather Valley" },
+  { step: 8,  locationId: "evidence-crossroads",     title: "证据岔路口",           subtitle: "Evidence Crossroads" },
+  { step: 9,  locationId: "risk-shield-bridge",      title: "风险护盾桥",           subtitle: "Risk-Shield Bridge" },
+  { step: 10, locationId: "hotspot-volcano",          title: "热点火山与追涨火箭",   subtitle: "Hotspot Volcano & Rocket" },
+  { step: 11, locationId: "review-lighthouse",       title: "复盘灯塔",            subtitle: "Review Lighthouse" },
+];
+
 // ===== XP 成长系统常量 =====
 
 /** 等级阈值表：[最低XP, 等级, 称号] */
