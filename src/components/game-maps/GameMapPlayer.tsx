@@ -239,6 +239,7 @@ export function GameMapPlayer({
 
   const handleLocationClick = useCallback(
     (loc: WorldLocation) => {
+      console.log("[DEBUG] handleLocationClick called:", { id: loc.id, type: loc.type, gameId: loc.gameId, showWallCastleTour });
       // 华尔堡引导：点击华尔堡关闭引导
       if (showWallCastleTour && loc.id === 12) {
         setShowWallCastleTour(false);
@@ -248,9 +249,11 @@ export function GameMapPlayer({
       setClickedWorldLoc(loc.id);
       setTimeout(() => {
         setClickedWorldLoc(null);
+        console.log("[DEBUG] Processing location click after timeout");
 
         // 模型沼泽 → 打开固收挑战游戏（弹窗内）
         if (loc.locationId === "model-swamp") {
+          console.log("[DEBUG] Opening bond-hunter game");
           setActiveGameId("bond-hunter");
           setActiveLevelId(null);
           setView("game");
@@ -262,22 +265,26 @@ export function GameMapPlayer({
             // 如果是主线关卡 (level-*)，使用旧 level 逻辑
             if (loc.gameId && loc.gameId.startsWith("level-")) {
               const levelId = parseInt(loc.gameId.replace("level-", ""), 10);
+              console.log("[DEBUG] Opening level:", levelId);
               setActiveLevelId(levelId);
               setActiveGameId(loc.gameId);
               setView("game");
             } else if (loc.gameId) {
               // 独立小游戏（如金融Quiz营、K线图学习等）
+              console.log("[DEBUG] Opening mini-game:", loc.gameId);
               setActiveGameId(loc.gameId);
               setView("game");
             }
             break;
           }
           case "submap": {
+            console.log("[DEBUG] Opening submap:", loc.mapId);
             setActiveSubmapId(loc.mapId || null);
             setView("submap");
             break;
           }
           case "feature": {
+            console.log("[DEBUG] Opening feature:", loc.featureId);
             setActiveFeatureId(loc.featureId || null);
             setView("feature");
             break;
@@ -415,8 +422,10 @@ export function GameMapPlayer({
               zIndex: isHovered ? 50 : 10,
             }}
             onClick={() => {
+              console.log("[DEBUG] Clicked location:", { id: loc.id, name: loc.name, showTour, tourVisited, isAvailable });
               if (showTour && !tourVisited && loc.id === 1) {
                 // Tour mode: clicking the knowledge-entrance completes the tour AND enters the game
+                console.log("[DEBUG] Tour mode - completing tour and entering game");
                 setTourVisited(true);
                 localStorage.setItem("financia-waltz-tour-seen", "true");
                 // Also enter the game immediately
@@ -424,7 +433,10 @@ export function GameMapPlayer({
                 return;
               }
               if (isAvailable) {
+                console.log("[DEBUG] Normal mode - entering game");
                 handleLocationClick(loc);
+              } else {
+                console.log("[DEBUG] Location not available");
               }
             }}
             onMouseEnter={() => setHoveredWorldLoc(loc.id)}
