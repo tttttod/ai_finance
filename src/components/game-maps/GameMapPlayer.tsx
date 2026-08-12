@@ -107,7 +107,7 @@ interface WorldLocation {
 
 const WORLD_LOCATIONS: WorldLocation[] = [
   // ===== 序章（入港口 → 引导进入华尔堡） =====
-  { id: 1, locationId: "knowledge-entrance", name: "金融知识入港口", subtitle: "Knowledge Entrance", x: 52, y: 97, type: "game", gameId: "level-1", legacyLevelId: 1 },
+  { id: 1, locationId: "knowledge-entrance", name: "金融知识入港口", subtitle: "Knowledge Entrance", x: 48, y: 94, type: "game", gameId: "level-1", legacyLevelId: 1 },
   // ===== 主地图关卡 =====
   { id: 2, locationId: "info-mist-archipelago", name: "信息迷雾群岛", subtitle: "Info Mist Archipelago", x: 20, y: 11, type: "game", gameId: "level-4", legacyLevelId: 4 },
   { id: 3, locationId: "financial-report-ruins", name: "财报考古遗迹", subtitle: "Financial-Report Ruins", x: 83, y: 11, type: "game", gameId: "level-5", legacyLevelId: 5 },
