@@ -223,6 +223,8 @@ export function GameMapPlayer({
       // 完成金融知识入港口后，显示华尔堡引导
       if (levelId === 0 || levelId === 1) {
         setShowWallCastleTour(true);
+        // 清除区域上下文，确保返回世界地图后弹窗正确显示
+        setActiveZoneId(null);
       }
     },
     [progress, onLevelComplete]
@@ -244,6 +246,11 @@ export function GameMapPlayer({
       if (showWallCastleTour && loc.id === 12) {
         setShowWallCastleTour(false);
         return; // 让后续正常点击逻辑也生效
+      }
+
+      // 如果用户点击了其他位置（非华尔堡），清除华尔堡引导弹窗
+      if (showWallCastleTour && loc.id !== 12) {
+        setShowWallCastleTour(false);
       }
 
       setClickedWorldLoc(loc.id);
@@ -1520,7 +1527,7 @@ export function GameMapPlayer({
         )}
 
         {/* Wall Castle tour after completing knowledge-entrance */}
-        {showWallCastleTour && !showTour && (
+        {showWallCastleTour && !showTour && view === "world" && (
           <div className="absolute inset-0 z-40 pointer-events-none">
             <div className="absolute inset-0 bg-black/40" />
             <div
