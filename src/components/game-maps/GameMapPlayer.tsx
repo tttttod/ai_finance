@@ -795,6 +795,18 @@ export function GameMapPlayer({
     return false;
   };
 
+  // 游戏完成后返回正确的视图
+  const returnAfterGameComplete = () => {
+    setActiveLevelId(null);
+    setActiveGameId(null);
+    // 如果有区域上下文，返回区域地图；否则返回世界地图
+    if (activeZoneId) {
+      setView("zone");
+    } else {
+      setView("world");
+    }
+  };
+
   const renderGame = () => {
     // 独立小游戏（金融Quiz营、K线图学习等）- 无 activeLevelId
     if (!activeLevelId && activeGameId) {
@@ -918,13 +930,11 @@ export function GameMapPlayer({
                 if (passed) {
                   handleLevelComplete(activeLevelId);
                   if (!completeWallCastleSubLevelAndReturn(activeLevelId)) {
-                    setView("zone");
-                    setActiveLevelId(null);
+                    returnAfterGameComplete();
                   }
                 } else {
-                  // 失败时不解锁，回到 zone 让玩家重新尝试
-                  setView("zone");
-                  setActiveLevelId(null);
+                  // 失败时不解锁，回到原视图让玩家重新尝试
+                  returnAfterGameComplete();
                 }
               }}
             />
@@ -935,8 +945,7 @@ export function GameMapPlayer({
               onComplete={() => {
                 handleLevelComplete(activeLevelId);
                 if (!completeWallCastleSubLevelAndReturn(activeLevelId)) {
-                  setView("zone");
-                  setActiveLevelId(null);
+                  returnAfterGameComplete();
                 }
               }}
             />
@@ -947,8 +956,7 @@ export function GameMapPlayer({
               onComplete={() => {
                 handleLevelComplete(activeLevelId);
                 if (!completeWallCastleSubLevelAndReturn(activeLevelId)) {
-                  setView("zone");
-                  setActiveLevelId(null);
+                  returnAfterGameComplete();
                 }
               }}
             />
@@ -959,8 +967,7 @@ export function GameMapPlayer({
               onComplete={() => {
                 handleLevelComplete(activeLevelId);
                 if (!completeWallCastleSubLevelAndReturn(activeLevelId)) {
-                  setView("zone");
-                  setActiveLevelId(null);
+                  returnAfterGameComplete();
                 }
               }}
             />
@@ -974,14 +981,12 @@ export function GameMapPlayer({
                 addCoins(20);
                 handleLevelComplete(activeLevelId);
                 if (!completeWallCastleSubLevelAndReturn(activeLevelId)) {
-                  setView("zone");
-                  setActiveLevelId(null);
+                  returnAfterGameComplete();
                 }
               }}
               onClose={() => {
                 if (!completeWallCastleSubLevelAndReturn(activeLevelId)) {
-                  setView("zone");
-                  setActiveLevelId(null);
+                  returnAfterGameComplete();
                 }
               }}
             />
@@ -995,14 +1000,12 @@ export function GameMapPlayer({
                 addCoins(20);
                 handleLevelComplete(activeLevelId);
                 if (!completeWallCastleSubLevelAndReturn(activeLevelId)) {
-                  setView("zone");
-                  setActiveLevelId(null);
+                  returnAfterGameComplete();
                 }
               }}
               onClose={() => {
                 if (!completeWallCastleSubLevelAndReturn(activeLevelId)) {
-                  setView("zone");
-                  setActiveLevelId(null);
+                  returnAfterGameComplete();
                 }
               }}
             />
