@@ -36,7 +36,7 @@ const moodItems: MoodItem[] = [
     text: "完了完了，大盘又跌了！这次是不是要彻底崩了？",
     correct: "panic",
     explanation:
-      "“彻底崩了”“完了”这类表达带有明显的灾难化和恐慌情绪。",
+      "\u201c完了\u201d\u201c完了\u201d这类表达带有明显的灾难化和恐慌情绪。",
   },
   {
     id: 2,
@@ -54,7 +54,7 @@ const moodItems: MoodItem[] = [
     text: "这票不可能跌！现在不上车以后只会更贵！",
     correct: "hype",
     explanation:
-      "“不可能跌”“不上车就晚了”是典型的狂热和追涨情绪。",
+      "\u201c不可能跌\u201d\u201c不上车就晚了\u201d是典型的狂热和追涨情绪。",
   },
   {
     id: 4,
@@ -68,20 +68,20 @@ const moodItems: MoodItem[] = [
   {
     id: 5,
     source: "社交平台",
-    icon: "⚠️",
+    icon: "️",
     text: "赶紧跑！我身边的人都在清仓，再不卖就来不及了！",
     correct: "panic",
     explanation:
-      "“赶紧跑”“来不及了”体现了强烈的群体恐慌和逃离情绪。",
+      "\u201c赶紧跑\u201d\u201c来不及了\u201d体现了强烈的群体恐慌和逃离情绪。",
   },
 ];
 
 const radarItems: RadarItem[] = [
   {
     id: "search",
-    icon: "📈",
+    icon: "",
     source: "搜索热度",
-    text: "“星浪科技”24 小时搜索热度上涨 386%",
+    text: "\u201c星浪科技\u201d24 小时搜索热度上涨 386%",
     isSignal: true,
   },
   {
@@ -93,9 +93,9 @@ const radarItems: RadarItem[] = [
   },
   {
     id: "comments",
-    icon: "🔥",
+    icon: "",
     source: "投资社区",
-    text: "“满仓冲！”“这次绝对不会跌！”等评论开始大量刷屏",
+    text: "\u201c满仓冲！\u201d\u201c这次绝对不会跌！\u201d等评论开始大量刷屏",
     isSignal: true,
   },
   {
@@ -131,11 +131,11 @@ type BossChoice = "chase" | "wait" | "evidence";
 type EvidenceChoice = "fundamental" | "price-sentiment" | "valuation";
 
 const openingFlight = [
-  { gain: "+3.2%", heat: 28, feed: "💬 ‘今天有点强诶。’" },
+  { gain: "+3.2%", heat: 28, feed: "💬 '今天有点强诶。'" },
   { gain: "+6.8%", heat: 39, feed: "📈 热门讨论排名升至 Top 50" },
-  { gain: "+10.5%", heat: 51, feed: "🔥 ‘是不是要突破了？’" },
-  { gain: "+12.8%", heat: 61, feed: "💬 ‘我刚买就赚了！’" },
-  { gain: "+15.7%", heat: 70, feed: "🚀 ‘还没上车的人真能忍。’" },
+  { gain: "+10.5%", heat: 51, feed: " '是不是要突破了？'" },
+  { gain: "+12.8%", heat: 61, feed: "💬 '我刚买就赚了！'" },
+  { gain: "+15.7%", heat: 70, feed: " '还没上车的人真能忍。'" },
 ];
 
 const chaseSequence = [
@@ -151,19 +151,19 @@ const waitPressureScene = {
   heat: 88,
   fomo: 82,
   feed: [
-    "🚀 ‘又涨了！刚才没买的人是不是后悔了？’",
-    "💬 ‘我朋友已经赚 18% 了！’",
-    "🔥 ‘现在不上车，下一站可能就是 +30%！’",
+    "🚀 '又涨了！刚才没买的人是不是后悔了？'",
+    " '我朋友已经赚 18% 了！'",
+    "🔥 '现在不上车，下一站可能就是 +30%！'",
   ],
 };
 
 const bossFeed = [
-  "🚀 ‘起飞！！！今天不可能回头了！’",
-  "🔥 ‘满仓！这种机会一辈子就一次！’",
-  "💬 ‘你还在分析？别人已经赚钱了！’",
-  "📣 ‘最后上车机会！’",
-  "⚡ ‘目标价至少再翻倍！’",
-  "😵 ‘不买真的会后悔！’",
+  "🚀 '起飞！！！今天不可能回头了！'",
+  "🔥 '满仓！这种机会一辈子就一次！'",
+  "💬 '你还在分析？别人已经赚钱了！'",
+  " '最后上车机会！'",
+  " '目标价至少再翻倍！'",
+  "😵 '不买真的会后悔！'",
 ];
 
 const evidenceCards = [
@@ -186,7 +186,7 @@ const evidenceCards = [
     tone: "hot",
   },
   {
-    icon: "🔥",
+    icon: "",
     title: "社区情绪",
     value: "极度狂热 · FOMO 高发",
     tone: "hot",
@@ -213,7 +213,7 @@ const moodMeta: Record<
   neutral: {
     label: "中性",
     english: "NEUTRAL",
-    icon: "😐",
+    icon: "",
     activeClass:
       "border-[#c7b9ec] bg-[#f3efff] text-[#75649b] shadow-[0_0_24px_rgba(180,160,230,0.20)]",
   },
@@ -221,7 +221,7 @@ const moodMeta: Record<
   hype: {
     label: "狂热",
     english: "HYPE",
-    icon: "🔥",
+    icon: "",
     activeClass:
       "border-[#efa6ce] bg-[#fff0f7] text-[#b45e8e] shadow-[0_0_24px_rgba(240,150,200,0.25)]",
   },
@@ -280,1561 +280,1012 @@ function AgentMessage({
   );
 }
 
+/* ======================================================
+   主组件
+   ====================================================== */
+
 export default function SentimentGame({
   onBack,
   onComplete,
 }: SentimentGameProps) {
   const [round, setRound] = useState<Round>(1);
-
   const [lives, setLives] = useState(3);
   const [gameOver, setGameOver] = useState(false);
-
-  /* ---------------------------
-     ROUND 1
-     --------------------------- */
-
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
-
-  const [moodFeedback, setMoodFeedback] = useState<
-    "correct" | "wrong" | null
-  >(null);
-
-  const [round1Complete, setRound1Complete] = useState(false);
-
-  const currentItem = moodItems[currentIndex];
-
-  /* ---------------------------
-     ROUND 2
-     --------------------------- */
-
-  const [selectedSignals, setSelectedSignals] = useState<string[]>([]);
-  const [radarWrong, setRadarWrong] = useState(false);
-  const [round2Complete, setRound2Complete] = useState(false);
-
-  /* ---------------------------
-     ROUND 3
-     --------------------------- */
-
-  const [fomoPhase, setFomoPhase] = useState<FomoPhase>("flight");
-  const [flightTick, setFlightTick] = useState(0);
-  const [chaseTick, setChaseTick] = useState(0);
-  const [firstAction, setFirstAction] = useState<"chase" | "wait" | null>(null);
-  const [reflectionChoice, setReflectionChoice] = useState<ReflectionChoice | null>(null);
-  const [reflectionWrong, setReflectionWrong] = useState(false);
-  const [waitReflectionChoice, setWaitReflectionChoice] =
-    useState<WaitReflectionChoice | null>(null);
-  const [waitReflectionWrong, setWaitReflectionWrong] = useState(false);
-  const [bossChoice, setBossChoice] = useState<BossChoice | null>(null);
-  const [bossWrong, setBossWrong] = useState(false);
-  const [evidenceChoice, setEvidenceChoice] = useState<EvidenceChoice | null>(null);
-  const [evidenceWrong, setEvidenceWrong] = useState(false);
+  const [gameCleared, setGameCleared] = useState(false);
   const [round3Complete, setRound3Complete] = useState(false);
 
-  const correctSignalIds = radarItems
-    .filter((item) => item.isSignal)
-    .map((item) => item.id);
+  // Round 1
+  const [moodIndex, setMoodIndex] = useState(0);
+  const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [round1Wrong, setRound1Wrong] = useState(false);
 
-  /* ===========================
-     通用扣命
-     =========================== */
+  // Round 2
+  const [selectedSignals, setSelectedSignals] = useState<string[]>([]);
+  const [round2Wrong, setRound2Wrong] = useState(false);
+
+  // Round 3
+  const [fomoPhase, setFomoPhase] = useState<FomoPhase>("flight");
+  const [flightIndex, setFlightIndex] = useState(0);
+  const [fomoChoice, setFomoChoice] = useState<"chase" | "wait" | null>(null);
+  const [chaseIndex, setChaseIndex] = useState(0);
+  const [reflectionChoice, setReflectionChoice] =
+    useState<ReflectionChoice | null>(null);
+  const [waitReflectionChoice, setWaitReflectionChoice] =
+    useState<WaitReflectionChoice | null>(null);
+  const [bossIndex, setBossIndex] = useState(0);
+  const [bossChoice, setBossChoice] = useState<BossChoice | null>(null);
+  const [evidenceChoice, setEvidenceChoice] =
+    useState<EvidenceChoice | null>(null);
+  const [bossWrong, setBossWrong] = useState(false);
+  const [evidenceWrong, setEvidenceWrong] = useState(false);
+  const [round3Wrong, setRound3Wrong] = useState(false);
+
+  const currentItem = moodItems[moodIndex];
+  const totalMoodItems = moodItems.length;
+  const totalFlight = openingFlight.length;
+  const totalChase = chaseSequence.length;
+  const totalBoss = bossFeed.length;
 
   function loseLife() {
-    const nextLives = lives - 1;
-
-    setLives(nextLives);
-
-    if (nextLives <= 0) {
-      setGameOver(true);
-    }
-  }
-
-  /* ===========================
-     ROUND 1 FUNCTION
-     =========================== */
-
-  function handleMoodSelect(mood: Mood) {
-    if (
-      moodFeedback ||
-      gameOver ||
-      round1Complete
-    ) {
-      return;
-    }
-
-    setSelectedMood(mood);
-  }
-
-  function submitMoodAnswer() {
-    if (
-      !selectedMood ||
-      moodFeedback ||
-      gameOver ||
-      round1Complete
-    ) {
-      return;
-    }
-
-    if (selectedMood === currentItem.correct) {
-      setMoodFeedback("correct");
-      return;
-    }
-
-    loseLife();
-    setMoodFeedback("wrong");
-  }
-
-  function retryMood() {
-    if (gameOver) return;
-
-    setSelectedMood(null);
-    setMoodFeedback(null);
-  }
-
-  function goNextMood() {
-    if (moodFeedback !== "correct") return;
-
-    if (currentIndex === moodItems.length - 1) {
-      setRound1Complete(true);
-      setSelectedMood(null);
-      setMoodFeedback(null);
-      return;
-    }
-
-    setCurrentIndex((prev) => prev + 1);
-
-    setSelectedMood(null);
-    setMoodFeedback(null);
-  }
-
-  function enterRound2() {
-    setRound(2);
-    setRound1Complete(false);
-  }
-
-  /* ===========================
-     ROUND 2 FUNCTION
-     =========================== */
-
-  function toggleSignal(id: string) {
-    if (
-      gameOver ||
-      round2Complete
-    ) {
-      return;
-    }
-
-    setRadarWrong(false);
-
-    setSelectedSignals((prev) => {
-      if (prev.includes(id)) {
-        return prev.filter((item) => item !== id);
+    setLives((prev) => {
+      const next = prev - 1;
+      if (next <= 0) {
+        setGameOver(true);
+        return 0;
       }
-
-      if (prev.length >= 2) {
-        return prev;
-      }
-
-      return [...prev, id];
+      return next;
     });
   }
 
-  function submitRadar() {
-    if (selectedSignals.length !== 2) return;
-
-    const correct =
-      selectedSignals.length === correctSignalIds.length &&
-      correctSignalIds.every((id) =>
-        selectedSignals.includes(id),
-      );
-
-    if (correct) {
-      setRound2Complete(true);
-      setRadarWrong(false);
-      return;
-    }
-
-    loseLife();
-
-    setRadarWrong(true);
-    setSelectedSignals([]);
-  }
-
-  /* ===========================
-     ROUND 3 FUNCTION
-     =========================== */
-
-  function enterRound3() {
-    setRound(3);
-    setRound2Complete(false);
-    setFomoPhase("flight");
-    setFlightTick(0);
-    setChaseTick(0);
-    setFirstAction(null);
-    setReflectionChoice(null);
-    setReflectionWrong(false);
-    setWaitReflectionChoice(null);
-    setWaitReflectionWrong(false);
-    setBossChoice(null);
-    setBossWrong(false);
-    setEvidenceChoice(null);
-    setEvidenceWrong(false);
+  function resetGame() {
+    setRound(1);
+    setLives(3);
+    setGameOver(false);
+    setGameCleared(false);
     setRound3Complete(false);
+    setMoodIndex(0);
+    setSelectedMood(null);
+    setShowFeedback(false);
+    setRound1Wrong(false);
+    setSelectedSignals([]);
+    setRound2Wrong(false);
+    setFomoPhase("flight");
+    setFlightIndex(0);
+    setFomoChoice(null);
+    setChaseIndex(0);
+    setReflectionChoice(null);
+    setWaitReflectionChoice(null);
+    setBossIndex(0);
+    setBossChoice(null);
+    setEvidenceChoice(null);
+    setBossWrong(false);
+    setEvidenceWrong(false);
+    setRound3Wrong(false);
   }
 
-  function chooseFirstAction(action: "chase" | "wait") {
-    setFirstAction(action);
-    setReflectionWrong(false);
+  /* ======================================================
+     Round 1 逻辑
+     ====================================================== */
 
-    if (action === "chase") {
-      setChaseTick(0);
-      setFomoPhase("afterChase");
+  function handleMoodSelect(mood: Mood) {
+    if (showFeedback || gameOver || gameCleared) return;
+    setSelectedMood(mood);
+  }
+
+  function handleMoodSubmit() {
+    if (!selectedMood || showFeedback) return;
+    if (selectedMood === currentItem.correct) {
+      setShowFeedback(true);
+      setRound1Wrong(false);
+      setTimeout(() => {
+        if (moodIndex + 1 < totalMoodItems) {
+          setMoodIndex((i) => i + 1);
+          setSelectedMood(null);
+          setShowFeedback(false);
+        } else {
+          setRound(2);
+        }
+      }, 1600);
     } else {
-      setWaitReflectionChoice(null);
-      setWaitReflectionWrong(false);
+      loseLife();
+      setShowFeedback(true);
+      setRound1Wrong(true);
+      setTimeout(() => {
+        setSelectedMood(null);
+        setShowFeedback(false);
+        setRound1Wrong(false);
+      }, 1600);
+    }
+  }
+
+  /* ======================================================
+     Round 2 逻辑
+     ====================================================== */
+
+  function toggleSignal(id: string) {
+    if (gameOver || gameCleared) return;
+    setRound2Wrong(false);
+    setSelectedSignals((prev) =>
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+    );
+  }
+
+  function handleRound2Submit() {
+    const correctIds = radarItems.filter((i) => i.isSignal).map((i) => i.id);
+    const isCorrect =
+      selectedSignals.length === 2 &&
+      correctIds.every((id) => selectedSignals.includes(id));
+    if (isCorrect) {
+      setRound(3);
+      setRound2Wrong(false);
+    } else {
+      loseLife();
+      setRound2Wrong(true);
+      setSelectedSignals([]);
+    }
+  }
+
+  /* ======================================================
+     Round 3 逻辑
+     ====================================================== */
+
+  function startFomoRound() {
+    setFomoPhase("flight");
+    setFlightIndex(0);
+    setFomoChoice(null);
+    setChaseIndex(0);
+    setReflectionChoice(null);
+    setWaitReflectionChoice(null);
+    setBossIndex(0);
+    setBossChoice(null);
+    setEvidenceChoice(null);
+    setBossWrong(false);
+    setEvidenceWrong(false);
+    setRound3Wrong(false);
+  }
+
+  function handleFomoChoice(choice: "chase" | "wait") {
+    setFomoChoice(choice);
+    if (choice === "chase") {
+      setFomoPhase("afterChase");
+      setChaseIndex(0);
+    } else {
       setFomoPhase("waitPressure");
     }
   }
 
-  function submitWaitReflection() {
-    if (!waitReflectionChoice) return;
-
-    if (waitReflectionChoice === "regret") {
-      setWaitReflectionWrong(false);
+  function handleReflection(choice: ReflectionChoice) {
+    setReflectionChoice(choice);
+    if (choice === "fomo") {
+      setRound3Wrong(true);
+      setTimeout(() => setRound3Wrong(false), 1800);
+    } else {
+      setRound3Wrong(false);
       setFomoPhase("concept");
-      return;
     }
-
-    loseLife();
-    setWaitReflectionWrong(true);
-    setWaitReflectionChoice(null);
   }
 
-  function submitReflection() {
-    if (!reflectionChoice) return;
-
-    if (reflectionChoice === "fomo") {
-      setReflectionWrong(false);
+  function handleWaitReflection(choice: WaitReflectionChoice) {
+    setWaitReflectionChoice(choice);
+    if (choice === "regret") {
+      setRound3Wrong(true);
+      setTimeout(() => setRound3Wrong(false), 1800);
+    } else {
+      setRound3Wrong(false);
       setFomoPhase("concept");
-      return;
     }
-
-    loseLife();
-    setReflectionWrong(true);
-    setReflectionChoice(null);
   }
 
-  function enterBoss() {
-    setBossChoice(null);
-    setBossWrong(false);
-    setFomoPhase("boss");
-  }
-
-  function submitBossChoice() {
-    if (!bossChoice) return;
-
-    if (bossChoice === "evidence") {
-      setBossWrong(false);
+  function handleBoss(choice: BossChoice) {
+    setBossChoice(choice);
+    if (choice === "evidence") {
       setFomoPhase("evidence");
-      return;
+      setBossWrong(false);
+    } else {
+      loseLife();
+      setBossWrong(true);
+      setTimeout(() => setBossWrong(false), 1800);
     }
-
-    loseLife();
-    setBossWrong(true);
-    setBossChoice(null);
   }
 
-  function submitEvidenceChoice() {
-    if (!evidenceChoice) return;
-
-    if (evidenceChoice === "price-sentiment") {
-      setEvidenceWrong(false);
+  function handleEvidence(choice: EvidenceChoice) {
+    setEvidenceChoice(choice);
+    if (choice === "fundamental") {
       setRound3Complete(true);
-      return;
+      setGameCleared(true);
+      setEvidenceWrong(false);
+    } else {
+      loseLife();
+      setEvidenceWrong(true);
+      setTimeout(() => setEvidenceWrong(false), 1800);
     }
-
-    loseLife();
-    setEvidenceWrong(true);
-    setEvidenceChoice(null);
   }
 
-  useEffect(() => {
-    if (round !== 3 || gameOver || round3Complete) return;
+  /* ======================================================
+     渲染
+     ====================================================== */
 
-    if (fomoPhase === "flight") {
-      if (flightTick >= openingFlight.length - 1) {
-        const timer = window.setTimeout(() => setFomoPhase("temptation"), 850);
-        return () => window.clearTimeout(timer);
-      }
+  const taskText =
+    round === 1
+      ? "判断这条信息的情绪类型"
+      : round === 2
+        ? "找出 2 条异动信号"
+        : fomoPhase === "flight"
+          ? "感受市场情绪升温"
+          : fomoPhase === "temptation"
+            ? "做出你的选择"
+            : fomoPhase === "afterChase"
+              ? "观察追涨后的走势"
+              : fomoPhase === "waitPressure"
+                ? "感受观望的压力"
+                : fomoPhase === "reflection"
+                  ? "反思你的感受"
+                  : fomoPhase === "concept"
+                    ? "理解 FOMO 是什么"
+                    : fomoPhase === "boss"
+                      ? "应对 Boss 关"
+                      : "做出最终判断";
 
-      const timer = window.setTimeout(
-        () => setFlightTick((prev) => prev + 1),
-        900,
-      );
-      return () => window.clearTimeout(timer);
-    }
+  const roundProgress =
+    round === 1
+      ? ((moodIndex + 1) / totalMoodItems) * 100
+      : round === 2
+        ? (selectedSignals.length / 2) * 100
+        : round === 3 && fomoPhase === "flight"
+          ? ((flightIndex + 1) / totalFlight) * 100
+          : round === 3 && fomoPhase === "afterChase"
+            ? ((chaseIndex + 1) / totalChase) * 100
+            : round === 3 && fomoPhase === "boss"
+              ? ((bossIndex + 1) / totalBoss) * 100
+              : 100;
 
-    if (fomoPhase === "afterChase") {
-      if (chaseTick >= chaseSequence.length - 1) {
-        const timer = window.setTimeout(() => setFomoPhase("reflection"), 1100);
-        return () => window.clearTimeout(timer);
-      }
-
-      const timer = window.setTimeout(
-        () => setChaseTick((prev) => prev + 1),
-        900,
-      );
-      return () => window.clearTimeout(timer);
-    }
-  }, [round, gameOver, round3Complete, fomoPhase, flightTick, chaseTick]);
-
-  /* ===========================
-     RESET
-     =========================== */
-
-  function resetGame() {
-    setRound(1);
-
-    setLives(3);
-    setGameOver(false);
-
-    setCurrentIndex(0);
-    setSelectedMood(null);
-    setMoodFeedback(null);
-    setRound1Complete(false);
-
-    setSelectedSignals([]);
-    setRadarWrong(false);
-    setRound2Complete(false);
-
-    setFomoPhase("flight");
-    setFlightTick(0);
-    setChaseTick(0);
-    setFirstAction(null);
-    setReflectionChoice(null);
-    setReflectionWrong(false);
-    setWaitReflectionChoice(null);
-    setWaitReflectionWrong(false);
-    setBossChoice(null);
-    setBossWrong(false);
-    setEvidenceChoice(null);
-    setEvidenceWrong(false);
-    setRound3Complete(false);
-  }
-
-  /* ===========================
-     进度
-     =========================== */
-
-  const round1Progress =
-    ((currentIndex + (moodFeedback === "correct" ? 1 : 0)) /
-      moodItems.length) *
-    100;
-
-  const overallRound =
-    round === 1 ? "ROUND 1 / 3" : round === 2 ? "ROUND 2 / 3" : "ROUND 3 / 3";
+  const roundLabel =
+    round === 1
+      ? "ROUND 1 · 情绪扫描"
+      : round === 2
+        ? "ROUND 2 · 舆情雷达"
+        : "ROUND 3 · FOMO 火箭";
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#eef7ff] via-[#f7f1ff] to-[#fff0f8] px-4 py-8 text-[#504a68]">
-      <div className="mx-auto w-full max-w-md">
-        {/* =====================================================
-            TOP HUD
-            ===================================================== */}
-
-        <section className="rounded-[26px] border border-[#dacff0] bg-white/75 p-4 shadow-[0_18px_50px_rgba(150,125,185,0.14)] backdrop-blur-md">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-[11px] font-black tracking-[0.22em] text-[#c26fa7]">
-                SENTIMENT AGENT
+    <main className="h-[100dvh] overflow-hidden bg-gradient-to-b from-[#e7f1ff] via-[#f5efff] to-[#ffe7f5] p-3 text-[#3a3a48]">
+      <div className="mx-auto flex h-full w-full max-w-md flex-col gap-2">
+        {/* 顶部状态栏 */}
+        <header className="shrink-0 rounded-[22px] border border-[#d9c9ef] bg-white/80 px-3 py-2.5 text-[#655f78] shadow-[0_12px_35px_rgba(141,116,180,0.08)] backdrop-blur">
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => onBack?.()}
+              className="rounded-full border border-[#d9c9ef] bg-white px-3 py-1.5 text-[10px] font-bold text-[#87689b] shadow-sm"
+            >
+              ← 金融华尔界
+            </button>
+            <div className="text-center">
+              <p className="text-[8px] font-black tracking-[0.18em] text-[#c36fa8]">
+                SENTIMENT LAB
               </p>
-
-              <h1 className="mt-1 text-2xl font-black text-[#514a6b]">
-                市场情绪实验室
-              </h1>
-
-              <p className="mt-1 text-xs font-bold text-[#9a8cae]">
-                {overallRound}
-              </p>
+              <p className="text-sm font-black">情绪实验室 · 星浪科技</p>
             </div>
-
-            {/* 红心 */}
             <div className="text-right">
-              <p className="text-[9px] font-bold tracking-[0.16em] text-[#a291ad]">
-                EMOTION ENERGY
-              </p>
-
-              <div className="mt-1 flex justify-end gap-1">
+              <p className="text-[8px] font-black text-[#c36fa8]">{roundLabel}</p>
+              <div className="mt-0.5 flex gap-0.5">
                 {[0, 1, 2].map((heart) => (
                   <span
                     key={heart}
-                    className={`text-xl transition-all ${
-                      heart < lives
-                        ? "scale-100 opacity-100"
-                        : "scale-90 grayscale opacity-20"
+                    className={`text-base ${
+                      heart < lives ? "opacity-100" : "grayscale opacity-25"
                     }`}
                   >
-                    ❤️
+                    💗
                   </span>
                 ))}
               </div>
             </div>
           </div>
-
-          {/* Round 总进度 */}
-          <div className="mt-4">
-            <div className="mb-2 flex justify-between text-[10px] font-bold text-[#a397b4]">
-              <span>MISSION PROGRESS</span>
-
-              <span>
-                {round === 1
-                  ? "情绪扫描"
-                  : round === 2
-                    ? "舆情雷达"
-                    : "FOMO 火箭"}
-              </span>
-            </div>
-
-            <div className="h-2 overflow-hidden rounded-full bg-[#ebe5f5]">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-[#8ecdf2] via-[#b59cf0] to-[#ef9ac9] transition-all duration-500"
-                style={{
-                  width:
-                    round === 1
-                      ? `${Math.max(8, round1Progress * 0.33)}%`
-                      : round === 2
-                        ? round2Complete
-                          ? "66%"
-                          : "52%"
-                        : round3Complete
-                          ? "100%"
-                          : fomoPhase === "flight" || fomoPhase === "temptation"
-                            ? "72%"
-                            : fomoPhase === "afterChase" ||
-                                fomoPhase === "waitPressure" ||
-                                fomoPhase === "reflection"
-                              ? "80%"
-                              : fomoPhase === "concept"
-                                ? "86%"
-                                : fomoPhase === "boss"
-                                  ? "92%"
-                                  : "96%",
-                }}
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* =====================================================
-            GAME OVER
-            ===================================================== */}
-
-        {gameOver && (
-          <>
-            <AgentMessage alert>
-              “市场里的声音太吵了。没关系，真正的情绪判断需要练习。重新来一次，这次先分清事实和情绪。”
-            </AgentMessage>
-
-            <section className="mt-5 rounded-[30px] border-2 border-[#efa9c4] bg-[#fff2f7] p-6 text-center shadow-[0_18px_45px_rgba(230,140,180,0.15)]">
-              <div className="text-5xl">
-                💔
+          {!gameOver && !gameCleared && (
+            <div className="mt-2">
+              <div className="flex items-center justify-between text-[9px] font-bold text-[#87689b]">
+                <span>{taskText}</span>
+                <span>
+                  {round === 1
+                    ? `${moodIndex + 1}/${totalMoodItems}`
+                    : round === 2
+                      ? `${selectedSignals.length}/2`
+                      : fomoPhase === "flight"
+                        ? `${flightIndex + 1}/${totalFlight}`
+                        : fomoPhase === "afterChase"
+                          ? `${chaseIndex + 1}/${totalChase}`
+                          : fomoPhase === "boss"
+                            ? `${bossIndex + 1}/${totalBoss}`
+                            : ""}
+                </span>
               </div>
-
-              <p className="mt-3 text-[11px] font-black tracking-[0.2em] text-[#cf6e99]">
-                EMOTION OVERLOAD
-              </p>
-
-              <h2 className="mt-2 text-2xl font-black text-[#68516b]">
-                情绪失控
-              </h2>
-
-              <p className="mt-3 text-sm leading-6 text-[#8a7187]">
-                三颗情绪能量已经耗尽。
-              </p>
-
-              <button
-                type="button"
-                onClick={resetGame}
-                className="mt-5 w-full rounded-2xl bg-gradient-to-r from-[#8ccaf0] via-[#b099e9] to-[#e88fbd] py-4 font-black text-white shadow-[0_12px_30px_rgba(190,140,200,0.25)]"
-              >
-                重新进入情绪实验室 ❤️❤️❤️
-              </button>
-            </section>
-          </>
-        )}
-
-        {/* =====================================================
-            ROUND 1
-            ===================================================== */}
-
-        {!gameOver &&
-          round === 1 &&
-          !round1Complete && (
-            <>
-              <AgentMessage>
-                “第一步很简单。先别判断市场会涨还是跌——听听这些话本身是什么情绪。”
-              </AgentMessage>
-
-              {/* Round 标题 */}
-              <section className="mt-5 rounded-[24px] border border-[#d8d3ee] bg-white/65 px-4 py-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-black tracking-[0.18em] text-[#a58bc1]">
-                      ROUND 1
-                    </p>
-
-                    <p className="mt-1 font-black text-[#5e5776]">
-                      情绪扫描 · MOOD SCAN
-                    </p>
-                  </div>
-
-                  <div className="rounded-full bg-[#f4e7f5] px-3 py-1 text-xs font-black text-[#ba6d9e]">
-                    {currentIndex + 1} / {moodItems.length}
-                  </div>
-                </div>
-
-                {/* 消息卡片 */}
-                <div className="mt-4 rounded-[22px] border-2 border-[#e2daf0] bg-white p-4 text-center shadow-[0_8px_20px_rgba(150,125,185,0.08)]">
-                  <div className="text-xs font-bold tracking-[0.1em] text-[#b09bc0]">
-                    <span>{currentItem.source}</span>
-                    <span className="ml-1">{currentItem.icon}</span>
-                  </div>
-
-                  <p className="mt-2 text-lg font-black leading-7 text-[#4d4564]">
-                    {currentItem.text}
-                  </p>
-                </div>
-
-                {/* 情绪判断按钮 */}
-                <p className="mt-4 text-[11px] font-black text-[#7a6e89]">
-                  这条信息属于哪种情绪？
-                </p>
-
-                <div className="mt-2 grid grid-cols-3 gap-2">
-                  {(Object.entries(moodMeta) as [Mood, typeof moodMeta[Mood]][]).map(
-                    ([key, meta]) => (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => handleMoodSelect(key)}
-                        className={`rounded-2xl border-2 py-3 text-center transition-all duration-200 ${
-                          selectedMood === key
-                            ? meta.activeClass
-                            : "border-[#e4daf0] bg-white text-[#8f819e] hover:border-[#cdbde0]"
-                        }`}
-                      >
-                        <div className="text-2xl">{meta.icon}</div>
-
-                        <p className="mt-1 text-[11px] font-black">
-                          {meta.label}
-                        </p>
-                      </button>
-                    ),
-                  )}
-                </div>
-
-                {/* 提交按钮 */}
-                {!moodFeedback && (
-                  <button
-                    type="button"
-                    disabled={!selectedMood}
-                    onClick={submitMoodAnswer}
-                    className="mt-4 w-full rounded-2xl bg-gradient-to-r from-[#8ccaf0] via-[#b099e9] to-[#e88fbd] py-3.5 font-black text-white disabled:opacity-40 shadow-[0_8px_20px_rgba(180,140,200,0.18)]"
-                  >
-                    判断情绪
-                  </button>
-                )}
-
-                {/* 正确反馈 */}
-                {moodFeedback === "correct" && (
-                  <div className="mt-4 rounded-[20px] border-2 border-[#bde0c5] bg-[#f0f9f2] p-4 text-center">
-                    <div className="text-2xl">✅</div>
-
-                    <p className="mt-1 text-xs font-black text-[#46945a]">
-                      正确！
-                    </p>
-
-                    <p className="mt-1 text-xs font-bold text-[#5c8762]">
-                      {currentItem.explanation}
-                    </p>
-
-                    <button
-                      type="button"
-                      onClick={goNextMood}
-                      className="mt-3 w-full rounded-2xl bg-gradient-to-r from-[#6cd08a] to-[#52b875] py-2.5 font-black text-white shadow-[0_8px_20px_rgba(100,200,120,0.18)]"
-                    >
-                      {currentIndex === moodItems.length - 1
-                        ? "完成情绪扫描"
-                        : "下一题"}
-                    </button>
-                  </div>
-                )}
-
-                {/* 错误反馈 */}
-                {moodFeedback === "wrong" &&
-                  !gameOver && (
-                    <div className="mt-4 rounded-[20px] border-2 border-[#f0c0c0] bg-[#fef0f0] p-4 text-center">
-                      <div className="text-2xl">💔</div>
-
-                      <p className="mt-1 text-xs font-black text-[#c45252]">
-                        再想想看
-                      </p>
-
-                      <p className="mt-1 text-xs font-bold text-[#a55a5a]">
-                        {currentItem.explanation}
-                      </p>
-
-                      <button
-                        type="button"
-                        onClick={retryMood}
-                        className="mt-3 w-full rounded-2xl border-2 border-[#dba8a8] bg-white py-2.5 font-black text-[#b45858]"
-                      >
-                        再试一次
-                      </button>
-                    </div>
-                  )}
-              </section>
-            </>
+              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[#efe6ff]">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[#a78bfa] via-[#f472b6] to-[#60a5fa] transition-all duration-300"
+                  style={{ width: `${roundProgress}%` }}
+                />
+              </div>
+            </div>
           )}
+        </header>
 
-        {/* =====================================================
-            ROUND 1 COMPLETE → ROUND 2 过渡
-            ===================================================== */}
-
-        {!gameOver &&
-          round === 1 &&
-          round1Complete && (
-            <>
-              <AgentMessage>
-                “很好！你已经能识别情绪了。下一步把情绪放进市场里——哪些是真实信号，哪些只是噪音？”
-              </AgentMessage>
-
-              <section className="mt-5 rounded-[24px] border border-[#d8d3ee] bg-white/65 p-4 text-center">
-                <div className="text-4xl">🎯</div>
-
-                <p className="mt-2 text-xs font-bold tracking-[0.14em] text-[#a58bc1]">
-                  ROUND 1 COMPLETE
+        {/* 游戏内容区 */}
+        <section className="min-h-0 flex-1 overflow-hidden rounded-[26px] border-[3px] border-[#d9c9ef] bg-white/90 p-3 shadow-[0_20px_60px_rgba(141,116,180,0.10)] backdrop-blur">
+          <div className="flex h-full flex-col">
+            {/* 游戏结束 */}
+            {gameOver && !gameCleared && (
+              <div className="flex h-full flex-col items-center justify-center text-center">
+                <div className="text-5xl">💔</div>
+                <p className="mt-2 text-[10px] font-black tracking-[0.18em] text-[#f0adc5]">
+                  GAME OVER
                 </p>
-
-                <p className="mt-1 text-lg font-black text-[#5e5776]">
-                  情绪扫描 —— 完成
+                <h2 className="mt-1 text-2xl font-black text-[#b45e8e]">
+                  情绪失控
+                </h2>
+                <p className="mt-3 max-w-xs text-sm leading-6 text-[#655f78]">
+                  三颗心已经耗尽。重新感受市场情绪的波动再试一次。
                 </p>
-
                 <button
                   type="button"
-                  onClick={enterRound2}
-                  className="mt-5 w-full rounded-2xl bg-gradient-to-r from-[#8ccaf0] via-[#b099e9] to-[#e88fbd] py-3.5 font-black text-white shadow-[0_8px_20px_rgba(180,140,200,0.18)]"
+                  onClick={resetGame}
+                  className="mt-5 w-full max-w-xs rounded-xl bg-gradient-to-r from-[#a78bfa] to-[#f472b6] py-3 font-bold text-white shadow-lg"
                 >
-                  进入 Round 2 — 舆情雷达
+                  再挑战一次 💗💗💗
                 </button>
-              </section>
-            </>
-          )}
+              </div>
+            )}
 
-        {/* =====================================================
-            ROUND 2
-            ===================================================== */}
+            {/* 通关完成 */}
+            {gameCleared && round3Complete && (
+              <div className="flex h-full flex-col justify-center">
+                <div className="text-center">
+                  <div className="text-5xl"></div>
+                  <p className="mt-2 text-[10px] font-black tracking-[0.16em] text-[#8cc9ef]">
+                    CASE CLOSED
+                  </p>
+                  <h2 className="mt-1 text-2xl font-black text-[#4f86ad]">
+                    情绪观察完成
+                  </h2>
+                </div>
+                <AgentMessage>
+                  你成功识别了市场情绪的变化，理解了 FOMO 的运作方式，并在压力下做出了理性判断。
+                  这正是成熟投资者最重要的能力之一。
+                </AgentMessage>
+                <div className="mt-4 grid grid-cols-1 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onComplete?.()}
+                    className="w-full rounded-xl bg-gradient-to-r from-[#a78bfa] to-[#f472b6] py-3 font-bold text-white shadow-lg"
+                  >
+                    完成挑战，返回市场天气谷 →
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetGame}
+                    className="w-full rounded-xl border border-[#d9c9ef] py-2.5 font-semibold text-[#87689b]"
+                  >
+                    再挑战一次
+                  </button>
+                </div>
+              </div>
+            )}
 
-        {!gameOver &&
-          round === 2 &&
-          !round2Complete && (
-            <>
-              <AgentMessage>
-                “搜索热度飙升 + 社区沸腾，是情绪信号还是真实变化？从 5 条信息中选出 2 条你认为最值得关注的异动信号。”
-              </AgentMessage>
-
-              <section className="mt-5 rounded-[24px] border border-[#d8d3ee] bg-white/65 px-4 py-3">
-                <div className="flex items-center justify-between">
+            {/* Round 1 */}
+            {!gameOver && !gameCleared && round === 1 && (
+              <div className="flex h-full flex-col">
+                <div className="shrink-0 flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-black tracking-[0.18em] text-[#a58bc1]">
-                      ROUND 2
+                    <p className="text-[9px] font-black tracking-[0.15em] text-[#c36fa8]">
+                      ROUND 1 · 情绪扫描
                     </p>
-
-                    <p className="mt-1 font-black text-[#5e5776]">
-                      舆情雷达 · MARKET RADAR
-                    </p>
+                    <h2 className="text-base font-black">判断信息情绪</h2>
                   </div>
-
-                  <span className="rounded-full bg-[#f4e7f5] px-3 py-1 text-xs font-black text-[#ba6d9e]">
-                    选 {selectedSignals.length}/2
+                  <span className="rounded-full bg-[#efe6ff] px-3 py-1 text-[10px] font-black text-[#87689b]">
+                    {moodIndex + 1}/{totalMoodItems}
                   </span>
                 </div>
 
-                <div className="mt-4 space-y-2">
-                  {radarItems.map((item) => {
-                    const active = selectedSignals.includes(item.id);
+                <div className="mt-3 rounded-[18px] border border-[#d9c9ef] bg-[#faf5ff] p-4">
+                  <div className="flex items-start gap-2">
+                    <span className="text-xl">{currentItem.icon}</span>
+                    <div>
+                      <p className="text-[9px] font-bold text-[#87689b]">
+                        {currentItem.source}
+                      </p>
+                      <p className="mt-1 text-sm leading-5 text-[#3a3a48]">
+                        {currentItem.text}
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  {(Object.keys(moodMeta) as Mood[]).map((mood) => {
+                    const active = selectedMood === mood;
+                    const meta = moodMeta[mood];
                     return (
                       <button
-                        key={item.id}
+                        key={mood}
                         type="button"
-                        onClick={() => toggleSignal(item.id)}
-                        className={`w-full rounded-[18px] border-2 p-3 text-left transition-all ${
+                        onClick={() => handleMoodSelect(mood)}
+                        className={`flex flex-col items-center rounded-[16px] border-2 p-3 transition ${
                           active
-                            ? "border-[#d594f0] bg-[#f7edff] shadow-[0_0_20px_rgba(200,140,240,0.15)]"
-                            : "border-[#e4daf0] bg-white hover:border-[#cdbde0]"
+                            ? meta.activeClass
+                            : "border-[#d9c9ef] bg-white text-[#87689b]"
                         }`}
                       >
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg">{item.icon}</span>
-
-                          <span className="text-[10px] font-bold tracking-[0.12em] text-[#b09bc0]">
-                            {item.source}
-                          </span>
-
-                          {active && (
-                            <span className="ml-auto text-xs font-black text-[#b757e0]">
-                              ✓ 信号已标记
-                            </span>
-                          )}
-                        </div>
-
-                        <p className="mt-1 text-sm font-bold leading-5 text-[#4d4564]">
-                          {item.text}
-                        </p>
+                        <span className="text-2xl">{meta.icon}</span>
+                        <span className="mt-1 text-[10px] font-black">
+                          {meta.label}
+                        </span>
+                        <span className="text-[8px] font-bold opacity-60">
+                          {meta.english}
+                        </span>
                       </button>
                     );
                   })}
                 </div>
 
-                {radarWrong && !gameOver && (
-                  <p className="mt-3 text-center text-xs font-bold text-[#c45252]">
-                    💔 再想想：哪些是“值得关注的市场异动信号”，而不是普通的公司日常动态？
+                {showFeedback && selectedMood && (
+                  <div
+                    className={`mt-3 rounded-[16px] border p-3 ${
+                      selectedMood === currentItem.correct
+                        ? "border-[#8cc9ef] bg-[#e7f5ff]"
+                        : "border-[#f0adc5] bg-[#fff2f7]"
+                    }`}
+                  >
+                    <p className="text-[10px] font-black">
+                      {selectedMood === currentItem.correct
+                        ? "✅ 正确！"
+                        : "💔 再想想"}
+                    </p>
+                    <p className="mt-1 text-[11px] leading-5 text-[#655f78]">
+                      {currentItem.explanation}
+                    </p>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  disabled={!selectedMood || showFeedback}
+                  onClick={handleMoodSubmit}
+                  className="mt-auto rounded-xl bg-gradient-to-r from-[#a78bfa] to-[#f472b6] py-2.5 text-sm font-black text-white shadow-lg disabled:opacity-40"
+                >
+                  提交判断
+                </button>
+              </div>
+            )}
+
+            {/* Round 2 */}
+            {!gameOver && !gameCleared && round === 2 && (
+              <div className="flex h-full flex-col">
+                <div className="shrink-0 flex items-center justify-between">
+                  <div>
+                    <p className="text-[9px] font-black tracking-[0.15em] text-[#c36fa8]">
+                      ROUND 2 · 舆情雷达
+                    </p>
+                    <h2 className="text-base font-black">找出异动信号</h2>
+                  </div>
+                  <span className="rounded-full bg-[#efe6ff] px-3 py-1 text-[10px] font-black text-[#87689b]">
+                    选 2 条
+                  </span>
+                </div>
+
+                <div className="mt-3 grid flex-1 gap-2">
+                  {radarItems.map((item) => {
+                    const active = selectedSignals.includes(item.id);
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => toggleSignal(item.id)}
+                        className={`flex items-center rounded-[16px] border-2 px-4 py-3 text-left transition ${
+                          active
+                            ? "border-[#f0adc5] bg-[#fff2f7] shadow-[0_0_20px_rgba(240,150,200,0.20)]"
+                            : "border-[#d9c9ef] bg-white"
+                        }`}
+                      >
+                        <span className="mr-3 text-xl">{item.icon}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[9px] font-bold text-[#87689b]">
+                            {item.source}
+                          </p>
+                          <p className="mt-0.5 text-[11px] leading-4 text-[#3a3a48]">
+                            {item.text}
+                          </p>
+                        </div>
+                        {active && (
+                          <span className="ml-2 text-[#f0adc5]">✓</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {round2Wrong && (
+                  <p className="mt-2 shrink-0 text-center text-[9px] font-bold text-[#f0adc5]">
+                    💔 再观察一下，哪些是真正的异动信号？
                   </p>
                 )}
 
                 <button
                   type="button"
                   disabled={selectedSignals.length !== 2}
-                  onClick={submitRadar}
-                  className="mt-4 w-full rounded-2xl bg-gradient-to-r from-[#8ccaf0] via-[#b099e9] to-[#e88fbd] py-3.5 font-black text-white disabled:opacity-40 shadow-[0_8px_20px_rgba(180,140,200,0.18)]"
+                  onClick={handleRound2Submit}
+                  className="mt-2 shrink-0 rounded-xl bg-gradient-to-r from-[#a78bfa] to-[#f472b6] py-2.5 text-sm font-black text-white shadow-lg disabled:opacity-40"
                 >
-                  提交信号判断
+                  提交信号 · {selectedSignals.length}/2
                 </button>
-              </section>
-            </>
-          )}
+              </div>
+            )}
 
-        {/* =====================================================
-            ROUND 2 COMPLETE → ROUND 3 过渡
-            ===================================================== */}
-
-        {!gameOver &&
-          round === 2 &&
-          round2Complete && (
-            <>
-              <AgentMessage alert>
-                “情绪信号已经确认。现在，它们开始推动股价了——你准备好面对 FOMO 了吗？”
-              </AgentMessage>
-
-              <section className="mt-5 rounded-[24px] border border-[#d8d3ee] bg-white/65 p-4 text-center">
-                <div className="text-4xl">📡</div>
-
-                <p className="mt-2 text-xs font-bold tracking-[0.14em] text-[#a58bc1]">
-                  ROUND 2 COMPLETE
-                </p>
-
-                <p className="mt-1 text-lg font-black text-[#5e5776]">
-                  舆情雷达 —— 完成
-                </p>
-
-                <button
-                  type="button"
-                  onClick={enterRound3}
-                  className="mt-5 w-full rounded-2xl bg-gradient-to-r from-[#f09ad9] via-[#e07bbd] to-[#cf64ab] py-3.5 font-black text-white shadow-[0_8px_20px_rgba(200,100,160,0.25)]"
-                >
-                  进入 Round 3 — FOMO 火箭 →
-                </button>
-              </section>
-            </>
-          )}
-
-        {/* =====================================================
-            ROUND 3
-            ===================================================== */}
-
-        {!gameOver && round === 3 && !round3Complete && (
-          <>
-
-            {/* =====================================================
-                PHASE 1：起飞前
-                ===================================================== */}
-
-            {fomoPhase === "flight" && (
-              <>
-                <AgentMessage alert>
-                  “股价正在快速拉升……市场情绪开始升温。你看到屏幕上的数字在不断跳动，周围的声音越来越响。”
-                </AgentMessage>
-
-                <section className="mt-5 rounded-[26px] border border-[#ead0f0] bg-white/70 p-4 shadow-[0_12px_30px_rgba(150,125,185,0.10)]">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-black tracking-[0.18em] text-[#b09bc0]">
-                      FOMO 火箭 · 实时行情
-                    </p>
-
-                    <span className="rounded-full bg-[#fce4f0] px-2 py-0.5 text-[9px] font-black text-[#d06a9a]">
-                      {openingFlight[flightTick].heat}°C
-                    </span>
-                  </div>
-
-                  {/* 股价仪表盘 */}
-                  <div className="mt-4 flex items-end justify-between">
-                    <div>
-                      <p className="text-[10px] font-bold text-[#b09bc0]">
-                        当前涨幅
+            {/* Round 3 - FOMO 火箭 */}
+            {!gameOver && !gameCleared && round === 3 && (
+              <div className="flex h-full flex-col">
+                {/* Flight 阶段 */}
+                {fomoPhase === "flight" && (
+                  <div className="flex h-full flex-col">
+                    <div className="shrink-0">
+                      <p className="text-[9px] font-black tracking-[0.15em] text-[#c36fa8]">
+                        ROUND 3 · FOMO 火箭
                       </p>
+                      <h2 className="text-base font-black">感受市场升温</h2>
+                    </div>
+                    <div className="mt-3 flex flex-1 flex-col items-center justify-center">
+                      <div className="text-6xl">🚀</div>
+                      <div className="mt-4 w-full rounded-[18px] border border-[#d9c9ef] bg-[#faf5ff] p-4 text-center">
+                        <p className="text-2xl font-black text-[#a78bfa]">
+                          {openingFlight[flightIndex].gain}
+                        </p>
+                        <p className="mt-1 text-[10px] text-[#87689b]">
+                          搜索热度 {openingFlight[flightIndex].heat}
+                        </p>
+                        <p className="mt-2 text-[11px] text-[#655f78]">
+                          {openingFlight[flightIndex].feed}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (flightIndex + 1 < totalFlight) {
+                          setFlightIndex((i) => i + 1);
+                        } else {
+                          setFomoPhase("temptation");
+                        }
+                      }}
+                      className="mt-2 shrink-0 rounded-xl bg-gradient-to-r from-[#a78bfa] to-[#f472b6] py-2.5 text-sm font-black text-white shadow-lg"
+                    >
+                      {flightIndex + 1 < totalFlight ? "继续观察 →" : "做出选择 →"}
+                    </button>
+                  </div>
+                )}
 
-                      <p className="text-4xl font-black text-[#4a4260]">
-                        {openingFlight[flightTick].gain}
+                {/* Temptation 阶段 */}
+                {fomoPhase === "temptation" && !fomoChoice && (
+                  <div className="flex h-full flex-col">
+                    <div className="shrink-0">
+                      <p className="text-[9px] font-black tracking-[0.15em] text-[#c36fa8]">
+                        做出你的选择
+                      </p>
+                      <h2 className="text-base font-black">现在怎么做？</h2>
+                    </div>
+                    <div className="mt-3 grid flex-1 grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => handleFomoChoice("chase")}
+                        className="flex flex-col items-center rounded-[20px] border-2 border-[#f0adc5] bg-[#fff2f7] p-4 shadow-lg transition hover:scale-[1.02]"
+                      >
+                        <span className="text-4xl"></span>
+                        <span className="mt-2 text-sm font-black text-[#b45e8e]">
+                          现在上车
+                        </span>
+                        <span className="mt-1 text-[9px] text-[#87689b]">
+                          追涨买入
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleFomoChoice("wait")}
+                        className="flex flex-col items-center rounded-[20px] border-2 border-[#8cc9ef] bg-[#e7f5ff] p-4 shadow-lg transition hover:scale-[1.02]"
+                      >
+                        <span className="text-4xl">👀</span>
+                        <span className="mt-2 text-sm font-black text-[#4f86ad]">
+                          继续观察
+                        </span>
+                        <span className="mt-1 text-[9px] text-[#87689b]">
+                          保持观望
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* 追涨后走势 */}
+                {fomoPhase === "afterChase" && (
+                  <div className="flex h-full flex-col">
+                    <div className="shrink-0">
+                      <p className="text-[9px] font-black tracking-[0.15em] text-[#c36fa8]">
+                        追涨后
+                      </p>
+                      <h2 className="text-base font-black">观察走势</h2>
+                    </div>
+                    <div className="mt-3 flex flex-1 flex-col items-center justify-center">
+                      <div className="w-full rounded-[18px] border border-[#d9c9ef] bg-[#faf5ff] p-4 text-center">
+                        <p className="text-2xl font-black text-[#a78bfa]">
+                          {chaseSequence[chaseIndex].gain}
+                        </p>
+                        <p className="mt-1 text-[10px] text-[#87689b]">
+                          热度 {chaseSequence[chaseIndex].heat}
+                        </p>
+                        <p className="mt-2 text-[11px] text-[#655f78]">
+                          {chaseSequence[chaseIndex].label}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (chaseIndex + 1 < totalChase) {
+                          setChaseIndex((i) => i + 1);
+                        } else {
+                          setFomoPhase("reflection");
+                        }
+                      }}
+                      className="mt-2 shrink-0 rounded-xl bg-gradient-to-r from-[#a78bfa] to-[#f472b6] py-2.5 text-sm font-black text-white shadow-lg"
+                    >
+                      {chaseIndex + 1 < totalChase ? "继续 →" : "反思 →"}
+                    </button>
+                  </div>
+                )}
+
+                {/* 追涨后反思 */}
+                {fomoPhase === "reflection" && (
+                  <div className="flex h-full flex-col">
+                    <div className="shrink-0">
+                      <p className="text-[9px] font-black tracking-[0.15em] text-[#c36fa8]">
+                        反思
+                      </p>
+                      <h2 className="text-base font-black">
+                        你为什么会追涨？
+                      </h2>
+                    </div>
+                    <div className="mt-3 grid flex-1 gap-2">
+                      {(
+                        [
+                          {
+                            id: "logic",
+                            text: "我觉得基本面确实好",
+                            icon: "",
+                          },
+                          {
+                            id: "fomo",
+                            text: "看到别人赚钱我急了",
+                            icon: "",
+                          },
+                          {
+                            id: "trend",
+                            text: "趋势看起来很强",
+                            icon: "",
+                          },
+                        ] as { id: ReflectionChoice; text: string; icon: string }[]
+                      ).map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => handleReflection(opt.id)}
+                          className={`flex items-center rounded-[16px] border-2 px-4 py-3 text-left transition ${
+                            reflectionChoice === opt.id
+                              ? opt.id === "fomo"
+                                ? "border-[#f0adc5] bg-[#fff2f7]"
+                                : "border-[#8cc9ef] bg-[#e7f5ff]"
+                              : "border-[#d9c9ef] bg-white"
+                          }`}
+                        >
+                          <span className="mr-3 text-xl">{opt.icon}</span>
+                          <span className="text-[11px] font-bold text-[#3a3a48]">
+                            {opt.text}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                    {round3Wrong && (
+                      <p className="mt-2 shrink-0 text-center text-[9px] font-bold text-[#f0adc5]">
+                        💔 再想想，真正驱动你的是情绪还是理性？
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* 观望压力 */}
+                {fomoPhase === "waitPressure" && !waitReflectionChoice && (
+                  <div className="flex h-full flex-col">
+                    <div className="shrink-0">
+                      <p className="text-[9px] font-black tracking-[0.15em] text-[#c36fa8]">
+                        观望的压力
+                      </p>
+                      <h2 className="text-base font-black">
+                        +{waitPressureScene.gain}
+                      </h2>
+                    </div>
+                    <div className="mt-3 rounded-[18px] border border-[#d9c9ef] bg-[#faf5ff] p-4">
+                      <div className="grid grid-cols-2 gap-2 text-center">
+                        <div>
+                          <p className="text-[9px] text-[#87689b]">热度</p>
+                          <p className="text-lg font-black text-[#a78bfa]">
+                            {waitPressureScene.heat}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] text-[#87689b]">FOMO</p>
+                          <p className="text-lg font-black text-[#f0adc5]">
+                            {waitPressureScene.fomo}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        {waitPressureScene.feed.map((f, i) => (
+                          <p key={i} className="text-[11px] text-[#655f78]">
+                            {f}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mt-3 grid flex-1 gap-2">
+                      {(
+                        [
+                          {
+                            id: "regret",
+                            text: "后悔没早点买",
+                            icon: "😢",
+                          },
+                          {
+                            id: "fundamental",
+                            text: "冷静分析基本面",
+                            icon: "📊",
+                          },
+                          {
+                            id: "safe",
+                            text: "没买就没风险",
+                            icon: "️",
+                          },
+                        ] as {
+                          id: WaitReflectionChoice;
+                          text: string;
+                          icon: string;
+                        }[]
+                      ).map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => handleWaitReflection(opt.id)}
+                          className={`flex items-center rounded-[16px] border-2 px-4 py-3 text-left transition ${
+                            waitReflectionChoice === opt.id
+                              ? opt.id === "regret"
+                                ? "border-[#f0adc5] bg-[#fff2f7]"
+                                : "border-[#8cc9ef] bg-[#e7f5ff]"
+                              : "border-[#d9c9ef] bg-white"
+                          }`}
+                        >
+                          <span className="mr-3 text-xl">{opt.icon}</span>
+                          <span className="text-[11px] font-bold text-[#3a3a48]">
+                            {opt.text}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                    {round3Wrong && (
+                      <p className="mt-2 shrink-0 text-center text-[9px] font-bold text-[#f0adc5]">
+                         这是 FOMO 的典型反应，再想想
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* FOMO 概念教学 */}
+                {fomoPhase === "concept" && (
+                  <div className="flex h-full flex-col">
+                    <div className="shrink-0">
+                      <p className="text-[9px] font-black tracking-[0.15em] text-[#c36fa8]">
+                        FOMO 是什么
+                      </p>
+                      <h2 className="text-base font-black">
+                        Fear of Missing Out
+                      </h2>
+                    </div>
+                    <div className="mt-3 rounded-[18px] border border-[#d9c9ef] bg-[#faf5ff] p-4">
+                      <p className="text-[11px] leading-5 text-[#655f78]">
+                        <span className="font-black text-[#a78bfa]">
+                          FOMO（错失恐惧）
+                        </span>
+                        是指看到别人获利时，害怕自己错过机会而产生的焦虑和冲动。
+                        它会让人在高点追涨、在低点恐慌卖出。
+                      </p>
+                      <p className="mt-3 text-[11px] leading-5 text-[#655f78]">
+                        <span className="font-black text-[#f0adc5]">
+                          识别 FOMO 的方法：
+                        </span>
+                        问自己"如果没人讨论这只股票，我还会买吗？"如果答案是否定的，那可能就是 FOMO 在驱动你。
                       </p>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => setFomoPhase("boss")}
+                      className="mt-auto rounded-xl bg-gradient-to-r from-[#a78bfa] to-[#f472b6] py-2.5 text-sm font-black text-white shadow-lg"
+                    >
+                      进入 Boss 关 →
+                    </button>
+                  </div>
+                )}
 
-                    <div className="text-right">
-                      <p className="text-[10px] font-bold text-[#b09bc0]">
-                        市场热度
+                {/* Boss 关 */}
+                {fomoPhase === "boss" && !bossChoice && (
+                  <div className="flex h-full flex-col">
+                    <div className="shrink-0">
+                      <p className="text-[9px] font-black tracking-[0.15em] text-[#c36fa8]">
+                        BOSS 关
                       </p>
+                      <h2 className="text-base font-black">社区狂热</h2>
+                    </div>
+                    <div className="mt-3 rounded-[18px] border border-[#f0adc5] bg-[#fff2f7] p-4">
+                      <div className="space-y-2">
+                        {bossFeed.slice(0, bossIndex + 1).map((f, i) => (
+                          <p key={i} className="text-[11px] text-[#b45e8e]">
+                            {f}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mt-3 grid flex-1 gap-2">
+                      {(
+                        [
+                          {
+                            id: "chase",
+                            text: "跟着冲！",
+                            icon: "🔥",
+                          },
+                          {
+                            id: "wait",
+                            text: "再等等看",
+                            icon: "⏳",
+                          },
+                          {
+                            id: "evidence",
+                            text: "先看证据再决定",
+                            icon: "🔍",
+                          },
+                        ] as { id: BossChoice; text: string; icon: string }[]
+                      ).map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => handleBoss(opt.id)}
+                          className={`flex items-center rounded-[16px] border-2 px-4 py-3 text-left transition ${
+                            bossChoice === opt.id
+                              ? opt.id === "evidence"
+                                ? "border-[#8cc9ef] bg-[#e7f5ff]"
+                                : "border-[#f0adc5] bg-[#fff2f7]"
+                              : "border-[#d9c9ef] bg-white"
+                          }`}
+                        >
+                          <span className="mr-3 text-xl">{opt.icon}</span>
+                          <span className="text-[11px] font-bold text-[#3a3a48]">
+                            {opt.text}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                    {bossWrong && (
+                      <p className="mt-2 shrink-0 text-center text-[9px] font-bold text-[#f0adc5]">
+                        💔 在狂热中保持冷静，先看证据
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      disabled={!bossChoice}
+                      onClick={() => {
+                        if (bossChoice === "evidence") {
+                          setFomoPhase("evidence");
+                        }
+                      }}
+                      className="mt-2 shrink-0 rounded-xl bg-gradient-to-r from-[#a78bfa] to-[#f472b6] py-2.5 text-sm font-black text-white shadow-lg disabled:opacity-40"
+                    >
+                      确认选择
+                    </button>
+                  </div>
+                )}
 
-                      <div className="mt-1 h-2 w-24 overflow-hidden rounded-full bg-[#ebe5f5]">
+                {/* 证据判断 */}
+                {fomoPhase === "evidence" && (
+                  <div className="flex h-full flex-col">
+                    <div className="shrink-0">
+                      <p className="text-[9px] font-black tracking-[0.15em] text-[#c36fa8]">
+                        最终判断
+                      </p>
+                      <h2 className="text-base font-black">
+                        你会依据什么做决策？
+                      </h2>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      {evidenceCards.map((card) => (
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-[#8ecdf2] via-[#b59cf0] to-[#ef9ac9] transition-all duration-500"
-                          style={{
-                            width: `${openingFlight[flightTick].heat}%`,
-                          }}
-                        />
-                      </div>
+                          key={card.title}
+                          className={`rounded-[14px] border p-3 text-center ${
+                            card.tone === "hot"
+                              ? "border-[#f0adc5] bg-[#fff2f7]"
+                              : card.tone === "warning"
+                                ? "border-[#f5c56a] bg-[#fff8e7]"
+                                : "border-[#8cc9ef] bg-[#e7f5ff]"
+                          }`}
+                        >
+                          <span className="text-xl">{card.icon}</span>
+                          <p className="mt-1 text-[9px] font-bold text-[#87689b]">
+                            {card.title}
+                          </p>
+                          <p className="mt-0.5 text-[10px] font-black text-[#3a3a48]">
+                            {card.value}
+                          </p>
+                        </div>
+                      ))}
                     </div>
-                  </div>
-
-                  {/* 社区动态 */}
-                  <div className="mt-4 rounded-[16px] border border-[#e8ddf0] bg-[#faf6ff] p-3">
-                    <p className="text-[10px] font-bold text-[#b09bc0]">
-                      社区动态
-                    </p>
-
-                    <p className="mt-1 text-sm font-bold text-[#4d4564]">
-                      {openingFlight[flightTick].feed}
-                    </p>
-                  </div>
-                </section>
-              </>
-            )}
-
-            {/* =====================================================
-                PHASE 2：诱惑时刻
-                ===================================================== */}
-
-            {fomoPhase === "temptation" && (
-              <>
-                <AgentMessage alert>
-                  “涨幅已经超过 15%。市场情绪开始沸腾。你看到‘还没上车’的人开始被嘲笑。现在，该你选择了。”
-                </AgentMessage>
-
-                <section className="mt-5 rounded-[26px] border-2 border-[#f0c8e0] bg-[#fff0f8] p-6 text-center shadow-[0_12px_30px_rgba(200,120,170,0.12)]">
-                  <div className="text-5xl">😵</div>
-
-                  <p className="mt-3 text-base font-black leading-7 text-[#5d5570]">
-                    涨幅已经 <span className="text-[#c95a92]">+15.7%</span>
-                  </p>
-
-                  <p className="mt-2 text-sm font-bold text-[#8a7187]">
-                    社交媒体上越来越多的人在炫耀收益。
-                    <br />
-                    你感觉自己的心跳在加快。
-                  </p>
-
-                  <div className="mt-5 space-y-2">
-                    <button
-                      type="button"
-                      onClick={() => chooseFirstAction("chase")}
-                      className="w-full rounded-2xl bg-gradient-to-r from-[#f09ad9] to-[#e88fbd] py-4 font-black text-white shadow-[0_8px_20px_rgba(200,100,160,0.25)]"
-                    >
-                      🚀 现在上车！不能错过这波！
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => chooseFirstAction("wait")}
-                      className="w-full rounded-2xl border-2 border-[#d8c6e0] bg-white py-4 font-black text-[#6b5a7e]"
-                    >
-                      🧊 继续观察，不着急
-                    </button>
-                  </div>
-                </section>
-              </>
-            )}
-
-            {/* =====================================================
-                PHASE 3A：选择"追涨"后的剧情
-                ===================================================== */}
-
-            {fomoPhase === "afterChase" && (
-              <>
-                <AgentMessage>
-                  “你买入了。股价继续上涨——一切看起来都是对的。但你需要继续观察。”
-                </AgentMessage>
-
-                <section className="mt-5 rounded-[26px] border border-[#ead0f0] bg-white/70 p-4 shadow-[0_12px_30px_rgba(150,125,185,0.10)]">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-black tracking-[0.18em] text-[#b09bc0]">
-                      持仓动态
-                    </p>
-
-                    <span className="rounded-full bg-[#fce4f0] px-2 py-0.5 text-[9px] font-black text-[#d06a9a]">
-                      {chaseSequence[chaseTick].label}
-                    </span>
-                  </div>
-
-                  <div className="mt-4">
-                    <p className="text-[10px] font-bold text-[#b09bc0]">
-                      当前盈利
-                    </p>
-
-                    <p className="text-4xl font-black text-[#4a4260]">
-                      {chaseSequence[chaseTick].gain}
-                    </p>
-                  </div>
-
-                  <div className="mt-3">
-                    <p className="text-[10px] font-bold text-[#b09bc0]">
-                      市场热度
-                    </p>
-
-                    <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-[#ebe5f5]">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-[#8ecdf2] via-[#b59cf0] to-[#ef9ac9] transition-all duration-500"
-                        style={{
-                          width: `${chaseSequence[chaseTick].heat}%`,
-                        }}
-                      />
+                    <div className="mt-3 grid flex-1 gap-2">
+                      {(
+                        [
+                          {
+                            id: "fundamental",
+                            text: "基于基本面分析",
+                            icon: "📊",
+                          },
+                          {
+                            id: "price-sentiment",
+                            text: "基于价格和情绪",
+                            icon: "📈",
+                          },
+                          {
+                            id: "valuation",
+                            text: "基于估值水平",
+                            icon: "💰",
+                          },
+                        ] as {
+                          id: EvidenceChoice;
+                          text: string;
+                          icon: string;
+                        }[]
+                      ).map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => handleEvidence(opt.id)}
+                          className={`flex items-center rounded-[16px] border-2 px-4 py-3 text-left transition ${
+                            evidenceChoice === opt.id
+                              ? opt.id === "fundamental"
+                                ? "border-[#8cc9ef] bg-[#e7f5ff]"
+                                : "border-[#f0adc5] bg-[#fff2f7]"
+                              : "border-[#d9c9ef] bg-white"
+                          }`}
+                        >
+                          <span className="mr-3 text-xl">{opt.icon}</span>
+                          <span className="text-[11px] font-bold text-[#3a3a48]">
+                            {opt.text}
+                          </span>
+                        </button>
+                      ))}
                     </div>
-                  </div>
-                </section>
-              </>
-            )}
-
-            {/* =====================================================
-                PHASE 3B：选择"追涨"后的反思
-                ===================================================== */}
-
-            {fomoPhase === "reflection" &&
-              firstAction === "chase" && (
-                <>
-                  <AgentMessage>
-                    “股价从 +22% 快速回落至 +11.8%。你账面上的浮盈正在快速蒸发。刚才你追涨的时候，是什么在驱动你的决定？”
-                  </AgentMessage>
-
-                  <section className="mt-5 rounded-[26px] border-2 border-[#f0c8e0] bg-[#fff0f8] p-6 text-center shadow-[0_12px_30px_rgba(200,120,170,0.12)]">
-                    <div className="text-4xl">🤔</div>
-
-                    <p className="mt-3 text-lg font-black text-[#5d5570]">
-                      回顾你的决策
-                    </p>
-
-                    <p className="mt-2 text-sm font-bold text-[#8a7187]">
-                      你刚才为什么决定追涨？
-                    </p>
-
-                    <div className="mt-5 space-y-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setReflectionWrong(false);
-                          setReflectionChoice("fomo");
-                        }}
-                        className={`w-full rounded-[18px] border-2 p-3 text-left transition-all ${
-                          reflectionChoice === "fomo"
-                            ? "border-[#d594f0] bg-[#f7edff]"
-                            : "border-[#e4daf0] bg-white"
-                        }`}
-                      >
-                        <p className="text-sm font-bold text-[#4d4564]">
-                          😵 怕错过，周围人都在赚钱让我坐不住
-                        </p>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setReflectionWrong(false);
-                          setReflectionChoice("logic");
-                        }}
-                        className={`w-full rounded-[18px] border-2 p-3 text-left transition-all ${
-                          reflectionChoice === "logic"
-                            ? "border-[#d594f0] bg-[#f7edff]"
-                            : "border-[#e4daf0] bg-white"
-                        }`}
-                      >
-                        <p className="text-sm font-bold text-[#4d4564]">
-                          🧠 分析了基本面，认为价格仍然合理
-                        </p>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setReflectionWrong(false);
-                          setReflectionChoice("trend");
-                        }}
-                        className={`w-full rounded-[18px] border-2 p-3 text-left transition-all ${
-                          reflectionChoice === "trend"
-                            ? "border-[#d594f0] bg-[#f7edff]"
-                            : "border-[#e4daf0] bg-white"
-                        }`}
-                      >
-                        <p className="text-sm font-bold text-[#4d4564]">
-                          📈 相信趋势，强者恒强
-                        </p>
-                      </button>
-                    </div>
-
-                    {reflectionWrong && (
-                      <p className="mt-3 text-xs font-bold text-[#c45252]">
-                        💔 再想想，刚才的决策更多是来自情绪还是理性分析？
+                    {evidenceWrong && (
+                      <p className="mt-2 shrink-0 text-center text-[9px] font-bold text-[#f0adc5]">
+                        💔 理性投资者应该基于基本面做决策
                       </p>
                     )}
-
-                    <button
-                      type="button"
-                      disabled={!reflectionChoice}
-                      onClick={submitReflection}
-                      className="mt-4 w-full rounded-2xl bg-gradient-to-r from-[#f09ad9] to-[#e88fbd] py-3.5 font-black text-white disabled:opacity-40"
-                    >
-                      确认反思
-                    </button>
-                  </section>
-                </>
-              )}
-
-            {/* =====================================================
-                PHASE 3C：选择"继续观察"后的独立 FOMO 分支
-                ===================================================== */}
-
-            {fomoPhase === "waitPressure" && (
-              <>
-                <AgentMessage alert>
-                  “你选择了继续观察。但股价还在涨——市场开始嘲笑没有上车的人。你虽然没有买入，但开始感到一种奇怪的压力。”
-                </AgentMessage>
-
-                <section className="mt-5 rounded-[26px] border-2 border-[#f0c8e0] bg-[#fff0f8] p-6 text-center shadow-[0_12px_30px_rgba(200,120,170,0.12)]">
-                  <div className="text-5xl">😰</div>
-
-                  <p className="mt-3 text-lg font-black text-[#5d5570]">
-                    股价继续上涨
-                  </p>
-
-                  <p className="mt-2 text-4xl font-black text-[#c95a92]">
-                    {waitPressureScene.gain}
-                  </p>
-
-                  <div className="mt-4 flex items-center justify-center gap-6">
-                    <div className="text-center">
-                      <p className="text-[10px] font-bold text-[#b09bc0]">
-                        市场热度
-                      </p>
-
-                      <p className="text-lg font-black text-[#4a4260]">
-                        {waitPressureScene.heat}°C
-                      </p>
-                    </div>
-
-                    <div className="text-center">
-                      <p className="text-[10px] font-bold text-[#b09bc0]">
-                        你的 FOMO 指数
-                      </p>
-
-                      <p className="text-lg font-black text-[#c95a92]">
-                        {waitPressureScene.fomo}%
-                      </p>
-                    </div>
                   </div>
-
-                  {/* 社区动态 */}
-                  <div className="mt-4 space-y-1">
-                    {waitPressureScene.feed.map((feed, i) => (
-                      <p
-                        key={i}
-                        className="rounded-[12px] bg-[#fff5fa] p-2 text-sm font-bold text-[#4d4564]"
-                      >
-                        {feed}
-                      </p>
-                    ))}
-                  </div>
-                </section>
-              </>
+                )}
+              </div>
             )}
+          </div>
+        </section>
 
-            {/* =====================================================
-                PHASE 3D：继续观察后的反思
-                ===================================================== */}
-
-            {fomoPhase === "waitPressure" &&
-              firstAction === "wait" &&
-              waitReflectionChoice === null && (
-                <>
-                  <section className="mt-5 rounded-[26px] border-2 border-[#f0c8e0] bg-[#fff0f8] p-6 text-center shadow-[0_12px_30px_rgba(200,120,170,0.12)]">
-                    <div className="text-4xl">😰</div>
-
-                    <p className="mt-3 text-lg font-black text-[#5d5570]">
-                      没有买入，也一样会焦虑
-                    </p>
-
-                    <p className="mt-2 text-sm font-bold text-[#8a7187]">
-                      你一直没买，但它还在涨。周围的人都在赚钱。你现在是什么感受？
-                    </p>
-
-                    <div className="mt-5 space-y-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setWaitReflectionWrong(false);
-                          setWaitReflectionChoice("regret");
-                        }}
-                        className={`w-full rounded-[18px] border-2 p-3 text-left transition-all ${
-                          waitReflectionChoice === "regret"
-                            ? "border-[#d594f0] bg-[#f7edff]"
-                            : "border-[#e4daf0] bg-white"
-                        }`}
-                      >
-                        <p className="text-sm font-bold text-[#4d4564]">
-                          😵 有点后悔刚才没买，怕它继续涨、自己彻底错过
-                        </p>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setWaitReflectionWrong(false);
-                          setWaitReflectionChoice("fundamental");
-                        }}
-                        className={`w-full rounded-[18px] border-2 p-3 text-left transition-all ${
-                          waitReflectionChoice === "fundamental"
-                            ? "border-[#d594f0] bg-[#f7edff]"
-                            : "border-[#e4daf0] bg-white"
-                        }`}
-                      >
-                        <p className="text-sm font-bold text-[#4d4564]">
-                          🏢 它继续涨，说明基本面一定突然变好了
-                        </p>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setWaitReflectionWrong(false);
-                          setWaitReflectionChoice("safe");
-                        }}
-                        className={`w-full rounded-[18px] border-2 p-3 text-left transition-all ${
-                          waitReflectionChoice === "safe"
-                            ? "border-[#d594f0] bg-[#f7edff]"
-                            : "border-[#e4daf0] bg-white"
-                        }`}
-                      >
-                        <p className="text-sm font-bold text-[#4d4564]">
-                          🧊 没买就没有亏损，坚持自己的判断
-                        </p>
-                      </button>
-                    </div>
-
-                    {waitReflectionWrong && (
-                      <p className="mt-3 text-xs font-bold text-[#c45252]">
-                        💔 注意，FOMO 的核心是“害怕错过”——即使没有买入，也可能因为看到别人赚钱而产生焦虑。
-                      </p>
-                    )}
-
-                    <button
-                      type="button"
-                      disabled={!waitReflectionChoice}
-                      onClick={submitWaitReflection}
-                      className="mt-4 w-full rounded-2xl bg-gradient-to-r from-[#f09ad9] to-[#e88fbd] py-3.5 font-black text-white disabled:opacity-40"
-                    >
-                      确认感受
-                    </button>
-                  </section>
-                </>
-              )}
-
-            {/* =====================================================
-                PHASE 4：FOMO 教学
-                ===================================================== */}
-
-            {fomoPhase === "concept" && (
-              <>
-                <AgentMessage>
-                  “很好。现在你已经亲身体验了 FOMO 的力量。无论你选择追涨还是继续观察，市场情绪都会以不同的方式影响你。重要的是——你能意识到它。”
-                </AgentMessage>
-
-                <section className="mt-5 rounded-[26px] border-2 border-[#d9b9e9] bg-white/80 p-6 text-center shadow-[0_12px_30px_rgba(150,125,185,0.12)]">
-                  <div className="text-5xl">🧠</div>
-
-                  <p className="mt-3 text-[10px] font-black tracking-[0.2em] text-[#b175ae]">
-                    FOMO 101
-                  </p>
-
-                  <h2 className="mt-2 text-xl font-black text-[#5d5570]">
-                    FOMO =
-                    <br />
-                    Fear of Missing Out
-                  </h2>
-
-                  <p className="mt-2 text-sm font-bold text-[#8a7187]">
-                    错失恐惧症
-                  </p>
-
-                  <div className="mt-5 rounded-[20px] border border-[#eaccf0] bg-[#fcf5ff] p-4 text-left">
-                    <p className="text-xs font-bold text-[#b09bc0]">
-                      FOMO 的典型特征
-                    </p>
-
-                    <ul className="mt-2 space-y-1.5">
-                      <li className="flex items-start gap-2 text-sm font-bold text-[#4d4564]">
-                        <span>🔥</span>
-                        <span>看到别人赚钱时产生焦虑</span>
-                      </li>
-
-                      <li className="flex items-start gap-2 text-sm font-bold text-[#4d4564]">
-                        <span>⚡</span>
-                        <span>害怕错过“一生一次的机会”</span>
-                      </li>
-
-                      <li className="flex items-start gap-2 text-sm font-bold text-[#4d4564]">
-                        <span>😵</span>
-                        <span>即使没买入，也可能因为“没买”而后悔</span>
-                      </li>
-
-                      <li className="flex items-start gap-2 text-sm font-bold text-[#4d4564]">
-                        <span>💊</span>
-                        <span>理性分析被情绪冲动取代</span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={enterBoss}
-                    className="mt-5 w-full rounded-2xl bg-gradient-to-r from-[#8ecdf2] via-[#b49aed] to-[#eb96c1] py-3.5 font-black text-white shadow-[0_8px_20px_rgba(180,145,210,0.18)]"
-                  >
-                    进入最终挑战 →
-                  </button>
-                </section>
-              </>
-            )}
-
-            {/* =====================================================
-                PHASE 5：Boss 关
-                ===================================================== */}
-
-            {fomoPhase === "boss" && (
-              <>
-                <AgentMessage alert>
-                  “市场现在处于极端狂热状态。众多声音在催促你‘上车’。你能保持冷静吗？”
-                </AgentMessage>
-
-                <section className="mt-5 rounded-[26px] border-2 border-[#f0c8e0] bg-[#fff0f8] p-6 shadow-[0_12px_30px_rgba(200,120,170,0.12)]">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">🚨</span>
-
-                    <p className="text-[10px] font-black tracking-[0.16em] text-[#c95a92]">
-                      FOMO BOSS FIGHT
-                    </p>
-                  </div>
-
-                  <p className="mt-2 text-lg font-black text-[#5d5570]">
-                    市场已经处于极端狂热
-                  </p>
-
-                  <div className="mt-4 space-y-1 rounded-[16px] bg-[#fff5fa] p-3">
-                    {bossFeed.map((feed, i) => (
-                      <p
-                        key={i}
-                        className="text-sm font-bold text-[#4d4564]"
-                      >
-                        {feed}
-                      </p>
-                    ))}
-                  </div>
-
-                  <p className="mt-4 text-sm font-black text-[#5d5570]">
-                    面对这种极端行情，你选择？
-                  </p>
-
-                  <div className="mt-4 space-y-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setBossWrong(false);
-                        setBossChoice("chase");
-                      }}
-                      className={`w-full rounded-[18px] border-2 p-3 text-left transition-all ${
-                        bossChoice === "chase"
-                          ? "border-[#d594f0] bg-[#f7edff]"
-                          : "border-[#e4daf0] bg-white"
-                      }`}
-                    >
-                      <p className="text-sm font-bold text-[#4d4564]">
-                        🚀 继续追涨，机会不能错过
-                      </p>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setBossWrong(false);
-                        setBossChoice("wait");
-                      }}
-                      className={`w-full rounded-[18px] border-2 p-3 text-left transition-all ${
-                        bossChoice === "wait"
-                          ? "border-[#d594f0] bg-[#f7edff]"
-                          : "border-[#e4daf0] bg-white"
-                      }`}
-                    >
-                      <p className="text-sm font-bold text-[#4d4564]">
-                        🧊 等待价格回调再考虑
-                      </p>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setBossWrong(false);
-                        setBossChoice("evidence");
-                      }}
-                      className={`w-full rounded-[18px] border-2 p-3 text-left transition-all ${
-                        bossChoice === "evidence"
-                          ? "border-[#d594f0] bg-[#f7edff]"
-                          : "border-[#e4daf0] bg-white"
-                      }`}
-                    >
-                      <p className="text-sm font-bold text-[#4d4564]">
-                        📊 先看清当前市场的全面信息，再做决定
-                      </p>
-                    </button>
-                  </div>
-
-                  {bossWrong && (
-                    <p className="mt-3 text-xs font-bold text-[#c45252]">
-                      💔 极端行情里，“继续追”或“只等价格”都没有增加投资证据。
-                    </p>
-                  )}
-
-                  <button
-                    type="button"
-                    disabled={!bossChoice}
-                    onClick={submitBossChoice}
-                    className="mt-4 w-full rounded-2xl bg-gradient-to-r from-[#8ecdf2] via-[#b49aed] to-[#eb96c1] py-3.5 font-black text-white disabled:opacity-40"
-                  >
-                    确认决策
-                  </button>
-                </section>
-              </>
-            )}
-
-            {/* =====================================================
-                PHASE 6：最终证据
-                ===================================================== */}
-
-            {fomoPhase === "evidence" && (
-              <>
-                <AgentMessage>
-                  “好的，先看完信息再做决定。现在你面前有四张卡片——哪一组信息最能说明当前市场情绪正在主导价格？”
-                </AgentMessage>
-
-                <section className="mt-5 rounded-[26px] border-2 border-[#f0c8e0] bg-[#fff0f8] p-6 shadow-[0_12px_30px_rgba(200,120,170,0.12)]">
-                  <p className="text-[10px] font-black tracking-[0.16em] text-[#c95a92]">
-                    EVIDENCE REVIEW
-                  </p>
-
-                  <p className="mt-1 text-lg font-black text-[#5d5570]">
-                    当前市场信息
-                  </p>
-
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                    {evidenceCards.map((card) => (
-                      <div
-                        key={card.title}
-                        className={`rounded-[16px] border-2 p-3 text-center ${
-                          card.tone === "neutral"
-                            ? "border-[#e4daf0] bg-white"
-                            : card.tone === "warning"
-                              ? "border-[#f0d8a0] bg-[#fffce8]"
-                              : "border-[#f0c8e0] bg-[#fff0f8]"
-                        }`}
-                      >
-                        <span className="text-2xl">{card.icon}</span>
-
-                        <p className="mt-1 text-[10px] font-black text-[#b09bc0]">
-                          {card.title}
-                        </p>
-
-                        <p className="mt-0.5 text-sm font-black text-[#4d4564]">
-                          {card.value}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <p className="mt-4 text-sm font-black text-[#5d5570]">
-                    哪一组信息组合最能说明当前行情由情绪驱动？
-                  </p>
-
-                  <div className="mt-3 space-y-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEvidenceWrong(false);
-                        setEvidenceChoice("fundamental");
-                      }}
-                      className={`w-full rounded-[18px] border-2 p-3 text-left transition-all ${
-                        evidenceChoice === "fundamental"
-                          ? "border-[#d594f0] bg-[#f7edff]"
-                          : "border-[#e4daf0] bg-white"
-                      }`}
-                    >
-                      <p className="text-sm font-bold text-[#4d4564]">
-                        🏢 基本面没有变化 + 估值合理
-                      </p>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEvidenceWrong(false);
-                        setEvidenceChoice("price-sentiment");
-                      }}
-                      className={`w-full rounded-[18px] border-2 p-3 text-left transition-all ${
-                        evidenceChoice === "price-sentiment"
-                          ? "border-[#d594f0] bg-[#f7edff]"
-                          : "border-[#e4daf0] bg-white"
-                      }`}
-                    >
-                      <p className="text-sm font-bold text-[#4d4564]">
-                        🚀 股价快速拉升 + 社区情绪极度狂热
-                      </p>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEvidenceWrong(false);
-                        setEvidenceChoice("valuation");
-                      }}
-                      className={`w-full rounded-[18px] border-2 p-3 text-left transition-all ${
-                        evidenceChoice === "valuation"
-                          ? "border-[#d594f0] bg-[#f7edff]"
-                          : "border-[#e4daf0] bg-white"
-                      }`}
-                    >
-                      <p className="text-sm font-bold text-[#4d4564]">
-                        💰 估值已明显偏高 + 基本面没有变化
-                      </p>
-                    </button>
-                  </div>
-
-                  {evidenceWrong && (
-                    <p className="mt-3 text-xs font-bold text-[#c45252]">
-                      💔 股价快速拉升 + 社区情绪狂热，才是当前行情由情绪而非基本面驱动的最直接证据。
-                    </p>
-                  )}
-
-                  <button
-                    type="button"
-                    disabled={!evidenceChoice}
-                    onClick={submitEvidenceChoice}
-                    className="mt-4 w-full rounded-2xl bg-gradient-to-r from-[#8ecdf2] via-[#b49aed] to-[#eb96c1] py-3.5 font-black text-white disabled:opacity-40"
-                  >
-                    确认判断
-                  </button>
-                </section>
-              </>
-            )}
-          </>
-        )}
-
-        {/* =====================================================
-            ROUND 3 COMPLETE
-            ===================================================== */}
-
-        {!gameOver &&
-          round === 3 &&
-          round3Complete && (
-            <>
-              <AgentMessage>
-                “漂亮。你不只是看懂了市场情绪，也开始看懂自己的情绪。真正的冷静，不是没有感觉，而是知道感觉什么时候正在替你做决定。”
-              </AgentMessage>
-
-              <section className="mt-5 rounded-[32px] border-2 border-[#d9b9e9] bg-white/80 p-6 text-center shadow-[0_20px_50px_rgba(150,125,185,0.14)]">
-                <div className="text-6xl">🚀</div>
-
-                <p className="mt-3 text-[10px] font-black tracking-[0.2em] text-[#b175ae]">
-                  SENTIMENT MISSION COMPLETE
-                </p>
-
-                <h2 className="mt-2 text-2xl font-black text-[#5d5570]">
-                  FOMO Survival｜成功脱离情绪风暴
-                </h2>
-
-                <div className="mt-4 flex justify-center gap-1">
-                  {[0, 1, 2].map((heart) => (
-                    <span
-                      key={heart}
-                      className={`text-2xl ${
-                        heart < lives ? "opacity-100" : "grayscale opacity-20"
-                      }`}
-                    >
-                      ❤️
-                    </span>
-                  ))}
-                </div>
-
-                <p className="mt-3 text-lg font-black text-[#bd6e9d]">
-                  {lives === 3
-                    ? "S级｜情绪驯服者"
-                    : lives === 2
-                      ? "A级｜冷静观察员"
-                      : "B级｜惊险刹车"}
-                </p>
-
-                <div className="mt-5 rounded-[24px] border border-[#efc9df] bg-[#fff5fa] p-4 text-left">
-                  <p className="text-xs font-black tracking-[0.14em] text-[#bd6d9a]">
-                    TODAY&apos;S UNLOCK
-                  </p>
-
-                  <p className="mt-2 text-xl font-black text-[#65586d]">
-                    FOMO = Fear of Missing Out
-                  </p>
-
-                  <p className="mt-1 text-sm font-bold text-[#8a7485]">
-                    错失恐惧 / 害怕错过
-                  </p>
-
-                  <p className="mt-3 text-sm leading-6 text-[#827382]">
-                    市场情绪可以帮助你理解“大家在想什么”，但真正重要的是：
-                    <span className="font-black text-[#c36695]">
-                      不要让别人的兴奋和恐慌替你做投资决定。
-                    </span>
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={resetGame}
-                  className="mt-6 w-full rounded-2xl bg-gradient-to-r from-[#8ecdf2] via-[#b49aed] to-[#eb96c1] py-4 font-black text-white shadow-[0_12px_30px_rgba(180,145,210,0.22)]"
-                >
-                  再挑战一次
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => onComplete?.()}
-                  className="mt-3 w-full rounded-2xl border-2 border-[#d9b9e9] bg-white py-4 font-black text-[#6b5a7e] shadow-[0_8px_20px_rgba(150,125,185,0.10)]"
-                >
-                  完成挑战，返回市场天气谷 →
-                </button>
-              </section>
-            </>
-          )}
-
-        {/* Disclaimer */}
-        <p className="mt-6 text-center text-[10px] leading-5 text-[#a199aa]">
-          市场情绪只能作为辅助信号，不构成任何投资建议。
+        <p className="shrink-0 text-center text-[8px] font-bold text-[#b8a8d0]">
+          训练案例仅用于学习市场情绪分析，不构成投资建议。
         </p>
       </div>
     </main>
