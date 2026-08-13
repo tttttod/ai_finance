@@ -14,6 +14,7 @@ import { MiniGame } from "./MiniGame";
 import { BondHunterGame } from "../bond-hunter/BondHunterGame";
 import { LearningCards } from "./LearningCards";
 import { QuizChoice } from "./QuizChoice";
+import { SentimentGame } from "./SentimentGame";
 import {
   loadTraderRoadProgress,
   saveTraderRoadProgress,
@@ -754,7 +755,7 @@ export function GameMapPlayer({
                   style={{ borderColor: isCurrent ? "#F59E0B" : "#D4A853" }}
                 >
                   <p className="text-xs font-bold text-[#1E293B]">
-                    {config.type === "dialogue" ? "🎭 对话闯关" : config.type === "quiz" ? "🃏 知识翻牌" : config.type === "brain" ? "🧠 脑力配对" : " 快速反应"}
+                    {config.type === "dialogue" ? "🎭 对话闯关" : config.type === "quiz" ? "🃏 知识翻牌" : config.type === "brain" ? "🧠 脑力配对" : config.type === "sentiment" ? "🧪 情绪实验室" : " 快速反应"}
                   </p>
                   {status === "available" && (
                     <p className="text-[10px] font-bold mt-0.5" style={{ color: isCurrent ? "#F59E0B" : "#D4A853" }}>
@@ -918,7 +919,7 @@ export function GameMapPlayer({
             第{activeLevelId}关：{config.title}
           </h3>
           <span className="text-[10px] text-[#64748B] ml-auto">
-            {config.type === "learning" ? "知识学习" : config.type === "quiz_choice" ? "答题闯关" : config.type === "dialogue" ? "对话闯关" : config.type === "quiz" ? "知识翻牌" : config.type === "brain" ? "脑力配对" : "快速反应"}
+            {config.type === "learning" ? "知识学习" : config.type === "quiz_choice" ? "答题闯关" : config.type === "sentiment" ? "情绪实验室" : config.type === "dialogue" ? "对话闯关" : config.type === "quiz" ? "知识翻牌" : config.type === "brain" ? "脑力配对" : "快速反应"}
           </span>
         </div>
         {/* Game content */}
@@ -1007,6 +1008,17 @@ export function GameMapPlayer({
                 if (!completeWallCastleSubLevelAndReturn(activeLevelId)) {
                   returnAfterGameComplete();
                 }
+              }}
+            />
+          )}
+          {config.type === "sentiment" && (
+            <SentimentGame
+              onBack={() => {
+                returnAfterGameComplete();
+              }}
+              onComplete={() => {
+                handleLevelComplete(activeLevelId);
+                returnAfterGameComplete();
               }}
             />
           )}
