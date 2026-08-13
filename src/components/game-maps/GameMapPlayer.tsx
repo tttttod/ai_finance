@@ -205,55 +205,58 @@ export function GameMapPlayer({
 
   const handleLevelComplete = useCallback(
     (levelId: number) => {
-      if (progress.completedLevels.includes(levelId)) return;
       const config = getLevelConfig(levelId);
       if (!config) return;
 
-      // 去重并排序
-      const newCompleted = [...new Set([...progress.completedLevels, levelId])].sort((a, b) => a - b);
+      const alreadyCompleted = progress.completedLevels.includes(levelId);
 
-      // 去重解锁 Agent
-      const newAgents = [...progress.unlockedAgents];
-      if (config.unlockAgents) {
-        for (const agent of config.unlockAgents) {
-          if (!newAgents.includes(agent as TraderRoadAgentId)) {
-            newAgents.push(agent as TraderRoadAgentId);
+      if (!alreadyCompleted) {
+        // 去重并排序
+        const newCompleted = [...new Set([...progress.completedLevels, levelId])].sort((a, b) => a - b);
+
+        // 去重解锁 Agent
+        const newAgents = [...progress.unlockedAgents];
+        if (config.unlockAgents) {
+          for (const agent of config.unlockAgents) {
+            if (!newAgents.includes(agent as TraderRoadAgentId)) {
+              newAgents.push(agent as TraderRoadAgentId);
+            }
           }
+        }
+
+        // 清理当前关卡失败次数
+        const newFailCounts = { ...progress.levelFailCounts };
+        delete newFailCounts[String(levelId)];
+
+        const newProgress = {
+          ...progress,
+          completedLevels: newCompleted,
+          unlockedAgents: newAgents,
+          currentLevel: Math.max(progress.currentLevel, levelId + 1),
+          levelFailCounts: newFailCounts,
+        };
+
+        // 同步保存到 localStorage，确保父组件回调时能读到最新进度
+        const savedProgress = saveTraderRoadProgress(newProgress);
+        setProgress(savedProgress);
+        onLevelComplete?.(levelId);
+
+        // 完成金融知识入港口后，显示华尔堡引导
+        if (levelId === 0 || levelId === 1) {
+          setShowWallCastleTour(true);
+          // 清除区域上下文，确保返回世界地图后弹窗正确显示
+          setActiveZoneId(null);
         }
       }
 
-      // 清理当前关卡失败次数
-      const newFailCounts = { ...progress.levelFailCounts };
-      delete newFailCounts[String(levelId)];
-
-      const newProgress = {
-        ...progress,
-        completedLevels: newCompleted,
-        unlockedAgents: newAgents,
-        currentLevel: Math.max(progress.currentLevel, levelId + 1),
-        levelFailCounts: newFailCounts,
-      };
-
-      // 同步保存到 localStorage，确保父组件回调时能读到最新进度
-      const savedProgress = saveTraderRoadProgress(newProgress);
-      setProgress(savedProgress);
-      onLevelComplete?.(levelId);
-
-      // 完成金融知识入港口后，显示华尔堡引导
-      if (levelId === 0 || levelId === 1) {
-        setShowWallCastleTour(true);
-        // 清除区域上下文，确保返回世界地图后弹窗正确显示
-        setActiveZoneId(null);
-      }
-
-      // 数据黑市通关后，显示 Agent 解锁弹窗
-      if (levelId === 1) {
+      // 数据黑市通关后，显示 Agent 解锁弹窗（即使已通关也显示，确保不遗漏）
+      if (levelId === 1 && !progress.unlockedAgents.includes("data")) {
         setUnlockedAgentId("data");
         setShowAgentUnlock(true);
       }
 
-      // 财报考古遗迹通关后，显示 Agent 解锁弹窗
-      if (levelId === 5) {
+      // 财报考古遗迹通关后，显示 Agent 解锁弹窗（即使已通关也显示，确保不遗漏）
+      if (levelId === 5 && !progress.unlockedAgents.includes("valuation")) {
         setUnlockedAgentId("valuation");
         setShowAgentUnlock(true);
       }
