@@ -174,6 +174,14 @@ export function GameMapPlayer({
   const [tourVisited, setTourVisited] = useState(false);
   const [wallCastleRefreshKey, setWallCastleRefreshKey] = useState(0);
 
+  // Agent 信息映射（用于解锁弹窗）
+  const agentInfoMap: Record<string, { name: string; title: string; image: string }> = {
+    data: { name: "数据分析师", title: "Data Analyst", image: "/data_agent.png" },
+    valuation: { name: "估值分析师", title: "Valuation Analyst", image: "/valuation_agent.png" },
+    bull: { name: "看多分析师", title: "Bull Analyst", image: "/bull_agent.png" },
+    bear: { name: "看空分析师", title: "Bear Analyst", image: "/bear_agent.png" },
+  };
+
   // Check if first visit - ONLY after map is loaded
   useEffect(() => {
     if (mapLoaded) {
@@ -241,6 +249,12 @@ export function GameMapPlayer({
       // 数据黑市通关后，显示 Agent 解锁弹窗
       if (levelId === 1) {
         setUnlockedAgentId("data");
+        setShowAgentUnlock(true);
+      }
+
+      // 财报考古遗迹通关后，显示 Agent 解锁弹窗
+      if (levelId === 5) {
+        setUnlockedAgentId("valuation");
         setShowAgentUnlock(true);
       }
     },
@@ -1625,32 +1639,33 @@ export function GameMapPlayer({
         )}
 
         {/* Agent Unlock Popup */}
-        {showAgentUnlock && unlockedAgentId && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-[320px] w-full mx-4 animate-in fade-in zoom-in duration-300">
-              <div className="text-center">
-                <div className="text-4xl mb-3">🎉</div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Agent 解锁！</h3>
-                <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 mb-4">
-                  <div className="text-3xl mb-2">📊</div>
-                  <p className="text-sm font-bold text-gray-900">数据分析师</p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    擅长从海量数据中发现隐藏的投资机会
-                  </p>
+        {showAgentUnlock && unlockedAgentId && (() => {
+          const agent = agentInfoMap[unlockedAgentId];
+          if (!agent) return null;
+          return (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+              <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-[320px] w-full mx-4 animate-in fade-in zoom-in duration-300">
+                <div className="text-center">
+                  <div className="text-4xl mb-3">🎉</div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">Agent 解锁！</h3>
+                  <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 mb-4">
+                    <p className="text-sm font-bold text-gray-900">{agent.name}</p>
+                    <p className="text-xs text-gray-600 mt-1">{agent.title}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowAgentUnlock(false);
+                      setUnlockedAgentId(null);
+                    }}
+                    className="w-full px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-medium text-sm shadow-md hover:shadow-lg transition-shadow"
+                  >
+                    太棒了！
+                  </button>
                 </div>
-                <button
-                  onClick={() => {
-                    setShowAgentUnlock(false);
-                    setUnlockedAgentId(null);
-                  }}
-                  className="w-full px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-medium text-sm shadow-md hover:shadow-lg transition-shadow"
-                >
-                  太棒了！
-                </button>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Zone nav bar (zone view) */}
         {view === "zone" && (
