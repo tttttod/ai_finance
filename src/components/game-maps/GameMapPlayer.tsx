@@ -1370,14 +1370,22 @@ export function GameMapPlayer({
                   if (view === "game") {
                     // 华尔堡子关卡（level 1/2/3）→ 返回 submap
                     // 如果有子地图上下文（华尔堡），返回 submap
-                    // 主线关卡（level-*）从 zone 进入 → 返回 zone
+                    // 主线关卡：检查是否在区域中，决定返回 zone 还是 world
                     // 独立小游戏（无 activeLevelId）从世界地图进入 → 返回 world
                     if (activeSubmapId) {
                       setView("submap");
                       setActiveLevelId(null);
                       setActiveGameId(null);
-                    } else if (activeLevelId) {
-                      setView("zone");
+                    } else if (activeLevelId !== null) {
+                      // 检查当前关卡是否在区域中
+                      const zone = MAP_ZONES.find((z) => z.levels.includes(activeLevelId));
+                      if (zone) {
+                        setView("zone");
+                      } else {
+                        // 世界地图关卡：清除区域上下文，返回世界地图
+                        setActiveZoneId(null);
+                        setView("world");
+                      }
                       setActiveLevelId(null);
                       setActiveGameId(null);
                     } else {
