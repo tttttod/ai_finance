@@ -157,6 +157,13 @@ export function GameMapPlayer({
   const [progress, setProgress] = useState(() => loadTraderRoadProgress());
   // Welcome + guided tour state
   const [mapLoaded, setMapLoaded] = useState(false);
+
+  // 当视图切换回世界地图时，清除区域上下文
+  useEffect(() => {
+    if (view === "world") {
+      setActiveZoneId(null);
+    }
+  }, [view]);
   const [wallCastleLoaded, setWallCastleLoaded] = useState(false);
   const [showTour, setShowTour] = useState(false);
   const [showWallCastleTour, setShowWallCastleTour] = useState(false);
