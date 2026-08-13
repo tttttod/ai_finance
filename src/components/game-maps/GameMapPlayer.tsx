@@ -815,14 +815,20 @@ export function GameMapPlayer({
 
   // 游戏完成后返回正确的视图
   const returnAfterGameComplete = () => {
+    const currentLevelId = activeLevelId;
     setActiveLevelId(null);
     setActiveGameId(null);
-    // 如果有区域上下文，返回区域地图；否则返回世界地图
-    if (activeZoneId) {
-      setView("zone");
-    } else {
-      setView("world");
+    // 检查当前关卡是否在区域中
+    if (currentLevelId !== null) {
+      const zone = MAP_ZONES.find((z) => z.levels.includes(currentLevelId));
+      if (zone) {
+        setView("zone");
+        return;
+      }
     }
+    // 世界地图关卡：清除区域上下文，返回世界地图
+    setActiveZoneId(null);
+    setView("world");
   };
 
   const renderGame = () => {

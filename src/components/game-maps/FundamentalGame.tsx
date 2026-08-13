@@ -123,12 +123,6 @@ export default function FundamentalGame({ onBack, onComplete }: FundamentalGameP
   return (
     <main className="min-h-screen bg-[#2b211a] px-4 py-6 flex justify-center">
       <div className="w-full max-w-md">
-        <button type="button" onClick={() => onBack?.()}
-          className="mb-4 flex items-center gap-2 rounded-full border border-[#8e673c] bg-[#3a2a20] px-4 py-2 text-sm font-semibold text-[#f3dfb2] shadow-md transition hover:bg-[#493429]">
-          <span>←</span>
-          <span>返回金融华尔界</span>
-        </button>
-
         <div className="mb-6">
           <div className="mb-4 rounded-xl border border-[#8e673c] bg-[#3a2a20] px-4 py-3 text-[#f3dfb2] shadow-lg">
             <div className="flex items-start justify-between gap-4">
