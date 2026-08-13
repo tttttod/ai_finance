@@ -251,6 +251,7 @@ export function GameMapPlayer({
     (levelId: number): "completed" | "available" | "locked" => {
       if (progress.completedLevels.includes(levelId)) return "completed";
       if (levelId === 1) return "available";
+      if (levelId === 8) return "available"; // 临时开放，测试市场天气谷
       if (progress.completedLevels.includes(levelId - 1)) return "available";
       return "locked";
     },
