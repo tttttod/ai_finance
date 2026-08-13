@@ -1,10 +1,13 @@
 "use client";
+
 import Image from "next/image";
 import { useState } from "react";
+
 type FundamentalGameProps = {
   onBack?: () => void;
   onComplete?: () => void;
 };
+
 const financials = [
   { id: "revenue", label: "营业收入", value: "12.0 亿元", change: "+25%", note: "增长很快，原因是什么？" },
   { id: "profit", label: "净利润", value: "2.1 亿元", change: "+48%", note: "利润增长是否有现金支持？" },
@@ -12,16 +15,19 @@ const financials = [
   { id: "receivable", label: "应收账款", value: "4.8 亿元", change: "+95%", note: "这么多钱为什么还没收回来？" },
   { id: "inventory", label: "存货", value: "1.9 亿元", change: "+12%", note: "库存变化是否异常？" },
 ];
+
 const evidence = [
   { id: "customer", text: "前五大客户销售占比从 31% 上升至 68%" },
   { id: "office", text: "公司今年重新装修了总部办公室" },
   { id: "yearEnd", text: "12 月确认的收入占全年收入 37%" },
 ];
+
 const actions = [
   { id: "price", text: "查看公司近期股价走势" },
   { id: "receivable", text: "查看应收账款账龄及主要客户" },
   { id: "forum", text: "查看论坛网友是否普遍看多" },
 ];
+
 const cashQualityOptions = [
   {
     id: "healthy",
@@ -39,6 +45,7 @@ const cashQualityOptions = [
     text: "当前主要问题是市场可能低估了公司。",
   },
 ];
+
 const conclusionOptions = [
   { id: "fraud", text: "可以直接认定公司存在财务造假。" },
   { id: "ignore", text: "增长很快，所以这些异常可以先忽略。" },
@@ -47,6 +54,7 @@ const conclusionOptions = [
     text: "异常已经形成证据链，应继续核查收入质量、回款与客户集中度，但不能仅凭这些直接定性。",
   },
 ];
+
 function AgentHint({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative shrink-0 rounded-[20px] border-2 border-[#9a764e] bg-[#f3dfb2] py-2.5 pl-[68px] pr-3 shadow-[0_6px_16px_rgba(83,52,28,0.14)]">
@@ -65,6 +73,7 @@ function AgentHint({ children }: { children: React.ReactNode }) {
           🔍
         </div>
       </div>
+
       <div className="flex items-center gap-2">
         <p className="text-[9px] font-black tracking-[0.12em] text-[#70472c]">
           FUNDAMENTAL AGENT
@@ -73,12 +82,14 @@ function AgentHint({ children }: { children: React.ReactNode }) {
           基本面分析师
         </span>
       </div>
+
       <p className="mt-1 text-[11px] font-medium leading-[17px] text-[#5a3e28]">
         {children}
       </p>
     </div>
   );
 }
+
 export default function FundamentalGame({
   onBack,
   onComplete,
@@ -87,37 +98,47 @@ export default function FundamentalGame({
   const [lives, setLives] = useState(3);
   const [gameOver, setGameOver] = useState(false);
   const [gameCleared, setGameCleared] = useState(false);
+
   const [selectedFinancials, setSelectedFinancials] = useState<string[]>([]);
   const [selectedEvidence, setSelectedEvidence] = useState<string[]>([]);
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [selectedCashQuality, setSelectedCashQuality] = useState<string | null>(null);
   const [selectedConclusion, setSelectedConclusion] = useState<string | null>(null);
+
   const [step1Wrong, setStep1Wrong] = useState(false);
   const [step2Wrong, setStep2Wrong] = useState(false);
   const [step3Wrong, setStep3Wrong] = useState(false);
   const [step4Wrong, setStep4Wrong] = useState(false);
   const [step5Wrong, setStep5Wrong] = useState(false);
+
   const correctFinancials = ["cashflow", "receivable"];
   const correctEvidence = ["customer", "yearEnd"];
+
   const financialCorrect =
     selectedFinancials.length === 2 &&
     correctFinancials.every((id) => selectedFinancials.includes(id));
+
   const evidenceCorrect =
     selectedEvidence.length === 2 &&
     correctEvidence.every((id) => selectedEvidence.includes(id));
+
   function loseLife() {
     setLives((prev) => {
       const next = prev - 1;
+
       if (next <= 0) {
         setGameOver(true);
         return 0;
       }
+
       return next;
     });
   }
+
   function toggleFinancial(id: string) {
     if (gameOver || gameCleared) return;
     setStep1Wrong(false);
+
     setSelectedFinancials((prev) => {
       if (prev.includes(id)) {
         return prev.filter((item) => item !== id);
@@ -126,9 +147,11 @@ export default function FundamentalGame({
       return [...prev, id];
     });
   }
+
   function toggleEvidence(id: string) {
     if (gameOver || gameCleared) return;
     setStep2Wrong(false);
+
     setSelectedEvidence((prev) => {
       if (prev.includes(id)) {
         return prev.filter((item) => item !== id);
@@ -137,6 +160,7 @@ export default function FundamentalGame({
       return [...prev, id];
     });
   }
+
   function submitFinancials() {
     if (financialCorrect) {
       setStep1Wrong(false);
@@ -147,6 +171,7 @@ export default function FundamentalGame({
     setStep1Wrong(true);
     setSelectedFinancials([]);
   }
+
   function submitEvidence() {
     if (evidenceCorrect) {
       setStep2Wrong(false);
@@ -157,6 +182,7 @@ export default function FundamentalGame({
     setStep2Wrong(true);
     setSelectedEvidence([]);
   }
+
   function submitAction() {
     if (selectedAction === "receivable") {
       setStep3Wrong(false);
@@ -167,6 +193,7 @@ export default function FundamentalGame({
     setStep3Wrong(true);
     setSelectedAction(null);
   }
+
   function submitCashQuality() {
     if (selectedCashQuality === "warning") {
       setStep4Wrong(false);
@@ -177,6 +204,7 @@ export default function FundamentalGame({
     setStep4Wrong(true);
     setSelectedCashQuality(null);
   }
+
   function submitConclusion() {
     if (selectedConclusion === "verify") {
       setStep5Wrong(false);
@@ -187,28 +215,33 @@ export default function FundamentalGame({
     setStep5Wrong(true);
     setSelectedConclusion(null);
   }
+
   function resetGame() {
     setStep(1);
     setLives(3);
     setGameOver(false);
     setGameCleared(false);
+
     setSelectedFinancials([]);
     setSelectedEvidence([]);
     setSelectedAction(null);
     setSelectedCashQuality(null);
     setSelectedConclusion(null);
+
     setStep1Wrong(false);
     setStep2Wrong(false);
     setStep3Wrong(false);
     setStep4Wrong(false);
     setStep5Wrong(false);
   }
+
   const rank =
     lives === 3
       ? { label: "S级｜王牌财报侦探", icon: "🏆" }
       : lives === 2
         ? { label: "A级｜敏锐调查员", icon: "🔎" }
         : { label: "B级｜惊险破案", icon: "🗂️" };
+
   const taskText =
     step === 1
       ? "圈出 2 个最值得怀疑的财务指标"
@@ -217,8 +250,9 @@ export default function FundamentalGame({
         : step === 3
           ? "决定下一步最该调查什么"
           : step === 4
-            ? "判断利润的\u201c含金量\u201d"
+            ? "判断利润的“含金量”"
             : "给出谨慎、专业的研究结论";
+
   return (
     <main className="h-[100dvh] overflow-hidden bg-[#2b211a] p-3 text-[#3c2a1d]">
       <div className="mx-auto flex h-full w-full max-w-md flex-col gap-2">
@@ -231,12 +265,14 @@ export default function FundamentalGame({
             >
               ← 金融华尔界
             </button>
+
             <div className="text-center">
               <p className="text-[8px] font-black tracking-[0.18em] text-[#c7a56a]">
                 CURRENT CASE
               </p>
               <p className="text-sm font-black">财报侦探 · 星河科技</p>
             </div>
+
             <div className="text-right">
               <p className="text-[8px] font-black text-[#c7a56a]">STEP {step}/5</p>
               <div className="mt-0.5 flex gap-0.5">
@@ -253,6 +289,7 @@ export default function FundamentalGame({
               </div>
             </div>
           </div>
+
           {!gameOver && !gameCleared && (
             <div className="mt-2">
               <div className="flex items-center justify-between text-[9px] font-bold text-[#d9c092]">
@@ -268,6 +305,7 @@ export default function FundamentalGame({
             </div>
           )}
         </header>
+
         {!gameOver && !gameCleared && (
           <AgentHint>
             {step === 1 &&
@@ -277,11 +315,12 @@ export default function FundamentalGame({
             {step === 3 &&
               "别急着下结论。下一步调查应该优先验证最核心的矛盾。"}
             {step === 4 &&
-              "利润表说\u201c赚了\u201d，现金流量表却说\u201c钱没进来\u201d——这就是利润质量问题。"}
+              "利润表说“赚了”，现金流量表却说“钱没进来”——这就是利润质量问题。"}
             {step === 5 &&
               "研究员最后要做的，不是夸大结论，而是明确：我们知道什么、还不知道什么。"}
           </AgentHint>
         )}
+
         <section className="min-h-0 flex-1 overflow-hidden rounded-[26px] border-[3px] border-[#8e673c] bg-[#ead7a5] p-3 shadow-2xl">
           <div className="flex h-full flex-col">
             {gameOver && (
@@ -294,7 +333,7 @@ export default function FundamentalGame({
                   调查失败
                 </h2>
                 <p className="mt-3 max-w-xs text-sm leading-6 text-[#6d4035]">
-                  三颗调查之心已经耗尽。重新梳理"利润、现金流、应收账款"之间的关系再试一次。
+                  三颗调查之心已经耗尽。重新梳理“利润、现金流、应收账款”之间的关系再试一次。
                 </p>
                 <button
                   type="button"
@@ -305,6 +344,7 @@ export default function FundamentalGame({
                 </button>
               </div>
             )}
+
             {gameCleared && !gameOver && (
               <div className="flex h-full flex-col justify-center">
                 <div className="text-center">
@@ -319,6 +359,7 @@ export default function FundamentalGame({
                     {rank.label}
                   </p>
                 </div>
+
                 <div className="mt-4 rounded-[18px] border-2 border-[#52724c] bg-[#dce9cf] p-4">
                   <p className="text-xs font-black text-[#355037]">案件结论</p>
                   <p className="mt-2 text-[12px] leading-5 text-[#3f4937]">
@@ -326,6 +367,7 @@ export default function FundamentalGame({
                     已形成值得继续核查的证据链，但这些现象本身不能直接证明财务造假。
                   </p>
                 </div>
+
                 <div className="mt-4 grid grid-cols-1 gap-2">
                   <button
                     type="button"
@@ -334,6 +376,7 @@ export default function FundamentalGame({
                   >
                     完成调查，继续旅程 →
                   </button>
+
                   <button
                     type="button"
                     onClick={resetGame}
@@ -344,6 +387,7 @@ export default function FundamentalGame({
                 </div>
               </div>
             )}
+
             {!gameOver && !gameCleared && step === 1 && (
               <div className="flex h-full flex-col">
                 <div className="shrink-0 flex items-center justify-between">
@@ -357,9 +401,11 @@ export default function FundamentalGame({
                     选 2 个
                   </span>
                 </div>
+
                 <div className="mt-2 grid min-h-0 flex-1 grid-cols-1 gap-1.5">
                   {financials.map((item) => {
                     const active = selectedFinancials.includes(item.id);
+
                     return (
                       <button
                         type="button"
@@ -382,6 +428,7 @@ export default function FundamentalGame({
                             </p>
                           )}
                         </div>
+
                         <span
                           className={`ml-2 text-[12px] font-black ${
                             item.change.startsWith("-")
@@ -395,11 +442,13 @@ export default function FundamentalGame({
                     );
                   })}
                 </div>
+
                 {step1Wrong && !gameOver && (
                   <p className="mt-1.5 shrink-0 text-center text-[9px] font-bold text-[#8f2f25]">
                     💔 再看看利润、现金流和应收账款之间有没有矛盾。
                   </p>
                 )}
+
                 <button
                   type="button"
                   disabled={selectedFinancials.length !== 2}
@@ -410,6 +459,7 @@ export default function FundamentalGame({
                 </button>
               </div>
             )}
+
             {!gameOver && !gameCleared && step === 2 && (
               <div className="flex h-full flex-col">
                 <div className="shrink-0 flex items-center justify-between">
@@ -423,9 +473,11 @@ export default function FundamentalGame({
                     选 2 条
                   </span>
                 </div>
+
                 <div className="mt-3 grid flex-1 grid-rows-3 gap-2">
                   {evidence.map((item) => {
                     const active = selectedEvidence.includes(item.id);
+
                     return (
                       <button
                         type="button"
@@ -444,11 +496,13 @@ export default function FundamentalGame({
                     );
                   })}
                 </div>
+
                 {step2Wrong && !gameOver && (
                   <p className="mt-1.5 shrink-0 text-center text-[9px] font-bold text-[#8f2f25]">
-                    💔 哪些材料能解释"利润上涨，但现金没有同步进来"？
+                    💔 哪些材料能解释“利润上涨，但现金没有同步进来”？
                   </p>
                 )}
+
                 <button
                   type="button"
                   disabled={selectedEvidence.length !== 2}
@@ -459,6 +513,7 @@ export default function FundamentalGame({
                 </button>
               </div>
             )}
+
             {!gameOver && !gameCleared && step === 3 && (
               <div className="flex h-full flex-col">
                 <div className="shrink-0">
@@ -467,6 +522,7 @@ export default function FundamentalGame({
                   </p>
                   <h2 className="text-base font-black">下一步调查什么？</h2>
                 </div>
+
                 <div className="mt-3 grid flex-1 grid-rows-3 gap-2">
                   {actions.map((item) => (
                     <button
@@ -486,11 +542,13 @@ export default function FundamentalGame({
                     </button>
                   ))}
                 </div>
+
                 {step3Wrong && !gameOver && (
                   <p className="mt-1.5 shrink-0 text-center text-[9px] font-bold text-[#8f2f25]">
                     💔 当前最值得继续验证的是收入质量和回款情况。
                   </p>
                 )}
+
                 <button
                   type="button"
                   disabled={!selectedAction}
@@ -501,14 +559,16 @@ export default function FundamentalGame({
                 </button>
               </div>
             )}
+
             {!gameOver && !gameCleared && step === 4 && (
               <div className="flex h-full flex-col">
                 <div className="shrink-0">
                   <p className="text-[9px] font-black tracking-[0.15em] text-[#7c5a37]">
                     PROFIT QUALITY CHECK
                   </p>
-                  <h2 className="text-base font-black">利润真的"赚到手"了吗？</h2>
+                  <h2 className="text-base font-black">利润真的“赚到手”了吗？</h2>
                 </div>
+
                 <div className="mt-2 grid shrink-0 grid-cols-3 gap-1.5">
                   <div className="rounded-[14px] border border-[#b99564] bg-[#f8edcf] p-2 text-center">
                     <p className="text-[8px] font-bold text-[#7c5a37]">净利润</p>
@@ -523,9 +583,11 @@ export default function FundamentalGame({
                     <p className="mt-1 text-sm font-black text-[#a63b2e]">+95%</p>
                   </div>
                 </div>
+
                 <p className="mt-2 shrink-0 text-[11px] font-black text-[#5a3e28]">
                   这组数据最合理的判断是？
                 </p>
+
                 <div className="mt-2 grid flex-1 grid-rows-3 gap-1.5">
                   {cashQualityOptions.map((item) => (
                     <button
@@ -548,11 +610,13 @@ export default function FundamentalGame({
                     </button>
                   ))}
                 </div>
+
                 {step4Wrong && !gameOver && (
                   <p className="mt-1 shrink-0 text-center text-[9px] font-bold text-[#8f2f25]">
-                    💔 利润大涨但现金流恶化，通常不是"现金质量健康"的信号。
+                    💔 利润大涨但现金流恶化，通常不是“现金质量健康”的信号。
                   </p>
                 )}
+
                 <button
                   type="button"
                   disabled={!selectedCashQuality}
@@ -563,6 +627,7 @@ export default function FundamentalGame({
                 </button>
               </div>
             )}
+
             {!gameOver && !gameCleared && step === 5 && (
               <div className="flex h-full flex-col">
                 <div className="shrink-0">
@@ -571,6 +636,7 @@ export default function FundamentalGame({
                   </p>
                   <h2 className="text-base font-black">给出研究结论</h2>
                 </div>
+
                 <div className="mt-2 shrink-0 rounded-[16px] border border-[#9a764e] bg-[#f5e7c4] p-3">
                   <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[9px] font-bold text-[#6f4d31]">
                     <span>✓ 经营现金流 -72%</span>
@@ -579,9 +645,11 @@ export default function FundamentalGame({
                     <span>✓ 12 月收入占比 37%</span>
                   </div>
                 </div>
+
                 <p className="mt-2 shrink-0 text-[11px] font-black text-[#5a3e28]">
                   作为 Fundamental Agent，你应该怎么写结论？
                 </p>
+
                 <div className="mt-2 grid flex-1 grid-rows-3 gap-2">
                   {conclusionOptions.map((item) => (
                     <button
@@ -601,11 +669,13 @@ export default function FundamentalGame({
                     </button>
                   ))}
                 </div>
+
                 {step5Wrong && !gameOver && (
                   <p className="mt-1.5 shrink-0 text-center text-[9px] font-bold text-[#8f2f25]">
-                     基本面研究要谨慎：异常支持"继续核查"，不等于可以直接定性。
+                    💔 基本面研究要谨慎：异常支持“继续核查”，不等于可以直接定性。
                   </p>
                 )}
+
                 <button
                   type="button"
                   disabled={!selectedConclusion}
@@ -618,6 +688,7 @@ export default function FundamentalGame({
             )}
           </div>
         </section>
+
         <p className="shrink-0 text-center text-[8px] font-bold text-[#a78e72]">
           训练案例仅用于学习基本面分析方法，不构成投资建议。
         </p>
