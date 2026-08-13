@@ -157,10 +157,13 @@ export function GameMapPlayer({
   // Welcome + guided tour state
   const [mapLoaded, setMapLoaded] = useState(false);
   const [wallCastleLoaded, setWallCastleLoaded] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
   const [showTour, setShowTour] = useState(false);
-  const [tourVisited, setTourVisited] = useState(false);
   const [showWallCastleTour, setShowWallCastleTour] = useState(false);
+  // Agent unlock popup state
+  const [showAgentUnlock, setShowAgentUnlock] = useState(false);
+  const [unlockedAgentId, setUnlockedAgentId] = useState<string | null>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [tourVisited, setTourVisited] = useState(false);
   const [wallCastleRefreshKey, setWallCastleRefreshKey] = useState(0);
 
   // Check if first visit - ONLY after map is loaded
@@ -225,6 +228,12 @@ export function GameMapPlayer({
         setShowWallCastleTour(true);
         // 清除区域上下文，确保返回世界地图后弹窗正确显示
         setActiveZoneId(null);
+      }
+
+      // 数据黑市通关后，显示 Agent 解锁弹窗
+      if (levelId === 1) {
+        setUnlockedAgentId("data");
+        setShowAgentUnlock(true);
       }
     },
     [progress, onLevelComplete]
@@ -914,6 +923,14 @@ export function GameMapPlayer({
       <div className="flex flex-col h-full">
         {/* Game header */}
         <div className="flex items-center gap-2 mb-3 px-1">
+          {/* 返回按钮 */}
+          <button
+            onClick={returnAfterGameComplete}
+            className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/80 hover:bg-white transition-colors shadow-sm"
+            title="返回地图"
+          >
+            <span className="text-lg">←</span>
+          </button>
           {zone && (
             <span
               className="text-lg"
@@ -1579,6 +1596,34 @@ export function GameMapPlayer({
             >
               我知道了
             </button>
+          </div>
+        )}
+
+        {/* Agent Unlock Popup */}
+        {showAgentUnlock && unlockedAgentId && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-[320px] w-full mx-4 animate-in fade-in zoom-in duration-300">
+              <div className="text-center">
+                <div className="text-4xl mb-3">🎉</div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Agent 解锁！</h3>
+                <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 mb-4">
+                  <div className="text-3xl mb-2">📊</div>
+                  <p className="text-sm font-bold text-gray-900">数据分析师</p>
+                  <p className="text-xs text-gray-600 mt-1">
+                    擅长从海量数据中发现隐藏的投资机会
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowAgentUnlock(false);
+                    setUnlockedAgentId(null);
+                  }}
+                  className="w-full px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-medium text-sm shadow-md hover:shadow-lg transition-shadow"
+                >
+                  太棒了！
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
