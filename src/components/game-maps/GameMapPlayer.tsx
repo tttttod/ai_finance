@@ -773,6 +773,10 @@ export function GameMapPlayer({
   // ===== Render: Game =====
   // 完成华尔堡子关卡后回到二级地图
   const completeWallCastleSubLevelAndReturn = (levelId: number) => {
+    // 只有在华尔堡子地图上下文中才处理
+    if (activeSubmapId !== "wallCastleMap") {
+      return false;
+    }
     const mainLevelToSubLevel: Record<number, WallCastleSubLevelId> = {
       1: "data-black-market",
       2: "market-storm",
@@ -1028,6 +1032,7 @@ export function GameMapPlayer({
         // 进入关卡游戏（不提前标记完成）
         setActiveLevelId(mainLevelId);
         setActiveGameId(`level-${mainLevelId}`);
+        setActiveSubmapId("wallCastleMap"); // 记录子地图上下文
         setView("game");
       }
     };
@@ -1307,9 +1312,10 @@ export function GameMapPlayer({
                 onClick={() => {
                   if (view === "game") {
                     // 华尔堡子关卡（level 1/2/3）→ 返回 submap
+                    // 如果有子地图上下文（华尔堡），返回 submap
                     // 主线关卡（level-*）从 zone 进入 → 返回 zone
                     // 独立小游戏（无 activeLevelId）从世界地图进入 → 返回 world
-                    if (activeLevelId && activeLevelId <= 3) {
+                    if (activeSubmapId) {
                       setView("submap");
                       setActiveLevelId(null);
                       setActiveGameId(null);
