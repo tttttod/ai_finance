@@ -14,7 +14,7 @@ import { MiniGame } from "./MiniGame";
 import { BondHunterGame } from "../bond-hunter/BondHunterGame";
 import { LearningCards } from "./LearningCards";
 import { QuizChoice } from "./QuizChoice";
-import { SentimentGame } from "./SentimentGame";
+import SentimentGame from "./SentimentGame";
 import FundamentalGame from "./FundamentalGame";
 import {
   loadTraderRoadProgress,
