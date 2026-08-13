@@ -4,7 +4,7 @@ import { BRAIN_DATA } from "./brain-data";
 import { MINIGAME_DATA } from "./minigame-data";
 
 // ===== Level type definitions =====
-export type GameMapLevelType = "dialogue" | "quiz" | "brain" | "minigame" | "learning" | "quiz_choice" | "sentiment";
+export type GameMapLevelType = "dialogue" | "quiz" | "brain" | "minigame" | "learning" | "quiz_choice" | "sentiment" | "fundamental";
 
 export interface GameMapLevel {
   id: number;
@@ -58,7 +58,7 @@ export const GAME_MAP_LEVELS: GameMapLevel[] = [
 
   // ===== 主地图关卡 =====
   { id: 4, title: "信息迷雾群岛", subtitle: "Fundamental Agent", icon: "🔍", type: "dialogue", unlockAgents: ["fundamental"], color: "#8B5CF6", description: "在信息迷雾中辨别真伪，挖掘公司基本面真相。" },
-  { id: 5, title: "财报考古遗迹", subtitle: "Valuation Agent", icon: "📋", type: "dialogue", unlockAgents: ["valuation"], color: "#8B5CF6", description: "深夜审查财报，从数字中挖掘公司的真实底色。" },
+  { id: 5, title: "财报考古遗迹", subtitle: "Valuation Agent", icon: "📋", type: "fundamental", unlockAgents: ["valuation"], color: "#8B5CF6", description: "深夜审查财报，从数字中挖掘公司的真实底色。" },
   { id: 6, title: "模型沼泽", subtitle: "Technical Agent", icon: "📈", type: "dialogue", unlockAgents: ["technical"], color: "#8B5CF6", description: "好公司也有价签 — 判断公司质量与买入价格能否同时成立。" },
   { id: 7, title: "K线图学习", subtitle: "Sentiment Agent", icon: "📊", type: "learning", unlockAgents: ["sentiment"], color: "#F97316", description: "图形会说话吗 — 检查价格位置和成交变化，决定入场时机与投入资金。", learningCardIndices: [0, 1, 2, 3, 4] },
   { id: 8, title: "市场天气谷", subtitle: "Bull & Bear Analyst", icon: "🌤️", type: "sentiment", unlockAgents: ["bull", "bear"], color: "#6366F1", description: "多空观点对决，判断市场的晴雨方向。" },

@@ -57,6 +57,7 @@ src/
 │   │   ├── BrainGame.tsx         # 脑力配对组件
 │   │   ├── MiniGame.tsx          # 快速反应组件
 │   │   ├── SentimentGame.tsx     # 市场情绪实验室（3关：情绪扫描/舆情雷达/FOMO生存）
+│   │   ├── FundamentalGame.tsx   # 财报侦探（3步：选财务指标/选证据/选调查方向）
 │   │   └── GameMapPlayer.tsx     # 地图主控制器
 │   ├── bond-hunter/               # 债券猎手：固收挑战游戏（8关）
 │   │   ├── types.ts              # 游戏类型定义
@@ -125,7 +126,7 @@ src/
 - **用户认证** — Supabase Auth 邮箱密码登录/注册，路由守卫，登出（档案Tab底部）
 
 ### 交易员的正确之路 — 游戏地图系统
-- **10 个关卡**，5 种游戏类型：对话闯关 (dialogue)、知识翻牌 (quiz)、脑力配对 (brain)、快速反应 (minigame)、情绪实验室 (sentiment)
+- **10 个关卡**，6 种游戏类型：对话闯关 (dialogue)、知识翻牌 (quiz)、脑力配对 (brain)、快速反应 (minigame)、情绪实验室 (sentiment)、财报侦探 (fundamental)
 - 关卡数据集中在 `src/components/game-maps/` 目录
 - 进度通过 `src/lib/trader-road-progress.ts` 管理（localStorage，SSR 安全）
 - 每关完成后解锁对应 Agent，下一关自动解锁
