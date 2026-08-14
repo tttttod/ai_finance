@@ -16,6 +16,7 @@ import { LearningCards } from "./LearningCards";
 import { QuizChoice } from "./QuizChoice";
 import SentimentGame from "./SentimentGame";
 import FundamentalGame from "./FundamentalGame";
+import RiskGame from "./RiskGame";
 import {
   loadTraderRoadProgress,
   saveTraderRoadProgress,
@@ -1074,6 +1075,17 @@ export function GameMapPlayer({
           )}
           {config.type === "fundamental" && (
             <FundamentalGame
+              onBack={() => {
+                returnAfterGameComplete();
+              }}
+              onComplete={() => {
+                handleLevelComplete(activeLevelId);
+                returnAfterGameComplete();
+              }}
+            />
+          )}
+          {config.type === "risk" && (
+            <RiskGame
               onBack={() => {
                 returnAfterGameComplete();
               }}
