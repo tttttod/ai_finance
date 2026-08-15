@@ -172,6 +172,7 @@ export function GameMapPlayer({
   const [showWallCastleTour, setShowWallCastleTour] = useState(false);
   const [showWallCastleWelcome, setShowWallCastleWelcome] = useState(false);
   const [showKnowledgeMap, setShowKnowledgeMap] = useState(false);
+  const [knowledgeMapKey, setKnowledgeMapKey] = useState(0);
   const [knowledgeMapError, setKnowledgeMapError] = useState(false);
   // Agent unlock popup state
   const [showAgentUnlock, setShowAgentUnlock] = useState(false);
@@ -948,6 +949,48 @@ if (levelId === 7) return "available"; // 临时开放，测试K线图学习
           </div>
         );
       }
+      if (activeGameId === "review-lighthouse") {
+        return (
+          <div className="flex flex-col h-full">
+            <div className="flex items-center gap-2 mb-3 px-1">
+              <span className="text-lg">🗼</span>
+              <h3 className="text-sm font-bold text-[#1E293B]">复盘灯塔</h3>
+            </div>
+            <div className="flex-1 min-h-0 overflow-y-auto px-1 space-y-4">
+              <div className="p-4 rounded-xl bg-gradient-to-br from-[#1E3A5F] to-[#0F172A] text-white">
+                <h4 className="text-sm font-bold mb-2">🗼 灯塔指引</h4>
+                <p className="text-xs text-white/70 leading-relaxed">
+                  站在灯塔高处，俯瞰整个投资知识的海洋。
+                  量化知识图谱为你点亮每一条航道，帮助你构建完整的投资认知体系。
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setKnowledgeMapError(false);
+                  setKnowledgeMapKey((k) => k + 1);
+                  setShowKnowledgeMap(true);
+                }}
+                className="w-full p-4 rounded-xl bg-white border border-[#E2E8F0] flex items-center gap-3 hover:shadow-md transition-all duration-200"
+              >
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#3B82F6] to-[#8B5CF6] flex items-center justify-center">
+                  <NetworkIcon className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1 text-left">
+                  <h5 className="text-sm font-bold text-[#1E293B]">量化知识图谱</h5>
+                  <p className="text-xs text-[#64748B] mt-0.5">节点点击 / 逐层展开 / 搜索 / 拖动缩放</p>
+                </div>
+                <span className="text-[#94A3B8] text-lg">›</span>
+              </button>
+            </div>
+            <button
+              onClick={() => { setView("world"); setActiveGameId(null); }}
+              className="mt-4 mx-1 py-2.5 rounded-xl text-sm font-bold text-[#475569] bg-[#F1F5F9] hover:bg-[#E2E8F0] transition-all"
+            >
+              返回世界地图
+            </button>
+          </div>
+        );
+      }
       // 兜底
       return (
         <div className="flex flex-col items-center justify-center h-full">
@@ -1325,8 +1368,6 @@ if (levelId === 7) return "available"; // 临时开放，测试K线图学习
               <button
                 onClick={() => {
                   setShowWallCastleWelcome(false);
-                  // 进入第一关：数据黑市
-                  handleSubLevelClick("data-black-market");
                 }}
                 className="relative mt-6 w-full py-3 rounded-xl font-bold text-sm text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
                 style={{
@@ -1334,7 +1375,7 @@ if (levelId === 7) return "available"; // 临时开放，测试K线图学习
                   boxShadow: "0 4px 20px rgba(245,158,11,0.35)",
                 }}
               >
-                进入第一关
+                开始探索
               </button>
             </div>
           </div>
@@ -1593,18 +1634,6 @@ if (levelId === 7) return "available"; // 临时开放，测试K线图学习
             </h2>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => {
-                setKnowledgeMapError(false);
-                setShowKnowledgeMap(true);
-              }}
-              aria-label="量化知识图谱"
-              title="量化知识图谱"
-              className="h-10 px-3 rounded-xl bg-[#EFF6FF] flex items-center gap-1.5 text-[#1D4ED8] hover:bg-[#DBEAFE] transition-all duration-200 text-xs font-semibold"
-            >
-              <NetworkIcon className="w-4 h-4" />
-              知识图谱
-            </button>
             <span className="text-xs font-bold text-[#D97706]">
               🪙 {progress.coins}
             </span>
@@ -1891,11 +1920,7 @@ if (levelId === 7) return "available"; // 临时开放，测试K线图学习
                   <button
                     onClick={() => {
                       setKnowledgeMapError(false);
-                      // 强制重新加载 iframe
-                      const iframe = document.getElementById("knowledge-map-iframe") as HTMLIFrameElement | null;
-                      if (iframe) {
-                        iframe.src = iframe.src;
-                      }
+                      setKnowledgeMapKey((k) => k + 1);
                     }}
                     className="mt-2 px-4 py-2 rounded-lg bg-[#1D4ED8] text-white text-sm font-medium hover:bg-[#1E40AF] transition-all"
                   >
@@ -1904,6 +1929,7 @@ if (levelId === 7) return "available"; // 临时开放，测试K线图学习
                 </div>
               ) : null}
               <iframe
+                key={knowledgeMapKey}
                 id="knowledge-map-iframe"
                 src="/quant-knowledge-map/index.html"
                 title="量化知识图谱"
