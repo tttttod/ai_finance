@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 
 // ===== Types =====
+type Sentiment = "panic" | "neutral" | "euphoric";
+
 interface HotNewsItem {
   id: string;
   title: string;
@@ -10,11 +12,13 @@ interface HotNewsItem {
   publishedAt: string;
   url: string;
   summary: string;
-  sentiment: "panic" | "neutral" | "euphoria";
+  sentiment: Sentiment;
   sentimentLabel: "恐慌" | "中性" | "狂热";
   hotScore: number;
+  sector?: string;
   relatedSectors: string[];
   tags: string[];
+  image?: string;
 }
 
 interface HotNewsMeta {
@@ -25,20 +29,13 @@ interface HotNewsMeta {
   message?: string;
 }
 
-interface MarketIndex {
-  name: string;
-  code: string;
-  value: number;
-  change: number;
-  changePercent: number;
-  volume?: number;
-  isUp: boolean;
-}
-
 interface ForumPost {
   id: number;
   author: string;
   avatar: string;
+  role: string;
+  styleTag: string;
+  styleColor: string;
   title: string;
   content: string;
   likes: number;
@@ -47,13 +44,83 @@ interface ForumPost {
   tag: string;
 }
 
-// ===== Mock Forum (demo only) =====
+// ===== Mock Forum（demo only，明确标注演示数据）=====
 const MOCK_FORUM: ForumPost[] = [
-  { id: 1, author: "华尔街在逃交易员", avatar: "", title: "降准之后，银行股还能追吗？", content: "央行降准释放1万亿，银行股今天集体高开。但我觉得利好出尽就是利空，大家怎么看？", likes: 234, comments: 67, time: "15分钟前", tag: "热议" },
-  { id: 2, author: "K线萨满", avatar: "🔮", title: "半导体板块技术面分析：突破还是假突破？", content: "中芯国际今天放量突破前高，MACD金叉，但RSI已经进入超买区。从技术面看，短期可能有回调风险。", likes: 189, comments: 45, time: "1小时前", tag: "技术" },
-  { id: 3, author: "价值猎人", avatar: "🦅", title: "茅台PE回到25倍，是不是该抄底了？", content: "茅台PE从35倍回到25倍，ROE依然33%+，分红率60%。从价值投资角度看，这个估值已经很有吸引力了。", likes: 156, comments: 89, time: "2小时前", tag: "价值" },
-  { id: 4, author: "量化小白", avatar: "🤖", title: "新手求教：怎么判断市场情绪？", content: "最近市场波动很大，想学学怎么判断市场情绪。有没有大佬分享一下经验？看哪些指标比较靠谱？", likes: 98, comments: 34, time: "3小时前", tag: "求助" },
-  { id: 5, author: "宏观观察者", avatar: "🌍", title: "美联储降息预期升温，对A股有什么影响？", content: "如果美联储年内降息两次，美元走弱，人民币升值压力加大。理论上利好A股外资流入，但也要警惕热钱快进快出。", likes: 145, comments: 52, time: "4小时前", tag: "宏观" },
+  {
+    id: 1,
+    author: "华尔街在逃交易员",
+    avatar: "",
+    role: "波段交易者",
+    styleTag: "右侧趋势",
+    styleColor: "#DC2626",
+    title: "降准之后，银行股还能追吗？",
+    content:
+      "央行降准释放1万亿，银行股今天集体高开。但我觉得利好出尽就是利空，大家怎么看？",
+    likes: 234,
+    comments: 67,
+    time: "15分钟前",
+    tag: "热议",
+  },
+  {
+    id: 2,
+    author: "K线萨满",
+    avatar: "",
+    role: "技术分析",
+    styleTag: "动量交易",
+    styleColor: "#8B5CF6",
+    title: "半导体板块技术面分析：突破还是假突破？",
+    content:
+      "中芯国际今天放量突破前高，MACD金叉，但RSI已经进入超买区。从技术面看，短期可能有回调风险。",
+    likes: 189,
+    comments: 45,
+    time: "1小时前",
+    tag: "技术",
+  },
+  {
+    id: 3,
+    author: "价值猎人",
+    avatar: "",
+    role: "价值投资",
+    styleTag: "左侧布局",
+    styleColor: "#0D9488",
+    title: "茅台PE回到25倍，是不是该抄底了？",
+    content:
+      "茅台PE从35倍回到25倍，ROE依然33%+，分红率60%。从价值投资角度看，这个估值已经很有吸引力了。",
+    likes: 156,
+    comments: 89,
+    time: "2小时前",
+    tag: "价值",
+  },
+  {
+    id: 4,
+    author: "量化小白",
+    avatar: "",
+    role: "新手观察",
+    styleTag: "学习中",
+    styleColor: "#F59E0B",
+    title: "新手求教：怎么判断市场情绪？",
+    content:
+      "最近市场波动很大，想学学怎么判断市场情绪。有没有大佬分享一下经验？看哪些指标比较靠谱？",
+    likes: 98,
+    comments: 34,
+    time: "3小时前",
+    tag: "求助",
+  },
+  {
+    id: 5,
+    author: "宏观观察者",
+    avatar: "",
+    role: "宏观研究",
+    styleTag: "自上而下",
+    styleColor: "#3B82F6",
+    title: "美联储降息预期升温，对A股有什么影响？",
+    content:
+      "如果美联储年内降息两次，美元走弱，人民币升值压力加大。理论上利好A股外资流入，但也要警惕热钱快进快出。",
+    likes: 145,
+    comments: 52,
+    time: "4小时前",
+    tag: "宏观",
+  },
 ];
 
 // ===== Helpers =====
@@ -75,31 +142,41 @@ function formatTime(isoStr: string): string {
   }
 }
 
-function getSentimentColor(sentiment: string): string {
+function getSentimentColor(sentiment: Sentiment): string {
   switch (sentiment) {
-    case "panic": return "#DC2626";
-    case "euphoria": return "#059669";
-    default: return "#64748B";
+    case "panic":
+      return "#DC2626";
+    case "euphoric":
+      return "#059669";
+    default:
+      return "#64748B";
   }
 }
 
-function getSentimentBg(sentiment: string): string {
+function getSentimentBg(sentiment: Sentiment): string {
   switch (sentiment) {
-    case "panic": return "rgba(220, 38, 38, 0.1)";
-    case "euphoria": return "rgba(5, 150, 105, 0.1)";
-    default: return "rgba(100, 116, 139, 0.1)";
+    case "panic":
+      return "rgba(220, 38, 38, 0.06)";
+    case "euphoric":
+      return "rgba(5, 150, 105, 0.06)";
+    default:
+      return "rgba(100, 116, 139, 0.04)";
   }
 }
 
 function getProviderLabel(provider: string): string {
   switch (provider) {
-    case "sina-finance-rss":
-      return "新浪财经 RSS";
-    case "none":
-      return "暂无数据源";
+    case "eastmoney-search":
+      return "东方财富";
     default:
       return provider;
   }
+}
+
+// 头像：优先用 emoji，无则用昵称首字
+function getAvatarText(post: ForumPost): string {
+  if (post.avatar) return post.avatar;
+  return post.author.slice(0, 1);
 }
 
 // ===== Hot News Section =====
@@ -108,15 +185,69 @@ function HotNewsSection({
   loading,
   error,
   meta,
+  searchKeyword,
+  onSearch,
   onRefresh,
 }: {
   news: HotNewsItem[];
   loading: boolean;
   error: string | null;
   meta: HotNewsMeta | null;
+  searchKeyword: string;
+  onSearch: (kw: string) => void;
   onRefresh: () => void;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [inputValue, setInputValue] = useState(searchKeyword);
+
+  useEffect(() => {
+    setInputValue(searchKeyword);
+  }, [searchKeyword]);
+
+  const handleSearch = () => {
+    const kw = inputValue.trim();
+    onSearch(kw);
+  };
+
+  const handleClear = () => {
+    setInputValue("");
+    onSearch("");
+  };
+
+  // 舆情统计
+  const sentimentStats = useMemo(() => {
+    const total = news.length;
+    if (total === 0) return null;
+    let panic = 0;
+    let euphoric = 0;
+    let neutral = 0;
+    for (const n of news) {
+      if (n.sentiment === "panic") panic++;
+      else if (n.sentiment === "euphoric") euphoric++;
+      else neutral++;
+    }
+    return {
+      total,
+      panic,
+      euphoric,
+      neutral,
+      panicPct: Math.round((panic / total) * 100),
+      euphoricPct: Math.round((euphoric / total) * 100),
+      neutralPct: Math.round((neutral / total) * 100),
+    };
+  }, [news]);
+
+  // 舆情总体判断（仅作为内容标签，不构成投资建议）
+  const overallMood = useMemo(() => {
+    if (!sentimentStats) return null;
+    if (sentimentStats.panicPct > sentimentStats.euphoricPct + 15) {
+      return { label: "情绪偏谨慎", color: "#DC2626", desc: "恐慌类新闻占比较高" };
+    }
+    if (sentimentStats.euphoricPct > sentimentStats.panicPct + 15) {
+      return { label: "情绪偏乐观", color: "#059669", desc: "狂热类新闻占比较高" };
+    }
+    return { label: "情绪中性", color: "#64748B", desc: "市场情绪较为平衡" };
+  }, [sentimentStats]);
 
   if (loading) {
     return (
@@ -151,6 +282,7 @@ function HotNewsSection({
           <h3 className="text-sm font-black text-slate-600">热点新闻</h3>
         </div>
         <div className="text-center py-6">
+          <p className="text-2xl mb-2">📡</p>
           <p className="text-xs font-bold text-slate-500 mb-2">{error}</p>
           <button
             onClick={onRefresh}
@@ -185,14 +317,104 @@ function HotNewsSection({
         </button>
       </div>
 
+      {/* 搜索框 */}
+      <div className="mb-3">
+        <div className="flex items-center gap-2">
+          <div className="flex-1 flex items-center gap-2 bg-slate-50 rounded-full px-3 py-2 border border-slate-200 focus-within:border-[#FF6B6B]/50 transition-colors">
+            <span className="text-xs">🔍</span>
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSearch();
+              }}
+              placeholder="搜索股票、行业、市场关键词..."
+              className="flex-1 bg-transparent text-xs font-bold text-slate-700 outline-none placeholder:text-slate-400"
+            />
+            {inputValue && (
+              <button
+                onClick={handleClear}
+                className="text-slate-400 hover:text-slate-600 text-xs"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          <button
+            onClick={handleSearch}
+            className="px-3 py-2 rounded-full bg-[#FF6B6B] text-white text-[10px] font-black hover:bg-[#e55a5a] transition-colors"
+          >
+            搜索
+          </button>
+        </div>
+        {searchKeyword && (
+          <p className="text-[10px] font-bold text-slate-400 mt-1.5 pl-1">
+            当前搜索：<span className="text-[#FF6B6B]">「{searchKeyword}」</span>
+          </p>
+        )}
+      </div>
+
+      {/* 舆情解读 */}
+      {overallMood && sentimentStats && (
+        <div className="mb-3 rounded-2xl bg-gradient-to-r from-slate-50 to-white border border-slate-100 p-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs">📊</span>
+              <span className="text-[11px] font-black text-slate-700">舆情解读</span>
+            </div>
+            <span
+              className="text-[10px] font-black px-2 py-0.5 rounded-full text-white"
+              style={{ backgroundColor: overallMood.color }}
+            >
+              {overallMood.label}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex-1 h-2 rounded-full overflow-hidden bg-slate-100 flex">
+              <div
+                className="h-full"
+                style={{
+                  width: `${sentimentStats.panicPct}%`,
+                  backgroundColor: "#DC2626",
+                }}
+              />
+              <div
+                className="h-full"
+                style={{
+                  width: `${sentimentStats.neutralPct}%`,
+                  backgroundColor: "#94A3B8",
+                }}
+              />
+              <div
+                className="h-full"
+                style={{
+                  width: `${sentimentStats.euphoricPct}%`,
+                  backgroundColor: "#059669",
+                }}
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-3 text-[10px] font-bold">
+            <span className="text-[#DC2626]">恐慌 {sentimentStats.panicPct}%</span>
+            <span className="text-slate-500">中性 {sentimentStats.neutralPct}%</span>
+            <span className="text-[#059669]">狂热 {sentimentStats.euphoricPct}%</span>
+            <span className="text-slate-400 ml-auto">共 {sentimentStats.total} 条</span>
+          </div>
+          <p className="text-[9px] text-slate-400 mt-1.5 leading-relaxed">
+            {overallMood.desc}。情绪标签由关键词规则生成，仅作内容聚合，不构成投资建议。
+          </p>
+        </div>
+      )}
+
       {news.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-2xl mb-2">📭</p>
           <p className="text-xs font-bold text-slate-500">
-            {meta?.message || "暂无实时新闻数据，请稍后重试"}
+            {meta?.message || "暂无可用新闻数据，请稍后重试"}
           </p>
           <p className="text-[10px] font-bold text-slate-400 mt-1">
-            新闻源：{getProviderLabel(meta?.provider || "none")}
+            新闻源：{getProviderLabel(meta?.provider || "")}
           </p>
         </div>
       ) : (
@@ -204,8 +426,12 @@ function HotNewsSection({
                 key={item.id}
                 className="rounded-2xl border-2 border-slate-100 p-3 transition-all duration-300 hover:border-[#FF6B6B]/30 hover:shadow-sm cursor-pointer"
                 style={{
-                  backgroundColor: isExpanded ? getSentimentBg(item.sentiment) : "white",
-                  borderColor: isExpanded ? getSentimentColor(item.sentiment) + "40" : undefined,
+                  backgroundColor: isExpanded
+                    ? getSentimentBg(item.sentiment)
+                    : "white",
+                  borderColor: isExpanded
+                    ? getSentimentColor(item.sentiment) + "40"
+                    : undefined,
                 }}
                 onClick={() => setExpandedId(isExpanded ? null : item.id)}
               >
@@ -221,9 +447,13 @@ function HotNewsSection({
                       {item.title}
                     </p>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <span className="text-[10px] font-bold text-slate-400">{item.source}</span>
+                      <span className="text-[10px] font-bold text-slate-500">
+                        {item.source}
+                      </span>
                       <span className="text-[10px] text-slate-300">·</span>
-                      <span className="text-[10px] font-bold text-slate-400">{formatTime(item.publishedAt)}</span>
+                      <span className="text-[10px] font-bold text-slate-400">
+                        {formatTime(item.publishedAt)}
+                      </span>
                       <span className="text-[10px] font-bold text-[#FF6B6B] ml-auto">
                         🔥 {item.hotScore}
                       </span>
@@ -247,7 +477,7 @@ function HotNewsSection({
                     <p className="text-[11px] font-bold text-slate-600 leading-relaxed mb-2">
                       {item.summary}
                     </p>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {item.tags.map((tag) => (
                         <span
                           key={tag}
@@ -279,144 +509,35 @@ function HotNewsSection({
   );
 }
 
-// ===== Market Section =====
-function MarketSection({
-  indices,
-  loading,
-  source,
-  tradeDate,
-}: {
-  indices: MarketIndex[];
-  loading: boolean;
-  source: string;
-  tradeDate: string;
-}) {
-  const isMock = source === "mock";
-
-  if (loading) {
-    return (
-      <div className="bg-white rounded-3xl p-4 border-2 border-[#4ECDC4]/30 shadow-md">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-lg">📈</span>
-          <h3 className="text-sm font-black bg-gradient-to-r from-[#4ECDC4] to-[#00D4FF] bg-clip-text text-transparent">
-            今日行情
-          </h3>
-          <div className="ml-auto flex items-center gap-1">
-            <div className="w-3 h-3 border-2 border-[#4ECDC4] border-t-transparent rounded-full animate-spin" />
-            <span className="text-[10px] font-bold text-slate-400">加载中</span>
-          </div>
-        </div>
-        <div className="space-y-2">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-12 bg-slate-50 rounded-xl animate-pulse" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-white rounded-3xl p-4 border-2 border-[#4ECDC4]/30 shadow-md">
-      <div className="flex items-center gap-2 mb-3">
-        <span className="text-lg">📈</span>
-        <h3 className="text-sm font-black bg-gradient-to-r from-[#4ECDC4] to-[#00D4FF] bg-clip-text text-transparent">
-          今日行情
-        </h3>
-        <div className="ml-auto flex items-center gap-1.5">
-          {isMock && (
-            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-200">
-              演示数据
-            </span>
-          )}
-          <span className="text-[10px] font-bold text-slate-400">
-            {tradeDate || new Date().toLocaleDateString("zh-CN", { month: "long", day: "numeric" })}
-          </span>
-        </div>
-      </div>
-
-      {indices.length === 0 ? (
-        <div className="text-center py-6">
-          <p className="text-xs font-bold text-slate-500">暂无行情数据</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {indices.map((idx) => (
-            <div
-              key={idx.code}
-              className="flex items-center justify-between py-2.5 px-3 rounded-xl border border-slate-100 transition-all hover:shadow-sm"
-              style={{
-                backgroundColor: idx.isUp ? "rgba(220, 38, 38, 0.03)" : "rgba(5, 150, 105, 0.03)",
-              }}
-            >
-              <div className="flex-1">
-                <div className="text-xs font-bold text-slate-800">{idx.name}</div>
-                <div className="text-[10px] font-bold text-slate-400">{idx.code}</div>
-              </div>
-              <div className="text-right">
-                <div
-                  className="text-sm font-mono font-black"
-                  style={{ color: idx.isUp ? "#DC2626" : "#059669" }}
-                >
-                  {idx.value.toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </div>
-                <div className="flex items-center gap-1 justify-end">
-                  <span
-                    className="text-[10px] font-mono font-bold"
-                    style={{ color: idx.isUp ? "#DC2626" : "#059669" }}
-                  >
-                    {idx.isUp ? "+" : ""}{idx.change.toFixed(2)}
-                  </span>
-                  <span
-                    className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
-                    style={{
-                      color: idx.isUp ? "#DC2626" : "#059669",
-                      backgroundColor: idx.isUp ? "rgba(220, 38, 38, 0.1)" : "rgba(5, 150, 105, 0.1)",
-                    }}
-                  >
-                    {idx.isUp ? "+" : ""}{idx.changePercent.toFixed(2)}%
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {source && (
-        <div className="mt-3 pt-2 border-t border-slate-100">
-          <p className="text-[9px] font-bold text-slate-400">
-            数据来源：{source === "tushare" ? "Tushare 实时行情" : source === "cache" ? "缓存行情数据" : "演示数据"}
-          </p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ===== Forum Section =====
+// ===== Forum Section（模拟社区，明确标识演示数据）=====
 function ForumSection() {
   const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
 
-  const toggleLike = (postId: number) => {
+  const toggleLike = useCallback((postId: number) => {
     setLikedPosts((prev) => {
       const next = new Set(prev);
       if (next.has(postId)) next.delete(postId);
       else next.add(postId);
       return next;
     });
-  };
+  }, []);
 
   return (
     <div className="bg-white rounded-3xl p-4 border-2 border-[#8B5CF6]/30 shadow-md">
       <div className="flex items-center gap-2 mb-3">
         <span className="text-lg">💬</span>
         <h3 className="text-sm font-black bg-gradient-to-r from-[#8B5CF6] to-[#FF6B6B] bg-clip-text text-transparent">
-          用户论谈
+          模拟社区
         </h3>
         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-200">
           演示数据
         </span>
-        <button className="text-[10px] font-black text-[#8B5CF6] ml-auto bg-[#8B5CF6]/10 px-3 py-1 rounded-full hover:bg-[#8B5CF6]/20 transition-colors">
+        <button
+          className="text-[10px] font-black text-[#8B5CF6] ml-auto bg-[#8B5CF6]/10 px-3 py-1 rounded-full hover:bg-[#8B5CF6]/20 transition-colors"
+          onClick={() => {
+            /* demo only */
+          }}
+        >
           发帖
         </button>
       </div>
@@ -428,25 +549,61 @@ function ForumSection() {
               key={post.id}
               className="rounded-2xl border-2 border-slate-100 p-3 transition-all hover:border-[#8B5CF6]/30 hover:shadow-sm"
             >
+              {/* 用户身份区 */}
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg">{post.avatar}</span>
-                <span className="text-xs font-black text-slate-700">{post.author}</span>
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-black text-white shrink-0"
+                  style={{ backgroundColor: post.styleColor }}
+                >
+                  {getAvatarText(post)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs font-black text-slate-800">
+                      {post.author}
+                    </span>
+                    <span
+                      className="text-[9px] font-bold px-1.5 py-0.5 rounded text-white"
+                      style={{ backgroundColor: post.styleColor }}
+                    >
+                      {post.role}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span
+                      className="text-[9px] font-bold"
+                      style={{ color: post.styleColor }}
+                    >
+                      · {post.styleTag}
+                    </span>
+                  </div>
+                </div>
                 <span
-                  className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
+                  className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white shrink-0"
                   style={{
                     backgroundColor:
-                      post.tag === "热议" ? "#FF6B6B" :
-                      post.tag === "技术" ? "#8B5CF6" :
-                      post.tag === "价值" ? "#4ECDC4" :
-                      post.tag === "求助" ? "#FFD93D" : "#FF6B35",
+                      post.tag === "热议"
+                        ? "#FF6B6B"
+                        : post.tag === "技术"
+                          ? "#8B5CF6"
+                          : post.tag === "价值"
+                            ? "#0D9488"
+                            : post.tag === "求助"
+                              ? "#F59E0B"
+                              : "#FF6B35",
                   }}
                 >
                   {post.tag}
                 </span>
-                <span className="text-[10px] font-bold text-slate-400 ml-auto">{post.time}</span>
+                <span className="text-[10px] font-bold text-slate-400 shrink-0">
+                  {post.time}
+                </span>
               </div>
+
               <p className="text-xs font-bold text-slate-800 mb-1">{post.title}</p>
-              <p className="text-[11px] font-bold text-slate-500 leading-relaxed">{post.content}</p>
+              <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
+                {post.content}
+              </p>
               <div className="flex items-center gap-4 mt-2 pt-2 border-t border-slate-100">
                 <button
                   onClick={() => toggleLike(post.id)}
@@ -461,7 +618,12 @@ function ForumSection() {
                   <span className="text-sm">💬</span>
                   <span>{post.comments}</span>
                 </span>
-                <button className="flex items-center gap-1 text-[10px] font-bold text-slate-400 hover:text-[#8B5CF6] transition-colors ml-auto">
+                <button
+                  className="flex items-center gap-1 text-[10px] font-bold text-slate-400 hover:text-[#8B5CF6] transition-colors ml-auto"
+                  onClick={() => {
+                    /* demo only */
+                  }}
+                >
                   <span className="text-sm">🔗</span>
                   <span>分享</span>
                 </button>
@@ -481,11 +643,7 @@ export default function NewsTab() {
   const [newsLoading, setNewsLoading] = useState(true);
   const [newsError, setNewsError] = useState<string | null>(null);
   const [newsMeta, setNewsMeta] = useState<HotNewsMeta | null>(null);
-
-  const [indices, setIndices] = useState<MarketIndex[]>([]);
-  const [marketLoading, setMarketLoading] = useState(true);
-  const [marketSource, setMarketSource] = useState("mock");
-  const [tradeDate, setTradeDate] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState("");
 
   // Clock
   useEffect(() => {
@@ -501,11 +659,14 @@ export default function NewsTab() {
   }, []);
 
   // Fetch hot news
-  const fetchNews = async () => {
+  const fetchNews = useCallback(async (keyword?: string) => {
     setNewsLoading(true);
     setNewsError(null);
     try {
-      const res = await fetch("/api/hot-news");
+      const url = keyword?.trim()
+        ? `/api/hot-news?q=${encodeURIComponent(keyword.trim())}`
+        : "/api/hot-news";
+      const res = await fetch(url, { cache: "no-store" });
       const data = await res.json();
       if (data.success) {
         setNews(data.data || []);
@@ -519,41 +680,23 @@ export default function NewsTab() {
     } finally {
       setNewsLoading(false);
     }
-  };
-
-  // Fetch market snapshot
-  const fetchMarket = async () => {
-    setMarketLoading(true);
-    try {
-      const res = await fetch("/api/market-snapshot");
-      const data = await res.json();
-      const snapshot = data.data || data;
-
-      if (snapshot.indices && snapshot.indices.length > 0) {
-        setIndices(
-          snapshot.indices.map((idx: Record<string, unknown>) => ({
-            name: (idx.name as string) || "",
-            code: (idx.tsCode as string) || (idx.code as string) || "",
-            value: Number(idx.close || idx.value || 0),
-            change: Number(idx.change || idx.pctChg || 0),
-            changePercent: Number(idx.pctChg || idx.changePercent || 0),
-            isUp: Number(idx.pctChg || idx.changePercent || 0) >= 0,
-          }))
-        );
-      }
-      setMarketSource(snapshot.source || "mock");
-      setTradeDate(snapshot.tradeDate || "");
-    } catch (err) {
-      console.error("[NewsTab] fetch market error:", err);
-    } finally {
-      setMarketLoading(false);
-    }
-  };
+  }, []);
 
   useEffect(() => {
     fetchNews();
-    fetchMarket();
-  }, []);
+  }, [fetchNews]);
+
+  const handleSearch = useCallback(
+    (kw: string) => {
+      setSearchKeyword(kw);
+      fetchNews(kw);
+    },
+    [fetchNews]
+  );
+
+  const handleRefresh = useCallback(() => {
+    fetchNews(searchKeyword);
+  }, [fetchNews, searchKeyword]);
 
   return (
     <div className="p-4 space-y-4">
@@ -570,35 +713,29 @@ export default function NewsTab() {
             <span className="text-[10px] font-bold text-slate-500">{currentTime}</span>
           </div>
           <p className="text-xs font-bold text-slate-600 leading-relaxed">
-            实时热点资讯 · 真实行情数据 · 投资社区，一站式掌握市场脉搏
+            实时热点资讯 · 舆情情绪解读 · 模拟社区，一站式掌握市场脉搏
           </p>
         </div>
       </div>
 
-      {/* 热点新闻 */}
+      {/* 热点新闻（含搜索 + 舆情解读）*/}
       <HotNewsSection
         news={news}
         loading={newsLoading}
         error={newsError}
         meta={newsMeta}
-        onRefresh={fetchNews}
+        searchKeyword={searchKeyword}
+        onSearch={handleSearch}
+        onRefresh={handleRefresh}
       />
 
-      {/* 今日行情 */}
-      <MarketSection
-        indices={indices}
-        loading={marketLoading}
-        source={marketSource}
-        tradeDate={tradeDate}
-      />
-
-      {/* 用户论谈 */}
+      {/* 模拟社区（演示数据）*/}
       <ForumSection />
 
       {/* 免责声明 */}
       <div className="bg-amber-50/50 rounded-2xl p-3 border border-amber-100">
         <p className="text-[10px] text-amber-600 leading-relaxed font-bold">
-          ⚠️ 以上信息仅供参考，不构成投资建议。市场有风险，投资需谨慎。新闻数据来自公开聚合源，社区内容为演示数据。
+          ⚠️ 以上信息仅供参考，不构成投资建议。市场有风险，投资需谨慎。新闻来自东方财富公开搜索聚合，情绪标签仅作内容分类；社区内容为演示数据。
         </p>
       </div>
     </div>

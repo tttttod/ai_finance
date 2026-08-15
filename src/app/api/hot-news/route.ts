@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchHotNews } from "@/lib/data/hot-news-provider";
+import { fetchHotNews, EASTMONEY_PROVIDER } from "@/lib/data/hot-news-provider";
 
 export const dynamic = "force-dynamic";
 
@@ -28,11 +28,11 @@ export async function GET(request: Request) {
         success: true,
         data: [],
         meta: {
-          provider: "none",
+          provider: EASTMONEY_PROVIDER,
           fetchedAt: new Date().toISOString(),
           query: "",
           isFallback: true,
-          message: "暂无实时新闻数据，请稍后重试",
+          message: "暂无可用新闻数据，请稍后重试",
         },
       },
       { status: 200 }
