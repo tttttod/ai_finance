@@ -193,6 +193,8 @@ export default function KnowledgeEntrance({ onBack, onComplete }: KnowledgeEntra
       setShowKnowledgeCard(false);
       setRiskAnswer(null);
       setRiskFeedback(null);
+      setShowWallCastle(false);
+      setShowCertificate(false);
     }
   }, [sceneIndex]);
 
