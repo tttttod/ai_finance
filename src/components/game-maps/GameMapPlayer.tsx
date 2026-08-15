@@ -17,6 +17,7 @@ import { QuizChoice } from "./QuizChoice";
 import SentimentGame from "./SentimentGame";
 import FundamentalGame from "./FundamentalGame";
 import RiskGame from "./RiskGame";
+import TechnicalGame from "./TechnicalGame";
 import {
   loadTraderRoadProgress,
   saveTraderRoadProgress,
@@ -271,6 +272,7 @@ export function GameMapPlayer({
       if (levelId === 1) return "available";
       if (levelId === 8) return "available"; // 临时开放，测试市场天气谷
       if (levelId === 10) return "available"; // 临时开放，测试风险护盾桥
+if (levelId === 7) return "available"; // 临时开放，测试K线图学习
       if (progress.completedLevels.includes(levelId - 1)) return "available";
       return "locked";
     },
@@ -1087,6 +1089,17 @@ export function GameMapPlayer({
           )}
           {config.type === "risk" && (
             <RiskGame
+              onBack={() => {
+                returnAfterGameComplete();
+              }}
+              onComplete={() => {
+                handleLevelComplete(activeLevelId);
+                returnAfterGameComplete();
+              }}
+            />
+          )}
+          {config.type === "candlestick" && (
+            <TechnicalGame
               onBack={() => {
                 returnAfterGameComplete();
               }}
