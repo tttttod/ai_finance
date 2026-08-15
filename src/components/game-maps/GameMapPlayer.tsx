@@ -18,6 +18,7 @@ import SentimentGame from "./SentimentGame";
 import FundamentalGame from "./FundamentalGame";
 import RiskGame from "./RiskGame";
 import TechnicalGame from "./TechnicalGame";
+import KnowledgeEntrance from "./KnowledgeEntrance";
 import ParliamentGame from "./ParliamentGame";
 import {
   loadTraderRoadProgress,
@@ -176,6 +177,7 @@ export function GameMapPlayer({
   const [knowledgeMapError, setKnowledgeMapError] = useState(false);
   // Agent unlock popup state
   const [showAgentUnlock, setShowAgentUnlock] = useState(false);
+  const [isKnowledgeEntrance, setIsKnowledgeEntrance] = useState(false);
   const [unlockedAgentId, setUnlockedAgentId] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
   const [tourVisited, setTourVisited] = useState(false);
@@ -315,6 +317,14 @@ export function GameMapPlayer({
         if (loc.locationId === "model-swamp") {
           setActiveGameId("bond-hunter");
           setActiveLevelId(null);
+          setView("game");
+          return;
+        }
+
+        // 金融知识入港口 → 使用独立剧情组件
+        if (loc.locationId === "knowledge-entrance") {
+          setIsKnowledgeEntrance(true);
+          setActiveLevelId(1);
           setView("game");
           return;
         }
@@ -1002,6 +1012,25 @@ export function GameMapPlayer({
             返回世界地图
           </button>
         </div>
+      );
+    }
+
+    // 金融知识入港口剧情
+    if (isKnowledgeEntrance) {
+      return (
+        <KnowledgeEntrance
+          onBack={() => {
+            setIsKnowledgeEntrance(false);
+            setActiveLevelId(null);
+            setView("world");
+          }}
+          onComplete={() => {
+            setIsKnowledgeEntrance(false);
+            handleLevelComplete(1);
+            // 触发华尔堡引导
+            setTimeout(() => setShowWallCastleTour(true), 500);
+          }}
+        />
       );
     }
 
