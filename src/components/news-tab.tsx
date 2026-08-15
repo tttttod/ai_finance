@@ -52,8 +52,8 @@ interface ForumPost {
 const MOCK_FORUM: ForumPost[] = [
   {
     id: "demo-1",
-    author: "华尔街在逃交易员",
-    avatar: "",
+    author: "华尔街在逃交易员 · 右侧阿凯",
+    avatar: "🏦",
     role: "波段交易者",
     styleTag: "右侧趋势",
     styleColor: "#DC2626",
@@ -67,8 +67,8 @@ const MOCK_FORUM: ForumPost[] = [
   },
   {
     id: "demo-2",
-    author: "K线萨满",
-    avatar: "",
+    author: "K线萨满 · 趋势观测员",
+    avatar: "🔮",
     role: "技术分析",
     styleTag: "动量交易",
     styleColor: "#8B5CF6",
@@ -82,8 +82,8 @@ const MOCK_FORUM: ForumPost[] = [
   },
   {
     id: "demo-3",
-    author: "价值猎人",
-    avatar: "",
+    author: "老钱，老了才有钱 · 价投老张",
+    avatar: "👴",
     role: "价值投资",
     styleTag: "左侧布局",
     styleColor: "#0D9488",
@@ -97,8 +97,8 @@ const MOCK_FORUM: ForumPost[] = [
   },
   {
     id: "demo-4",
-    author: "量化小白",
-    avatar: "",
+    author: "回本就卖宗师 · 新手小林",
+    avatar: "📉",
     role: "新手观察",
     styleTag: "学习中",
     styleColor: "#F59E0B",
@@ -112,8 +112,8 @@ const MOCK_FORUM: ForumPost[] = [
   },
   {
     id: "demo-5",
-    author: "宏观观察者",
-    avatar: "",
+    author: "利好已出尽还在冲 · 宏观阿杰",
+    avatar: "🚀",
     role: "宏观研究",
     styleTag: "自上而下",
     styleColor: "#3B82F6",
@@ -714,7 +714,7 @@ function PostComposer({
           <div className="flex items-center gap-2">
             <span className="text-lg">✍️</span>
             <h3 className="text-sm font-black bg-gradient-to-r from-[#8B5CF6] to-[#FF6B6B] bg-clip-text text-transparent">
-              发布到模拟社区
+              发布到交流社区
             </h3>
             <button
               onClick={onClose}
@@ -859,7 +859,7 @@ function PostComposer({
   );
 }
 
-// ===== Forum Section（模拟社区，明确标识演示数据）=====
+// ===== Forum Section（交流社区，明确标识演示数据）=====
 function ForumSection() {
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [composerOpen, setComposerOpen] = useState(false);
@@ -943,7 +943,7 @@ function ForumSection() {
       <div className="flex items-center gap-2 mb-3">
         <span className="text-lg">💬</span>
         <h3 className="text-sm font-black bg-gradient-to-r from-[#8B5CF6] to-[#FF6B6B] bg-clip-text text-transparent">
-          模拟社区
+          交流社区
         </h3>
         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-200">
           本地演示
@@ -1116,7 +1116,7 @@ export default function NewsTab() {
             <span className="text-[10px] font-bold text-slate-500">{currentTime}</span>
           </div>
           <p className="text-xs font-bold text-slate-600 leading-relaxed">
-            实时热点资讯 · 舆情情绪解读 · 模拟社区，一站式掌握市场脉搏
+            实时热点资讯 · 舆情情绪解读 · 交流社区，一站式掌握市场脉搏
           </p>
         </div>
       </div>
@@ -1132,7 +1132,7 @@ export default function NewsTab() {
         onRefresh={handleRefresh}
       />
 
-      {/* 模拟社区（演示数据）*/}
+      {/* 交流社区（演示数据）*/}
       <ForumSection />
 
       {/* 免责声明 */}
