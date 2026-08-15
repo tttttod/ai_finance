@@ -287,10 +287,7 @@ export function GameMapPlayer({
     (levelId: number): "completed" | "available" | "locked" => {
       if (progress.completedLevels.includes(levelId)) return "completed";
       if (levelId === 1) return "available";
-      if (levelId === 8) return "available"; // 临时开放，测试市场天气谷
-      if (levelId === 10) return "available"; // 临时开放，测试风险护盾桥
-if (levelId === 7) return "available"; // 临时开放，测试K线图学习
-      if (levelId === 9) return "available"; // 临时开放，测试多空议会
+      // 纯顺序解锁：上一关完成后才解锁下一关
       if (progress.completedLevels.includes(levelId - 1)) return "available";
       return "locked";
     },
@@ -462,9 +459,14 @@ if (levelId === 7) return "available"; // 临时开放，测试K线图学习
       )}
       {/* Location hotspots with micro-interactions */}
       {WORLD_LOCATIONS.map((loc) => {
-        // 独立地点（非主线关卡）始终可点击；模型沼泽始终显示五角星（引导用户进入固收挑战）
+        // 独立地点（非主线关卡）始终可点击；华尔堡需要完成金融知识入港口后才能进入
         const isIndependent = loc.type === "feature" || loc.type === "submap" || (loc.type === "game" && loc.gameId && !loc.gameId.startsWith("level-"));
-        const status = isIndependent || loc.locationId === "model-swamp" ? "available" : getLevelStatus(loc.legacyLevelId ?? 0);
+        const isWallCastle = loc.type === "submap" && loc.locationId === "wall-castle";
+        const status = isWallCastle
+          ? (progress.completedLevels.includes(1) ? "available" : "locked")
+          : isIndependent
+            ? "available"
+            : getLevelStatus(loc.legacyLevelId ?? 0);
         const isHovered = hoveredWorldLoc === loc.id;
         const isClicked = clickedWorldLoc === loc.id;
         const isAvailable = status === "available" || status === "completed";
