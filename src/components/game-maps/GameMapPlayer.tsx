@@ -290,6 +290,7 @@ export function GameMapPlayer({
       if (levelId === 8) return "available"; // 临时开放，测试市场天气谷
       if (levelId === 10) return "available"; // 临时开放，测试风险护盾桥
 if (levelId === 7) return "available"; // 临时开放，测试K线图学习
+      if (levelId === 9) return "available"; // 临时开放，测试多空议会
       if (progress.completedLevels.includes(levelId - 1)) return "available";
       return "locked";
     },
