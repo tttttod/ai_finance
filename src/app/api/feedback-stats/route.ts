@@ -18,6 +18,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const sb = getSupabase();
   let records: any[] = [];
+  let source: "supabase" | "file" | "none" = "none";
 
   if (sb) {
     try {
@@ -27,9 +28,13 @@ export async function GET() {
         .order("created_at", { ascending: false });
       if (!error && data) {
         records = data;
+        source = "supabase";
+      } else if (error) {
+        console.error("[FeedbackStats] Supabase query error:", error.message);
       }
-    } catch {
-      // fall through to file
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      console.error("[FeedbackStats] Supabase exception:", message);
     }
   }
 
@@ -37,6 +42,7 @@ export async function GET() {
   if (records.length === 0 && fs.existsSync(FEEDBACK_FILE)) {
     const lines = fs.readFileSync(FEEDBACK_FILE, "utf-8").trim().split("\n");
     records = lines.map((line) => JSON.parse(line)).reverse();
+    source = "file";
   }
 
   // Calculate statistics
@@ -77,6 +83,7 @@ export async function GET() {
   return NextResponse.json({
     success: true,
     data: {
+      source,
       total,
       ratingDistribution,
       dimensionStats,

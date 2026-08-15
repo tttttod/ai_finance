@@ -26,11 +26,11 @@ function ensureCacheDir() {
 
 export async function saveUserFeedback(
   payload: UserFeedbackPayload,
-): Promise<void> {
+): Promise<{ savedTo: "supabase" | "file"; error?: string }> {
   const sb = getSupabase();
   if (sb) {
     try {
-      await sb.from("user_feedback").insert({
+      const { error } = await sb.from("user_feedback").insert({
         rating: payload.rating,
         selected_issues: payload.selectedIssues || null,
         dimension_scores: payload.dimensionScores || null,
@@ -38,9 +38,16 @@ export async function saveUserFeedback(
         page: payload.page,
         user_agent: payload.userAgent || null,
       });
-      return;
-    } catch {
-      // fall through to file
+      if (error) {
+        console.error("[Feedback] Supabase insert error:", error.message, error.details);
+        // Fall through to file
+      } else {
+        return { savedTo: "supabase" };
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      console.error("[Feedback] Supabase exception:", message);
+      // Fall through to file
     }
   }
 
@@ -48,4 +55,5 @@ export async function saveUserFeedback(
   ensureCacheDir();
   const line = JSON.stringify(payload) + "\n";
   fs.appendFileSync(FEEDBACK_FILE, line, "utf-8");
+  return { savedTo: "file" };
 }

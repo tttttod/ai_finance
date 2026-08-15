@@ -52,9 +52,13 @@ export async function POST(request: NextRequest) {
       userAgent: request.headers.get("user-agent") || undefined,
     };
 
-    await saveUserFeedback(payload);
+    const result = await saveUserFeedback(payload);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true, 
+      savedTo: result.savedTo,
+      ...(result.error ? { error: result.error } : {})
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json(
