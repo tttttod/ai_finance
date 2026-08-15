@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { TRADETI_PERSONALITIES } from "@/lib/mini-types";
+import type { TradeTIPersonalityId } from "@/lib/mini-types";
 
 // ===== Types =====
 type Sentiment = "panic" | "neutral" | "euphoric";
@@ -30,7 +32,7 @@ interface HotNewsMeta {
 }
 
 interface ForumPost {
-  id: number;
+  id: string;
   author: string;
   avatar: string;
   role: string;
@@ -42,12 +44,14 @@ interface ForumPost {
   comments: number;
   time: string;
   tag: string;
+  isMine?: boolean;
+  createdAt?: number;
 }
 
 // ===== Mock Forum（demo only，明确标注演示数据）=====
 const MOCK_FORUM: ForumPost[] = [
   {
-    id: 1,
+    id: "demo-1",
     author: "华尔街在逃交易员",
     avatar: "",
     role: "波段交易者",
@@ -62,7 +66,7 @@ const MOCK_FORUM: ForumPost[] = [
     tag: "热议",
   },
   {
-    id: 2,
+    id: "demo-2",
     author: "K线萨满",
     avatar: "",
     role: "技术分析",
@@ -77,7 +81,7 @@ const MOCK_FORUM: ForumPost[] = [
     tag: "技术",
   },
   {
-    id: 3,
+    id: "demo-3",
     author: "价值猎人",
     avatar: "",
     role: "价值投资",
@@ -92,7 +96,7 @@ const MOCK_FORUM: ForumPost[] = [
     tag: "价值",
   },
   {
-    id: 4,
+    id: "demo-4",
     author: "量化小白",
     avatar: "",
     role: "新手观察",
@@ -107,7 +111,7 @@ const MOCK_FORUM: ForumPost[] = [
     tag: "求助",
   },
   {
-    id: 5,
+    id: "demo-5",
     author: "宏观观察者",
     avatar: "",
     role: "宏观研究",
@@ -177,6 +181,134 @@ function getProviderLabel(provider: string): string {
 function getAvatarText(post: ForumPost): string {
   if (post.avatar) return post.avatar;
   return post.author.slice(0, 1);
+}
+
+// ===== 论坛身份：TPTI 人格 + 自定义用户名 =====
+
+interface ForumIdentity {
+  personalityId: TradeTIPersonalityId | "";
+  personalityName: string;
+  personalityEmoji: string;
+  personalityColor: string;
+  username: string;
+  /** 作者完整展示名：人格名 · 用户名 */
+  displayName: string;
+  isUnassessed: boolean;
+}
+
+const FORUM_USERNAME_KEY = "forum_username";
+const FORUM_USER_POSTS_KEY = "forum_user_posts";
+
+/** 从 localStorage 安全读取 TPTI 结果 */
+function readTradetiResultType(): TradeTIPersonalityId | "" {
+  if (typeof window === "undefined") return "";
+  try {
+    const raw = window.localStorage.getItem("tradeti_state");
+    if (!raw) return "";
+    const state = JSON.parse(raw) as { result_type?: TradeTIPersonalityId | "" };
+    return state.result_type || "";
+  } catch {
+    return "";
+  }
+}
+
+/** 基于 client-id 生成 player_xxxx 短码 */
+function generateFallbackUsername(): string {
+  if (typeof window === "undefined") return "player_0000";
+  let clientId = window.localStorage.getItem("client-id") || "";
+  if (!clientId) {
+    clientId =
+      (window.crypto && crypto.randomUUID
+        ? crypto.randomUUID()
+        : Math.random().toString(36).slice(2)) || "";
+    window.localStorage.setItem("client-id", clientId);
+  }
+  // 取最后 4 位字母数字，不足则左补 0
+  const tail = clientId.replace(/[^a-zA-Z0-9]/g, "").slice(-4).toLowerCase();
+  return `player_${tail.padStart(4, "0")}`;
+}
+
+function readForumUsername(): string {
+  if (typeof window === "undefined") return "";
+  return window.localStorage.getItem(FORUM_USERNAME_KEY) || "";
+}
+
+function writeForumUsername(name: string): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(FORUM_USERNAME_KEY, name);
+}
+
+/** 综合 TPTI 结果和用户名，得到当前用户论坛身份 */
+function getForumIdentity(): ForumIdentity {
+  const personalityId = readTradetiResultType();
+  const isUnassessed = !personalityId;
+  const personality = personalityId
+    ? TRADETI_PERSONALITIES[personalityId]
+    : null;
+  const personalityName = personality?.name || "未测评型";
+  const personalityEmoji = personality?.emoji || "🐣";
+  const personalityColor = personality?.color || "#64748B";
+
+  const saved = readForumUsername().trim();
+  const username = saved || generateFallbackUsername();
+  const displayName = `${personalityName} · ${username}`;
+
+  return {
+    personalityId,
+    personalityName,
+    personalityEmoji,
+    personalityColor,
+    username,
+    displayName,
+    isUnassessed,
+  };
+}
+
+function readUserPosts(): ForumPost[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(FORUM_USER_POSTS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as ForumPost[];
+    if (!Array.isArray(parsed)) return [];
+    return parsed;
+  } catch {
+    return [];
+  }
+}
+
+function writeUserPosts(posts: ForumPost[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      FORUM_USER_POSTS_KEY,
+      JSON.stringify(posts.slice(0, 50))
+    );
+  } catch {
+    // 存储失败时静默忽略，不影响发帖 UI
+  }
+}
+
+function formatPostTime(createdAt: number): string {
+  const diff = Date.now() - createdAt;
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return "刚刚";
+  if (minutes < 60) return `${minutes}分钟前`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}小时前`;
+  const days = Math.floor(hours / 24);
+  return `${days}天前`;
+}
+
+/** 标签颜色映射 */
+function getTagColor(tag: string, fallback: string): string {
+  if (tag === "热议") return "#FF6B6B";
+  if (tag === "技术") return "#8B5CF6";
+  if (tag === "价值") return "#0D9488";
+  if (tag === "求助") return "#F59E0B";
+  if (tag === "宏观") return "#3B82F6";
+  if (tag === "我") return "#EC4899";
+  return fallback;
 }
 
 // ===== Hot News Section =====
@@ -509,11 +641,255 @@ function HotNewsSection({
   );
 }
 
+// ===== 发帖弹窗 =====
+const FORUM_TAG_OPTIONS = [
+  { label: "热议", color: "#FF6B6B" },
+  { label: "技术", color: "#8B5CF6" },
+  { label: "价值", color: "#0D9488" },
+  { label: "求助", color: "#F59E0B" },
+  { label: "宏观", color: "#3B82F6" },
+  { label: "闲聊", color: "#FF6B35" },
+] as const;
+
+function PostComposer({
+  open,
+  onClose,
+  onSubmit,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onSubmit: (data: { title: string; content: string; tag: string }) => void;
+}) {
+  const [identity, setIdentity] = useState<ForumIdentity>(() =>
+    getForumIdentity()
+  );
+  const [username, setUsername] = useState(identity.username);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [tag, setTag] = useState<string>(FORUM_TAG_OPTIONS[0].label);
+  const [usernameEdited, setUsernameEdited] = useState(false);
+
+  // 弹窗打开时同步最新身份（反映 TPTI 测试结果或用户名变化）
+  useEffect(() => {
+    if (!open) return;
+    const current = getForumIdentity();
+    setIdentity(current);
+    setUsername(current.username);
+    setUsernameEdited(false);
+  }, [open]);
+
+  if (!open) return null;
+
+  const trimmedTitle = title.trim();
+  const trimmedContent = content.trim();
+  const valid = trimmedTitle.length >= 2 && trimmedContent.length >= 2;
+
+  const handleSubmit = () => {
+    if (!valid) return;
+    const finalUsername = username.trim() || identity.username;
+    // 写入自定义用户名（下次自动回填）
+    if (finalUsername && finalUsername !== readForumUsername()) {
+      writeForumUsername(finalUsername);
+    }
+    onSubmit({
+      title: trimmedTitle,
+      content: trimmedContent,
+      tag,
+    });
+    setTitle("");
+    setContent("");
+    setTag(FORUM_TAG_OPTIONS[0].label);
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl border-2 border-[#8B5CF6]/30 shadow-2xl max-h-[88vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="sticky top-0 bg-white/95 backdrop-blur px-4 pt-4 pb-3 border-b border-slate-100 rounded-t-3xl">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">✍️</span>
+            <h3 className="text-sm font-black bg-gradient-to-r from-[#8B5CF6] to-[#FF6B6B] bg-clip-text text-transparent">
+              发布到模拟社区
+            </h3>
+            <button
+              onClick={onClose}
+              className="ml-auto w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 text-sm font-black flex items-center justify-center"
+              aria-label="关闭"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        <div className="p-4 space-y-3">
+          {/* 身份区 */}
+          <div className="rounded-2xl border-2 border-slate-100 p-3 bg-slate-50/60">
+            <div className="flex items-center gap-2.5">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 shadow-sm"
+                style={{ backgroundColor: identity.personalityColor }}
+              >
+                <span className="text-white">{identity.personalityEmoji}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-black text-slate-800 truncate">
+                  {identity.personalityName}
+                  <span className="text-slate-400 mx-1">·</span>
+                  <span className="text-slate-600">{username || identity.username}</span>
+                </p>
+                <p className="text-[10px] font-bold text-slate-400 mt-0.5">
+                  {identity.isUnassessed
+                    ? "完成开场 TPTI 测试后，这里会显示你的交易人格"
+                    : "来自 TPTI 人格测试结果"}
+                </p>
+              </div>
+            </div>
+
+            {/* 自定义用户名（可选） */}
+            <div className="mt-2.5">
+              <label className="text-[10px] font-black text-slate-500 mb-1 block">
+                自定义用户名
+              </label>
+              <input
+                type="text"
+                value={username}
+                maxLength={20}
+                placeholder="例如：小陈、trader_88"
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  setUsernameEdited(true);
+                }}
+                className="w-full h-9 px-3 rounded-xl border-2 border-slate-200 text-xs font-bold text-slate-700 placeholder:text-slate-300 focus:border-[#8B5CF6] focus:outline-none"
+              />
+              {usernameEdited && username.trim().length < 2 && username.length > 0 && (
+                <p className="text-[10px] font-bold text-amber-500 mt-1">
+                  用户名至少 2 个字符，留空则使用自动生成的 player_xxxx
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* 标题 */}
+          <div>
+            <label className="text-[10px] font-black text-slate-500 mb-1 block">
+              标题
+            </label>
+            <input
+              type="text"
+              value={title}
+              maxLength={40}
+              placeholder="一句话说清你想聊什么"
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full h-10 px-3 rounded-xl border-2 border-slate-200 text-xs font-bold text-slate-800 placeholder:text-slate-300 focus:border-[#8B5CF6] focus:outline-none"
+            />
+          </div>
+
+          {/* 正文 */}
+          <div>
+            <label className="text-[10px] font-black text-slate-500 mb-1 block">
+              内容
+            </label>
+            <textarea
+              value={content}
+              maxLength={500}
+              rows={4}
+              placeholder="分享你的观察、困惑或观点……"
+              onChange={(e) => setContent(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border-2 border-slate-200 text-xs font-bold text-slate-700 placeholder:text-slate-300 focus:border-[#8B5CF6] focus:outline-none resize-none"
+            />
+            <div className="text-right text-[10px] font-bold text-slate-300 mt-1">
+              {content.length}/500
+            </div>
+          </div>
+
+          {/* 标签 */}
+          <div>
+            <label className="text-[10px] font-black text-slate-500 mb-1 block">
+              标签
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              {FORUM_TAG_OPTIONS.map((option) => {
+                const selected = option.label === tag;
+                return (
+                  <button
+                    key={option.label}
+                    type="button"
+                    onClick={() => setTag(option.label)}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-black transition-all ${
+                      selected
+                        ? "text-white shadow-sm scale-105"
+                        : "text-slate-500 bg-slate-100 hover:bg-slate-200"
+                    }`}
+                    style={selected ? { backgroundColor: option.color } : undefined}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <p className="text-[10px] font-bold text-slate-400 leading-relaxed bg-amber-50 border border-amber-100 rounded-xl p-2">
+            仅为本地 demo：内容保存在当前浏览器，不会上传服务器，也不构成任何投资建议。
+          </p>
+        </div>
+
+        <div className="sticky bottom-0 bg-white/95 backdrop-blur px-4 py-3 border-t border-slate-100 flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-black text-slate-600 transition-colors"
+          >
+            取消
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={!valid}
+            className="flex-[2] h-10 rounded-xl bg-gradient-to-r from-[#8B5CF6] to-[#FF6B6B] text-white text-xs font-black disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          >
+            发布
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ===== Forum Section（模拟社区，明确标识演示数据）=====
 function ForumSection() {
-  const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
+  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [userPosts, setUserPosts] = useState<ForumPost[]>([]);
+  // 用 tick 触发用户帖子时间相对刷新
+  const [, setTick] = useState(0);
 
-  const toggleLike = useCallback((postId: number) => {
+  // 挂载后读取本地用户帖子
+  useEffect(() => {
+    setUserPosts(readUserPosts());
+  }, []);
+
+  // 每分钟刷新一次「刚刚/N分钟前」
+  useEffect(() => {
+    const timer = window.setInterval(() => setTick((t) => t + 1), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  // 监听其他标签页 / TPTI 测试完成后写入的 tradeti_state 变化
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "tradeti_state" || e.key === FORUM_USER_POSTS_KEY) {
+        setUserPosts(readUserPosts());
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  const toggleLike = useCallback((postId: string) => {
     setLikedPosts((prev) => {
       const next = new Set(prev);
       if (next.has(postId)) next.delete(postId);
@@ -521,6 +897,46 @@ function ForumSection() {
       return next;
     });
   }, []);
+
+  const handleCreatePost = useCallback(
+    (data: { title: string; content: string; tag: string }) => {
+      const identity = getForumIdentity();
+      const tagOption =
+        FORUM_TAG_OPTIONS.find((option) => option.label === data.tag) ||
+        FORUM_TAG_OPTIONS[0];
+      const newPost: ForumPost = {
+        id: `me-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        author: identity.displayName,
+        avatar: identity.personalityEmoji,
+        role: identity.personalityName,
+        styleTag: identity.isUnassessed ? "未测评" : "TPTI 认证",
+        styleColor: identity.personalityColor,
+        title: data.title,
+        content: data.content,
+        likes: 0,
+        comments: 0,
+        time: "刚刚",
+        tag: "我",
+        isMine: true,
+        createdAt: Date.now(),
+      };
+      const next = [newPost, ...userPosts];
+      setUserPosts(next);
+      writeUserPosts(next);
+      setComposerOpen(false);
+    },
+    [userPosts]
+  );
+
+  // 用户帖子置顶，再接演示数据；用户帖子的时间按 createdAt 实时计算
+  const mergedPosts = useMemo<ForumPost[]>(() => {
+    const refreshed = userPosts.map((post) =>
+      post.createdAt
+        ? { ...post, time: formatPostTime(post.createdAt) }
+        : post
+    );
+    return [...refreshed, ...MOCK_FORUM];
+  }, [userPosts]);
 
   return (
     <div className="bg-white rounded-3xl p-4 border-2 border-[#8B5CF6]/30 shadow-md">
@@ -530,24 +946,27 @@ function ForumSection() {
           模拟社区
         </h3>
         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-200">
-          演示数据
+          本地演示
         </span>
         <button
-          className="text-[10px] font-black text-[#8B5CF6] ml-auto bg-[#8B5CF6]/10 px-3 py-1 rounded-full hover:bg-[#8B5CF6]/20 transition-colors"
-          onClick={() => {
-            /* demo only */
-          }}
+          className="text-[10px] font-black text-white ml-auto bg-gradient-to-r from-[#8B5CF6] to-[#FF6B6B] px-3 py-1 rounded-full shadow-sm hover:opacity-90 transition-opacity"
+          onClick={() => setComposerOpen(true)}
         >
-          发帖
+          + 发帖
         </button>
       </div>
       <div className="space-y-3">
-        {MOCK_FORUM.map((post) => {
+        {mergedPosts.map((post) => {
           const isLiked = likedPosts.has(post.id);
+          const tagColor = getTagColor(post.tag, post.styleColor);
           return (
             <div
               key={post.id}
-              className="rounded-2xl border-2 border-slate-100 p-3 transition-all hover:border-[#8B5CF6]/30 hover:shadow-sm"
+              className={`rounded-2xl border-2 p-3 transition-all hover:shadow-sm ${
+                post.isMine
+                  ? "border-[#8B5CF6]/30 bg-gradient-to-br from-[#8B5CF6]/[0.03] to-[#FF6B6B]/[0.03]"
+                  : "border-slate-100 hover:border-[#8B5CF6]/30"
+              }`}
             >
               {/* 用户身份区 */}
               <div className="flex items-center gap-2 mb-2">
@@ -559,14 +978,8 @@ function ForumSection() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-xs font-black text-slate-800">
+                    <span className="text-xs font-black text-slate-800 truncate max-w-full">
                       {post.author}
-                    </span>
-                    <span
-                      className="text-[9px] font-bold px-1.5 py-0.5 rounded text-white"
-                      style={{ backgroundColor: post.styleColor }}
-                    >
-                      {post.role}
                     </span>
                   </div>
                   <div className="flex items-center gap-1 mt-0.5">
@@ -580,18 +993,7 @@ function ForumSection() {
                 </div>
                 <span
                   className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white shrink-0"
-                  style={{
-                    backgroundColor:
-                      post.tag === "热议"
-                        ? "#FF6B6B"
-                        : post.tag === "技术"
-                          ? "#8B5CF6"
-                          : post.tag === "价值"
-                            ? "#0D9488"
-                            : post.tag === "求助"
-                              ? "#F59E0B"
-                              : "#FF6B35",
-                  }}
+                  style={{ backgroundColor: tagColor }}
                 >
                   {post.tag}
                 </span>
@@ -600,8 +1002,8 @@ function ForumSection() {
                 </span>
               </div>
 
-              <p className="text-xs font-bold text-slate-800 mb-1">{post.title}</p>
-              <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
+              <p className="text-xs font-black text-slate-800 mb-1">{post.title}</p>
+              <p className="text-[11px] font-bold text-slate-500 leading-relaxed whitespace-pre-wrap break-words">
                 {post.content}
               </p>
               <div className="flex items-center gap-4 mt-2 pt-2 border-t border-slate-100">
@@ -618,20 +1020,21 @@ function ForumSection() {
                   <span className="text-sm">💬</span>
                   <span>{post.comments}</span>
                 </span>
-                <button
-                  className="flex items-center gap-1 text-[10px] font-bold text-slate-400 hover:text-[#8B5CF6] transition-colors ml-auto"
-                  onClick={() => {
-                    /* demo only */
-                  }}
-                >
+                <span className="flex items-center gap-1 text-[10px] font-bold text-slate-300 ml-auto">
                   <span className="text-sm">🔗</span>
-                  <span>分享</span>
-                </button>
+                  <span>分享（demo）</span>
+                </span>
               </div>
             </div>
           );
         })}
       </div>
+
+      <PostComposer
+        open={composerOpen}
+        onClose={() => setComposerOpen(false)}
+        onSubmit={handleCreatePost}
+      />
     </div>
   );
 }
