@@ -882,7 +882,7 @@ export function useTraderRoadProgress() {
 // ===== 华尔堡二级地图 — 子关卡进度系统 =====
 // localStorage key: tpti_wallcastle_progress
 
-export type WallCastleSubLevelId = "data-black-market" | "market-storm" | "policy-letter";
+export type WallCastleSubLevelId = "parliament-hall" | "data-black-market" | "market-storm" | "policy-letter";
 
 export interface WallCastleSubLevel {
   id: WallCastleSubLevelId;
@@ -902,6 +902,8 @@ export interface WallCastleProgress {
 const WC_STORAGE_KEY = "tpti_wallcastle_progress";
 
 export const WALL_CASTLE_LOCATIONS: { id: string; name: string; subLevelId?: WallCastleSubLevelId; status: "active" | "coming_soon" }[] = [
+  // 入口关（剧情）
+  { id: "parliament-hall", name: "多空议会厅", subLevelId: "parliament-hall", status: "active" },
   // 3个已设计完成的关卡
   { id: "data-black-market", name: "数据黑市", subLevelId: "data-black-market", status: "active" },
   { id: "market-storm", name: "市场风暴", subLevelId: "market-storm", status: "active" },
@@ -915,6 +917,7 @@ export const WALL_CASTLE_LOCATIONS: { id: string; name: string; subLevelId?: Wal
 ];
 
 export const WALL_CASTLE_SUB_LEVELS: WallCastleSubLevel[] = [
+  { id: "parliament-hall", name: "多空议会厅", description: "热搜开庭 · 多空辩论", order: 0, status: "available", x: 50, y: 18 },
   { id: "data-black-market", name: "数据黑市", description: "K线数据解读", order: 1, status: "available", x: 23, y: 33 },
   { id: "market-storm", name: "市场风暴", description: "市场情绪分析", order: 2, status: "available", x: 22, y: 52 },
   { id: "policy-letter", name: "政策密函", description: "政策解读研判", order: 3, status: "available", x: 81, y: 41 },
@@ -944,7 +947,8 @@ export function saveWallCastleProgress(progress: WallCastleProgress): void {
 }
 
 // 华尔堡子关卡 → Agent 映射
-const WALL_CASTLE_AGENT_MAP: Record<WallCastleSubLevelId, TraderRoadAgentId> = {
+const WALL_CASTLE_AGENT_MAP: Record<WallCastleSubLevelId, TraderRoadAgentId | null> = {
+  "parliament-hall": null, // 入口剧情关不解锁新 Agent，但解锁后续关卡
   "data-black-market": "data",
   "market-storm": "market",
   "policy-letter": "industry",
@@ -957,7 +961,7 @@ export function completeWallCastleSubLevel(subLevelId: WallCastleSubLevelId): Wa
   progress.updatedAt = new Date().toISOString();
   saveWallCastleProgress(progress);
 
-  // 联动主力：完成子关卡 → 解锁对应 Agent
+  // 联动主力：完成子关卡 → 解锁对应 Agent（部分关卡不解锁 Agent）
   const agentToUnlock = WALL_CASTLE_AGENT_MAP[subLevelId];
   if (agentToUnlock) {
     unlockTraderRoadAgents([agentToUnlock]);
@@ -972,7 +976,8 @@ export function getWallCastleSubLevelStatus(subLevelId: WallCastleSubLevelId, pr
   const subLevel = WALL_CASTLE_SUB_LEVELS.find((s) => s.id === subLevelId);
   if (!subLevel) return "locked";
 
-  if (subLevel.order === 1) return "available";
+  // order 0 的入口关默认可用
+  if (subLevel.order === 0) return "available";
 
   // 按顺序解锁：完成前一个才可进入当前
   const prevOrder = subLevel.order - 1;

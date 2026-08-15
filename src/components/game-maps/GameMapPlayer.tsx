@@ -956,6 +956,36 @@ if (levelId === 7) return "available"; // 临时开放，测试K线图学习
           </div>
         );
       }
+      // 华尔堡入口：多空议会厅
+      if (activeGameId === "wallcastle-parliament") {
+        return (
+          <div className="flex flex-col h-full">
+            <div className="flex items-center gap-2 mb-3 px-1">
+              <span className="text-lg">🏛️</span>
+              <h3 className="text-sm font-bold text-[#1E293B]">多空议会厅 · 热搜开庭</h3>
+            </div>
+            <div className="flex-1 min-h-0">
+              <ParliamentGame
+                addCoins={addCoins}
+                onBack={() => {
+                  setView("submap");
+                  setActiveGameId(null);
+                }}
+                onComplete={() => {
+                  addCoins(30);
+                  // 标记华尔堡入口关完成
+                  const newProgress = completeWallCastleSubLevel("parliament-hall");
+                  saveWallCastleProgress(newProgress);
+                  setWallCastleRefreshKey((k) => k + 1);
+                  // 回到华尔堡地图
+                  setView("submap");
+                  setActiveGameId(null);
+                }}
+              />
+            </div>
+          </div>
+        );
+      }
       // 兜底
       return (
         <div className="flex flex-col items-center justify-center h-full">
@@ -1146,14 +1176,22 @@ if (levelId === 7) return "available"; // 临时开放，测试K线图学习
       const status = getWallCastleSubLevelStatus(levelId, progress);
       if (status !== "available" && status !== "completed") return;
       
+      // 多空议会厅 — 独立 parliament 游戏
+      if (levelId === "parliament-hall") {
+        setActiveSubmapId("wallCastleMap"); // 记录子地图上下文
+        setActiveGameId("wallcastle-parliament");
+        setView("game");
+        return;
+      }
+
       // 映射子关卡 ID 到主线关卡 ID
-      const subLevelToMainLevel: Record<WallCastleSubLevelId, number> = {
+      const subLevelToMainLevel: Record<Exclude<WallCastleSubLevelId, "parliament-hall">, number> = {
         "data-black-market": 1,
         "market-storm": 2,
         "policy-letter": 3,
       };
       
-      const mainLevelId = subLevelToMainLevel[levelId];
+      const mainLevelId = subLevelToMainLevel[levelId as Exclude<WallCastleSubLevelId, "parliament-hall">];
       if (mainLevelId) {
         // 进入关卡游戏（不提前标记完成）
         setActiveLevelId(mainLevelId);
@@ -1251,10 +1289,11 @@ if (levelId === 7) return "available"; // 临时开放，测试K线图学习
             onError={() => setWallCastleLoaded(true)}
           />
 
-          {/* 3 Sub-Level Nodes */}
+          {/* Sub-Level Nodes */}
           {subLevels.map((level) => {
             const status = getWallCastleSubLevelStatus(level.id, progress);
             const style = getNodeStyle(status);
+            const isParliament = level.id === "parliament-hall";
             return (
               <button
                 key={level.id}
@@ -1265,18 +1304,26 @@ if (levelId === 7) return "available"; // 临时开放，测试K线图学习
                 style={{
                   left: `${level.x}%`,
                   top: `${level.y}%`,
-                  width: "11%",
+                  width: isParliament ? "15%" : "11%",
                   transform: "translate(-50%, -50%)",
                   aspectRatio: "1/1",
                 }}
                 title={level.name}
               >
                 <div className={`w-full h-full rounded-full flex items-center justify-center text-white font-bold border-2 ${style.border} ${style.bg}`}
-                  style={{ boxShadow: status !== "locked" ? "0 0 20px rgba(212,160,23,0.3)" : "none" }}>
+                  style={{
+                    boxShadow: status !== "locked"
+                      ? isParliament
+                        ? "0 0 30px rgba(250,204,21,0.5), 0 0 60px rgba(250,204,21,0.2)"
+                        : "0 0 20px rgba(212,160,23,0.3)"
+                      : "none",
+                  }}>
                   {status === "completed" ? (
                     <span className="text-white font-black text-lg">✓</span>
                   ) : status === "locked" ? (
                     <span className="text-white/60 text-xs">🔒</span>
+                  ) : isParliament ? (
+                    <span className="text-white text-2xl animate-pulse">🏛️</span>
                   ) : (
                     <span className="text-white text-xs font-bold">▶</span>
                   )}
