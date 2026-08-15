@@ -1701,7 +1701,7 @@ export function GameMapPlayer({
               className="absolute pointer-events-none animate-pulse"
               style={{
                 left: "48%",
-                top: "92%",
+                top: "94%",
                 width: 80,
                 height: 80,
                 transform: "translate(-50%, -50%)",
@@ -1789,7 +1789,7 @@ export function GameMapPlayer({
               className="absolute pointer-events-none animate-pulse"
               style={{
                 left: "50%",
-                top: "25%",
+                top: "23%",
                 width: 80,
                 height: 80,
                 transform: "translate(-50%, -50%)",
