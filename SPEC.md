@@ -1,8 +1,8 @@
 # AI 投研平台 — 产品规格说明书 (Spec)
 
 > **工作流规则**：所有功能改动必须先更新本 Spec 文档，经确认后再按 Spec 修改代码。
-> 最后更新：2026-08-09
-> 本次变更：新增用户登录/注册系统（Supabase Auth 邮箱密码登录），路由守卫，登出功能
+> 最后更新：2026-08-13
+> 本次变更：第四页"时讯"热点新闻数据源替换为新浪财经 RSS，停用 GDELT / Google News 等国外源
 
 ---
 
@@ -498,10 +498,47 @@ data: [DONE]
 当前使用 `mockNewsFeed` 模拟数据。后续可接入：
 - 财联社/东方财富快讯 API
 - Tushare 研报接口
-- 新闻 RSS 聚合
 
+### 4.5 `GET /api/hot-news` 热点新闻（第四页时讯）
 
-### 4.5 `POST /api/chat` AI 研究对话（增强版）
+**数据源（唯一）**：新浪财经 RSS（国内可访问、免费、无需 API Key）。
+
+订阅地址（并行拉取，合并去重）：
+- 财经要闻：`https://rss.sina.com.cn/roll/finance/hot_roll.xml`
+- 股市及时雨：`https://rss.sina.com.cn/finance/jsy.xml`
+- 股票要闻：`https://rss.sina.com.cn/roll/stock/hot_roll.xml`
+- 港股：`https://rss.sina.com.cn/finance/hkstock.xml`
+- 美股：`https://rss.sina.com.cn/finance/usstock.xml`
+
+**处理流程**：
+1. 服务端并行 fetch 上述 5 个 RSS，单个超时 8s，单个失败不影响其他源
+2. 解析 RSS `<item>`，提取 title / link / pubDate / source / description
+3. 本地处理：情绪识别（关键词：恐慌 / 中性 / 狂热，仅作为辅助标签）、关联板块、热度评分、标签提取
+4. 去重（URL + 标题前 20 字符）、按热度 + 时间排序、取 Top 30
+5. 支持 `?q=` 查询参数，按标题 + 摘要做本地关键词过滤
+
+**响应格式**：
+```json
+{
+  "success": true,
+  "data": [HotNewsItem],
+  "meta": {
+    "provider": "sina-finance-rss",
+    "fetchedAt": "ISO 时间",
+    "query": "default",
+    "isFallback": false,
+    "message": "可选说明"
+  }
+}
+```
+
+**降级策略**：所有新浪 RSS 子源均失败时返回 `data: []`、`isFallback: true`、`message: "暂无可用新闻数据，请稍后重试"`，**不回退到任何国外源，不使用 mock 数据**。
+
+**前端 provider 映射**：`sina-finance-rss` → `新浪财经 RSS`。
+
+情绪标签仅作内容归类，不构成投资建议。
+
+### 4.6 `POST /api/chat` AI 研究对话（增强版）
 
 **请求格式：**
 ```json
@@ -750,6 +787,7 @@ NewsFeed                              // 信息面数据
 | 2026-08-03 | 🗺️ 市场冒险局主题改造：首页改为市场冒险局叙事，人格搭子问候、市场天气、主线任务、全球冒险地图、支线任务、认知经验总结，底部 Tab 统一改名（冒险/任务/工坊/档案） |
 | 2026-08-08 | 研究报告动态生成（基于股票名称 hash）、历史研究档案数量动态化（localStorage 联动 ResearchTab 和 ProfileTab）、备用页面 mini/page.tsx 同步更新 |
 | 2026-08-08 | 新增「交易员的正确之路」进度与解锁系统：集中式进度模块 `trader-road-progress.ts`、10 关卡 + 12 Agent 映射、SSR 安全 localStorage 读写、Agent 团队锁定态视觉、开发调试按钮 |
+| 2026-08-13 | 第四页「时讯」热点新闻数据源替换：停用 GDELT / Google News RSS 等国外源，`/api/hot-news` 改为聚合新浪财经 5 路 RSS（财经要闻 / 股市及时雨 / 股票要闻 / 港股 / 美股），失败仅返回空状态、不再回退国外源或 mock 数据 |
 
 ---
 

@@ -93,10 +93,12 @@ function getSentimentBg(sentiment: string): string {
 
 function getProviderLabel(provider: string): string {
   switch (provider) {
-    case "gdelt": return "GDELT 全球新闻";
-    case "google-news-rss": return "Google News";
-    case "none": return "暂无数据源";
-    default: return provider;
+    case "sina-finance-rss":
+      return "新浪财经 RSS";
+    case "none":
+      return "暂无数据源";
+    default:
+      return provider;
   }
 }
 

@@ -12,6 +12,7 @@ export interface HotNewsItem {
   sentiment: HotNewsSentiment;
   sentimentLabel: "恐慌" | "中性" | "狂热";
   hotScore: number;
+  sector?: string;
   relatedSectors: string[];
   tags: string[];
 }

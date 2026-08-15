@@ -1,4 +1,6 @@
-// ===== 热门新闻聚合 Provider =====
+// ===== 新浪财经 RSS 热门新闻聚合 Provider =====
+// 国内可访问的免费公开 RSS，无需 API Key。
+// 参考：https://rss.sina.com.cn/rss/finance/index.shtml?from=wap
 
 import {
   type HotNewsItem,
@@ -7,21 +9,61 @@ import {
   PANIC_KEYWORDS,
   EUPHORIA_KEYWORDS,
   SECTOR_KEYWORD_MAP,
-  TOP_FINANCE_SOURCES,
 } from "./hot-news-types";
 
-// ===== 舆情分析 =====
+export const SINA_FINANCE_PROVIDER = "sina-finance-rss";
 
-function analyzeSentiment(text: string): { sentiment: HotNewsSentiment; sentimentLabel: "恐慌" | "中性" | "狂热" } {
+// 新浪财经 RSS 订阅源（国内可访问、免费）
+const SINA_FINANCE_FEEDS: ReadonlyArray<{
+  url: string;
+  channel: string;
+  keywords: string[];
+}> = [
+  {
+    url: "https://rss.sina.com.cn/roll/finance/hot_roll.xml",
+    channel: "财经要闻",
+    keywords: ["A股", "财经", "央行", "政策", "经济", "利率"],
+  },
+  {
+    url: "https://rss.sina.com.cn/finance/jsy.xml",
+    channel: "股市及时雨",
+    keywords: ["股市", "A股", "沪指", "创业板", "板块"],
+  },
+  {
+    url: "https://rss.sina.com.cn/roll/stock/hot_roll.xml",
+    channel: "股票要闻",
+    keywords: ["股票", "上市公司", "业绩", "公告", "涨跌"],
+  },
+  {
+    url: "https://rss.sina.com.cn/finance/hkstock.xml",
+    channel: "港股",
+    keywords: ["港股", "恒生", "港股通", "港币"],
+  },
+  {
+    url: "https://rss.sina.com.cn/finance/usstock.xml",
+    channel: "美股",
+    keywords: ["美股", "纳斯达克", "标普", "美联储", "中概股"],
+  },
+];
+
+const FETCH_TIMEOUT_MS = 8000;
+const MAX_NEWS_ITEMS = 30;
+
+// ===== 舆情分析（仅作为内容标签，不构成投资建议）=====
+
+function analyzeSentiment(text: string): {
+  sentiment: HotNewsSentiment;
+  sentimentLabel: "恐慌" | "中性" | "狂热";
+} {
   const lowerText = text.toLowerCase();
   let panicCount = 0;
   let euphoriaCount = 0;
 
   for (const kw of PANIC_KEYWORDS) {
-    if (lowerText.includes(kw)) panicCount++;
+    if (lowerText.includes(kw.toLowerCase())) panicCount++;
   }
   for (const kw of EUPHORIA_KEYWORDS) {
-    if (lowerText.includes(kw)) euphoriaCount++;
+    if (lowerText.includes(kw.toLowerCase())) euphoriaCount++;
   }
 
   if (panicCount >= 2 || (panicCount > euphoriaCount && panicCount >= 1)) {
@@ -62,19 +104,21 @@ function calculateHotScore(item: {
   let score = 30; // 基础分
 
   // 时效分
-  const now = Date.now();
   const pubTime = new Date(item.publishedAt).getTime();
-  const hoursDiff = (now - pubTime) / (1000 * 60 * 60);
-  if (hoursDiff <= 1) score += 30;
-  else if (hoursDiff <= 6) score += 25;
-  else if (hoursDiff <= 12) score += 15;
-  else if (hoursDiff <= 24) score += 10;
+  if (!Number.isNaN(pubTime)) {
+    const now = Date.now();
+    const hoursDiff = (now - pubTime) / (1000 * 60 * 60);
+    if (hoursDiff <= 1) score += 30;
+    else if (hoursDiff <= 6) score += 25;
+    else if (hoursDiff <= 12) score += 15;
+    else if (hoursDiff <= 24) score += 10;
+  }
 
-  // 舆情分
+  // 舆情分（仅作为内容标签，不构成投资建议）
   if (item.sentiment !== "neutral") score += 10;
 
   // 关键词分
-  const text = item.title + " " + item.summary;
+  const text = `${item.title} ${item.summary}`;
   let keywordHits = 0;
   for (const kw of DEFAULT_NEWS_KEYWORDS) {
     if (text.includes(kw)) keywordHits++;
@@ -83,25 +127,24 @@ function calculateHotScore(item: {
   else if (keywordHits >= 2) score += 10;
   else if (keywordHits >= 1) score += 5;
 
-  // 来源分
-  const isTopSource = TOP_FINANCE_SOURCES.some((s) => item.source.toLowerCase().includes(s));
-  if (isTopSource) score += 10;
+  // 来源分：新浪财经作为主流财经来源给予稳定加分
+  if (item.source.includes("新浪财经")) score += 10;
 
   return Math.min(100, Math.max(0, score));
 }
 
-// ===== 提取标签 =====
+// ===== 标签提取 =====
 
 function extractTags(title: string, summary: string): string[] {
-  const text = title + " " + summary;
+  const text = `${title} ${summary}`;
   const tags: string[] = [];
   const tagKeywords: Record<string, string[]> = {
-    "政策": ["政策", "监管", "央行", "降准", "降息", "国务院", "证监会"],
-    "科技": ["AI", "芯片", "半导体", "科技", "英伟达", "大模型", "量子"],
-    "宏观": ["GDP", "CPI", "PPI", "通胀", "利率", "汇率", "美联储"],
-    "行业": ["销量", "产量", "渗透率", "市场份额", "产能"],
-    "海外": ["美股", "港股", "欧股", "纳斯达克", "标普", "美联储"],
-    "市场": ["A股", "沪指", "深指", "创业板", "科创板", "北向资金"],
+    政策: ["政策", "监管", "央行", "降准", "降息", "国务院", "证监会"],
+    科技: ["AI", "芯片", "半导体", "科技", "英伟达", "大模型", "量子"],
+    宏观: ["GDP", "CPI", "PPI", "通胀", "利率", "汇率", "美联储"],
+    行业: ["销量", "产量", "渗透率", "市场份额", "产能"],
+    海外: ["美股", "港股", "欧股", "纳斯达克", "标普", "美联储"],
+    市场: ["A股", "沪指", "深指", "创业板", "科创板", "北向资金"],
   };
 
   for (const [tag, keywords] of Object.entries(tagKeywords)) {
@@ -115,199 +158,135 @@ function extractTags(title: string, summary: string): string[] {
   return tags.slice(0, 3);
 }
 
-// ===== 生成摘要 =====
+// ===== 文本清洗 =====
+
+function decodeXmlEntities(input: string): string {
+  return input
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&#(\d+);/g, (_, code: string) => String.fromCharCode(Number(code)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, code: string) =>
+      String.fromCharCode(parseInt(code, 16)),
+    )
+    .replace(/&amp;/g, "&")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function extractXmlTag(xml: string, tag: string): string {
+  const regex = new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)</${tag}>`, "i");
+  const match = regex.exec(xml);
+  return match ? decodeXmlEntities(match[1]) : "";
+}
 
 function generateSummary(title: string, description?: string): string {
-  if (description && description.length > 20) {
-    return description.slice(0, 150) + (description.length > 150 ? "..." : "");
+  const cleanDesc = description ? decodeXmlEntities(description) : "";
+  if (cleanDesc.length > 20) {
+    return cleanDesc.slice(0, 150) + (cleanDesc.length > 150 ? "..." : "");
   }
   return title;
 }
 
-// ===== GDELT Provider =====
-
-interface GdeltArticle {
-  title?: string;
-  url?: string;
-  domain?: string;
-  seendate?: string;
-  sourceCountry?: string;
-  socialimage?: string;
-  language?: string;
+function parsePubDate(pubDate: string): string {
+  if (!pubDate) return new Date().toISOString();
+  const parsed = new Date(pubDate);
+  return Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
 }
 
-async function fetchFromGdelt(query: string): Promise<HotNewsItem[]> {
-  const encodedQuery = encodeURIComponent(query);
-  const url = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodedQuery}&mode=artlist&format=json&timespan=24h&sort=hybridrel&maxrecords=30&sourcelang=chi`;
+function inferChannelSector(channel: string): string {
+  if (channel.includes("港股")) return "港股";
+  if (channel.includes("美股")) return "美股";
+  if (channel.includes("股票")) return "A股";
+  if (channel.includes("股市")) return "A股";
+  return "财经";
+}
 
+// ===== 单个新浪 RSS 源解析 =====
+
+async function fetchFromSinaFeed(feed: {
+  url: string;
+  channel: string;
+}): Promise<HotNewsItem[]> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   try {
-    const res = await fetch(url, {
+    const res = await fetch(feed.url, {
       signal: controller.signal,
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; FinanceNewsBot/1.0)" },
+      next: { revalidate: 120 },
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; MarketAdventureNewsBot/1.0)",
+        Accept: "application/rss+xml, application/xml, text/xml, */*",
+      },
     });
-    clearTimeout(timeout);
 
-    if (!res.ok) throw new Error(`GDELT HTTP ${res.status}`);
-
-    const data = await res.json();
-    const articles: GdeltArticle[] = data?.articles || [];
-
-    if (articles.length === 0) throw new Error("GDELT returned no articles");
-
-    return articles
-      .filter((a) => a.title && a.url)
-      .map((a) => {
-        const title = a.title || "";
-        const summary = generateSummary(title);
-        const { sentiment, sentimentLabel } = analyzeSentiment(title + " " + summary);
-        const relatedSectors = findRelatedSectors(title + " " + summary);
-        const tags = extractTags(title, summary);
-
-        let publishedAt = new Date().toISOString();
-        if (a.seendate) {
-          try {
-            // GDELT seendate format: "20240101T120000Z" or similar
-            const cleaned = a.seendate.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
-            publishedAt = new Date(cleaned).toISOString();
-          } catch {
-            // keep default
-          }
-        }
-
-        const item: HotNewsItem = {
-          id: `gdelt-${Buffer.from(a.url || title).toString("base64").slice(0, 16)}`,
-          title,
-          source: a.domain || "unknown",
-          publishedAt,
-          url: a.url || "",
-          summary,
-          sentiment,
-          sentimentLabel,
-          hotScore: 0,
-          relatedSectors,
-          tags,
-        };
-        item.hotScore = calculateHotScore(item);
-        return item;
-      });
-  } catch (err) {
-    clearTimeout(timeout);
-    throw err;
-  }
-}
-
-// ===== Google News RSS Provider =====
-
-async function fetchFromGoogleNewsRSS(query: string): Promise<HotNewsItem[]> {
-  const encodedQuery = encodeURIComponent(query);
-  const url = `https://news.google.com/rss/search?q=${encodedQuery}&hl=zh-CN&gl=CN&ceid=CN:zh-Hans`;
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
-
-  try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; FinanceNewsBot/1.0)" },
-    });
-    clearTimeout(timeout);
-
-    if (!res.ok) throw new Error(`Google News RSS HTTP ${res.status}`);
-
-    const xml = await res.text();
-    return parseRssXml(xml);
-  } catch (err) {
-    clearTimeout(timeout);
-    throw err;
-  }
-}
-
-function parseRssXml(xml: string): HotNewsItem[] {
-  const items: HotNewsItem[] = [];
-
-  // Simple XML parsing for RSS items
-  const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
-  let match: RegExpExecArray | null;
-
-  while ((match = itemRegex.exec(xml)) !== null) {
-    const itemXml = match[1];
-
-    const title = extractXmlTag(itemXml, "title") || "";
-    const link = extractXmlTag(itemXml, "link") || "";
-    const pubDate = extractXmlTag(itemXml, "pubDate") || "";
-    const source = extractXmlTag(itemXml, "source") || "Google News";
-    const description = extractXmlTag(itemXml, "description") || "";
-
-    if (!title || !link) continue;
-
-    // Clean HTML entities from title
-    const cleanTitle = title
-      .replace(/<!\[CDATA\[(.*?)\]\]>/g, "$1")
-      .replace(/<[^>]*>/g, "")
-      .trim();
-
-    const cleanDesc = description
-      .replace(/<!\[CDATA\[(.*?)\]\]>/g, "$1")
-      .replace(/<[^>]*>/g, "")
-      .trim();
-
-    const summary = generateSummary(cleanTitle, cleanDesc);
-    const { sentiment, sentimentLabel } = analyzeSentiment(cleanTitle + " " + summary);
-    const relatedSectors = findRelatedSectors(cleanTitle + " " + summary);
-    const tags = extractTags(cleanTitle, summary);
-
-    let publishedAt = new Date().toISOString();
-    if (pubDate) {
-      try {
-        publishedAt = new Date(pubDate).toISOString();
-      } catch {
-        // keep default
-      }
+    if (!res.ok) {
+      throw new Error(`Sina RSS HTTP ${res.status} (${feed.channel})`);
     }
 
-    const item: HotNewsItem = {
-      id: `gnews-${Buffer.from(link).toString("base64").slice(0, 16)}`,
-      title: cleanTitle,
-      source,
-      publishedAt,
-      url: link,
-      summary,
-      sentiment,
-      sentimentLabel,
-      hotScore: 0,
-      relatedSectors,
-      tags,
-    };
-    item.hotScore = calculateHotScore(item);
-    items.push(item);
+    const xml = await res.text();
+    const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
+    const items: HotNewsItem[] = [];
+    let match: RegExpExecArray | null;
+
+    while ((match = itemRegex.exec(xml)) !== null) {
+      const itemXml = match[1];
+      const title = extractXmlTag(itemXml, "title");
+      const link = extractXmlTag(itemXml, "link");
+      const pubDate = extractXmlTag(itemXml, "pubDate") || extractXmlTag(itemXml, "dc:date");
+      const description = extractXmlTag(itemXml, "description");
+      const rssSource = extractXmlTag(itemXml, "source") || extractXmlTag(itemXml, "author");
+
+      if (!title || !link) continue;
+
+      const source = rssSource ? `新浪财经 · ${rssSource}` : `新浪财经 · ${feed.channel}`;
+      const summary = generateSummary(title, description);
+      const analysisText = `${title} ${summary}`;
+      const { sentiment, sentimentLabel } = analyzeSentiment(analysisText);
+      const relatedSectors = findRelatedSectors(analysisText);
+      const tags = extractTags(title, summary);
+      const channelSector = inferChannelSector(feed.channel);
+      const sector = relatedSectors[0] || channelSector;
+
+      const item: HotNewsItem = {
+        id: `sina-${Buffer.from(link).toString("base64url").slice(0, 24)}`,
+        title,
+        source,
+        publishedAt: parsePubDate(pubDate),
+        url: link,
+        summary,
+        sentiment,
+        sentimentLabel,
+        hotScore: 0,
+        sector,
+        relatedSectors,
+        tags,
+      };
+      item.hotScore = calculateHotScore(item);
+      items.push(item);
+    }
+
+    return items;
+  } finally {
+    clearTimeout(timeout);
   }
-
-  return items;
 }
 
-function extractXmlTag(xml: string, tag: string): string {
-  // Handle both <tag>value</tag> and <tag attr="...">value</tag>
-  const regex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, "i");
-  const match = regex.exec(xml);
-  return match ? match[1].trim() : "";
-}
-
-// ===== 去重与排序 =====
+// ===== 去重、过滤与排序 =====
 
 function deduplicateNews(items: HotNewsItem[]): HotNewsItem[] {
   const seen = new Set<string>();
   const result: HotNewsItem[] = [];
 
   for (const item of items) {
-    // URL 去重
     if (seen.has(item.url)) continue;
     seen.add(item.url);
 
-    // 标题前20字符去重
-    const titleKey = item.title.slice(0, 20);
+    const titleKey = item.title.replace(/\s+/g, "").slice(0, 20).toLowerCase();
     if (seen.has(titleKey)) continue;
     seen.add(titleKey);
 
@@ -317,11 +296,27 @@ function deduplicateNews(items: HotNewsItem[]): HotNewsItem[] {
   return result;
 }
 
+function filterByQuery(items: HotNewsItem[], query?: string): HotNewsItem[] {
+  if (!query?.trim()) return items;
+
+  // 支持空格 / 逗号 / OR 分隔关键词，命中任一关键词即保留；
+  // 短语带引号时作为完整关键词匹配。
+  const tokens = query
+    .split(/\s+(?:OR)\s+|[\s,，、]+/i)
+    .map((token) => token.trim().replace(/^["']|["']$/g, ""))
+    .filter(Boolean);
+
+  if (tokens.length === 0) return items;
+
+  return items.filter((item) => {
+    const haystack = `${item.title} ${item.summary}`.toLowerCase();
+    return tokens.some((token) => haystack.includes(token.toLowerCase()));
+  });
+}
+
 function sortNews(items: HotNewsItem[]): HotNewsItem[] {
-  return items.sort((a, b) => {
-    // 热度优先
+  return [...items].sort((a, b) => {
     if (b.hotScore !== a.hotScore) return b.hotScore - a.hotScore;
-    // 时间次之
     return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
   });
 }
@@ -334,45 +329,45 @@ export async function fetchHotNews(query?: string): Promise<{
   isFallback: boolean;
   message?: string;
 }> {
-  const searchQuery = query || DEFAULT_NEWS_KEYWORDS.slice(0, 5).join(" OR ");
+  const results = await Promise.allSettled(
+    SINA_FINANCE_FEEDS.map((feed) => fetchFromSinaFeed(feed)),
+  );
 
-  // Try GDELT first
-  try {
-    const gdeltItems = await fetchFromGdelt(searchQuery);
-    if (gdeltItems.length > 0) {
-      const deduped = deduplicateNews(gdeltItems);
-      const sorted = sortNews(deduped);
-      return {
-        items: sorted.slice(0, 20),
-        provider: "gdelt",
-        isFallback: false,
-      };
+  const allItems: HotNewsItem[] = [];
+  const failedFeeds: string[] = [];
+
+  results.forEach((result, index) => {
+    const feed = SINA_FINANCE_FEEDS[index];
+    if (result.status === "fulfilled") {
+      allItems.push(...result.value);
+    } else {
+      failedFeeds.push(feed.channel);
+      const reason =
+        result.reason instanceof Error ? result.reason.message : String(result.reason);
+      console.warn(`[hot-news] Sina RSS ${feed.channel} failed:`, reason);
     }
-  } catch (err) {
-    console.warn("[hot-news] GDELT failed:", err instanceof Error ? err.message : err);
+  });
+
+  if (allItems.length === 0) {
+    return {
+      items: [],
+      provider: SINA_FINANCE_PROVIDER,
+      isFallback: true,
+      message: "暂无可用新闻数据，请稍后重试",
+    };
   }
 
-  // Fallback to Google News RSS
-  try {
-    const gnewsItems = await fetchFromGoogleNewsRSS(searchQuery);
-    if (gnewsItems.length > 0) {
-      const deduped = deduplicateNews(gnewsItems);
-      const sorted = sortNews(deduped);
-      return {
-        items: sorted.slice(0, 20),
-        provider: "google-news-rss",
-        isFallback: false,
-      };
-    }
-  } catch (err) {
-    console.warn("[hot-news] Google News RSS failed:", err instanceof Error ? err.message : err);
-  }
+  const deduped = deduplicateNews(allItems);
+  const filtered = filterByQuery(deduped, query);
+  const sorted = sortNews(filtered);
 
-  // All providers failed
   return {
-    items: [],
-    provider: "none",
-    isFallback: true,
-    message: "暂无实时新闻数据，请稍后重试",
+    items: sorted.slice(0, MAX_NEWS_ITEMS),
+    provider: SINA_FINANCE_PROVIDER,
+    isFallback: false,
+    message:
+      failedFeeds.length > 0
+        ? `部分栏目加载失败：${failedFeeds.join("、")}`
+        : undefined,
   };
 }
