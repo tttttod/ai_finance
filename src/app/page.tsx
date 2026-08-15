@@ -2637,26 +2637,44 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
     });
   };
 
+  // Fetch market snapshot with auto-refresh during trading hours
   useEffect(() => {
     let cancelled = false;
-    setSnapshotLoading(true);
-    fetch("/api/market-snapshot")
-      .then((res) => res.json())
-      .then((json) => {
-        if (cancelled) return;
-        if (json?.success && json.data) {
-          setMarketSnapshot(json.data);
-        } else {
-          setSnapshotError("数据加载失败");
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setSnapshotError("网络异常");
-      })
-      .finally(() => {
-        if (!cancelled) setSnapshotLoading(false);
-      });
-    return () => { cancelled = true; };
+    let refreshTimer: NodeJS.Timeout | null = null;
+
+    const fetchSnapshot = (showLoading = true) => {
+      if (showLoading) setSnapshotLoading(true);
+      fetch("/api/market-snapshot")
+        .then((res) => res.json())
+        .then((json) => {
+          if (cancelled) return;
+          if (json?.success && json.data) {
+            setMarketSnapshot(json.data);
+            // If in trading hours and auto-refresh was triggered, schedule next refresh
+            if (json.data.isTradingTime && json.data.autoRefreshTriggered) {
+              // Refresh every 30 minutes during trading hours
+              refreshTimer = setTimeout(() => {
+                if (!cancelled) fetchSnapshot(false);
+              }, 30 * 60 * 1000);
+            }
+          } else {
+            setSnapshotError("数据加载失败");
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setSnapshotError("网络异常");
+        })
+        .finally(() => {
+          if (!cancelled && showLoading) setSnapshotLoading(false);
+        });
+    };
+
+    fetchSnapshot(true);
+
+    return () => {
+      cancelled = true;
+      if (refreshTimer) clearTimeout(refreshTimer);
+    };
   }, []);
 
   // Use snapshot data or fallback to mock

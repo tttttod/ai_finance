@@ -1,13 +1,35 @@
 import { NextResponse } from "next/server";
 import { getLatestMarketSnapshot, isSupabaseConfigured, isTushareConfigured } from "@/lib/data/market-snapshot-store";
+import { isTradingTime, isSnapshotStale } from "@/lib/data/market-refresh-policy";
+import { buildMarketSnapshotFromTushare } from "@/lib/data/market-snapshot-builder";
+import { saveMarketSnapshot } from "@/lib/data/market-snapshot-store";
 import { mockMarketData, mockRecommendedTargets } from "@/lib/mini-mock";
 import type { MiniMarketSnapshot } from "@/lib/data/market-types";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  // Only read from cache — NEVER call Tushare here
-  const snapshot = await getLatestMarketSnapshot();
+  let snapshot = await getLatestMarketSnapshot();
+
+  // Auto-refresh during trading hours if snapshot is stale
+  const trading = isTradingTime();
+  const stale = snapshot ? isSnapshotStale(snapshot.fetchedAt) : true;
+
+  if (trading && stale && isTushareConfigured()) {
+    try {
+      // Fire-and-forget refresh (don't block the response)
+      const refreshPromise = (async () => {
+        const fresh = await buildMarketSnapshotFromTushare();
+        await saveMarketSnapshot(fresh);
+      })();
+      // Don't await - let it run in background
+      refreshPromise.catch((err) => {
+        console.error("[market-snapshot] Background refresh failed:", err);
+      });
+    } catch (err) {
+      console.error("[market-snapshot] Failed to trigger background refresh:", err);
+    }
+  }
 
   if (snapshot) {
     // Add data quality info
@@ -26,6 +48,8 @@ export async function GET() {
         hasRealData: snapshot.source === "tushare",
         supabaseConfigured: isSupabaseConfigured(),
         tushareConfigured: isTushareConfigured(),
+        isTradingTime: trading,
+        autoRefreshTriggered: trading && stale && isTushareConfigured(),
       },
     });
   }
@@ -58,6 +82,8 @@ export async function GET() {
       hasRealData: false,
       supabaseConfigured: isSupabaseConfigured(),
       tushareConfigured: isTushareConfigured(),
+      isTradingTime: trading,
+      autoRefreshTriggered: false,
     },
   });
 }
