@@ -1,0 +1,2126 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="覆盖因子、模型与策略的交互式量化知识图谱">
+  <title>量化知识图谱</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f4f1e9;
+      --surface: rgba(255, 253, 247, 0.92);
+      --surface-strong: #fffdf7;
+      --text: #18201d;
+      --muted: #66706b;
+      --line: rgba(24, 32, 29, 0.14);
+      --shadow: 0 18px 50px rgba(34, 45, 39, 0.09);
+      --factor: #147d64;
+      --factor-soft: rgba(20, 125, 100, 0.13);
+      --model: #315fba;
+      --model-soft: rgba(49, 95, 186, 0.13);
+      --strategy: #b05a2a;
+      --strategy-soft: rgba(176, 90, 42, 0.13);
+      --accent: #d9a91f;
+      --danger: #b44b45;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111613;
+        --surface: rgba(24, 31, 27, 0.94);
+        --surface-strong: #19201c;
+        --text: #edf1ee;
+        --muted: #aab4ae;
+        --line: rgba(237, 241, 238, 0.14);
+        --shadow: 0 18px 50px rgba(0, 0, 0, 0.3);
+        --factor: #58c7a7;
+        --factor-soft: rgba(88, 199, 167, 0.14);
+        --model: #7fa8ff;
+        --model-soft: rgba(127, 168, 255, 0.14);
+        --strategy: #f0a16e;
+        --strategy-soft: rgba(240, 161, 110, 0.14);
+        --accent: #f0c752;
+        --danger: #ef8680;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--factor) 10%, transparent), transparent 34rem),
+        radial-gradient(circle at 90% 8%, color-mix(in srgb, var(--model) 10%, transparent), transparent 32rem),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    a { color: inherit; }
+
+    .shell {
+      width: min(1540px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 24px 0 48px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      padding: 26px 28px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", "Songti SC", serif;
+      font-size: clamp(34px, 5vw, 68px);
+      font-weight: 500;
+      line-height: 1.02;
+      letter-spacing: -0.04em;
+    }
+
+    .hero-copy {
+      max-width: 830px;
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(92px, 1fr));
+      gap: 10px;
+      min-width: 330px;
+    }
+
+    .stat {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: color-mix(in srgb, var(--surface-strong) 86%, transparent);
+    }
+
+    .stat strong {
+      display: block;
+      font-family: Georgia, serif;
+      font-size: 30px;
+      font-weight: 500;
+    }
+
+    .stat span { color: var(--muted); font-size: 13px; }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(250px, 1fr) auto auto;
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .search-wrap { position: relative; }
+    .search-wrap svg {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      width: 18px;
+      height: 18px;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .search {
+      width: 100%;
+      height: 48px;
+      padding: 0 46px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      outline: none;
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 8px 22px rgba(0,0,0,0.03);
+    }
+
+    .search:focus { border-color: color-mix(in srgb, var(--model) 62%, var(--line)); }
+    .search-clear {
+      position: absolute;
+      right: 10px;
+      top: 8px;
+      width: 32px;
+      height: 32px;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      cursor: pointer;
+      color: var(--muted);
+    }
+    .search-clear:hover { background: var(--line); }
+
+    .filters, .view-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filter, .icon-button {
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+      cursor: pointer;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+    }
+
+    .filter { padding: 0 15px; }
+    .filter:hover, .icon-button:hover { transform: translateY(-1px); }
+    .filter[aria-pressed="true"] { border-color: currentColor; }
+    .filter[data-filter="all"][aria-pressed="true"] { background: var(--text); color: var(--bg); }
+    .filter[data-filter="factor"][aria-pressed="true"] { color: var(--factor); background: var(--factor-soft); }
+    .filter[data-filter="model"][aria-pressed="true"] { color: var(--model); background: var(--model-soft); }
+    .filter[data-filter="strategy"][aria-pressed="true"] { color: var(--strategy); background: var(--strategy-soft); }
+
+    .icon-button {
+      width: 44px;
+      padding: 0;
+      display: inline-grid;
+      place-items: center;
+      color: var(--muted);
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.7fr) minmax(330px, .85fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .graph-card, .detail-card, .sources-card {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(18px);
+    }
+
+    .graph-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .graph-head p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+    .graph-stage {
+      position: relative;
+      min-height: 720px;
+      background-image:
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line) 1px, transparent 1px);
+      background-size: 32px 32px;
+      background-position: center;
+      overflow: hidden;
+      touch-action: none;
+      cursor: grab;
+    }
+    .graph-stage.is-dragging { cursor: grabbing; }
+
+    #knowledgeGraph { width: 100%; height: 800px; display: block; }
+    .edge { fill: none; stroke: color-mix(in srgb, var(--muted) 28%, transparent); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+    .edge.trunk-edge { stroke-width: 2; stroke: color-mix(in srgb, var(--muted) 38%, transparent); }
+    .edge.branch-edge { stroke-width: 1.2; }
+    .edge.topic-edge { stroke-width: 1.5; stroke: var(--accent); opacity: .65; }
+    .edge.subtopic-edge { stroke-width: 1.5; stroke: var(--accent); opacity: .78; }
+    .edge.application-edge { stroke-width: 1.5; stroke: var(--accent); opacity: .82; }
+    .topic-zone { fill: color-mix(in srgb, var(--surface-strong) 54%, transparent); stroke: var(--line); stroke-width: 1; stroke-dasharray: 7 8; vector-effect: non-scaling-stroke; }
+    .topic-zone-label { fill: var(--muted); font-size: 14px; font-weight: 500; letter-spacing: .04em; }
+    .edge.cross-edge { stroke: var(--accent); stroke-dasharray: 6 7; opacity: .7; }
+    .node { cursor: pointer; outline: none; }
+    .node rect { stroke-width: 2; vector-effect: non-scaling-stroke; transition: filter .15s ease, opacity .15s ease; }
+    .node:hover rect, .node.selected rect { filter: drop-shadow(0 8px 10px rgba(0,0,0,.16)); }
+    .node text { pointer-events: none; fill: var(--text); font-size: 19px; font-weight: 500; }
+    .node .node-sub { fill: var(--muted); font-size: 13px; font-weight: 400; }
+    .node.root rect { fill: var(--text); stroke: var(--text); }
+    .node.root text { fill: var(--bg); font-family: Georgia, serif; font-size: 28px; }
+    .node.category.factor rect, .node.group.factor rect, .node.topic.factor rect, .node.subtopic.factor rect, .node.application.factor rect { fill: color-mix(in srgb, var(--factor) 14%, var(--surface-strong)); stroke: var(--factor); }
+    .node.category.model rect, .node.group.model rect, .node.topic.model rect, .node.subtopic.model rect, .node.application.model rect { fill: color-mix(in srgb, var(--model) 14%, var(--surface-strong)); stroke: var(--model); }
+    .node.category.strategy rect, .node.group.strategy rect, .node.topic.strategy rect, .node.subtopic.strategy rect, .node.application.strategy rect { fill: color-mix(in srgb, var(--strategy) 14%, var(--surface-strong)); stroke: var(--strategy); }
+    .node.subtopic rect { stroke-width: 1.5; }
+    .node.subtopic text { font-size: 16px; }
+    .node.subtopic .node-sub { font-size: 12px; }
+    .node.application rect { stroke-width: 1.25; stroke-dasharray: 5 4; }
+    .node.application text { font-size: 15px; }
+    .node.application .node-sub { font-size: 11px; }
+    .node.dimmed { opacity: .14; pointer-events: none; }
+    .node.match rect { stroke: var(--accent); stroke-width: 4; }
+
+    .graph-empty {
+      position: absolute;
+      inset: 0;
+      display: none;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .graph-empty.visible { display: grid; }
+
+    .detail-card { position: sticky; top: 14px; }
+    .detail-top {
+      padding: 22px 22px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+    .detail-kicker {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .detail-kicker i { width: 9px; height: 9px; border-radius: 50%; }
+    .detail-top h2 {
+      margin: 10px 0 8px;
+      font-family: Georgia, "Songti SC", serif;
+      font-size: clamp(26px, 3vw, 40px);
+      font-weight: 500;
+      line-height: 1.15;
+    }
+    .source-badge {
+      display: inline-flex;
+      margin-top: 13px;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: color-mix(in srgb, var(--surface-strong) 78%, transparent);
+      font-size: 12px;
+    }
+    .detail-summary { margin: 0; color: var(--muted); line-height: 1.75; }
+    .detail-body { padding: 20px 22px 24px; }
+    .detail-section + .detail-section { margin-top: 22px; }
+    .detail-section h3 {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .formula {
+      overflow-x: auto;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--accent);
+      border-radius: 14px;
+      background: color-mix(in srgb, var(--surface-strong) 84%, transparent);
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 14px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+    .detail-list { margin: 0; padding: 0 0 0 19px; color: var(--muted); line-height: 1.75; }
+    .detail-list li + li { margin-top: 6px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: transparent;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .chip:hover { border-color: var(--accent); }
+    .warning {
+      padding: 13px 14px;
+      border-radius: 14px;
+      background: color-mix(in srgb, var(--danger) 10%, transparent);
+      color: var(--muted);
+      line-height: 1.7;
+    }
+    .deep-grid { display: grid; gap: 10px; }
+    .deep-item {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: color-mix(in srgb, var(--surface-strong) 82%, transparent);
+    }
+    .deep-item strong { display: block; margin-bottom: 7px; font-weight: 500; }
+    .deep-item p { margin: 0; color: var(--muted); line-height: 1.75; }
+    .deep-item code {
+      display: block;
+      overflow-x: auto;
+      margin-top: 9px;
+      padding: 10px;
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--text) 6%, transparent);
+      color: var(--text);
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+    .interview-answer {
+      padding: 15px;
+      border: 1px solid color-mix(in srgb, var(--model) 32%, var(--line));
+      border-radius: 15px;
+      background: color-mix(in srgb, var(--model) 8%, transparent);
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .sources-card { margin-top: 18px; padding: 22px; }
+    .sources-card h2 { margin: 0 0 8px; font-family: Georgia, serif; font-weight: 500; }
+    .sources-intro { margin: 0 0 18px; color: var(--muted); line-height: 1.7; }
+    .sources-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .source {
+      display: block;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      text-decoration: none;
+      background: color-mix(in srgb, var(--surface-strong) 82%, transparent);
+    }
+    .source:hover { border-color: var(--accent); }
+    .source strong { display: block; font-weight: 500; line-height: 1.45; }
+    .source span { display: block; margin-top: 6px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+    .footer { padding: 22px 4px 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+
+    @media (max-width: 1080px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-stats { min-width: 0; }
+      .toolbar { grid-template-columns: 1fr; }
+      .main-grid { grid-template-columns: 1fr; }
+      .detail-card { position: static; }
+      .sources-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 640px) {
+      .shell { width: min(100% - 16px, 1540px); padding-top: 8px; }
+      .hero { padding: 21px 18px; border-radius: 21px; }
+      .hero-stats { grid-template-columns: 1fr 1fr 1fr; }
+      .stat { padding: 11px; }
+      .stat strong { font-size: 24px; }
+      .filters { display: grid; grid-template-columns: repeat(2, 1fr); }
+      .filter { width: 100%; }
+      .view-actions { justify-content: flex-end; }
+      .graph-head { align-items: flex-start; flex-direction: column; }
+      .graph-stage, #knowledgeGraph { min-height: 650px; height: 650px; }
+      .sources-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Quantitative finance atlas</p>
+        <h1>量化知识图谱</h1>
+        <p class="hero-copy">我把量化研究整理成三类问题：因子解释收益从哪里来，模型描述变量怎样共同变化，策略把预测转成可交易的仓位。点开节点，可以直接看到核心机制、数学表达、使用方法和容易踩坑的地方。</p>
+      </div>
+      <div class="hero-stats" aria-label="图谱统计">
+        <div class="stat"><strong id="topicCount">0</strong><span>知识节点</span></div>
+        <div class="stat"><strong id="formulaCount">0</strong><span>关键公式</span></div>
+        <div class="stat"><strong id="sourceCount">0</strong><span>经典来源</span></div>
+      </div>
+    </header>
+
+    <section class="toolbar" aria-label="图谱工具">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.6-4.6m2.1-5.4a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="searchInput" class="search" type="search" placeholder="搜索因子、模型、策略或公式，例如 IC、Barra、波动率" aria-label="搜索知识节点">
+        <button id="clearSearch" class="search-clear" type="button" aria-label="清空搜索">×</button>
+      </div>
+      <div class="filters" aria-label="方向筛选">
+        <button class="filter" type="button" data-filter="all" aria-pressed="true">全部</button>
+        <button class="filter" type="button" data-filter="factor" aria-pressed="false">因子</button>
+        <button class="filter" type="button" data-filter="model" aria-pressed="false">模型</button>
+        <button class="filter" type="button" data-filter="strategy" aria-pressed="false">策略</button>
+      </div>
+      <div class="view-actions" aria-label="视图控制">
+        <button id="zoomOut" class="icon-button" type="button" aria-label="缩小">−</button>
+        <button id="resetView" class="icon-button" type="button" aria-label="恢复视图">◎</button>
+        <button id="zoomIn" class="icon-button" type="button" aria-label="放大">＋</button>
+      </div>
+    </section>
+
+    <section class="main-grid">
+      <div class="graph-card">
+        <div class="graph-head">
+          <p>知识点支持逐层展开。点开细分节点后，“具体运用”也会变成可点击节点。拖动画布可以移动，滚轮可以缩放。</p>
+          <div class="legend" aria-label="颜色说明">
+            <span><i style="background:var(--factor)"></i>因子</span>
+            <span><i style="background:var(--model)"></i>模型</span>
+            <span><i style="background:var(--strategy)"></i>策略</span>
+          </div>
+        </div>
+        <div id="graphStage" class="graph-stage">
+          <svg id="knowledgeGraph" role="img" aria-label="量化知识关系图"></svg>
+          <div id="graphEmpty" class="graph-empty">没有找到对应节点，换一个关键词试试。</div>
+        </div>
+      </div>
+
+      <aside id="detailCard" class="detail-card" aria-live="polite">
+        <div class="detail-top">
+          <div class="detail-kicker"><i id="detailDot"></i><span id="detailPath">量化投资</span></div>
+          <h2 id="detailTitle">从一张图开始</h2>
+          <p id="detailSummary" class="detail-summary">选择任意节点，右侧会展示它解决的问题、关键公式和实际用法。搜索结果会自动展开所在主题。</p>
+          <div id="detailSource" class="source-badge" hidden></div>
+        </div>
+        <div class="detail-body">
+          <section class="detail-section">
+            <h3>核心机制</h3>
+            <div id="detailEssence">量化研究的共同任务，是把经济假设或市场行为写成可检验的信号，再把信号映射为仓位，同时控制风险与交易成本。</div>
+          </section>
+          <section id="formulaSection" class="detail-section">
+            <h3>数学表达</h3>
+            <div id="detailFormula" class="formula">净收益 = 预测收益 − 风险成本 − 交易成本</div>
+          </section>
+          <section id="deepDiveSection" class="detail-section" hidden>
+            <h3>专题拆解</h3>
+            <div id="detailDeepDive" class="deep-grid"></div>
+          </section>
+          <section class="detail-section">
+            <h3 id="applicationsHeading">具体运用</h3>
+            <ul id="detailApplications" class="detail-list"></ul>
+          </section>
+          <section class="detail-section">
+            <h3 id="methodHeading">研究步骤</h3>
+            <ul id="detailMethod" class="detail-list"></ul>
+          </section>
+          <section id="checklistSection" class="detail-section" hidden>
+            <h3>实操检查</h3>
+            <ul id="detailChecklist" class="detail-list"></ul>
+          </section>
+          <section class="detail-section">
+            <h3>常见误区</h3>
+            <div id="detailPitfalls" class="warning"></div>
+          </section>
+          <section id="interviewSection" class="detail-section" hidden>
+            <h3>面试回答</h3>
+            <div id="detailInterview" class="interview-answer"></div>
+          </section>
+          <section class="detail-section">
+            <h3>关联节点</h3>
+            <div id="detailRelated" class="chips"></div>
+          </section>
+        </div>
+      </aside>
+    </section>
+
+    <section class="sources-card">
+      <h2>资料来源</h2>
+      <p class="sources-intro">图谱以经典论文、公开课程与行业常用方法为主，同时吸收了你前面收集的多因子、Barra、机器学习、风险控制和期权笔记。公式采用研究中常见写法，真实交易仍需结合市场规则和数据口径。</p>
+      <div id="sourcesGrid" class="sources-grid"></div>
+    </section>
+
+    <footer class="footer">版本 1.2，重点专题和具体运用支持继续下钻，适合添加新的帖子、论文和代码案例。内容用于学习与研究，不构成投资建议。</footer>
+  </main>
+
+  <script>
+    const categories = {
+      factor: { title: '因子', subtitle: '解释收益差异', color: 'var(--factor)' },
+      model: { title: '模型', subtitle: '描述变量关系', color: 'var(--model)' },
+      strategy: { title: '策略', subtitle: '把预测变成仓位', color: 'var(--strategy)' }
+    };
+
+    const groups = [
+      { id: 'factor-foundation', category: 'factor', title: '因子基础', subtitle: '暴露、收益与检验' },
+      { id: 'factor-style', category: 'factor', title: '股票风格', subtitle: '价值、动量与质量' },
+      { id: 'factor-macro', category: 'factor', title: '宏观与衍生品', subtitle: 'Carry、期限与波动率' },
+      { id: 'factor-research', category: 'factor', title: '因子研究', subtitle: '挖掘、衰减与拥挤' },
+      { id: 'model-pricing', category: 'model', title: '资产定价', subtitle: '风险溢价与横截面' },
+      { id: 'model-risk', category: 'model', title: '风险建模', subtitle: '协方差与尾部' },
+      { id: 'model-portfolio', category: 'model', title: '组合优化', subtitle: '收益、风险与约束' },
+      { id: 'model-timeseries', category: 'model', title: '时间序列', subtitle: '动态状态与均衡' },
+      { id: 'model-ml', category: 'model', title: '机器学习', subtitle: '非线性预测与验证' },
+      { id: 'model-derivative', category: 'model', title: '衍生品定价', subtitle: '波动率与希腊字母' },
+      { id: 'strategy-cross', category: 'strategy', title: '横截面策略', subtitle: '选股与市场中性' },
+      { id: 'strategy-time', category: 'strategy', title: '时序策略', subtitle: '趋势、反转与宏观' },
+      { id: 'strategy-arb', category: 'strategy', title: '套利策略', subtitle: '价差与相对价值' },
+      { id: 'strategy-option', category: 'strategy', title: '期权策略', subtitle: '波动率与动态对冲' },
+      { id: 'strategy-micro', category: 'strategy', title: '交易执行', subtitle: '订单簿与滑点' },
+      { id: 'strategy-allocation', category: 'strategy', title: '配置与防守', subtitle: '风险预算与尾部保护' }
+    ];
+
+    const topics = [
+      {
+        id:'factor-exposure', group:'factor-foundation', category:'factor', title:'因子暴露', subtitle:'资产对特征的敏感度',
+        essence:'因子暴露描述资产或组合在某类系统性特征上的位置。个股暴露来自标准化后的特征值，组合暴露是权重加总，主动暴露用组合减去基准。',
+        formula:'xₚ,k = Σᵢ wᵢ xᵢ,k\nx_active,k = xₚ,k − x_benchmark,k',
+        applications:['检查组合是否意外押注市值、行业或波动率。','给优化器设置风格暴露上下限。','将收益贡献和风险贡献归到具体因子。'],
+        method:['统一因子方向并处理缺失值。','去极值、标准化，再做行业或市值中性化。','按组合权重计算总暴露与主动暴露。'],
+        pitfalls:'暴露高并不等于贡献高。贡献还取决于因子收益或风险结构，时间口径也要保持一致。',
+        related:['factor-return','barra','neutralization','risk-attribution']
+      },
+      {
+        id:'factor-return', group:'factor-foundation', category:'factor', title:'因子收益', subtitle:'单位暴露获得的回报',
+        essence:'因子收益是截面回归中每单位暴露对应的当期回报。它把资产收益分成公共因子部分和个体残差。',
+        formula:'rᵢ,t = Σₖ xᵢ,k,t₋₁ fₖ,t + εᵢ,t\n组合因子贡献ₖ = xₚ,k · fₖ',
+        applications:['解释组合当天为何赚钱或亏损。','判断价值、动量等风格近期是否占优。','形成风险模型中的因子收益序列。'],
+        method:['使用上一期暴露解释下一期收益。','采用加权回归减轻异方差影响。','检查残差分布和回归稳定性。'],
+        pitfalls:'当因子彼此高度相关时，回归系数容易飘动，贡献解释也会变得脆弱。',
+        related:['factor-exposure','fama-macbeth','barra','multicollinearity']
+      },
+      {
+        id:'ic', group:'factor-foundation', category:'factor', title:'IC 与 Rank IC', subtitle:'预测排序是否有效',
+        essence:'IC衡量当前因子值与未来收益的截面关系。Rank IC使用秩相关，对异常值更稳，也更贴近选股排序。',
+        formula:'ICₜ = Corr(fᵢ,t, rᵢ,t+1)\nRankICₜ = Spearman(fᵢ,t, rᵢ,t+1)\nICIR = mean(IC) / std(IC)',
+        applications:['比较不同因子的预测能力。','监控因子是否进入失效阶段。','估计主动管理的信息比率上限。'],
+        method:['明确预测区间和收益口径。','按日期计算截面相关，再研究时间序列均值。','结合分组收益、胜率和显著性判断。'],
+        pitfalls:'平均IC显著仍可能由少数时期贡献。行业暴露、停牌样本和幸存者偏差也会抬高结果。',
+        related:['ic-decay','monotonicity','grinold-law','factor-testing']
+      },
+      {
+        id:'monotonicity', group:'factor-foundation', category:'factor', title:'单调性检验', subtitle:'收益能否随排序稳定变化',
+        essence:'单调性检验关注因子从低到高的各组收益是否持续变化。完整单调说明预测能力覆盖整个截面，头尾差异只说明极端组有效。',
+        formula:'d_g,t = R_g+1,t − R_g,t\nMR = [ΣₜΣ_g 1(d_g,t > 0)] / [T(K−1)]',
+        applications:['识别因子收益是否由头尾组驱动。','发现U形或分段关系。','为分层选股确定组数和阈值。'],
+        method:['按每期截面分位数分组。','查看相邻组收益差、Rank IC和多空收益。','使用重采样方法检验趋势稳定性。'],
+        pitfalls:'分组过多会降低每组样本量，分组过少又会遮住非线性关系。',
+        related:['ic','factor-testing','quantile-regression','multifactor-stock']
+      },
+      {
+        id:'neutralization', group:'factor-foundation', category:'factor', title:'中性化', subtitle:'剥离已知风险暴露',
+        essence:'中性化用回归残差保留因子中无法被行业、市值或其他控制变量解释的部分，减少伪预测关系。',
+        formula:'f = Zγ + u\nf_neutral = u',
+        applications:['构建行业中性的选股信号。','减少小市值偏好对其他因子的污染。','让不同因子更容易组合。'],
+        method:['选定需要控制的暴露。','按截面做加权回归。','对残差再次标准化并检查分布。'],
+        pitfalls:'控制变量过多会拿走真实Alpha。控制时点晚于预测时点还会引入未来信息。',
+        related:['factor-exposure','multicollinearity','barra','market-neutral']
+      },
+      {
+        id:'value', group:'factor-style', category:'factor', title:'价值因子', subtitle:'价格相对基本面较低',
+        essence:'价值因子寻找价格相对账面、盈利或现金流较低的资产。回报来源可解释为风险补偿、投资者过度悲观和均值修复。',
+        formula:'BM = Book Equity / Market Cap\nEP = Earnings / Price\nFCFY = Free Cash Flow / Enterprise Value',
+        applications:['横截面选股。','行业内估值比较。','与质量因子组合形成质量价值。'],
+        method:['使用可得日期对齐财报数据。','行业内标准化估值指标。','加入盈利质量和负债约束。'],
+        pitfalls:'低估值可能反映基本面恶化。财报发布日期和会计口径处理错误会制造虚假收益。',
+        related:['quality','ff3','multifactor-stock','value-trap']
+      },
+      {
+        id:'momentum', group:'factor-style', category:'factor', title:'动量因子', subtitle:'赢家继续强于输家',
+        essence:'动量利用信息扩散缓慢、锚定和机构调仓持续性。常见做法跳过最近一个月，降低短期反转干扰。',
+        formula:'MOM₁₂₋₁ = Π(1+rₜ), t∈[−12,−2]\n或 Σ log(1+rₜ)',
+        applications:['股票横截面排序。','期货和外汇趋势判断。','作为多因子组合的增长型信号。'],
+        method:['设定回看期和跳过期。','对波动率和行业暴露做控制。','监控拥挤和动量崩溃风险。'],
+        pitfalls:'市场快速反转时，动量组合可能同时平仓，尾部损失会明显放大。',
+        related:['carhart','trend','ic-decay','crowding']
+      },
+      {
+        id:'quality', group:'factor-style', category:'factor', title:'质量因子', subtitle:'稳定盈利与稳健资产负债',
+        essence:'质量因子偏好盈利能力强、现金流可靠、负债可控的公司。它经常与价值结合，用来过滤价值陷阱。',
+        formula:'ROE = Net Income / Equity\nGross Profitability = Gross Profit / Assets\nAccruals = Earnings − Cash Flow',
+        applications:['基本面选股。','防守型组合。','价值因子的质量过滤。'],
+        method:['选择盈利、杠杆和现金流子指标。','统一方向后标准化。','观察行业差异和财报季节性。'],
+        pitfalls:'高质量公司常带有较高估值，单独使用可能形成利率敏感暴露。',
+        related:['value','low-volatility','multifactor-stock','fundamental-data']
+      },
+      {
+        id:'size', group:'factor-style', category:'factor', title:'规模因子', subtitle:'小市值相对大市值',
+        essence:'规模因子衡量小公司相对大公司的收益差。潜在来源包括流动性风险、信息覆盖不足和融资约束。',
+        formula:'Sizeᵢ = −log(Market Capᵢ)\nSMB = R_small − R_big',
+        applications:['风格归因。','小盘增强策略。','控制其他因子的规模偏差。'],
+        method:['使用自由流通市值或总市值并保持一致。','行业内比较并处理壳公司。','加入流动性与交易成本约束。'],
+        pitfalls:'小盘收益在现实中容易被冲击成本和容量限制侵蚀。',
+        related:['ff3','liquidity','barra','capacity']
+      },
+      {
+        id:'low-volatility', group:'factor-style', category:'factor', title:'低波动因子', subtitle:'低风险资产的风险调整收益',
+        essence:'低波动异象可能来自杠杆限制、基准考核和投资者偏好高波动彩票型资产。',
+        formula:'σᵢ = std(rᵢ,t−L:t)\nβᵢ = Cov(rᵢ,rₘ) / Var(rₘ)',
+        applications:['防守型权益组合。','最低波动组合。','控制多因子策略的风险集中。'],
+        method:['估计滚动波动率和Beta。','处理停牌与价格跳跃。','控制行业和估值暴露。'],
+        pitfalls:'低波动组合常集中在防守行业，并可能对利率变化较敏感。',
+        related:['risk-parity-model','minimum-variance','quality','vol-targeting']
+      },
+      {
+        id:'liquidity', group:'factor-style', category:'factor', title:'流动性因子', subtitle:'交易困难对应的补偿',
+        essence:'流动性差的资产需要更高预期收益补偿持有者。研究中可从价差、冲击和成交活跃度刻画。',
+        formula:'Amihud = mean(|rₜ| / Amountₜ)\nTurnover = Volume / Shares Outstanding',
+        applications:['流动性溢价研究。','交易容量评估。','组合优化中的成交约束。'],
+        method:['同时观察价差、成交额和冲击指标。','按市场制度处理涨跌停与停牌。','将预期收益与成本放在同一口径。'],
+        pitfalls:'流动性因子在危机时会与市场风险同时恶化，历史平均成本会明显低估压力状态。',
+        related:['market-impact','optimal-execution','size','capacity']
+      },
+      {
+        id:'carry', group:'factor-macro', category:'factor', title:'Carry 因子', subtitle:'持有期间的结构性收益',
+        essence:'Carry衡量市场状态保持不变时，资产随时间推移产生的预期收益。它广泛存在于外汇、债券、商品和期权。',
+        formula:'FX Carry ≈ i_domestic − i_foreign\nFutures Carry ≈ (Spot − Future) / Time\nOption Carry 常由 Theta 与融资成本共同决定',
+        applications:['外汇利差策略。','商品期限结构交易。','期权卖方收益分解。'],
+        method:['定义统一持有期。','分离即期变化和曲线滚动收益。','监控危机状态下的融资与跳跃风险。'],
+        pitfalls:'Carry常呈现小幅稳定收益和少数巨大亏损，尾部风险必须单独建模。',
+        related:['option-carry','term-structure','tail-risk','global-macro']
+      },
+      {
+        id:'term-structure', group:'factor-macro', category:'factor', title:'期限结构', subtitle:'曲线斜率与滚动收益',
+        essence:'期限结构反映不同到期资产之间的价格关系。曲线形状包含库存、融资、风险偏好和未来供需预期。',
+        formula:'Slope = y_long − y_short\nRoll Yield ≈ Price_near − Price_far',
+        applications:['债券久期和曲线交易。','商品跨期策略。','波动率期限结构交易。'],
+        method:['按相同到期口径比较。','区分平移、变陡和曲率变化。','计入换月规则与交易成本。'],
+        pitfalls:'合约换月和到期日处理稍有偏差，就会制造虚假的滚动收益。',
+        related:['carry','pca','global-macro','option-carry']
+      },
+      {
+        id:'volatility-factor', group:'factor-macro', category:'factor', title:'波动率因子', subtitle:'风险水平与波动率风险溢价',
+        essence:'波动率既是风险状态，也是可交易价格。隐含波动率与未来实现波动率之差，常被用来刻画波动率风险溢价。',
+        formula:'RV = sqrt(Σ rₜ²)\nVRP = IV² − E[RV²]',
+        applications:['波动率择时。','期权相对价值。','组合杠杆和风险预算。'],
+        method:['选择与期权期限一致的实现波动率窗口。','清洗隐含波动率报价。','分离方向、跳跃和波动率曲面风险。'],
+        pitfalls:'卖波动率的平均收益通常伴随左尾风险，保证金和流动性压力也会同时上升。',
+        related:['garch','iv-surface','vol-arbitrage','vol-targeting']
+      },
+      {
+        id:'sentiment', group:'factor-macro', category:'factor', title:'情绪因子', subtitle:'注意力与交易行为',
+        essence:'情绪因子从新闻、搜索、订单流和社交文本中提取市场态度，捕捉信息扩散与投资者反应。',
+        formula:'Sentiment Score = Σ_j weight_j · signal_j\nAbnormal Attention = current − seasonal baseline',
+        applications:['事件驱动信号。','短周期方向预测。','风险状态监测。'],
+        method:['建立时间戳严格的数据流。','处理否定、反讽和实体映射。','用滚动样本检验语义漂移。'],
+        pitfalls:'文本来源和平台机制会持续变化，历史词典容易失效，时间戳错误也会产生严重的信息泄漏。',
+        related:['alternative-data','transformer','event-driven','data-leakage']
+      },
+      {
+        id:'alpha-mining', group:'factor-research', category:'factor', title:'Alpha 因子挖掘', subtitle:'从假设到可交易信号',
+        essence:'有效挖掘从经济或行为假设出发，再把变量构造成可验证信号。公式搜索只是手段，真正价值来自独立信息与可交易性。',
+        formula:'Alpha = Signal Edge × Breadth × Stability − Cost\nScoreᵢ = Σₖ aₖ zᵢ,k',
+        applications:['构建候选因子库。','寻找已有因子的非线性变体。','跨市场迁移有效信号。'],
+        method:['提出可证伪假设。','处理数据时间戳和样本范围。','检验IC、分组收益、稳定性和成本。'],
+        pitfalls:'大规模试验会放大数据窥探。保留完整试验记录，并对多重检验做校正。',
+        related:['factor-testing','multiple-testing','ml-overfit','multifactor-stock']
+      },
+      {
+        id:'factor-testing', group:'factor-research', category:'factor', title:'因子检验', subtitle:'有效性、稳定性与成本',
+        essence:'因子检验需要同时回答预测是否存在、关系是否稳定、收益是否可交易。单一指标无法完成全部判断。',
+        formula:'t = mean(IC) / [std(IC)/√T]\nNet Alpha = Gross Alpha − Turnover × Cost',
+        applications:['筛选候选因子。','确定适合的持有期。','比较中性化前后的信息增量。'],
+        method:['检查覆盖率、分布和异常值。','计算IC、分组收益、单调性和多空收益。','做滚动样本外检验与成本压力测试。'],
+        pitfalls:'统计显著无法直接替代经济意义。现实容量、成交规则和税费常会改变结论。',
+        related:['ic','monotonicity','multiple-testing','turnover']
+      },
+      {
+        id:'ic-decay', group:'factor-research', category:'factor', title:'IC 衰减', subtitle:'预测能力随期限下降',
+        essence:'IC衰减曲线衡量信号对不同未来期限的预测能力。衰减速度决定合理持有期，也会影响换手和交易成本。',
+        formula:'IC(h) = Corr(fₜ, rₜ→t+h)\n若 IC(h) ≈ IC₀e^(−λh)，半衰期 h½ = ln2 / λ',
+        applications:['选择调仓频率。','监控因子失效。','比较快信号和慢信号。'],
+        method:['对多个预测期限计算IC。','使用滚动窗口估计均值和置信区间。','将衰减收益与交易成本共同评估。'],
+        pitfalls:'重叠收益会产生序列相关，显著性需要使用适合的标准误或重采样方法。',
+        related:['ic','turnover','optimal-execution','factor-combination']
+      },
+      {
+        id:'turnover', group:'factor-research', category:'factor', title:'换手率', subtitle:'信号变化转化为交易量',
+        essence:'换手率连接预测与现实成本。信号越快、约束越紧，组合往往越频繁交易。',
+        formula:'Turnoverₜ = ½ Σᵢ |wᵢ,t − wᵢ,t−1⁺|\nCost ≈ spread + impact + fees',
+        applications:['估算净收益。','设置组合优化的换手约束。','比较不同调仓频率。'],
+        method:['用价格漂移后的旧权重计算真实交易量。','按品种和订单规模估计成本。','对高换手信号做缓冲区或信号平滑。'],
+        pitfalls:'直接比较新旧目标权重会忽略价格漂移，结果与真实成交量存在差异。',
+        related:['ic-decay','turnover-constraint','market-impact','optimal-execution']
+      },
+      {
+        id:'crowding', group:'factor-research', category:'factor', title:'因子拥挤', subtitle:'相似仓位引发共同平仓',
+        essence:'因子拥挤出现在大量资金持有相似头寸时。平时收益可能稳定，压力状态下会因共同减仓产生非线性损失。',
+        formula:'Crowding Proxy = Position Concentration × Valuation Spread × Flow Correlation',
+        applications:['监控动量和低波动策略风险。','调整因子权重。','设计压力情景和容量上限。'],
+        method:['跟踪估值分位、借券成本和资金流。','观察因子组合间相关性上升。','模拟快速去杠杆下的冲击。'],
+        pitfalls:'公开持仓数据往往滞后，单个指标只能给出局部信号，需要多个代理变量共同判断。',
+        related:['momentum','capacity','tail-risk','regime']
+      },
+
+      {
+        id:'capm', group:'model-pricing', category:'model', title:'CAPM', subtitle:'市场风险解释预期收益',
+        essence:'CAPM把资产预期超额收益归因于市场风险暴露。Beta衡量资产与市场共同变化的程度。',
+        formula:'E[Rᵢ] − Rf = βᵢ(E[Rₘ] − Rf)\nβᵢ = Cov(Rᵢ,Rₘ) / Var(Rₘ)',
+        applications:['估算股权资本成本。','分解Alpha与Beta。','作为多因子模型的基准。'],
+        method:['选择市场组合和无风险利率。','用滚动回归估计Beta。','检查Beta在不同状态中的稳定性。'],
+        pitfalls:'Beta会随市场状态和估计窗口变化，单一市场因子也难以解释完整横截面。',
+        related:['apt','ff3','alpha-beta','market-neutral']
+      },
+      {
+        id:'apt', group:'model-pricing', category:'model', title:'套利定价理论', subtitle:'多个系统性来源决定收益',
+        essence:'APT认为资产收益可由若干公共因子解释。若两个组合拥有相同因子暴露，价格关系长期偏离会形成套利压力。',
+        formula:'Rᵢ = αᵢ + βᵢᵀF + εᵢ\nE[Rᵢ] = Rf + βᵢᵀλ',
+        applications:['宏观多因子定价。','风险归因。','构建因子模拟组合。'],
+        method:['选择可解释且稳定的公共因子。','估计资产暴露与因子风险价格。','检查残差相关和遗漏变量。'],
+        pitfalls:'因子选择缺乏唯一答案，统计因子和经济因子的解释方式也不同。',
+        related:['capm','pca','barra','factor-return']
+      },
+      {
+        id:'ff3', group:'model-pricing', category:'model', title:'Fama-French 三因子', subtitle:'市场、规模与价值',
+        essence:'三因子模型在市场因子之外加入规模和价值，用来解释CAPM遗漏的横截面收益差异。',
+        formula:'Rᵢ − Rf = α + β·MKT + s·SMB + h·HML + ε',
+        applications:['基金业绩归因。','构造风格中性Alpha。','检验新因子的增量解释力。'],
+        method:['按公开规则构造因子组合。','使用时间序列回归估计暴露。','检查Alpha和残差相关性。'],
+        pitfalls:'不同市场的因子构造规则会影响结果，历史有效也不保证未来风险溢价稳定。',
+        related:['capm','carhart','value','size']
+      },
+      {
+        id:'carhart', group:'model-pricing', category:'model', title:'Carhart 四因子', subtitle:'三因子加动量',
+        essence:'Carhart模型在三因子基础上加入动量因子，用来解释基金收益中的趋势暴露。',
+        formula:'Rᵢ − Rf = α + β·MKT + s·SMB + h·HML + m·UMD + ε',
+        applications:['基金风格归因。','动量中性化。','评估主动管理Alpha。'],
+        method:['保持因子收益口径一致。','估计滚动暴露。','检查Alpha对样本区间的敏感度。'],
+        pitfalls:'暴露会动态变化，固定系数回归可能把择时能力误写成Alpha或残差。',
+        related:['ff3','momentum','alpha-beta','fama-macbeth']
+      },
+      {
+        id:'fama-macbeth', group:'model-pricing', category:'model', title:'Fama-MacBeth 回归', subtitle:'估计横截面风险价格',
+        essence:'该方法逐期做截面回归，再对系数时间序列取均值。它把截面预测关系和时间上的统计推断分开。',
+        formula:'rᵢ,t+1 = αₜ + βₜᵀxᵢ,t + εᵢ,t+1\nλ̂ = mean(βₜ)',
+        applications:['检验因子是否获得风险补偿。','控制多个公司特征。','估计特征的平均收益关系。'],
+        method:['每期用当时可得的暴露预测下一期收益。','保存每期系数。','对系数均值使用稳健标准误。'],
+        pitfalls:'它支持平均线性关系，仍无法单独证明分组收益严格单调。',
+        related:['factor-return','monotonicity','multicollinearity','ff3']
+      },
+      {
+        id:'barra', group:'model-risk', category:'model', title:'Barra 风险模型', subtitle:'因子风险与特质风险',
+        essence:'Barra类模型把资产收益分成风格、行业和特质部分，再利用因子协方差与特质方差估计组合风险。',
+        formula:'r = Xf + u\nVar(r) = X F Xᵀ + D\nσₚ² = wᵀ(XFXᵀ + D)w',
+        applications:['组合风险分解，回答风险来自行业、风格还是个股。','风格暴露约束，避免Alpha组合意外变成市值或波动率押注。','主动风险、跟踪误差、压力测试和组合优化。'],
+        method:['确定行业与风格因子，处理共线性和基准约束。','对原始特征去极值、标准化和必要的中性化，形成暴露矩阵X。','每天做加权截面回归估计因子收益f与特质收益u。','用历史因子收益估计协方差F，并对特质收益估计对角矩阵D。','把组合权重映射到因子暴露、因子风险和特质风险。'],
+        pitfalls:'风险模型解释的是共同波动，风格因子并不天然等同于Alpha因子。行业哑变量、国家因子和截距存在完全共线性时，需要施加约束或删去一列。',
+        source:'结合你之前发送的“Barra风险模型如何选择因子”和“Barra模型如何分解风险”',
+        deepDive:[
+          {title:'1. 收益方程', text:'在每个日期，用期初已知暴露解释下一期资产收益。风格暴露通常连续，行业暴露常用0或1。回归权重会考虑公司规模和异方差。', formula:'r_t = X_{t-1} f_t + u_t'},
+          {title:'2. 因子怎么选', text:'候选因子需要覆盖广、经济含义清楚、暴露稳定，并能解释共同波动。常见风格包含规模、价值、动量、盈利、杠杆、流动性、Beta和波动率。行业因子用于隔离结构差异。', formula:'X = [Country | Industry | Style]'},
+          {title:'3. 风险结构', text:'资产协方差由公共因子风险和特质风险组成。实务中会对因子协方差做指数加权、Newey-West调整、波动率状态调整和特征值修正。', formula:'C = X F Xᵀ + D'},
+          {title:'4. 组合风险分解', text:'组合因子暴露等于权重乘暴露矩阵。总方差可以拆成因子部分与特质部分，还能继续按单个因子计算边际贡献。', formula:'b = Xᵀw\nσ_factor² = bᵀFb\nσ_specific² = wᵀDw'},
+          {title:'5. 主动风险', text:'指数增强使用主动权重a等于组合权重减去基准权重。跟踪误差由主动因子暴露和主动特质仓位共同决定。', formula:'a = w_p − w_b\nTE² = aᵀ(XFXᵀ+D)a'},
+          {title:'6. 风险归因', text:'因子风险贡献取决于暴露与协方差，并不等于因子暴露本身。收益归因则使用暴露乘因子收益，两套口径要分开。', formula:'RC_k = b_k(Fb)_k / σ_p\nPnL_k = b_k f_k'}
+        ],
+        checklist:['暴露全部来自预测时点之前。','行业、国家和截距约束能够识别。','暴露经过去极值和标准化，方向保持一致。','因子收益回归检查残差与异常点。','因子协方差检查半衰期、状态调整和正定性。','特质风险考虑波动率偏差和贝叶斯收缩。','组合风险分解之和能还原总风险。'],
+        interview:'我会把Barra讲成一套线性多因子风险模型。先构造行业和风格暴露矩阵X，再用逐日截面回归得到因子收益和特质收益。资产协方差写成XFX转置加D，组合暴露是X转置乘权重，所以组合方差可以拆成因子风险和特质风险。实际使用时，我会重点处理因子共线性、暴露标准化、因子协方差的稳定估计，以及主动权重相对基准的跟踪误差。',
+        related:['factor-exposure','risk-attribution','shrinkage','portfolio-optimization']
+      },
+      {
+        id:'pca', group:'model-risk', category:'model', title:'主成分分析', subtitle:'提取共同变化方向',
+        essence:'PCA寻找解释数据方差最多的正交方向，适合压缩收益曲线、期限结构和高相关因子。',
+        formula:'S vⱼ = λⱼ vⱼ\nPCⱼ = X vⱼ\nExplained Ratioⱼ = λⱼ / Σλ',
+        applications:['收益曲线的平移、斜率和曲率。','统计风险因子提取。','多重共线性处理。'],
+        method:['先统一量纲并处理缺失值。','按训练窗口估计主成分。','监控载荷方向的时间稳定性。'],
+        pitfalls:'最大方差方向未必最有预测力，主成分的经济含义也可能随时间变化。',
+        related:['apt','multicollinearity','term-structure','pca-stat-arb']
+      },
+      {
+        id:'shrinkage', group:'model-risk', category:'model', title:'协方差收缩', subtitle:'降低样本估计噪声',
+        essence:'当资产很多而历史样本有限时，样本协方差误差会很大。收缩方法把样本估计拉向更稳定的目标结构。',
+        formula:'Σ̂ = (1−δ)S + δT,  0≤δ≤1',
+        applications:['组合优化。','风险预算。','高维资产风险预测。'],
+        method:['选择对角、等相关或因子结构作为目标。','估计收缩强度。','用样本外风险预测误差比较。'],
+        pitfalls:'目标结构选择不当会带来系统偏差，仍需配合权重上限和稳健约束。',
+        related:['barra','markowitz','risk-parity-model','portfolio-optimization']
+      },
+      {
+        id:'garch', group:'model-risk', category:'model', title:'GARCH', subtitle:'波动率聚集与持续性',
+        essence:'GARCH使用过去冲击和过去条件方差预测当前波动率，刻画金融收益的波动聚集。',
+        formula:'σₜ² = ω + αεₜ₋₁² + βσₜ₋₁²\n稳定条件常写为 α+β<1',
+        applications:['风险价值估计。','波动率择时。','期权和杠杆控制的短期预测。'],
+        method:['选择收益频率和误差分布。','估计参数并检查标准化残差。','与实现波动率和隐含波动率比较。'],
+        pitfalls:'对跳跃和结构突变反应有限，正态误差也容易低估尾部。',
+        related:['volatility-factor','evt','vol-targeting','heston']
+      },
+      {
+        id:'evt', group:'model-risk', category:'model', title:'极值理论', subtitle:'专门估计尾部',
+        essence:'极值理论直接研究分布尾部。POT方法对超过阈值的损失拟合广义帕累托分布。',
+        formula:'P(X−u ≤ y | X>u) ≈ GPD(y; ξ,β)\nVaRₚ 与 ESₚ 由尾部参数外推',
+        applications:['极端VaR和ES。','压力测试。','套利策略尾部风险控制。'],
+        method:['选择足够高且样本仍可用的阈值。','拟合尾部形状和尺度参数。','检查参数稳定性和超越点独立性。'],
+        pitfalls:'阈值太低会污染尾部模型，阈值太高又会使估计方差快速上升。',
+        related:['heavy-tail','tail-risk','copula','garch']
+      },
+      {
+        id:'markowitz', group:'model-portfolio', category:'model', title:'均值方差模型', subtitle:'在收益与风险间取舍',
+        essence:'均值方差模型用预期收益和协方差结构决定资产权重。它是组合优化的起点，也是理解估计误差的最好入口。',
+        formula:'min_w  ½wᵀΣw − λμᵀw\ns.t.  1ᵀw=1,  Aw≤b',
+        applications:['资产配置。','指数增强。','多因子权重优化。'],
+        method:['估计预期收益和风险结构。','加入仓位、行业、换手和流动性约束。','做样本外和压力情景测试。'],
+        pitfalls:'预期收益估计稍有变化，最优权重就可能大幅改变。约束与稳健估计相当重要。',
+        related:['shrinkage','black-litterman','turnover-constraint','portfolio-optimization']
+      },
+      {
+        id:'black-litterman', group:'model-portfolio', category:'model', title:'Black-Litterman', subtitle:'市场均衡结合主观观点',
+        essence:'Black-Litterman从市场隐含收益出发，再按观点置信度进行贝叶斯更新，缓解直接估计预期收益的不稳定。',
+        formula:'π = δΣw_market\nμ_BL = [(τΣ)⁻¹ + PᵀΩ⁻¹P]⁻¹[(τΣ)⁻¹π + PᵀΩ⁻¹q]',
+        applications:['大类资产配置。','把研究观点转成组合权重。','控制观点强度。'],
+        method:['从市场权重反推出均衡收益。','用P和q表达相对或绝对观点。','用Ω描述观点不确定性。'],
+        pitfalls:'观点置信度决定结果，设置过程需要透明，也要防止为了得到目标权重反向调参。',
+        related:['markowitz','risk-parity-model','global-macro','portfolio-optimization']
+      },
+      {
+        id:'risk-parity-model', group:'model-portfolio', category:'model', title:'风险平价', subtitle:'让各资产贡献相近风险',
+        essence:'风险平价按照风险贡献分配资本，减少名义资金权重掩盖的风险集中。',
+        formula:'σₚ = √(wᵀΣw)\nRCᵢ = wᵢ(Σw)ᵢ / σₚ\n目标常为 RCᵢ = σₚ / N',
+        applications:['大类资产配置。','多策略风险预算。','构建稳健基准。'],
+        method:['估计资产风险和相关结构。','求解目标风险贡献。','设置杠杆和流动性上限。'],
+        pitfalls:'低波动资产会获得较高名义权重，利率上升或相关性突变时仍可能集中受损。',
+        related:['risk-parity-strategy','shrinkage','vol-targeting','tail-risk']
+      },
+      {
+        id:'kelly', group:'model-portfolio', category:'model', title:'Kelly 仓位', subtitle:'最大化长期对数财富',
+        essence:'Kelly准则平衡胜率、赔率和仓位，目标是最大化长期财富增长率。实践中常使用半Kelly降低估计误差和回撤。',
+        formula:'单一赌注 f* = (bp−q)/b\n连续近似 w* ≈ Σ⁻¹μ',
+        applications:['策略资金分配。','下注规模控制。','多个Alpha的资本配置。'],
+        method:['估计净收益分布。','计入相关性和尾部。','使用分数Kelly并设置回撤约束。'],
+        pitfalls:'对收益均值估计敏感，重尾和参数漂移会让理论最优仓位过大。',
+        related:['markowitz','vol-targeting','tail-risk','portfolio-optimization']
+      },
+      {
+        id:'cointegration', group:'model-timeseries', category:'model', title:'协整模型', subtitle:'非平稳价格的稳定组合',
+        essence:'两个价格各自可能非平稳，某个线性组合却保持平稳。该关系为配对与相对价值交易提供统计基础。',
+        formula:'zₜ = yₜ − βxₜ 为平稳序列\nΔyₜ = αzₜ₋₁ + ΓΔXₜ + εₜ',
+        applications:['配对交易。','期限价差。','跨市场相对价值。'],
+        method:['先检验单序列的整合阶数。','估计协整向量。','检查残差平稳性和关系稳定性。'],
+        pitfalls:'历史协整关系可能因商业模式、指数成分或市场制度变化而断裂。',
+        related:['pairs-trading','mean-reversion','kalman','regime']
+      },
+      {
+        id:'kalman', group:'model-timeseries', category:'model', title:'卡尔曼滤波', subtitle:'动态估计隐藏状态',
+        essence:'卡尔曼滤波在状态转移和新观测之间持续更新隐藏变量，适合估计动态Beta、价差均值和趋势。',
+        formula:'xₜ = A xₜ₋₁ + ηₜ\nyₜ = H xₜ + εₜ\nKₜ = Pₜ⁻Hᵀ(H Pₜ⁻Hᵀ+R)⁻¹',
+        applications:['动态对冲比率。','时变Beta。','平滑噪声较大的信号。'],
+        method:['定义状态与观测方程。','设置过程噪声和观测噪声。','逐期预测、更新并检查创新项。'],
+        pitfalls:'噪声参数决定模型反应速度，设置不当会造成跟随过慢或过度追踪噪声。',
+        related:['cointegration','hmm','pairs-trading','trend']
+      },
+      {
+        id:'hmm', group:'model-timeseries', category:'model', title:'隐马尔可夫模型', subtitle:'识别市场状态',
+        essence:'HMM假设市场处在不可直接观察的离散状态中，每种状态拥有不同收益和波动特征，并按转移概率切换。',
+        formula:'P(Sₜ=j | Sₜ₋₁=i)=pᵢⱼ\nyₜ | Sₜ=k ~ Distribution(θₖ)',
+        applications:['牛熊或高低波动状态识别。','动态因子权重。','风险开关。'],
+        method:['选择状态数和观测变量。','用训练样本估计转移与分布参数。','按过滤概率而非事后状态交易。'],
+        pitfalls:'状态标签由模型生成，经济含义需要另行解释，状态数过多也容易拟合噪声。',
+        related:['regime','dynamic-factor-weight','garch','global-macro']
+      },
+      {
+        id:'regularization', group:'model-ml', category:'model', title:'正则化回归', subtitle:'在拟合与复杂度间平衡',
+        essence:'Ridge、Lasso和Elastic Net通过惩罚系数大小，降低高维特征中的方差和共线性影响。',
+        formula:'Ridge: min ||y−Xβ||² + λ||β||₂²\nLasso: min ||y−Xβ||² + λ||β||₁',
+        applications:['多因子预测。','特征筛选。','稳定组合预期收益。'],
+        method:['只在训练集拟合缩放参数。','用时间序列交叉验证选择λ。','检查系数稳定性和样本外表现。'],
+        pitfalls:'随机交叉验证会打乱金融时间顺序，导致信息泄漏和过高估计。',
+        related:['multicollinearity','ml-overfit','factor-combination','data-leakage']
+      },
+      {
+        id:'tree-boosting', group:'model-ml', category:'model', title:'树模型与 Boosting', subtitle:'捕捉非线性和交互',
+        essence:'树模型按特征阈值切分样本，Boosting逐步拟合残差。它适合表格数据中的非线性关系与变量交互。',
+        formula:'F_M(x)=Σₘ η hₘ(x)\nhₘ 近似负梯度方向',
+        applications:['横截面收益预测。','违约与风险分类。','因子非线性组合。'],
+        method:['按时间滚动训练。','限制树深、叶子样本和学习率。','使用特征置换或SHAP做解释。'],
+        pitfalls:'高频更新与复杂调参容易追踪噪声，特征重要性也不等同于稳定因果关系。',
+        related:['ml-alpha','ml-overfit','regularization','factor-combination']
+      },
+      {
+        id:'sequence-model', group:'model-ml', category:'model', title:'LSTM 与 Transformer', subtitle:'学习时间依赖',
+        essence:'序列模型从历史窗口学习动态关系。LSTM通过门控保留状态，Transformer利用注意力连接不同时间位置。',
+        formula:'Attention(Q,K,V)=softmax(QKᵀ/√d)V\nLSTM 通过输入门、遗忘门与输出门更新状态',
+        applications:['收益与波动率预测。','订单流建模。','新闻与价格联合建模。'],
+        method:['用滚动窗口构造严格时间顺序样本。','设置简单基线。','按市场状态和换手成本评估。'],
+        pitfalls:'金融信号噪声高，参数量大时样本外优势经常消失。模型复杂度要和有效样本量匹配。',
+        related:['ml-overfit','sentiment','order-book','ml-alpha']
+      },
+      {
+        id:'gnn', group:'model-ml', category:'model', title:'图神经网络', subtitle:'利用资产之间的关系',
+        essence:'GNN将股票、行业或供应关系表示为节点与边，让每个资产聚合邻居信息，捕捉横截面传播效应。',
+        formula:'hᵢ⁽ˡ⁺¹⁾ = σ(W₁hᵢ⁽ˡ⁾ + Σⱼ∈N(i) aᵢⱼW₂hⱼ⁽ˡ⁾)',
+        applications:['行业与供应关系因子。','相关网络风险。','跨资产信息扩散。'],
+        method:['定义经济合理的图。','避免用未来相关性建边。','与无图模型做严格样本外比较。'],
+        pitfalls:'图的定义常比网络结构更重要，动态关系和幸存者偏差会显著影响结果。',
+        related:['ml-overfit','alternative-data','pca','ml-alpha']
+      },
+      {
+        id:'ml-overfit', group:'model-ml', category:'model', title:'过拟合监控', subtitle:'识别训练好看但未来失效',
+        essence:'金融过拟合常来自低信噪比、反复试验和数据泄漏。监控重点是训练与验证差距、跨期稳定性和策略成本。',
+        formula:'Generalization Gap = Metric_train − Metric_valid\nPBO 与 Deflated Sharpe 用于校正选择偏差',
+        applications:['模型选择。','因子库治理。','实盘失效预警。'],
+        method:['使用走步式验证。','保存全部试验结果。','比较简单基线、子样本和成本后表现。'],
+        pitfalls:'只看一次留出集也可能被反复调参污染。验证集需要保持真正独立。',
+        related:['multiple-testing','data-leakage','regularization','ml-alpha']
+      },
+      {
+        id:'black-scholes', group:'model-derivative', category:'model', title:'Black-Scholes', subtitle:'无套利期权定价',
+        essence:'Black-Scholes通过动态复制给出欧式期权价格。风险中性定价把预期收益替换为无风险利率，波动率成为核心输入。',
+        formula:'C = S₀N(d₁) − Ke^(−rT)N(d₂)\nd₁=[ln(S₀/K)+(r+½σ²)T]/(σ√T)\nd₂=d₁−σ√T',
+        applications:['欧式期权估值。','反解隐含波动率。','计算Delta、Gamma和Vega。'],
+        method:['确认合约类型、分红和利率。','用市场价格反解波动率。','用希腊字母管理局部风险。'],
+        pitfalls:'常数波动率和连续对冲属于理想假设，真实市场存在跳跃、曲面和离散交易。',
+        related:['greeks','iv-surface','heston','delta-hedging']
+      },
+      {
+        id:'greeks', group:'model-derivative', category:'model', title:'期权希腊字母', subtitle:'价格对风险变量的敏感度',
+        essence:'希腊字母把期权价格变化拆成标的、波动率、时间和利率等局部风险，便于构建动态对冲。',
+        formula:'dV ≈ ΔdS + ½Γ(dS)² + Vega·dσ + Θdt + Rho·dr',
+        applications:['Delta中性。','Gamma与Vega预算。','期权组合风险归因。'],
+        method:['统一每个希腊字母的单位。','按情景而非单点敏感度检查。','计入曲面变化和离散对冲误差。'],
+        pitfalls:'希腊字母是局部近似，大幅行情和波动率跳跃时，高阶项会变得重要。',
+        related:['black-scholes','delta-hedging','iv-surface','vol-arbitrage']
+      },
+      {
+        id:'iv-surface', group:'model-derivative', category:'model', title:'隐含波动率曲面', subtitle:'执行价与期限上的波动率价格',
+        essence:'市场期权价格反解出的隐含波动率随执行价和期限变化。曲面估计需要先清洗报价，再逐点反解，随后进行平滑并约束静态无套利。',
+        formula:'找到 σ 使 BS(S,K,T,r,σ)=Market Price\nSVI: w(k)=a+b[ρ(k−m)+√((k−m)²+σ²)]',
+        applications:['期权定价和报价。','波动率相对价值。','Vega与曲面风险管理。'],
+        method:['过滤低流动性和违反价格边界的报价。','使用中间价或稳健报价反解IV。','按总方差拟合并检查蝶式与日历套利。'],
+        pitfalls:'直接对IV做普通二维插值可能产生静态套利。远虚值报价对点差和价格误差尤其敏感。',
+        related:['black-scholes','greeks','heston','vol-arbitrage']
+      },
+      {
+        id:'heston', group:'model-derivative', category:'model', title:'Heston 随机波动率', subtitle:'波动率自身随机变化',
+        essence:'Heston模型让方差按均值回复过程变化，并允许价格与方差冲击相关，从而生成偏斜和动态曲面。',
+        formula:'dSₜ = μSₜdt + √vₜSₜdWₜˢ\ndvₜ = κ(θ−vₜ)dt + ξ√vₜdWₜᵛ\ncorr(dWˢ,dWᵛ)=ρ',
+        applications:['期权曲面拟合。','波动率情景模拟。','奇异期权风险管理。'],
+        method:['选择流动报价做校准。','约束参数并检查Feller条件。','观察跨日期参数稳定性。'],
+        pitfalls:'多个参数可能产生相似价格，校准问题容易不稳定，短期期权还需要跳跃或更灵活结构。',
+        related:['iv-surface','garch','vol-arbitrage','black-scholes']
+      },
+
+      {
+        id:'multifactor-stock', group:'strategy-cross', category:'strategy', title:'多因子选股', subtitle:'将多个弱信号组合',
+        essence:'多因子选股把价值、动量、质量等独立信号组合成预期收益，再通过约束优化得到可交易权重。',
+        formula:'αᵢ = Σₖ aₖ zᵢ,k\nmax_w αᵀw − λwᵀΣw − Cost(Δw)',
+        applications:['主动股票组合。','指数增强。','市场中性多空组合。'],
+        method:['选择互补因子并统一方向。','评估IC、相关性、衰减和成本。','在风险模型下优化权重。'],
+        pitfalls:'历史相关性低并不保证压力状态仍分散，因子权重也要考虑拥挤和容量。',
+        related:['factor-combination','portfolio-optimization','barra','index-enhancement']
+      },
+      {
+        id:'index-enhancement', group:'strategy-cross', category:'strategy', title:'指数增强', subtitle:'控制跟踪误差获取Alpha',
+        essence:'指数增强围绕基准配置主动权重，在跟踪误差、行业和风格约束下追求超额收益。',
+        formula:'Active Return = (w−w_b)ᵀr\nTE = √[(w−w_b)ᵀΣ(w−w_b)]',
+        applications:['宽基指数增强。','行业指数增强。','基本面与量价信号组合。'],
+        method:['用基准权重作为起点。','构建预期超额收益。','控制跟踪误差、行业、风格和换手。'],
+        pitfalls:'基准成分调整、涨跌停和停牌会让理论主动权重难以完全成交。',
+        related:['multifactor-stock','barra','turnover-constraint','portfolio-optimization']
+      },
+      {
+        id:'market-neutral', group:'strategy-cross', category:'strategy', title:'市场中性', subtitle:'保留Alpha并压低公共风险',
+        essence:'市场中性通过多空配对或优化，使市场Beta和其他公共暴露接近零，让收益主要来自相对选股。',
+        formula:'β_port = Σᵢ wᵢβᵢ ≈ 0\nNet Exposure = Σwᵢ\nGross Exposure = Σ|wᵢ|',
+        applications:['股票多空。','统计套利。','因子纯化组合。'],
+        method:['分别构建多头和空头候选。','控制Beta、行业和风格。','纳入借券成本与空头可得性。'],
+        pitfalls:'净暴露低仍可能拥有较高总暴露和拥挤风险，空头端的跳跃损失也更明显。',
+        related:['risk-attribution','barra','pairs-trading','short-risk']
+      },
+      {
+        id:'trend', group:'strategy-time', category:'strategy', title:'趋势跟随与 CTA', subtitle:'价格延续时顺势持仓',
+        essence:'趋势策略押注价格变化具有持续性，来源包括信息扩散、行为偏差和机构缓慢调整。',
+        formula:'Signal = sign(MA_short − MA_long)\nPosition ∝ Signal / Forecast Volatility',
+        applications:['期货CTA。','跨资产趋势。','危机分散。'],
+        method:['使用多个回看周期。','按波动率调整仓位。','控制单市场和板块风险。'],
+        pitfalls:'震荡市场会连续触发小亏损，快速反转也可能形成趋势崩溃。',
+        related:['momentum','vol-targeting','global-macro','tail-risk']
+      },
+      {
+        id:'mean-reversion', group:'strategy-time', category:'strategy', title:'均值回归', subtitle:'偏离后向稳定水平修复',
+        essence:'均值回归假设价格、价差或估值围绕某个动态中心波动。策略在偏离较大时反向建仓。',
+        formula:'zₜ = (xₜ − μₜ) / σₜ\n常见规则: z>z_entry 做空, z<−z_entry 做多',
+        applications:['短期反转。','价差交易。','库存型做市。'],
+        method:['确认序列具备均值回复证据。','动态估计中心和波动。','设置入场、退出和止损阈值。'],
+        pitfalls:'结构变化会让旧均值失去意义。不断加仓等待回归，容易把策略变成方向性押注。',
+        related:['cointegration','pairs-trading','kalman','regime']
+      },
+      {
+        id:'global-macro', group:'strategy-time', category:'strategy', title:'系统化宏观', subtitle:'经济状态驱动跨资产配置',
+        essence:'系统化宏观把增长、通胀、政策和流动性变量映射为债券、外汇、商品和股票仓位。',
+        formula:'Expected Return_asset = B_asset · Macro Surprise\nPosition ∝ Forecast / Risk',
+        applications:['跨资产配置。','利率与曲线交易。','宏观状态轮动。'],
+        method:['构造实时宏观意外指标。','估计资产对宏观变量的敏感度。','控制跨资产相关和事件跳跃。'],
+        pitfalls:'宏观数据修订频繁，使用修订后数据回测会产生严重的未来信息。',
+        related:['carry','term-structure','hmm','black-litterman']
+      },
+      {
+        id:'pairs-trading', group:'strategy-arb', category:'strategy', title:'配对交易', subtitle:'交易稳定价差的偏离',
+        essence:'配对交易寻找具有稳定经济或统计关系的资产，在价差偏离时做多低估端、做空高估端。',
+        formula:'Spreadₜ = yₜ − βxₜ\nzₜ = (Spreadₜ − μ) / σ',
+        applications:['同行业股票。','ETF与期货。','跨上市地价差。'],
+        method:['基于经济关系筛选候选。','检验协整和半衰期。','动态估计对冲比率并控制借券。'],
+        pitfalls:'历史相关性本身无法证明价差会回归，关系断裂需要明确止损和状态识别。',
+        related:['cointegration','kalman','mean-reversion','stat-arb']
+      },
+      {
+        id:'stat-arb', group:'strategy-arb', category:'strategy', title:'统计套利', subtitle:'大量小价差的组合交易',
+        essence:'统计套利利用横截面或时序中的短暂错价，通过分散的多空组合获取小幅优势。',
+        formula:'PnL ≈ αᵀw − Cost(Δw)\n约束常含 1ᵀw≈0, βᵀw≈0',
+        applications:['股票短周期多空。','ETF成分相对价值。','PCA残差交易。'],
+        method:['构建稳定残差或预测信号。','在风险约束下形成分散组合。','精细模拟成交、延迟和借券。'],
+        pitfalls:'毛收益往往很薄，成本模型稍有乐观就会让回测收益消失。',
+        related:['pca-stat-arb','market-neutral','optimal-execution','pairs-trading']
+      },
+      {
+        id:'event-driven', group:'strategy-arb', category:'strategy', title:'事件驱动', subtitle:'围绕离散信息重新定价',
+        essence:'事件驱动研究财报、并购、指数调整和政策公告前后的价格反应，寻找概率和市场定价之间的差异。',
+        formula:'Expected PnL = p_success·Payoff_success + (1−p_success)·Payoff_fail − Cost',
+        applications:['并购套利。','财报意外。','指数纳入与剔除。'],
+        method:['建立准确事件日历。','估计成功概率和失败损失。','控制停牌、跳跃与容量。'],
+        pitfalls:'事件失败损失常远大于成功收益，概率估计和仓位上限决定策略生存。',
+        related:['sentiment','tail-risk','short-risk','global-macro']
+      },
+      {
+        id:'vol-arbitrage', group:'strategy-option', category:'strategy', title:'波动率套利', subtitle:'交易隐含与实现波动率差异',
+        essence:'波动率套利比较期权价格隐含的波动率与未来实现波动率预测，并通过Delta对冲降低方向风险。',
+        formula:'Edge ≈ IV² − Forecast(RV²)\nDelta-Hedged PnL ≈ ½Γ[(dS)² − σ_imp²S²dt] + Vega·dσ',
+        applications:['跨执行价相对价值。','跨期限波动率交易。','事件波动率交易。'],
+        method:['建立实现波动率预测。','比较曲面相对定价。','动态对冲并计入Gamma、Vega与成本。'],
+        pitfalls:'方向中性并不代表风险中性，跳跃、曲面移动和离散对冲会产生巨大误差。',
+        related:['iv-surface','greeks','delta-hedging','dispersion']
+      },
+      {
+        id:'dispersion', group:'strategy-option', category:'strategy', title:'离散度交易', subtitle:'指数波动率对个股波动率',
+        essence:'离散度交易利用指数期权和成分股期权之间隐含相关性的差异。常见结构是卖指数波动率、买成分波动率。',
+        formula:'σ_index² ≈ Σᵢwᵢ²σᵢ² + 2Σᵢ<ⱼwᵢwⱼρᵢⱼσᵢσⱼ',
+        applications:['隐含相关性交易。','指数与成分期权相对价值。','相关性风险管理。'],
+        method:['统一期权期限和Delta口径。','估计成分权重与相关结构。','管理成分变更和大量腿的执行。'],
+        pitfalls:'交易腿数多，成本和执行偏差明显。市场压力下相关性通常快速上升。',
+        related:['vol-arbitrage','iv-surface','tail-risk','optimal-execution']
+      },
+      {
+        id:'delta-hedging', group:'strategy-option', category:'strategy', title:'Delta 对冲', subtitle:'用标的抵消一阶方向风险',
+        essence:'Delta对冲按照期权对标的价格的一阶敏感度持有反向标的仓位，并随Delta变化重新调整。',
+        formula:'Hedge Shares = −Δ_option × Contracts × Multiplier\n离散对冲误差受 Gamma、跳跃、成本和频率影响',
+        applications:['期权做市。','波动率套利。','结构化产品风险管理。'],
+        method:['计算组合净Delta。','按风险阈值或时间触发再平衡。','同时监控Gamma、Vega和流动性。'],
+        pitfalls:'提高对冲频率会降低部分方向误差，也会增加交易成本和冲击，需要联合优化。',
+        related:['greeks','black-scholes','vol-arbitrage','optimal-execution']
+      },
+      {
+        id:'option-carry', group:'strategy-option', category:'strategy', title:'期权 Carry', subtitle:'时间价值与波动率风险溢价',
+        essence:'期权Carry来自时间流逝、融资、曲面滚动和波动率风险溢价。卖方常收取稳定权利金，同时承担凸性损失。',
+        formula:'Short Option Carry ≈ −Theta − Hedge Cost + Volatility Risk Premium',
+        applications:['备兑与卖跨策略。','波动率期限结构。','风险溢价组合。'],
+        method:['分解Theta、Gamma和Vega。','按事件和状态调整仓位。','设置尾部保护与保证金缓冲。'],
+        pitfalls:'Theta收益只是局部收益，跳跃造成的Gamma损失可能迅速超过长期累计Carry。',
+        related:['carry','tail-risk','delta-hedging','vol-arbitrage']
+      },
+      {
+        id:'market-making', group:'strategy-micro', category:'strategy', title:'做市策略', subtitle:'报价并管理库存风险',
+        essence:'做市商同时提供买卖报价赚取价差，同时承担库存、逆向选择和跳跃风险。',
+        formula:'Reservation Price ≈ Mid − γ·Inventory·σ²·Horizon\nSpread 随风险厌恶、波动率和成交强度变化',
+        applications:['股票与期货做市。','期权做市。','数字资产流动性提供。'],
+        method:['估计短期公允价。','按库存和订单流调整报价。','设置撤单、风控和延迟保护。'],
+        pitfalls:'成交往往发生在价格即将向不利方向移动时，单看名义价差会高估真实收益。',
+        related:['order-book','adverse-selection','hft-slippage','delta-hedging']
+      },
+      {
+        id:'optimal-execution', group:'strategy-micro', category:'strategy', title:'最优执行', subtitle:'平衡冲击与价格风险',
+        essence:'最优执行在快速成交和慢速拆单之间取舍。快成交降低等待风险，却增加市场冲击。',
+        formula:'min  E[Execution Cost] + λ·Var(Execution Cost)\nImpact ≈ Yσ√(Q/V)',
+        applications:['大单拆分。','TWAP、VWAP和POV。','实施缺口控制。'],
+        method:['估计临时冲击和永久冲击。','结合订单期限求解交易轨迹。','成交后做交易成本分析。'],
+        pitfalls:'历史平均冲击在压力市场里偏低，订单簿状态和自身参与率需要进入模型。',
+        related:['hft-slippage','turnover','market-impact','smart-routing']
+      },
+      {
+        id:'hft-slippage', group:'strategy-micro', category:'strategy', title:'高频滑点控制', subtitle:'减少价格偏离与机会损失',
+        essence:'高频滑点由价差、延迟、排队位置、市场冲击和未成交机会共同决定。执行器需要动态选择主动单与被动单。',
+        formula:'Slippage_bps = side·(P_exec−P_ref)/P_ref × 10⁴\nImplementation Shortfall = Realized Cost − Decision Benchmark',
+        applications:['拆单与冰山订单。','智能订单路由。','低延迟执行与交易成本分析。'],
+        method:['选择决策价或到达价作为基准。','使用盘口不平衡和队列位置判断订单方式。','回放逐笔订单簿校准成交模型。'],
+        pitfalls:'假设限价单触价即成交会大幅低估滑点，延迟和部分成交需要显式模拟。',
+        related:['optimal-execution','market-making','smart-routing','order-book']
+      },
+      {
+        id:'smart-routing', group:'strategy-micro', category:'strategy', title:'智能订单路由', subtitle:'在多个场所选择执行路径',
+        essence:'智能路由综合报价、深度、成交概率、费用和延迟，选择预期总成本较低的交易场所。',
+        formula:'Expected Cost_venue = Price + Fee + Impact + Latency Cost + Miss Risk',
+        applications:['多交易所执行。','暗池与公开市场选择。','订单动态拆分。'],
+        method:['统一各市场行情时间戳。','估计每个场所的成交概率和毒性。','按实时反馈更新路由比例。'],
+        pitfalls:'最优报价只是总成本的一部分，隐藏流动性和逆向选择也可能改变场所排名。',
+        related:['hft-slippage','optimal-execution','market-making','order-book']
+      },
+      {
+        id:'risk-parity-strategy', group:'strategy-allocation', category:'strategy', title:'风险平价配置', subtitle:'按风险贡献分配资产',
+        essence:'风险平价配置将资本分给股票、债券、商品等资产，使它们对总波动的贡献接近目标。',
+        formula:'RCᵢ = wᵢ(Σw)ᵢ / σₚ\n选择 w 使 RCᵢ 接近预算 bᵢσₚ',
+        applications:['全天候配置。','多策略资金分配。','长期基准组合。'],
+        method:['使用稳健风险估计。','加入杠杆和流动性约束。','监控跨资产相关性状态。'],
+        pitfalls:'风险平衡无法保证亏损平衡，通胀冲击下股票和债券可能同时下跌。',
+        related:['risk-parity-model','vol-targeting','tail-risk','black-litterman']
+      },
+      {
+        id:'vol-targeting', group:'strategy-allocation', category:'strategy', title:'波动率目标', subtitle:'按风险水平调节杠杆',
+        essence:'波动率目标根据预测风险缩放仓位，在风险上升时降低敞口，在风险下降时提高敞口。',
+        formula:'Leverageₜ = Target Vol / Forecast Volₜ\nPositionₜ = Base Position × Leverageₜ',
+        applications:['CTA仓位。','指数风险控制。','多策略资本配置。'],
+        method:['选择反应速度合适的波动率模型。','限制最大杠杆和单日调整。','纳入相关性与流动性状态。'],
+        pitfalls:'剧烈下跌后才减仓会形成顺周期交易，快速反弹时还可能错失收益。',
+        related:['garch','trend','risk-parity-strategy','optimal-execution']
+      },
+      {
+        id:'tail-risk', group:'strategy-allocation', category:'strategy', title:'尾部风险控制', subtitle:'管理少数巨大损失',
+        essence:'尾部风险控制关注分布左端、流动性枯竭和相关性突变。方法包括仓位上限、压力测试、期权保护和动态去杠杆。',
+        formula:'ES_α = E[Loss | Loss > VaR_α]\nTail Hedge Budget = Premium + Carry Cost',
+        applications:['套利策略风险限制。','卖波动率组合保护。','危机情景资本规划。'],
+        method:['使用重尾分布和极值方法。','设计历史与假设压力情景。','明确保护成本和触发规则。'],
+        pitfalls:'廉价保护常覆盖有限情景，长期权利金消耗也会影响组合收益，需要明确保护对象。',
+        related:['evt','heavy-tail','option-carry','max-drawdown']
+      },
+      {
+        id:'max-drawdown', group:'strategy-allocation', category:'strategy', title:'最大回撤', subtitle:'从历史高点到低点的最大跌幅',
+        essence:'最大回撤描述财富曲线从峰值到后续谷值的最大损失，直观反映投资者经历的资金压力。',
+        formula:'Peakₜ = maxₛ≤ₜ Vₛ\nDDₜ = Vₜ/Peakₜ − 1\nMDD = minₜ DDₜ',
+        applications:['策略风险比较。','止损和资本规划。','恢复期分析。'],
+        method:['使用复利净值。','记录峰值、谷值和恢复日。','结合波动率、ES和回撤持续时间。'],
+        pitfalls:'最大回撤只取一个历史极值，样本起点和长度会显著影响结果。',
+        related:['tail-risk','vol-targeting','kelly','risk-attribution']
+      },
+
+      {
+        id:'risk-attribution', group:'strategy-allocation', category:'strategy', title:'风险与收益归因', subtitle:'解释组合结果来自哪里',
+        essence:'归因把组合结果分成因子、行业、个股、多头和空头部分。收益贡献关注赚亏来源，风险贡献关注对总波动的边际影响。',
+        formula:'Return Contributionᵢ = wᵢrᵢ\nMRCᵢ = (Σw)ᵢ / σₚ\nRCᵢ = wᵢ·MRCᵢ',
+        applications:['多空组合贡献分解。','Barra因子风险分解。','监控风险预算偏离。'],
+        method:['区分多头、空头、净敞口和总敞口。','分别计算收益贡献与风险贡献。','按因子、行业和特质风险汇总。'],
+        pitfalls:'空头权重为负，收益贡献符号需要按统一定义解释。风险贡献还包含协同变化，无法只看单资产波动。',
+        related:['factor-exposure','barra','market-neutral','max-drawdown']
+      },
+      {
+        id:'portfolio-optimization', group:'strategy-allocation', category:'strategy', title:'组合优化', subtitle:'把预测、风险和成本一起求解',
+        essence:'组合优化将预期收益、风险模型、交易成本和现实约束放进同一个目标函数，输出可执行权重。',
+        formula:'max_w αᵀw − λwᵀΣw − κ||w−w_old||₁\ns.t. 暴露、仓位、行业、流动性约束',
+        applications:['多因子选股。','指数增强。','多策略资金分配。'],
+        method:['校准Alpha到统一收益尺度。','使用稳健风险与成本估计。','检查影子价格和约束敏感度。'],
+        pitfalls:'优化器会放大输入误差。现实中稳定权重往往来自稳健输入和清晰约束。',
+        related:['markowitz','barra','turnover-constraint','multifactor-stock']
+      },
+      {
+        id:'turnover-constraint', group:'strategy-allocation', category:'strategy', title:'换手约束', subtitle:'在收益和成本间做取舍',
+        essence:'换手约束限制新权重相对漂移后旧权重的变化，避免优化器为微小Alpha差异进行大量交易。',
+        formula:'½Σᵢ|wᵢ−wᵢ,old⁺| ≤ T_max\n或在目标中加入 κΣᵢcᵢ|Δwᵢ|',
+        applications:['指数增强。','高换手因子组合。','大规模资产配置。'],
+        method:['估计每个资产的边际成本。','使用硬约束、软惩罚或缓冲区。','分析净Alpha对换手上限的敏感度。'],
+        pitfalls:'统一成本系数会忽略资产流动性差异，约束太紧还会让组合长期偏离目标暴露。',
+        related:['turnover','portfolio-optimization','optimal-execution','index-enhancement']
+      }
+    ];
+
+    const virtualTopics = [
+      { id:'alpha-beta', title:'Alpha 与 Beta', category:'model', group:'model-pricing' },
+      { id:'multicollinearity', title:'多重共线性', category:'model', group:'model-ml' },
+      { id:'quantile-regression', title:'分位数回归', category:'model', group:'model-pricing' },
+      { id:'grinold-law', title:'主动管理基本定律', category:'model', group:'model-portfolio' },
+      { id:'multiple-testing', title:'多重检验', category:'model', group:'model-ml' },
+      { id:'data-leakage', title:'数据泄漏', category:'model', group:'model-ml' },
+      { id:'alternative-data', title:'另类数据', category:'factor', group:'factor-macro' },
+      { id:'factor-combination', title:'因子合成', category:'factor', group:'factor-research' },
+      { id:'dynamic-factor-weight', title:'动态因子权重', category:'model', group:'model-timeseries' },
+      { id:'heavy-tail', title:'重尾分布', category:'model', group:'model-risk' },
+      { id:'copula', title:'Copula 相关结构', category:'model', group:'model-risk' },
+      { id:'regime', title:'市场状态', category:'model', group:'model-timeseries' },
+      { id:'ml-alpha', title:'机器学习 Alpha', category:'strategy', group:'strategy-cross' },
+      { id:'pca-stat-arb', title:'PCA 统计套利', category:'strategy', group:'strategy-arb' },
+      { id:'order-book', title:'订单簿信号', category:'factor', group:'factor-macro' },
+      { id:'adverse-selection', title:'逆向选择', category:'strategy', group:'strategy-micro' },
+      { id:'market-impact', title:'市场冲击', category:'strategy', group:'strategy-micro' },
+      { id:'capacity', title:'策略容量', category:'strategy', group:'strategy-micro' },
+      { id:'short-risk', title:'空头风险', category:'strategy', group:'strategy-cross' },
+      { id:'value-trap', title:'价值陷阱', category:'factor', group:'factor-style' },
+      { id:'fundamental-data', title:'基本面数据', category:'factor', group:'factor-style' },
+      { id:'minimum-variance', title:'最低波动组合', category:'strategy', group:'strategy-allocation' }
+    ];
+
+    const sources = [
+      { title:'Portfolio Selection', meta:'Harry Markowitz, 1952', url:'https://doi.org/10.1111/j.1540-6261.1952.tb01525.x' },
+      { title:'Capital Asset Prices', meta:'William Sharpe, 1964', url:'https://doi.org/10.1111/j.1540-6261.1964.tb02865.x' },
+      { title:'Arbitrage Theory of Capital Asset Pricing', meta:'Stephen Ross, 1976', url:'https://doi.org/10.1016/0022-0531(76)90046-6' },
+      { title:'Common Risk Factors in Returns', meta:'Fama and French, 1993', url:'https://doi.org/10.1016/0304-405X(93)90023-5' },
+      { title:'On Persistence in Mutual Fund Performance', meta:'Mark Carhart, 1997', url:'https://doi.org/10.1111/j.1540-6261.1997.tb03808.x' },
+      { title:'The Fundamental Law of Active Management', meta:'Richard Grinold, 1989', url:'https://doi.org/10.3905/jpm.1989.409211' },
+      { title:'Autoregressive Conditional Heteroscedasticity', meta:'Robert Engle, 1982', url:'https://doi.org/10.2307/1912773' },
+      { title:'Generalized ARCH', meta:'Tim Bollerslev, 1986', url:'https://doi.org/10.1016/0304-4076(86)90063-1' },
+      { title:'Statistical Analysis of Cointegration Vectors', meta:'Søren Johansen, 1988', url:'https://doi.org/10.1016/0165-1889(88)90041-3' },
+      { title:'The Pricing of Options and Corporate Liabilities', meta:'Black and Scholes, 1973', url:'https://doi.org/10.1086/260062' },
+      { title:'A Closed-Form Solution for Options with Stochastic Volatility', meta:'Steven Heston, 1993', url:'https://doi.org/10.1093/rfs/6.2.327' },
+      { title:'Optimal Execution of Portfolio Transactions', meta:'Almgren and Chriss, 2001', url:'https://www.math.nyu.edu/~chriss/optliq_f.pdf' }
+    ];
+
+    const supplemental = {
+      'alpha-beta': ['Alpha衡量超出风险因子解释的收益，Beta衡量系统性暴露。', 'Rₚ−Rf = α + β(Rₘ−Rf) + ε'],
+      'multicollinearity': ['多个特征表达相似信息时，回归系数会变得不稳定。', 'VIFⱼ = 1/(1−Rⱼ²)'],
+      'quantile-regression': ['分位数回归研究特征对收益分布不同位置的影响。', 'min_β Σ ρ_τ(yᵢ−xᵢᵀβ)'],
+      'grinold-law': ['主动收益能力由信息质量和独立下注次数共同决定。', 'IR ≈ IC × √Breadth'],
+      'multiple-testing': ['反复尝试大量信号会放大偶然成功，需要校正选择偏差。', '控制 FDR，或使用 Deflated Sharpe'],
+      'data-leakage': ['训练时使用预测时点之后的信息，会让回测表现失真。', 'Feature Time ≤ Decision Time < Return Window'],
+      'alternative-data': ['供应关系、卫星、招聘和文本数据可补充传统财务信息。', 'Value = Timeliness × Coverage × Uniqueness'],
+      'factor-combination': ['因子合成在预测力、相关性、稳定性和成本之间分配权重。', 'Combined Score = Z·a'],
+      'dynamic-factor-weight': ['动态权重根据近期IC、状态或风险调整因子配置。', 'aₜ ∝ Σ_IC⁻¹ μ_IC'],
+      'heavy-tail': ['金融收益尾部概率高于正态分布，极端波动出现得更频繁。', 'P(|X|>x) ~ x^(−α)'],
+      'copula': ['Copula把边际分布与相关结构分开建模，适合尾部相关。', 'F(x,y)=C(Fₓ(x),Fᵧ(y))'],
+      'regime': ['市场状态代表增长、通胀、波动或流动性环境的变化。', 'P(Sₜ|Data₁:ₜ)'],
+      'ml-alpha': ['机器学习Alpha用非线性模型组合大量特征，重点在样本外增量。', 'Prediction = f(features), Position ∝ prediction/risk'],
+      'pca-stat-arb': ['PCA统计套利交易收益中无法被公共主成分解释的残差。', 'Residual = r − Bf'],
+      'order-book': ['订单簿信号刻画短期供需、撤单和成交压力。', 'OBI=(BidSize−AskSize)/(BidSize+AskSize)'],
+      'adverse-selection': ['被动订单成交后价格继续不利移动，说明交易对手掌握更强信息。', 'Markout = side·(Mid_future−Fill Price)'],
+      'market-impact': ['自身交易改变可成交价格，规模越大、流动性越差，冲击越明显。', 'Impact ≈ Yσ√(Q/V)'],
+      'capacity': ['容量表示策略在收益被冲击和拥挤侵蚀前可承载的资金规模。', 'Net Alpha(AUM)=Gross Alpha−Impact(AUM)'],
+      'short-risk': ['空头面临借券、召回、逼空和无限上行损失。', 'Short PnL = Entry−Exit−Borrow Cost'],
+      'value-trap': ['低估值公司可能因盈利持续恶化而长期保持低估值。', 'Value + Quality Filter'],
+      'fundamental-data': ['基本面数据研究的关键在可得日期、财报口径和公司行为处理。', 'Data Available Date ≤ Trade Date'],
+      'minimum-variance': ['最低波动组合在不使用收益预测时寻找风险较低的权重。', 'min wᵀΣw, s.t. 1ᵀw=1']
+    };
+
+    const allTopics = topics.concat(virtualTopics.map(v => ({
+      ...v,
+      subtitle:'关联概念',
+      essence:supplemental[v.id][0],
+      formula:supplemental[v.id][1],
+      applications:['帮助理解相邻主题。','用于研究诊断或风险控制。'],
+      method:['先确认数据和时间口径。','再做样本外检验与敏感度分析。'],
+      pitfalls:'概念需要放在具体数据和市场规则中使用，单一公式无法覆盖全部现实条件。',
+      related:[]
+    })));
+
+    const xhsEnrichments = {
+      'risk-attribution': {
+        source:'结合你之前发送的“多因子模型如何做风险归因”“风险归因中多空头贡献如何拆”',
+        deepDive:[
+          {title:'收益贡献', text:'多头和空头都用权重乘收益计算贡献。空头权重为负，标的下跌时贡献为正。分解后应满足所有资产贡献之和等于组合收益。', formula:'CR_i = w_i r_i\nR_p = Σ CR_i'},
+          {title:'风险贡献', text:'风险贡献来自资产与整个组合的协方差。单个仓位波动很大，但若与组合反向变化，其边际贡献仍可能较低。', formula:'MRC_i=(Σw)_i/σ_p\nRC_i=w_i·MRC_i'},
+          {title:'多空口径', text:'分别报告多头贡献、空头贡献、净敞口和总敞口。总敞口表达资本使用和去杠杆压力，净敞口表达方向性。', formula:'Long Gross=Σ max(w_i,0)\nShort Gross=Σ|max(w_i,0)|\nNet=Σw_i'}
+        ],
+        checklist:['收益贡献之和还原组合收益。','风险贡献之和还原组合波动率。','空头收益与权重符号定义统一。','因子、行业和特质贡献避免重复计算。','主动归因以组合减基准后的权重为起点。'],
+        interview:'我会先区分收益归因和风险归因。收益贡献是权重乘资产收益，空头权重为负，所以标的下跌会产生正贡献。风险贡献则用权重乘边际风险，包含资产与整个组合的协方差。多空组合还要同时报告Long Gross、Short Gross、Net和Gross，随后再按行业、风格因子与特质部分汇总。'
+      },
+      'factor-exposure': {
+        source:'结合你之前发送的“什么是因子暴露度如何计算”',
+        deepDive:[
+          {title:'个股暴露', text:'风格暴露常由多个原始指标合成。原始值需要去极值、缺失处理和标准化，行业暴露通常采用哑变量。', formula:'z_i=(x_i−median(x))/scale(x)'},
+          {title:'组合暴露', text:'组合在因子k上的暴露等于全部资产权重与该因子暴露的加权和。多空组合仍使用带符号权重。', formula:'b_k=Σ_i w_i x_{ik}'},
+          {title:'主动暴露', text:'指数增强与主动基金更关注相对基准的暴露。它直接决定跟踪误差中的公共因子部分。', formula:'b_active=Xᵀ(w_p−w_b)'}
+        ],
+        checklist:['原始数据时间戳正确。','去极值规则跨期稳定。','标准化在每期截面完成。','组合暴露使用成交后或目标权重时注明口径。','主动暴露明确基准。'],
+        interview:'因子暴露表示资产对某类共同风险或特征的位置。个股暴露通常由原始指标去极值、标准化后得到，组合暴露等于权重乘个股暴露再求和。相对基准管理时，我会计算主动权重对应的主动暴露，并区分暴露、因子收益和风险贡献。'
+      },
+      'dynamic-factor-weight': {
+        source:'结合你之前发送的“多因子模型如何动态调权重”',
+        deepDive:[
+          {title:'IC加权', text:'用滚动IC均值衡量近期预测能力，并用IC协方差降低相似因子同时获得高权重的情况。', formula:'a_t ∝ Σ_IC,t⁻¹ μ_IC,t'},
+          {title:'风险加权', text:'因子组合也可以按因子收益的风险贡献分配，避免高波动因子主导组合。', formula:'min_a aᵀΣ_f a,  s.t. 1ᵀa=1'},
+          {title:'状态调权', text:'通过HMM、宏观变量或波动率状态识别环境，再给不同状态设置权重。交易时使用过滤概率，避免使用事后识别状态。', formula:'a_t=Σ_s P(S_t=s|Data_t)·a_s'}
+        ],
+        checklist:['滚动窗口只使用当时已知数据。','权重变化加入平滑和换手惩罚。','设置单因子权重上下限。','样本外比较等权基线。','检查状态切换时的集中度。'],
+        interview:'动态调权可以基于近期IC、因子收益风险或市场状态。我更倾向把滚动IC均值和IC协方差结合，再加权重上限与换手惩罚。状态模型只能使用当期过滤概率。最后必须和等权组合做样本外比较，因为动态方法容易把短期噪声当成有效变化。'
+      },
+      'multicollinearity': {
+        source:'结合你之前发送的“如何处理因子间多重共线性”',
+        deepDive:[
+          {title:'如何识别', text:'检查相关矩阵、条件数、VIF以及滚动回归系数。高相关只是线索，系数随样本轻微变化而剧烈改变更值得警惕。', formula:'VIF_j=1/(1−R_j²)'},
+          {title:'如何处理', text:'经济含义相近的因子可择一保留，也可用PCA、Ridge或聚类降维。用于预测时重点看样本外结果，用于归因时更重视可解释性。', formula:'Ridge: min ||y−Xβ||²+λ||β||²'},
+          {title:'因子合成', text:'同类因子可以先标准化，再按等权、IC或主成分合成一个主题因子，减少优化器反复押注同一信息。', formula:'ThemeScore=Σ_j a_j z_j'}
+        ],
+        checklist:['检查滚动相关而非单个全样本相关。','回归前统一量纲。','处理后检查信息损失。','归因模型保留经济含义。','预测模型以样本外误差为准。'],
+        interview:'多重共线性会让回归系数方差升高，符号和贡献不稳定。我会先看相关矩阵、VIF、条件数和滚动系数，再根据目标选择方法。归因模型会优先保留清楚的经济解释，预测模型可以使用Ridge、PCA或同类因子合成。'
+      },
+      'ic-decay': {
+        source:'结合你之前发送的“因子衰减速度如何影响换手”“因子IC衰减如何监控”',
+        deepDive:[
+          {title:'衰减曲线', text:'固定形成日，对未来多个期限分别计算IC。快衰减信号适合短持有期，慢衰减信号更适合低频组合。', formula:'IC(h)=Corr(f_t,r_{t→t+h})'},
+          {title:'半衰期', text:'指数衰减只是方便的近似。估计半衰期后，还要观察不同年份和市场状态是否稳定。', formula:'IC(h)=IC_0e^(−λh)\nh_1/2=ln2/λ'},
+          {title:'与换手的关系', text:'调仓快于信号有效信息更新，会增加无效交易。调仓过慢则会持有已经衰减的仓位。最优频率由净Alpha决定。', formula:'NetAlpha(h)=GrossAlpha(h)−Cost(Turnover(h))'}
+        ],
+        checklist:['不同h的收益区间定义一致。','重叠收益使用稳健标准误。','滚动窗口监控均值、ICIR和胜率。','设置失效预警而非一次阈值判断。','将交易成本加入持有期选择。'],
+        interview:'我会对多个未来期限计算Rank IC，形成衰减曲线，并用滚动窗口监控均值、ICIR和胜率。若曲线近似指数下降，可以估算半衰期。调仓频率不能只看IC峰值，还要比较不同持有期的换手和成本后Alpha。'
+      },
+      'monotonicity': {
+        source:'结合你之前发送的“如何检验因子的单调性”',
+        deepDive:[
+          {title:'截面分组', text:'每期按因子分位数分组，计算等权与市值加权未来收益。行业内分组有助于降低行业结构造成的伪单调。', formula:'R_g,t+1=Σ_{i∈G_g,t}w_i r_i,t+1'},
+          {title:'相邻组关系', text:'多空收益只看头尾，单调性还要检查每一对相邻组。中间组平坦时更适合描述为极端组选股。', formula:'d_g,t=R_{g+1,t}−R_{g,t}'},
+          {title:'统计检验', text:'趋势回归、Bootstrap和不等式约束检验可以补充分组图。程序的原假设方向需要按具体实现解释。', formula:'mean(R_g)=a+b·g+ε_g'}
+        ],
+        checklist:['同时比较五组和十组。','检查等权与市值加权。','报告相邻组差值和多空收益。','控制行业、市值、Beta与动量。','识别U形和分段关系。'],
+        interview:'我会按每期截面分位数把股票分组，查看分组收益、相邻组收益差、多空收益和Rank IC。再用趋势回归或重采样方法判断稳定性。若只有头尾两组差异明显，我会描述为极端组有效；中间组也持续变化时，才能说完整截面具有较强单调性。'
+      },
+      'alpha-mining': {
+        source:'结合你之前发送的“Alpha因子怎么挖”',
+        deepDive:[
+          {title:'假设来源', text:'从风险补偿、行为偏差、信息处理、机构约束和市场微观结构提出假设，再寻找可观测代理变量。', formula:'Hypothesis → Proxy → Signal'},
+          {title:'表达与纯化', text:'对原始变量做时间对齐、去极值、标准化和中性化。变化率、横截面排序与时序异常值常表达不同信息。', formula:'Signal=Neutralize(Standardize(Transform(Data)))'},
+          {title:'验证与淘汰', text:'研究记录要包含所有失败尝试。候选因子需要通过样本外、子市场、成本和容量测试。', formula:'NetIR=(GrossReturn−Cost)/Risk'}
+        ],
+        checklist:['经济或行为解释可证伪。','数据发布日期早于交易时点。','记录全部候选与参数。','做多重检验校正。','检查成本、容量和拥挤。'],
+        interview:'我挖Alpha会从可证伪假设出发，再找数据代理并构造信号。处理完时间戳、异常值和风险暴露后，我会看IC、分组收益、衰减、稳定性与成本。所有试验都记录下来，并做多重检验校正。最终保留的是有独立信息、样本外稳定且能够成交的信号。'
+      },
+      'multifactor-stock': {
+        source:'结合你之前发送的“如何构建有效的多因子选股模型”',
+        deepDive:[
+          {title:'因子池', text:'因子需要有经济解释、稳定覆盖和差异化信息。先在主题内部去冗余，再比较主题之间的相关与拥挤。', formula:'FactorPool={Value,Momentum,Quality,LowRisk,...}'},
+          {title:'因子合成', text:'等权是重要基线。IC加权、风险调整和机器学习合成需要严格走步验证，并限制权重变化。', formula:'Score_i=Σ_k a_k z_{ik}'},
+          {title:'组合构建', text:'用风险模型和成本模型把综合得分映射为权重，控制行业、风格、个股、流动性和换手。', formula:'max αᵀw−λwᵀΣw−Cost(Δw)'},
+          {title:'评估', text:'同时评估毛收益、净收益、IC、回撤、暴露、容量和不同市场状态。', formula:'NetAlpha=GrossAlpha−TradingCost−BorrowCost'}
+        ],
+        checklist:['因子方向和标准化一致。','同类因子去冗余。','合成权重与组合权重分开理解。','风险约束不拿走主要Alpha。','样本外含真实交易成本。'],
+        interview:'多因子模型包含因子选择、预处理、合成和组合优化。因子池要有经济解释和互补信息，经过标准化与中性化后，我会先用等权作为基线，再比较IC或风险调整权重。组合层用风险模型控制行业与风格暴露，并把换手、冲击和容量放入优化。'
+      },
+      'ml-overfit': {
+        source:'结合你之前发送的“机器学习特征如何避免过拟合”“如何评估深度学习模型的过拟合程度”',
+        deepDive:[
+          {title:'数据层', text:'按时间切分训练、验证和测试集，所有缩放、缺失填充、标签和特征选择只在训练数据拟合。', formula:'Train Time < Validation Time < Test Time'},
+          {title:'模型层', text:'限制参数量，使用正则化、早停、Dropout和简单基线。金融有效样本量受到标签重叠和相关性影响。', formula:'Loss_total=Loss_valid+λ·Complexity'},
+          {title:'策略层', text:'比较训练与验证差距、跨期稳定性、换手和成本后收益。分类准确率高并不保证交易收益高。', formula:'GeneralizationGap=Metric_train−Metric_valid'},
+          {title:'选择偏差', text:'反复调参也会污染验证集，需要保留最终测试集，并记录所有试验以估计选择偏差。', formula:'Deflated Sharpe 调整非正态和多重尝试'}
+        ],
+        checklist:['时间顺序切分。','预处理仅在训练集拟合。','使用简单线性或树模型基线。','保存全部实验。','最终测试集只使用一次。','报告净收益和状态表现。'],
+        interview:'评估过拟合我会看训练与验证差距、滚动样本外稳定性、不同市场状态以及交易成本后表现。数据按时间切分，预处理只在训练集拟合。模型方面用正则化、早停和简单基线，研究流程还要记录全部试验，并保留最终测试集避免反复调参污染。'
+      },
+      'sequence-model': {
+        source:'结合你之前发送的“LSTM能否有效预测股票收益”',
+        deepDive:[
+          {title:'LSTM能学什么', text:'它适合从有序窗口提取非线性状态和较长依赖，更容易在波动率、成交量和订单流任务中找到结构。', formula:'h_t=LSTM(x_t,h_{t−1})'},
+          {title:'收益预测为何难', text:'单股短期收益信噪比低，分布会漂移，网络容易记住市场和行业暴露。预测目标和训练损失需要贴近最终策略。', formula:'SignalNoiseRatio ≪ 1'},
+          {title:'正确比较', text:'与线性、树模型和简单动量基线比较。相同特征、样本和成本口径下，才有资格判断LSTM的增量。', formula:'IncrementalValue=Metric_LSTM−Metric_Baseline'}
+        ],
+        checklist:['避免随机打乱时间。','标签区间与特征窗口不重叠泄漏。','报告多次随机种子。','检查行业和Beta暴露。','将预测转成仓位后评估成本。'],
+        interview:'LSTM可以用于收益预测，但收益信噪比低，它并不会天然优于简单模型。我会用严格走步验证，在相同特征和成本口径下与线性、树模型和动量基线比较。还要检查模型是否只学到了市场、行业和波动率暴露。'
+      },
+      'gnn': {
+        source:'结合你之前发送的“图神经网络能挖掘出什么因子”',
+        deepDive:[
+          {title:'图怎么建', text:'节点可表示股票，边可来自行业、供应关系、共同机构持仓、收益相关或新闻关系。经济关系图通常比纯历史相关图更容易解释。', formula:'G=(V,E,A)'},
+          {title:'能挖什么', text:'邻居动量、供应关系传导、行业相对强弱、网络中心性和风险传播都可以形成图因子。', formula:'GraphFactor_i=Aggregate({h_j:j∈N(i)})'},
+          {title:'时间问题', text:'每个日期的图只能使用当时可得关系。用全样本相关性或当前成分回建历史图会产生未来信息。', formula:'E_t uses Data≤t'}
+        ],
+        checklist:['图关系有经济解释。','历史每期图无未来信息。','与无图模型比较。','测试动态图与静态图。','检查大节点和行业标签是否主导。'],
+        interview:'GNN适合挖掘资产之间的信息传播。股票是节点，行业、供应关系或共同持仓是边，聚合邻居特征后可以形成关系动量、供应传导和网络风险因子。关键在图的定义和时间戳，必须与无图基线做样本外比较。'
+      },
+      'tail-risk': {
+        source:'结合你之前发送的“套利策略如何控制尾部风险”“量化笔试题：重尾分布”',
+        deepDive:[
+          {title:'重尾识别', text:'用QQ图、峰度、Hill估计和极值方法检查尾部。正态VaR在跳跃和流动性危机下常低估风险。', formula:'P(|X|>x)≈Cx^(−α)'},
+          {title:'套利的尾部来源', text:'价差关系断裂、融资中断、保证金上调、空头逼仓和相关性突变会同时出现。均值回归策略尤其要限制不断加仓。', formula:'Loss=SpreadBreak+Funding+Impact'},
+          {title:'控制方法', text:'仓位上限、硬止损、时间止损、压力测试、分散关系来源和期权保护需要组合使用。', formula:'Position≤min(RiskLimit,LiquidityLimit,MarginLimit)'}
+        ],
+        checklist:['使用ES和压力测试补充VaR。','模拟相关性趋近1。','模拟无法及时成交。','检查融资和保证金。','明确价差关系失效条件。','尾部保护成本计入净收益。'],
+        interview:'套利策略的尾部风险来自关系断裂、杠杆、流动性和共同平仓。我会用重尾分布、ES和历史与假设压力测试，不只看正态VaR。执行上设置仓位、杠杆、流动性和保证金上限，同时使用价格止损、时间止损与关系失效判断。'
+      },
+      'max-drawdown': {
+        source:'结合你之前发送的“如何计算组合的最大回撤”',
+        deepDive:[
+          {title:'计算', text:'从复利净值计算历史峰值，再计算当前相对峰值的跌幅。最小值就是最大回撤。', formula:'Peak_t=max_{s≤t}V_s\nDD_t=V_t/Peak_t−1'},
+          {title:'三段日期', text:'完整报告应包含峰值日、谷值日和恢复日。尚未恢复时，需要标注当前处于水下。', formula:'Duration=RecoveryDate−PeakDate'},
+          {title:'解释边界', text:'最大回撤只记录一个最差路径，无法表达发生概率，也对样本长度敏感。应配合ES、波动率和多次回撤分布。', formula:'Calmar=AnnualReturn/|MDD|'}
+        ],
+        checklist:['净值使用复利累计。','缺失日期处理一致。','报告峰值、谷值和恢复期。','比较同长度样本。','同时报告净收益口径。'],
+        interview:'最大回撤先计算累计净值和历史峰值，再用当前净值除以峰值减一，最小值就是最大回撤。我还会报告峰值日、谷值日、恢复日和水下持续时间。它是路径指标，对样本长度敏感，所以会配合波动率与ES。'
+      },
+      'iv-surface': {
+        source:'结合你之前发送的“隐含波动率是如何形成的”“如何估计期权隐含波动率曲面”',
+        deepDive:[
+          {title:'报价清洗', text:'先处理零买价、过大点差、低成交、违反期权价格边界和临近到期报价。使用远期价格与对数货币度统一执行价。', formula:'k=ln(K/F_T)'},
+          {title:'逐点反解', text:'每个期权价格通过数值求根得到IV。Vega很低的远虚值期权，价格小误差会变成很大IV误差。', formula:'Find σ: BS(F,K,T,σ)=Price'},
+          {title:'曲线拟合', text:'每个期限可用SVI拟合总隐含方差，再在期限方向插值。总方差比直接插值IV更容易处理日历无套利。', formula:'w(k,T)=σ_imp²(k,T)·T'},
+          {title:'无套利检查', text:'执行价方向检查单调、凸性与蝶式套利，期限方向检查总方差不随到期缩短而反向。', formula:'∂²C/∂K²≥0\n∂w/∂T≥0'}
+        ],
+        checklist:['利率、分红和远期口径正确。','使用买卖价差权重。','过滤低Vega点。','检查蝶式与日历无套利。','跨日期参数平滑但避免滞后过强。','用价格误差与Vega加权误差共同评估。'],
+        interview:'估计隐含波动率曲面时，我会先清洗报价并转换为远期对数货币度，再逐点用Black-Scholes数值反解IV。随后按期限拟合总隐含方差，比如使用SVI，并在期限方向平滑。最后检查执行价方向的凸性和期限方向的总方差单调，避免产生静态套利。'
+      },
+      'greeks': {
+        source:'结合你之前发送的“期权希腊字母如何动态对冲”',
+        deepDive:[
+          {title:'一阶风险', text:'Delta、Vega、Theta和Rho分别描述标的、波动率、时间与利率变化的局部影响。', formula:'dV≈ΔdS+Vega·dσ+Θdt+Rho·dr'},
+          {title:'二阶风险', text:'Gamma决定Delta随标的变化的速度。对冲频率不足时，Gamma和跳跃会产生离散误差。', formula:'dV≈ΔdS+½Γ(dS)²+…'},
+          {title:'组合对冲', text:'先汇总整个组合的净希腊字母，再选择标的和期权工具分层对冲。Delta容易用标的处理，Vega与Gamma往往需要其他期权。', formula:'Greek_port=Σ_j Position_j·Greek_j'}
+        ],
+        checklist:['希腊字母单位统一。','合约乘数和方向正确。','按曲面而非单一IV计算。','做大幅价格和波动率情景。','对冲成本与流动性进入决策。'],
+        interview:'动态对冲先汇总组合Delta、Gamma和Vega。Delta用标的对冲，Gamma和Vega通常用其他期权调整。希腊字母是局部敏感度，所以我还会做价格、波动率曲面和跳跃情景，并根据风险阈值和交易成本决定再平衡频率。'
+      },
+      'delta-hedging': {
+        source:'结合你之前发送的“期权希腊字母Delta如何对冲”',
+        deepDive:[
+          {title:'头寸计算', text:'期权多头Delta为正时，需要卖出标的；期权空头Delta方向相反。合约乘数必须进入计算。', formula:'Shares=−NetDelta×Contracts×Multiplier'},
+          {title:'再平衡', text:'可以按时间、Delta偏离阈值或价格移动触发。高Gamma、临近到期和高波动状态需要更紧密监控。', formula:'Rehedge if |NetDelta|>Limit'},
+          {title:'对冲误差', text:'离散时间、跳跃、交易成本、波动率曲面变化和模型误差都会进入实际PnL。', formula:'HedgeError≈½Γ[(ΔS)²−σ²S²Δt]−Cost'}
+        ],
+        checklist:['Delta方向与合约乘数正确。','标的与期权交易时间匹配。','设置Delta阈值。','监控Gamma和流动性。','分解对冲PnL和期权PnL。'],
+        interview:'Delta对冲用反向标的头寸抵消期权的一阶方向风险，数量等于负的组合Delta乘合约数和乘数。Delta会随价格、时间和波动率变化，所以需要再平衡。频率越高，方向误差通常越低，但成本越高，还要同时管理Gamma和跳跃风险。'
+      },
+      'turnover-constraint': {
+        source:'结合你之前发送的“组合优化中如何加入换手率约束”',
+        deepDive:[
+          {title:'硬约束', text:'限制总交易量，适合明确预算。旧权重应先按价格变化漂移到再平衡时点。', formula:'½Σ|w_i−w_i,old⁺|≤T_max'},
+          {title:'软惩罚', text:'在目标函数加入线性或非线性成本，优化器会比较边际Alpha与边际成本。', formula:'max αᵀw−λwᵀΣw−κΣc_i|Δw_i|'},
+          {title:'缓冲区', text:'目标变化较小时维持旧仓位，超过阈值后只交易到缓冲边界，能够减少来回交易。', formula:'Trade only if |w*−w_old|>Buffer'}
+        ],
+        checklist:['旧权重经过价格漂移。','成本按资产流动性区分。','买卖方向可使用不同成本。','检查约束影子价格。','压力测试成交额和冲击。'],
+        interview:'换手约束可以用硬上限，也可以在目标函数加入交易成本惩罚。我会使用漂移后的旧权重计算Delta权重，并给不同资产设置不同成本。实务中还可以加缓冲区，减少小信号变化造成的来回交易。'
+      },
+      'hft-slippage': {
+        source:'结合你之前发送的“高频交易中如何降低滑点”',
+        deepDive:[
+          {title:'成本分解', text:'滑点需要分成价差、冲击、延迟、机会成本、手续费和逆向选择。选择决策价、到达价或中间价作为基准时要明确。', formula:'IS=Spread+Impact+Delay+Miss+Fees'},
+          {title:'订单方式', text:'被动单节省价差但有排队和逆向选择风险，主动单提高成交概率但支付价差。盘口不平衡和Alpha寿命决定切换。', formula:'Choose Passive if ExpectedEdge>MissRisk+AdverseSelection'},
+          {title:'执行与设施', text:'冰山订单、智能路由、物理托管、内核旁路和FPGA分别处理意图暴露、场所选择与技术延迟。', formula:'TotalLatency=MarketData+Decision+Network+Exchange'}
+        ],
+        checklist:['参考价格定义清楚。','盘口回放模拟排队位置。','限价单允许部分成交。','延迟按链条分解。','成本模型按状态和参与率校准。','成交后检查Markout。'],
+        interview:'降低高频滑点要同时处理市场冲击、价差、延迟和未成交风险。我会根据Alpha寿命、盘口不平衡和队列位置选择主动或被动订单，大单使用拆单、冰山和智能路由。基础设施负责降低技术延迟，成交后再用实施缺口和Markout分解真实成本。'
+      }
+    };
+
+    allTopics.forEach(topic => Object.assign(topic, xhsEnrichments[topic.id] || {}));
+
+    const subtopics = {
+      'barra': [
+        {id:'barra-factor-system', title:'因子体系', subtitle:'国家、行业与风格', essence:'Barra把共同风险来源整理成国家、行业和风格因子。行业暴露负责结构差异，风格暴露描述规模、价值、动量、盈利、杠杆、流动性、Beta和波动率等连续特征。因子应具备稳定覆盖和风险解释力。', formula:'X = [Country | Industry | Style]', applications:['决定风险报告的解释口径。','隔离组合中的行业和风格押注。','为指数增强设置暴露边界。'], method:['列出候选风险来源。','检查覆盖率、稳定性与共线性。','确定行业和国家约束。','比较加入因子前后的残差相关。'], pitfalls:'风险因子负责解释共同波动。把短期Alpha信号直接放入风险模型，容易让风险估计随预测噪声摆动。'},
+        {id:'barra-exposure', title:'暴露处理', subtitle:'去极值与标准化', essence:'暴露处理把量纲不同、尾部异常的原始指标变成可比较的截面变量。行业暴露常用哑变量，风格暴露常采用加权合成。缺失值处理和时间戳会直接影响历史风险估计。', formula:'z_i = clip(x_i) − mean_w(x)\nz_i ← z_i / std_w(z)', applications:['构造个股风格暴露。','生成组合和基准的主动暴露。','减少极端值对回归的影响。'], method:['按发布日期对齐原始数据。','使用稳健规则处理异常值。','在当期截面标准化。','按行业或规模处理缺失。','保存每一步变换参数。'], pitfalls:'跨期使用全样本均值或方差会带入未来信息。过度中性化也会把真实结构一起消除。'},
+        {id:'barra-cross-sectional', title:'截面回归', subtitle:'估计每日因子收益', essence:'每个交易日用期初暴露解释下一期资产收益。加权最小二乘能降低异方差影响，行业和国家因子还需要识别约束。残差作为当日特质收益进入后续风险估计。', formula:'f_t = argmin_f (r_t − X_{t−1}f)ᵀW(r_t − X_{t−1}f)\nu_t = r_t − X_{t−1}f_t', applications:['产生每日风格和行业因子收益。','生成特质收益序列。','检查组合收益的公共来源。'], method:['固定收益和暴露时间口径。','选择与市值或特质波动相关的权重。','施加行业识别约束。','处理极端收益。','检查残差截面结构。'], pitfalls:'暴露日期与收益日期错位会产生前视偏差。完全共线的哑变量会让解失去唯一性。'},
+        {id:'barra-factor-covariance', title:'因子协方差', subtitle:'波动、相关与状态', essence:'因子协方差描述各公共风险来源的波动和相关。实务常给近期观察更高权重，再处理自相关、波动率状态和小样本特征值偏差，最终保证协方差可用于优化。', formula:'F_t = EWMA(f_τ f_τᵀ)\nF_t = QΛQᵀ,  Λ_j ≥ ε', applications:['计算组合因子风险。','估计跟踪误差。','为优化器提供稳定风险输入。'], method:['选择半衰期。','估计波动和相关。','处理自相关与波动状态。','修正过小特征值。','检查正定性和预测偏差。'], pitfalls:'短窗口响应快，估计噪声也会升高。单一半衰期难以同时覆盖快变波动和慢变相关。'},
+        {id:'barra-specific-risk', title:'特质风险', subtitle:'残差波动与收缩', essence:'特质风险来自公共因子无法解释的个股波动。直接使用短历史残差方差会对新股和缺失数据不稳定，常按规模、行业或波动特征向组均值收缩，并修正波动率预测偏差。', formula:'D = diag(σ²_{u,1},…,σ²_{u,N})\nσ²_i ← q_iσ²_i + (1−q_i)σ²_group', applications:['识别个股集中风险。','限制优化器押注低估风险的股票。','分解总风险中的特质部分。'], method:['从截面回归保存残差。','估计残差波动。','处理新股和缺失历史。','向同类股票收缩。','检验预测波动与实现波动。'], pitfalls:'把特质协方差全部设为零是工程近似。事件集中和供应关系可能让残差在短期共同变化。'},
+        {id:'barra-active-risk', title:'主动风险', subtitle:'跟踪误差与约束', essence:'主动风险以组合相对基准的权重为起点。主动因子暴露决定公共风险，主动个股权重决定特质风险。指数增强关注的是这两部分共同形成的跟踪误差。', formula:'a = w_p − w_b\nTE² = (Xᵀa)ᵀF(Xᵀa) + aᵀDa', applications:['指数增强风险预算。','行业与风格偏离监控。','评估单个主动仓位对跟踪误差的影响。'], method:['对齐组合和基准成分。','计算主动权重与主动暴露。','分解因子和特质风险。','施加暴露与个股约束。','用实现跟踪误差检验模型。'], pitfalls:'仅控制净暴露仍可能保留较大的总敞口和特质集中。风险模型口径需要与组合基准一致。'},
+        {id:'barra-attribution', title:'风险归因', subtitle:'边际贡献与收益贡献', essence:'风险归因利用协方差计算各资产或因子的边际风险贡献，收益归因利用暴露乘因子收益。两者回答的问题不同，报告时需要分别展示，并检查各项贡献能够还原总量。', formula:'RC_k = b_k(Fb)_k / σ_p\nPnL_k = b_{k,t−1}f_{k,t}', applications:['解释风险来自哪些因子。','对比风险预算与实际贡献。','区分Alpha收益和风格收益。'], method:['确定资产、行业和因子层级。','计算边际风险。','汇总贡献并验证加总。','单独计算期间收益贡献。','分析多头和空头方向。'], pitfalls:'暴露较大并不代表风险贡献一定较大，协方差会改变贡献。把收益贡献和风险贡献混在一起会造成错误判断。'}
+      ],
+      'factor-exposure': [
+        {id:'exposure-raw-data', title:'原始特征', subtitle:'财务、价格与交易数据', essence:'因子暴露从可观测数据开始。财务指标强调发布日期，价格指标强调复权和窗口，交易指标强调停牌、涨跌停与流动性口径。', formula:'Feature_{i,t} uses InformationTime ≤ t', applications:['构造价值、动量、质量和流动性暴露。','建立可追溯的数据字典。'], method:['记录数据来源和发布日期。','处理公司行为。','统一截面样本。','标记缺失与异常。'], pitfalls:'财报期末日期早于公告日期，直接按期末日期使用会产生前视偏差。'},
+        {id:'exposure-transform', title:'变量变换', subtitle:'比例、对数与变化率', essence:'变量变换让经济含义与统计分布更贴近研究目标。规模常取对数，估值常处理负值，动量常跳过最近月份，质量可以由多个分项合成。', formula:'Size = ln(MarketCap)\nMomentum = P_{t−21}/P_{t−252}−1', applications:['改善横截面分布。','把同类指标合成主题暴露。'], method:['明确指标方向。','检查零值和负值。','比较原值、排序和非线性变换。','固定历史计算规则。'], pitfalls:'为了提升历史结果反复选择变换方式，会扩大数据挖掘偏差。'},
+        {id:'exposure-winsorize', title:'去极值', subtitle:'限制异常点影响', essence:'去极值限制异常观测对截面标准化和回归的影响。中位数绝对偏差适合重尾数据，分位数截断容易解释，规则应在每个日期独立执行。', formula:'MAD = median(|x_i−median(x)|)\nx_i ← clip(x_i, m±k·MAD)', applications:['处理财务比率异常值。','稳定因子收益回归。'], method:['查看原始分布。','选择稳健尺度。','按期截面处理。','保留异常标记用于诊断。'], pitfalls:'极端值可能携带真实信息，强截断会损失尾部排序。'},
+        {id:'exposure-standardize', title:'标准化', subtitle:'统一截面量纲', essence:'标准化把不同量纲的指标放到统一尺度，便于比较和加权。风格风险模型常用市值加权均值和方差，多因子选股也可采用Rank Gaussian减少重尾影响。', formula:'z_i = (x_i−μ_t)/σ_t', applications:['合成多指标因子。','计算组合因子暴露。','控制优化约束的尺度。'], method:['确定等权或市值加权口径。','每期独立估计均值和方差。','检查标准化后的均值和离散度。'], pitfalls:'跨市场或行业直接标准化会让结构差异主导排序。'},
+        {id:'exposure-neutralize', title:'中性化', subtitle:'剥离已知风险', essence:'中性化用截面回归移除行业、市值、Beta等已知暴露。残差表示在控制变量之后的相对特征，适合判断信号是否提供增量信息。', formula:'x = Zγ + ε\nSignal = ε', applications:['构造行业中性的价值因子。','检验新因子的独立信息。'], method:['选择需要控制的风险。','使用当期已知暴露回归。','检查残差与控制变量相关。','比较中性化前后IC。'], pitfalls:'控制变量过多会移除信号的主要经济来源，并放大估计噪声。'},
+        {id:'exposure-portfolio', title:'组合暴露', subtitle:'权重加总与主动口径', essence:'组合暴露是个股暴露按带符号权重加总。主动管理还要计算相对基准暴露，多空策略要同时查看净暴露和总敞口。', formula:'b = Xᵀw\nb_active = Xᵀ(w_p−w_b)', applications:['监控行业和风格押注。','设置优化器暴露边界。','解释组合收益和风险。'], method:['确定目标权重或成交后权重。','使用同日暴露数据。','计算组合、基准和主动暴露。','检查净敞口和总敞口。'], pitfalls:'权重、暴露和基准日期不一致，会让归因结果无法还原实际组合。'}
+      ],
+      'risk-attribution': [
+        {id:'attribution-asset-return', title:'资产收益贡献', subtitle:'权重乘收益', essence:'资产收益贡献从期初权重和期间收益出发。多头权重为正，空头权重为负，全部资产贡献加总应等于组合收益，再按行业、国家或策略簇汇总。', formula:'CR_i = w_{i,t−1}r_{i,t}\nR_p = Σ_i CR_i', applications:['识别盈利和亏损来源。','分别汇总多头与空头贡献。'], method:['固定权重时点。','处理现金和融资成本。','计算个股贡献。','按层级汇总并核对加总。'], pitfalls:'使用期末权重会混入期间价格变化和交易，造成事后偏差。'},
+        {id:'attribution-factor-return', title:'因子收益归因', subtitle:'暴露乘因子收益', essence:'因子收益归因用期初组合暴露乘当期因子收益。剩余部分归入特质或选择收益，适合判断业绩来自价值、动量、行业或个股选择。', formula:'R_p ≈ b_{t−1}ᵀf_t + wᵀu_t', applications:['基金风格归因。','区分公共Beta和主动Alpha。'], method:['选定归因模型。','计算期初暴露。','获取同期因子收益。','汇总因子和特质贡献。'], pitfalls:'因子模型变化会改变历史解释，归因结果依赖模型选择和暴露定义。'},
+        {id:'attribution-marginal-risk', title:'边际风险', subtitle:'增加仓位带来的变化', essence:'边际风险衡量某个仓位增加一小单位时组合波动率如何变化。它包含该资产与整个组合的协方差，是风险预算和调仓判断的关键输入。', formula:'MRC_i = ∂σ_p/∂w_i = (Σw)_i/σ_p', applications:['识别新增仓位的风险代价。','比较不同资产的边际风险。'], method:['计算组合协方差向量。','除以组合波动率。','结合预期收益比较边际收益风险。'], pitfalls:'边际风险依赖当前组合，同一资产在不同组合中的数值会明显变化。'},
+        {id:'attribution-component-risk', title:'成分风险贡献', subtitle:'权重乘边际风险', essence:'成分风险贡献把边际风险乘以当前权重。在线性齐次风险度量下，各项贡献之和能够还原组合风险，也能按资产、行业和因子层级聚合。', formula:'RC_i = w_i·MRC_i\nΣ_i RC_i = σ_p', applications:['风险预算监控。','查找风险集中来源。','风险平价调仓。'], method:['从统一协方差计算MRC。','乘以带符号权重。','按层级汇总。','核对贡献之和。'], pitfalls:'对冲仓位可能产生负风险贡献，报告时需要保留符号并解释协方差关系。'},
+        {id:'attribution-factor-risk', title:'因子风险贡献', subtitle:'暴露与协方差共同决定', essence:'因子风险贡献在因子空间中计算。组合因子暴露b与因子协方差F共同决定公共风险贡献，特质风险另行计算，二者合成总风险。', formula:'σ²_factor = bᵀFb\nRC_k = b_k(Fb)_k/σ_p', applications:['解释行业、风格和宏观风险。','设置因子风险预算。'], method:['计算组合因子暴露。','映射到因子协方差。','计算每个因子贡献。','加入特质风险并核对总风险。'], pitfalls:'相关因子之间的风险无法仅凭单个方差判断，贡献会随组合中的其他暴露改变。'},
+        {id:'attribution-long-short', title:'多空归因', subtitle:'净敞口与总敞口', essence:'多空组合同时报告Long Gross、Short Gross、Net和Gross。收益贡献按带符号权重计算，风险还要考虑多空两侧之间的协方差和共同去杠杆压力。', formula:'Net = Σ_i w_i\nGross = Σ_i |w_i|', applications:['判断方向收益与相对价值收益。','监控杠杆和逼空风险。'], method:['分别汇总多头和空头。','计算净敞口与总敞口。','分解两侧收益贡献。','分析行业和因子匹配。'], pitfalls:'净敞口接近零仍可能保留较高杠杆、基差风险和流动性风险。'},
+        {id:'attribution-active', title:'主动归因', subtitle:'组合相对基准', essence:'主动归因以组合减基准后的权重和收益为对象。主动收益可继续分为配置、选择和交互，也能按风险模型拆分主动因子和主动特质部分。', formula:'a = w_p−w_b\nActiveReturn = R_p−R_b', applications:['指数增强业绩解释。','基金相对基准分析。'], method:['统一组合与基准收益口径。','计算主动权重。','按行业与因子归因。','核对主动贡献之和。'], pitfalls:'组合和基准的公司行为、现金和再平衡口径不一致，会制造虚假的主动贡献。'}
+      ],
+      'ic-decay': [
+        {id:'ic-decay-curve', title:'衰减曲线', subtitle:'不同预测期限的IC', essence:'衰减曲线固定信号形成日，分别计算未来多个期限的截面相关。它显示信息有效期，也帮助区分开盘冲击、短期反转和中期趋势。', formula:'IC(h) = Corr(f_t, r_{t→t+h})', applications:['选择持有期。','比较快慢信号。'], method:['设定多个h。','保证收益区间定义一致。','逐期计算Rank IC。','画出均值和置信区间。'], pitfalls:'重叠收益带来自相关，显著性检验需要使用稳健标准误。'},
+        {id:'ic-decay-half-life', title:'半衰期估计', subtitle:'信息消失速度', essence:'半衰期用简化曲线概括IC下降速度。指数形式便于比较，但金融信号常出现短期峰值、反转或平台，应同时保留非参数曲线。', formula:'IC(h)=IC₀e^(−λh)\nh₁/₂=ln2/λ', applications:['给信号设置平滑窗口。','比较不同市场的有效期。'], method:['估计指数参数。','检查拟合残差。','滚动计算半衰期。','对比非参数结果。'], pitfalls:'强行用单一指数拟合复杂曲线，会掩盖延迟反应和反转。'},
+        {id:'ic-decay-rolling', title:'滚动监控', subtitle:'均值、ICIR与胜率', essence:'滚动监控同时看IC均值、标准差、ICIR、正IC比例和分组收益。单日IC噪声较高，预警应结合连续窗口和状态变化。', formula:'ICIR = mean(IC_t)/std(IC_t)', applications:['因子上线后的健康监控。','识别状态失效。'], method:['确定短期和长期窗口。','计算IC与ICIR。','跟踪分市场和行业表现。','设置连续预警条件。'], pitfalls:'只看全市场均值会隐藏特定行业或市值区间的失效。'},
+        {id:'ic-decay-turnover', title:'换手映射', subtitle:'信号变化转成交易', essence:'信号衰减越快，目标仓位更新越频繁。真实换手还受截面排序变化、权重映射、缓冲区和约束影响，需要直接在组合层测量。', formula:'Turnover_t = ½Σ_i |w_{i,t}−w^+_{i,t−1}|', applications:['选择调仓频率。','估计容量与交易成本。'], method:['从信号生成目标权重。','漂移旧权重。','计算双边换手。','加入成交成本。'], pitfalls:'用因子数值变化代替组合换手，会忽略排序稳定性和权重规则。'},
+        {id:'ic-decay-net-alpha', title:'净Alpha最优点', subtitle:'预测收益减去成本', essence:'最优持有期位于预测收益衰减和交易成本上升的平衡点。研究时应对每个持有期重建组合，直接比较成本后收益与容量。', formula:'NetAlpha(h)=GrossAlpha(h)−Cost(Turnover(h))', applications:['确定日频、周频或月频调仓。','决定信号是否值得上线。'], method:['为每个h回测相同信号。','使用一致风险约束。','估计线性和冲击成本。','比较净IR与容量。'], pitfalls:'选择毛IC最高的期限，可能得到成本后表现较差的组合。'}
+      ],
+      'multifactor-stock': [
+        {id:'multifactor-universe', title:'股票池', subtitle:'可交易样本与基准', essence:'股票池定义决定策略面对的流动性、退市、行业和市值结构。历史成分必须按当时信息恢复，并把停牌、涨跌停和上市天数写入可交易规则。', formula:'U_t = {i | Listed_t, Tradable_t, Eligible_t}', applications:['建立指数增强股票池。','控制容量和执行难度。'], method:['选定基准或全市场。','恢复历史成分。','加入流动性与上市期限制。','保留退市样本。'], pitfalls:'使用当前指数成分回测历史会产生生存者偏差。'},
+        {id:'multifactor-pool', title:'因子池', subtitle:'解释与互补信息', essence:'因子池围绕价值、动量、质量、低风险、情绪和流动性等主题组织。每个候选因子需要有可检验假设，并检查与已有信号的信息重合。', formula:'FactorPool = {Value, Momentum, Quality, LowRisk,…}', applications:['建立候选信号库。','按主题管理研究。'], method:['写出经济假设。','定义原始数据和公式。','检验覆盖与稳定性。','与现有因子比较相关和增量IC。'], pitfalls:'大量同义变换会让因子数量膨胀，同时夸大回测选择空间。'},
+        {id:'multifactor-clean', title:'预处理', subtitle:'对齐、去极值与中性化', essence:'预处理统一数据时点和尺度，再按研究目的处理中性化。每一步都应保存中间结果，才能解释因子变化来自数据更新还是处理规则。', formula:'z = Neutralize(Standardize(Winsorize(x)))', applications:['生成可比较的因子分数。','降低异常值和结构暴露。'], method:['对齐发布日期。','处理缺失和异常。','截面标准化。','选择风险控制变量。','检查处理前后分布。'], pitfalls:'所有因子套用同一处理模板，会损害某些因子的经济含义。'},
+        {id:'multifactor-redundancy', title:'去冗余', subtitle:'相关、聚类与增量检验', essence:'去冗余在主题内识别相似信号。相关系数、VIF、聚类和条件增量IC各自描述不同层面，最终保留稳定且能补充已有组合的信号。', formula:'IncrementalIC_k = Corr(f_k, r | ExistingFactors)', applications:['降低权重不稳定。','减少重复交易同一信息。'], method:['检查滚动相关。','按主题聚类。','做条件回归或残差化。','比较加入前后的样本外结果。'], pitfalls:'仅凭低相关保留因子，会错过非线性重合和共同尾部风险。'},
+        {id:'multifactor-combine', title:'因子合成', subtitle:'等权、IC与模型权重', essence:'合成把多个标准化信号映射为综合分数。等权提供稳健基线，IC加权利用近期效果，机器学习能处理交互，但都需要限制权重变化和集中度。', formula:'Score_i = Σ_k a_k z_{ik}', applications:['形成统一选股排序。','按状态调整因子组合。'], method:['建立等权基线。','走步估计权重。','设置上下限和平滑。','检查权重集中与换手。'], pitfalls:'权重估计误差常大于因子间真实差异，复杂合成容易追逐短期噪声。'},
+        {id:'multifactor-optimizer', title:'组合优化', subtitle:'收益、风险与成本', essence:'组合优化把综合预测转成权重，在预期收益、风险、交易成本和约束之间求解。风险模型处理行业、风格和个股风险，成本模型处理换手和冲击。', formula:'max_w αᵀw − λwᵀΣw − Cost(w−w_old)', applications:['指数增强。','市场中性选股。','多空组合构建。'], method:['校准Alpha尺度。','输入风险和成本模型。','设置个股、行业、风格和流动性约束。','检查约束影子价格。'], pitfalls:'过紧约束会移除主要Alpha，过松约束会让估计误差转成集中仓位。'},
+        {id:'multifactor-evaluation', title:'样本外评估', subtitle:'净收益、暴露与容量', essence:'评估同时覆盖预测、组合和执行三个层面。IC与分组收益衡量信号，净收益和回撤衡量组合，成交率、冲击和容量衡量真实可交易性。', formula:'NetReturn = GrossReturn − Fees − Impact − BorrowCost', applications:['筛选可上线策略。','定位表现来自预测还是风险暴露。'], method:['使用走步样本外。','报告IC与净收益。','分解行业和风格暴露。','做状态、容量和压力测试。'], pitfalls:'只报告夏普率会隐藏换手、集中、尾部和容量问题。'}
+      ],
+      'ml-overfit': [
+        {id:'overfit-time-split', title:'时间切分', subtitle:'训练、验证与测试', essence:'金融数据按时间流动，训练集早于验证集，验证集早于测试集。随机切分会让相邻样本共享市场状态，也容易让重叠标签的信息跨越边界。', formula:'Train Time < Validation Time < Test Time', applications:['建立可信样本外结果。','模拟真实上线顺序。'], method:['确定时间边界。','留出标签重叠隔离区。','在滚动窗口中训练。','保留最终测试集。'], pitfalls:'反复查看测试集并调参，会让测试集变成新的验证集。'},
+        {id:'overfit-pipeline', title:'数据管道泄漏', subtitle:'缩放、填充与特征选择', essence:'所有从数据估计出来的处理参数都只能在训练集拟合，再应用到验证和测试。行业中性化、缺失填充、PCA和特征筛选也遵循这一规则。', formula:'Transformer.fit(Train)\nTransformer.transform(Valid, Test)', applications:['防止预处理偷看未来。','保证线上线下一致。'], method:['把预处理封装进训练管道。','逐折重新拟合。','记录每期参数。','用可用时间校验特征。'], pitfalls:'先在全样本标准化再切分，会把未来分布信息传给模型。'},
+        {id:'overfit-complexity', title:'模型复杂度', subtitle:'参数与有效样本量', essence:'模型容量需要与有效样本量匹配。金融样本存在截面和时间相关，名义观测数会高估独立信息量，复杂网络更容易记住股票身份和市场状态。', formula:'N_eff < N_raw\nComplexity Penalty = λΩ(θ)', applications:['选择网络宽度和树深。','比较线性与复杂模型。'], method:['估计标签相关结构。','限制参数量。','使用正则化和Dropout。','与简单基线比较。'], pitfalls:'样本行数较多并不代表独立信息充足，相关样本会显著降低有效规模。'},
+        {id:'overfit-early-stop', title:'早停与正则化', subtitle:'控制泛化差距', essence:'早停在验证指标开始恶化时终止训练。L1、L2、Dropout和数据扰动从不同方向限制模型依赖局部噪声，评估指标应贴近最终交易目标。', formula:'Loss = Loss_train + λΩ(θ)', applications:['减少神经网络过拟合。','稳定特征权重。'], method:['选择验证指标。','设置耐心轮数。','保存最佳权重。','跨随机种子比较。'], pitfalls:'用训练损失决定早停无法衡量泛化，过强正则也会抹去弱信号。'},
+        {id:'overfit-walk-forward', title:'走步验证', subtitle:'滚动训练与预测', essence:'走步验证按真实研究时序重复训练、调参和预测。扩展窗口利用全部历史，滚动窗口更适合分布变化，二者都应固定更新频率和计算预算。', formula:'Model_t = Fit(Data_{≤t})\nPrediction_{t+1} = Model_t(X_{t+1})', applications:['评估状态变化下的稳定性。','确定模型更新频率。'], method:['设定训练窗和验证窗。','逐期重训。','保存每期预测。','合并为连续样本外收益。'], pitfalls:'每个窗口单独选择最优参数，会扩大隐含搜索空间，需要提前固定规则。'},
+        {id:'overfit-selection-bias', title:'选择偏差', subtitle:'多次试验与幸运结果', essence:'研究者尝试的特征、模型和参数越多，最优结果越容易来自运气。完整实验记录、多重检验和保留测试集可以约束选择偏差。', formula:'P(false discovery) ↑ with Number of Trials', applications:['评估研究结果可信度。','比较大量候选模型。'], method:['记录全部实验。','限制搜索空间。','做多重检验校正。','报告中位数和分布。'], pitfalls:'只保存成功实验会让研究历史看起来比真实过程稳定。'},
+        {id:'overfit-trading-metric', title:'交易层验证', subtitle:'净收益与稳定性', essence:'预测指标需要转成仓位后再判断价值。模型可能拥有较高准确率，同时交易集中、换手较高或暴露失控，最终成本后收益仍较弱。', formula:'NetIR = (GrossReturn−Cost)/Risk', applications:['判断模型能否上线。','比较模型和简单基线的增量。'], method:['映射预测到统一组合规则。','加入风险约束。','估计真实成本。','分市场状态报告结果。'], pitfalls:'使用准确率或训练损失替代投资指标，会忽略收益幅度、方向不对称和交易成本。'}
+      ],
+      'iv-surface': [
+        {id:'iv-market-inputs', title:'市场输入', subtitle:'远期、利率与分红', essence:'隐含波动率反解依赖期权价格、标的远期、利率和分红。使用远期价格统一不同期限的货币度，也能减少现货和分红口径造成的曲面扭曲。', formula:'F_T = S_0e^{(r−q)T}\nk = ln(K/F_T)', applications:['统一看涨和看跌报价。','构造远期对数货币度。'], method:['建立利率曲线。','估计分红或借券成本。','从期权平价检查远期。','统一到期时间。'], pitfalls:'远期估计偏差会系统性扭曲微笑位置，尤其影响较长期限。'},
+        {id:'iv-quote-cleaning', title:'报价清洗', subtitle:'点差、边界与流动性', essence:'曲面拟合前需要清除零买价、异常点差、低成交和违反价格边界的报价。中间价适合研究，实际交易还要保留买卖价差和可成交量。', formula:'LowerBound ≤ OptionPrice ≤ UpperBound', applications:['减少IV反解异常。','建立可交易曲面。'], method:['检查价格边界。','过滤低流动性。','按点差或Vega加权。','保留买卖两侧。'], pitfalls:'过度过滤会让尾部缺少报价，曲面外推风险随之增加。'},
+        {id:'iv-inversion', title:'逐点反解', subtitle:'数值求根得到IV', essence:'每个期权价格通过数值求根得到隐含波动率。二分法稳定，Newton法较快但依赖Vega，低Vega和临近到期合约需要更谨慎。', formula:'Find σ such that BS(F,K,T,σ)=Price', applications:['把价格转换为统一波动率报价。','比较不同执行价和期限。'], method:['设定波动率上下界。','用二分或Newton求根。','检查价格重建误差。','标记低Vega点。'], pitfalls:'低Vega区域的微小价格误差会变成较大的IV误差。'},
+        {id:'iv-smile-fit', title:'微笑拟合', subtitle:'每个期限的横截面', essence:'单个到期日上，SVI等参数模型拟合总隐含方差随货币度的变化。权重需要兼顾报价质量和Vega，参数约束用于减少蝶式套利。', formula:'w(k)=a+b[ρ(k−m)+√((k−m)²+σ²)]', applications:['平滑稀疏报价。','估计Delta和Vega。','插值未挂牌执行价。'], method:['转换为总方差。','设置点差或Vega权重。','带约束拟合参数。','检查残差和凸性。'], pitfalls:'追求极低拟合误差会让参数随日期跳动，并在尾部产生异常曲率。'},
+        {id:'iv-term-structure', title:'期限结构', subtitle:'总方差方向插值', essence:'期限方向常对总隐含方差进行插值。相同远期货币度下，总方差应随期限保持无套利关系，短端还要处理事件和到期效应。', formula:'w(k,T)=σ²_imp(k,T)T\n∂w/∂T ≥ 0', applications:['生成连续到期曲面。','定价非标准期限期权。'], method:['统一货币度网格。','对总方差插值。','处理财报和宏观事件。','检查日历套利。'], pitfalls:'直接线性插值IV可能在期限方向制造日历套利。'},
+        {id:'iv-static-arbitrage', title:'静态无套利', subtitle:'单调、凸性与日历条件', essence:'无套利检查覆盖价格对执行价的单调性和凸性，以及期限方向的总方差关系。曲面用于定价和风险时，这些条件比视觉平滑更重要。', formula:'∂C/∂K ≤ 0\n∂²C/∂K² ≥ 0', applications:['避免负风险中性密度。','提高定价和对冲稳定性。'], method:['检查看涨价差。','检查蝶式价差。','检查日历价差。','对违规区域重新拟合。'], pitfalls:'曲面外观看起来平滑，仍可能包含局部套利。'},
+        {id:'iv-dynamics', title:'曲面动态', subtitle:'Skew、期限与状态变化', essence:'真实对冲面对的是整张曲面随现货和时间变化。Sticky Strike、Sticky Delta和局部波动假设给出不同动态，需要用历史PnL和风险情景选择。', formula:'dσ_imp = β_S dS + β_T dT + ε', applications:['估计Vanna与Volga风险。','设计波动率情景。','改进动态对冲。'], method:['跟踪固定执行价和固定Delta点。','估计曲面对现货的响应。','做平移、倾斜和曲率情景。','回测对冲误差。'], pitfalls:'只平移单一IV会低估Skew和期限结构变化带来的风险。'}
+      ],
+      'greeks': [
+        {id:'greeks-delta', title:'Delta', subtitle:'标的一阶敏感度', essence:'Delta衡量期权价格对标的小幅变化的局部响应，也常解释为风险中性世界下的方向敏感度。组合Delta需要乘合约数、方向和乘数后汇总。', formula:'Δ = ∂V/∂S', applications:['用标的对冲方向风险。','估计小幅价格变化的PnL。'], method:['按曲面计算每个合约Delta。','统一乘数与币种。','汇总净Delta。','设置再平衡阈值。'], pitfalls:'Delta会随现货、时间和波动率变化，固定Delta只适合局部情景。'},
+        {id:'greeks-gamma', title:'Gamma', subtitle:'Delta变化速度', essence:'Gamma衡量Delta对标的变化的敏感度。长Gamma组合从大幅双向波动中受益，同时支付Theta；短Gamma组合平时收取时间价值，跳跃时承担凸性损失。', formula:'Γ = ∂²V/∂S²', applications:['决定Delta对冲频率。','评估跳跃和离散对冲风险。'], method:['汇总组合Gamma。','按价格区间做情景。','结合流动性设置对冲阈值。','分解Gamma PnL。'], pitfalls:'用连续扩散近似估计Gamma收益，会低估跳跃和成交成本。'},
+        {id:'greeks-vega', title:'Vega', subtitle:'波动率敏感度', essence:'Vega衡量隐含波动率变化对期权价格的影响。组合Vega应按期限和货币度分桶，因为曲面平移、倾斜和曲率变化会产生不同结果。', formula:'Vega = ∂V/∂σ', applications:['交易隐含波动率。','管理期限和Skew风险。'], method:['按曲面节点汇总Vega。','做平移和倾斜情景。','用其他期权对冲。','监控Vanna与Volga。'], pitfalls:'把所有期限Vega直接相加，会隐藏期限结构和曲面形状风险。'},
+        {id:'greeks-theta', title:'Theta', subtitle:'时间流逝敏感度', essence:'Theta衡量其他输入保持局部不变时，时间减少对期权价值的影响。它与Gamma和波动率风险相连，短期期权的时间衰减和事件溢价尤其集中。', formula:'Θ = ∂V/∂t', applications:['估算持仓Carry。','比较不同期限卖方收益。'], method:['按日历时间统一单位。','区分周末和交易日口径。','与Gamma和Vega一起解释PnL。'], pitfalls:'Theta并非确定收益，标的波动和曲面变化可能快速覆盖时间价值。'},
+        {id:'greeks-rho', title:'Rho', subtitle:'利率敏感度', essence:'Rho衡量利率变化对期权价格的局部影响。短期期权影响常较小，长期期权、外汇期权和利率波动较大的市场更需要关注。', formula:'ρ = ∂V/∂r', applications:['长期期权风险管理。','跨币种衍生品估值。'], method:['使用完整利率曲线。','统一贴现与远期口径。','做曲线平移和形变情景。'], pitfalls:'只使用单一无风险利率会忽略期限结构和融资差异。'},
+        {id:'greeks-cross', title:'高阶希腊字母', subtitle:'Vanna、Volga与Charm', essence:'高阶希腊字母描述Delta、Vega对现货、波动率和时间的变化。曲面交易和临近到期持仓中，这些交叉敏感度会让一阶对冲快速失效。', formula:'Vanna = ∂²V/(∂S∂σ)\nVolga = ∂²V/∂σ²', applications:['解释曲面变化下的PnL。','设计更完整的压力测试。'], method:['识别主要交叉风险。','按现货与波动率联合情景重估。','选择期权工具分层对冲。'], pitfalls:'高阶希腊字母依赖定价模型和曲面动态，单点数值容易给出虚假精度。'},
+        {id:'greeks-hedging', title:'动态对冲', subtitle:'风险阈值与交易成本', essence:'动态对冲按时间、价格移动或风险阈值触发。对冲频率提高会减少局部方向误差，也会增加点差、冲击和逆向选择，需要根据Gamma、流动性和Alpha寿命权衡。', formula:'Rehedge if |NetDelta| > Limit\nHedgePnL = OptionPnL + UnderlyingPnL − Cost', applications:['管理期权组合方向风险。','评估离散对冲误差。'], method:['汇总净希腊字母。','设定风险和成本阈值。','选择标的与期权工具。','记录对冲PnL和成本。'], pitfalls:'只对冲Delta会保留Gamma、Vega和跳跃风险，极端行情下误差可能同时放大。'}
+      ],
+      'tail-risk': [
+        {id:'tail-heavy-tail', title:'重尾识别', subtitle:'峰度、QQ图与尾指数', essence:'重尾意味着极端收益发生概率高于正态分布预期。QQ图、超额峰度和Hill估计提供不同证据，样本量和阈值选择会影响结论。', formula:'P(|X|>x) ≈ Cx^(−α)', applications:['检验正态VaR的适用性。','选择尾部模型。'], method:['画QQ图。','计算峰度。','检查不同阈值的Hill估计。','按市场状态分段。'], pitfalls:'少量异常数据也会制造表面重尾，需要核对价格和公司行为。'},
+        {id:'tail-var-es', title:'VaR 与 ES', subtitle:'分位损失和条件尾部均值', essence:'VaR给出置信水平下的损失分位点，ES计算超过VaR后的平均损失。ES更能反映尾部严重程度，也更适合风险预算，但依赖尾部样本和模型。', formula:'VaR_α = Quantile_α(L)\nES_α = E[L | L≥VaR_α]', applications:['设置风险限额。','比较不同策略尾部风险。'], method:['选择历史、参数或蒙特卡洛方法。','报告多个置信水平。','回测违约次数和严重度。'], pitfalls:'短样本中的高置信度ES估计非常不稳定，需要压力测试补充。'},
+        {id:'tail-stress', title:'压力测试', subtitle:'历史与假设情景', essence:'压力测试直接重估危机状态下的价格、相关、波动、点差和保证金。历史情景保留真实联动，假设情景覆盖尚未出现的结构变化。', formula:'StressLoss = V(ShockedInputs) − V(BaseInputs)', applications:['评估危机损失。','制定去杠杆和保证金预案。'], method:['选取历史危机。','设计价格和相关冲击。','同步扩大点差与冲击。','重估组合和融资需求。'], pitfalls:'只冲击价格会低估流动性枯竭和保证金上调带来的二次损失。'},
+        {id:'tail-liquidity', title:'流动性尾部', subtitle:'冲击、拥堵与无法成交', essence:'危机时期成交量下降、点差扩大，多个策略还会同时平仓。纸面仓位能够止损，实际成交可能排在同一方向，导致冲击和损失相互加强。', formula:'Impact ≈ Yσ√(Q/V)', applications:['设置容量和成交参与率。','模拟分阶段减仓。'], method:['按危机状态调整ADV和点差。','估计参与率冲击。','模拟部分成交和延迟。','检查共同持仓拥挤。'], pitfalls:'使用平时成本参数评估危机，会明显低估退出成本。'},
+        {id:'tail-funding', title:'融资与保证金', subtitle:'杠杆引发的被动平仓', essence:'套利头寸常依赖融资和保证金。价差扩大造成账面损失后，保证金上调和融资缩减可能迫使策略在最差时点减仓。', formula:'AvailableCapital ≥ InitialMargin + VariationMargin', applications:['制定杠杆上限。','评估融资方集中风险。'], method:['梳理融资来源。','模拟保证金上调。','计算现金缓冲。','评估强平路径。'], pitfalls:'只看最终价差回归会忽略期间保证金和现金需求。'},
+        {id:'tail-position-limit', title:'仓位与止损', subtitle:'价格、时间和关系失效', essence:'尾部控制结合仓位上限、价格止损、时间止损和关系失效条件。均值回归策略还要限制亏损加仓，防止模型误判转化为不断扩大的风险。', formula:'Position ≤ min(RiskLimit, LiquidityLimit, MarginLimit)', applications:['控制单笔套利损失。','限制极端行情敞口。'], method:['定义最大仓位。','设置价格和时间阈值。','监控关系参数变化。','禁止无上限加仓。'], pitfalls:'固定价格止损在波动状态变化时可能过松或过紧，需要结合风险尺度。'},
+        {id:'tail-hedge', title:'尾部保护', subtitle:'期权与分散关系来源', essence:'尾部保护用期权、动态减仓和跨策略分散降低危机损失。保护成本应计入长期净收益，期权的执行价、期限和流动性决定它能否覆盖真实风险。', formula:'ProtectedPnL = StrategyPnL + HedgePnL − Premium', applications:['降低组合极端回撤。','保护融资能力。'], method:['识别主要尾部方向。','选择期权结构。','评估滚动成本。','在压力情景中检验覆盖率。'], pitfalls:'廉价远虚值期权可能在需要时提供有限现金，期限错配也会削弱保护。'}
+      ],
+      'hft-slippage': [
+        {id:'slippage-benchmark', title:'基准价格', subtitle:'决策价、到达价与中间价', essence:'滑点需要相对明确基准衡量。决策价反映从策略产生意图后的总成本，到达价反映订单交给执行系统后的结果，中间价更适合研究价差和Markout。', formula:'Slippage = ExecutedPrice − BenchmarkPrice', applications:['建立执行绩效报告。','区分研究与交易责任。'], method:['定义时间戳。','选择方向一致的价格符号。','分别报告不同基准。','核对行情延迟。'], pitfalls:'更换基准会改变成本归属，跨策略比较必须保持同一口径。'},
+        {id:'slippage-spread', title:'价差成本', subtitle:'主动成交与被动报价', essence:'主动单跨越买卖价差以获得成交确定性，被动单等待成交以争取价差。决策需要结合Alpha寿命、排队位置和逆向选择。', formula:'ExpectedSpreadCost ≈ Side × (FillPrice−Mid)', applications:['选择限价单或市价单。','估计短周期策略成本。'], method:['计算有效价差。','区分主动和被动成交。','按盘口状态分组。','观察成交后Markout。'], pitfalls:'被动成交表面节省价差，成交样本可能集中在价格即将不利移动的时刻。'},
+        {id:'slippage-impact', title:'市场冲击', subtitle:'参与率与订单规模', essence:'自身订单会消耗盘口并暴露交易意图。冲击随订单占成交量比例、波动率和执行速度变化，可分为临时冲击和较持久的价格影响。', formula:'Impact ≈ Yσ√(Q/V)', applications:['决定拆单速度。','评估策略容量。'], method:['按参与率分桶。','控制波动和流动性。','估计临时与永久部分。','在回测中加入状态模型。'], pitfalls:'用平均冲击覆盖所有股票和时段，会低估低流动性与开收盘风险。'},
+        {id:'slippage-queue', title:'队列位置', subtitle:'成交概率与等待成本', essence:'被动限价单能否成交取决于前方挂单、撤单、市场单流和交易所撮合规则。队列模拟需要逐笔行情，简单假设触价即成交会高估表现。', formula:'Fill if ExecutedVolumeAhead ≥ QueueAhead', applications:['评估做市和被动执行。','选择挂单档位。'], method:['重建订单簿。','估计初始队列位置。','处理撤单和部分成交。','校准真实成交率。'], pitfalls:'忽略队列位置和延迟，会让高频回测产生不现实的成交。'},
+        {id:'slippage-adverse', title:'逆向选择', subtitle:'成交后的价格移动', essence:'逆向选择表示订单成交后价格朝不利方向移动，常用不同时间尺度的Markout衡量。它帮助判断被动成交获得的价差能否覆盖信息劣势。', formula:'Markout_h = Side × (Mid_{t+h}−FillPrice)', applications:['评估做市报价质量。','识别有毒订单流。'], method:['计算多个h的Markout。','按盘口和事件分组。','区分主动与被动成交。','调整报价宽度和撤单规则。'], pitfalls:'只看成交瞬间的价差收益，会遗漏随后发生的信息损失。'},
+        {id:'slippage-latency', title:'延迟成本', subtitle:'行情、决策与网络时间', essence:'总延迟来自行情接收、策略计算、风控、网络和交易所处理。对短寿命Alpha，数毫秒的延迟就可能让预期优势消失，并提高排队和追价成本。', formula:'Latency = MarketData + Decision + Risk + Network + Exchange', applications:['定位系统性能瓶颈。','评估托管和硬件投入。'], method:['记录全程时间戳。','校准时钟。','测量尾部延迟。','把延迟映射到价格损失。'], pitfalls:'只优化平均延迟会忽略尾部抖动，极端延迟往往造成更大损失。'},
+        {id:'slippage-routing', title:'执行与路由', subtitle:'拆单、场所与订单方式', essence:'执行系统根据流动性、费用、成交概率和Alpha寿命选择场所和订单方式。拆单减少瞬时冲击，同时延长暴露时间，路由目标需要包含机会成本。', formula:'ExpectedCost = Fees + Spread + Impact + Delay + MissRisk', applications:['智能订单路由。','执行大额母单。'], method:['预测各场所成交率。','估计费用与返佣。','选择订单方式。','动态更新剩余数量。'], pitfalls:'只追求最低显性费用，可能牺牲成交质量和机会成本。'},
+        {id:'slippage-tca', title:'成交分析', subtitle:'实施缺口与成本诊断', essence:'成交分析把实施缺口分成价差、冲击、延迟、未成交机会损失和费用，并按股票、时段、订单方式和市场状态比较。', formula:'IS = Spread + Impact + Delay + Miss + Fees', applications:['校准成本模型。','改进执行规则。','判断研究Alpha是否被交易吃掉。'], method:['保存决策到成交全过程数据。','计算实施缺口。','按驱动因素分解。','用样本外交易校准。'], pitfalls:'仅分析已成交订单会忽略未成交订单的机会成本和选择偏差。'}
+      ]
+    };
+
+    Object.entries(subtopics).forEach(([parentId, children]) => {
+      const parent = allTopics.find(topic => topic.id === parentId);
+      if (!parent) return;
+      children.forEach(child => {
+        child.parent = parentId;
+        child.group = parent.group;
+        child.category = parent.category;
+        child.related = child.related || [];
+      });
+    });
+
+    const allSubtopics = Object.values(subtopics).flat();
+
+    const applicationDetails = {
+      '计算组合因子风险': {essence:'把持仓权重先映射成组合因子暴露，再用因子协方差计算公共风险。这个结果回答组合波动中有多少来自行业、风格或宏观因子的共同变化。', formula:'b = Xᵀw\nσ_factor = √(bᵀFb)', applications:['组合风险日报。','因子风险预算。','比较调仓前后的公共风险。'], method:['对齐持仓权重与暴露日期。','计算组合因子暴露b。','使用同频率因子协方差F。','计算总因子风险和单因子贡献。','用实现波动检验预测偏差。'], pitfalls:'暴露和协方差频率不一致时，年化风险容易出错。相关因子也不能只看单个方差。'},
+      '估计跟踪误差': {essence:'跟踪误差衡量组合相对基准收益的波动。计算从主动权重出发，公共因子偏离和主动个股仓位都会进入结果。', formula:'a = w_p−w_b\nTE = √(aᵀ(XFXᵀ+D)a)', applications:['指数增强风险控制。','主动基金相对基准管理。','分配主动风险预算。'], method:['统一组合与基准成分口径。','计算主动权重a。','分解主动因子和特质风险。','检查行业与风格偏离。','比较预测TE和实现TE。'], pitfalls:'只限制行业偏离仍会保留风格或个股集中。预测TE也无法覆盖基准调整和流动性冲击。'},
+      '为优化器提供稳定风险输入': {essence:'优化器会放大风险输入中的小误差。稳定协方差需要处理短样本噪声、过小特征值和状态变化，让求出的权重对日期与参数的小变化保持可接受的稳定性。', formula:'max_w αᵀw−λwᵀΣw−Cost(Δw)\nΣ = XFXᵀ+D', applications:['均值方差优化。','指数增强权重求解。','市场中性风险约束。'], method:['检查F和D的正定性。','设置特征值下限或收缩。','加入个股与暴露约束。','对风险参数做敏感度测试。','检查权重集中和换手。'], pitfalls:'风险矩阵数值可逆并不代表经济上稳定，估计误差仍可能让优化器押注虚假的低风险方向。'},
+      '构造个股风格暴露': {essence:'从财务、价格和交易数据构造规模、价值、动量、质量、Beta和流动性等暴露。各指标经过时间对齐、异常处理和截面标准化后，才能用于风险模型或选股。', formula:'StyleExposure_i = Σ_j a_j z_{ij}', applications:['Barra风格风险模型。','多因子选股。','基金风格分析。'], method:['确定经济定义和原始指标。','按发布日期对齐。','去极值并处理缺失。','在当期截面标准化。','检验覆盖率与跨期稳定性。'], pitfalls:'使用财报期末日期代替公告日期会带入未来信息。不同市场沿用同一阈值也可能扭曲暴露。'},
+      '生成组合和基准的主动暴露': {essence:'主动暴露表达组合相对基准在某个因子上的偏离。它把选股结果翻译成风险语言，便于发现策略是否意外押注规模、行业或波动率。', formula:'b_active = Xᵀ(w_p−w_b)', applications:['指数增强监控。','基金风格偏离报告。','优化器暴露约束。'], method:['对齐组合与基准权重。','使用同一暴露矩阵。','计算主动权重。','按行业与风格汇总。','设置预警和约束边界。'], pitfalls:'基准权重、组合权重和暴露日期错位，会制造虚假的主动偏离。'},
+      '产生每日风格和行业因子收益': {essence:'每天用期初暴露解释下一期股票收益，回归系数就是当日因子收益。连续保存后可以分析风险、归因和风格轮动。', formula:'f_t = (XᵀWX)⁻¹XᵀWr_t', applications:['构建风险模型历史。','风格收益监控。','组合收益归因。'], method:['确定股票样本与权重。','使用期初暴露。','施加行业识别约束。','处理极端收益。','保存系数与残差并做加总检查。'], pitfalls:'停牌、涨跌停和异常收益处理会影响当日因子收益，规则需要固定并可追溯。'},
+      '生成特质收益序列': {essence:'特质收益是资产收益减去行业和风格解释部分后的残差。它用于估计特质波动，也能判断选股收益是否来自公共暴露。', formula:'u_t = r_t−X_{t−1}f_t', applications:['估计个股特质风险。','分解选股收益。','检查遗漏的共同因子。'], method:['完成每日截面回归。','保存每只股票残差。','处理缺失和上市期。','检查残差相关。','按滚动窗口估计波动。'], pitfalls:'残差仍可能含有供应关系、事件或行业子结构的共同变化，直接假设完全独立会低估风险。'},
+      '指数增强风险预算': {essence:'把允许的跟踪误差分配给行业、风格、个股和交易风险。预算帮助判断某项主动仓位是否值得占用有限风险空间。', formula:'TE² = TE²_factor + TE²_specific', applications:['控制指数增强风险。','分配研究信号风险额度。','比较不同组合方案。'], method:['设定总TE目标。','分解当前风险贡献。','给主要因子和行业设边界。','比较边际Alpha与边际TE。','上线后监控实现TE。'], pitfalls:'风险预算过紧会把信号主要来源一起移除，过松会让少数行业或个股占据大部分风险。'},
+      '行业与风格偏离监控': {essence:'持续跟踪主动行业和风格暴露、风险贡献及其变化。偏离监控关注当前水平，也关注调仓导致的突然跳变。', formula:'ActiveExposure_t = X_tᵀ(w_{p,t}−w_{b,t})', applications:['盘前风险检查。','调仓前后比较。','基金风格稳定性分析。'], method:['每日更新组合和基准。','计算主动暴露。','对照历史区间和限制。','定位偏离来源股票。','记录调仓后的风险变化。'], pitfalls:'暴露位于限制内并不代表风险较低，因子波动和相关升高时，相同暴露会产生更大风险。'},
+      '解释风险来自哪些因子': {essence:'把组合公共风险分配给行业和风格因子，显示每个因子对总波动的贡献。这个结果依赖暴露、因子波动以及因子之间的相关。', formula:'RC_k = b_k(Fb)_k/σ_p', applications:['风险日报和投资委员会说明。','定位组合风险集中。','比较策略版本。'], method:['计算组合因子暴露。','得到Fb。','计算带符号贡献。','按行业和风格汇总。','检查贡献之和与总风险。'], pitfalls:'因子暴露较高时，风险贡献仍可能因对冲关系较低或为负，报告时要保留协方差影响。'},
+      '区分Alpha收益和风格收益': {essence:'用风险模型把期间收益分成行业、风格和特质部分。公共因子贡献解释组合随市场风格获得的收益，剩余部分更接近选股或特定事件贡献。', formula:'R_p ≈ b_{t−1}ᵀf_t + wᵀu_t', applications:['基金业绩归因。','检验多因子策略是否保留独立Alpha。','解释月度收益。'], method:['使用期初组合暴露。','匹配同期因子收益。','计算风格和行业贡献。','汇总特质贡献。','核对总收益并分析残差。'], pitfalls:'特质收益仍会包含模型遗漏和交易影响，直接把全部残差称为Alpha会高估主动能力。'},
+      '选择持有期': {essence:'把信号在多个未来期限的预测力与组合换手放在一起比较，选择成本后信息价值较高的持有期。', formula:'h* = argmax_h [GrossAlpha(h)−Cost(h)]', applications:['确定日频、周频或月频调仓。','为不同因子设置独立更新速度。'], method:['计算多期限IC曲线。','为每个期限重建组合。','估计换手和冲击。','比较成本后IR。','检查不同年份的稳定性。'], pitfalls:'选择IC峰值对应的期限，可能忽略仓位形成、成交延迟和真实成本。'},
+      '因子上线后的健康监控': {essence:'上线后同时监控IC、ICIR、分组收益、换手、暴露和净收益。预警需要结合短窗口和长期基线，判断变化来自噪声、市场状态还是数据问题。', formula:'Health_t = {IC, ICIR, Spread, Turnover, Exposure, NetPnL}', applications:['因子失效预警。','判断是否降低权重。','发现数据管道异常。'], method:['建立上线基线。','滚动计算预测和组合指标。','按行业与市值分层。','设置连续触发条件。','定位数据、交易或市场原因。'], pitfalls:'单一指标跌破阈值就停用因子，容易把正常噪声误判成结构失效。'},
+      '确定日频、周频或月频调仓': {essence:'调仓频率由信号更新速度、IC衰减、成本和风险漂移共同决定。相同信号在不同频率下需要重新生成权重和成交。', formula:'NetPnL(freq)=GrossPnL(freq)−Cost(Turnover(freq))', applications:['制定组合运行日历。','平衡信号新鲜度和交易成本。'], method:['测试多个固定频率。','加入缓冲区和成交限制。','使用漂移后的旧权重。','计算净收益与容量。','检查极端行情表现。'], pitfalls:'简单抽样月末信号无法代表真实月频策略，期间公司行为和风险漂移也需要处理。'},
+      '形成统一选股排序': {essence:'把多个标准化因子按权重合成综合分数，再按股票池内的相对位置形成排序。排序用于分组、选股或映射成预期收益。', formula:'Score_i = Σ_k a_k z_{ik}\nRank_i = rank(Score_i)', applications:['多因子选股。','构建多空组合。','指数增强候选排序。'], method:['统一因子方向和尺度。','处理相关与缺失。','建立等权基线。','走步估计合成权重。','检查排序稳定与行业结构。'], pitfalls:'综合分数较高可能来自多个高度相似因子重复计票，需要先处理同类信息。'},
+      '指数增强': {essence:'在接近基准风险结构的条件下，用股票选择获得主动收益。组合构建同时处理Alpha、跟踪误差、行业风格偏离、换手和流动性。', formula:'max_w αᵀ(w−w_b)−λTE²−Cost(Δw)', applications:['宽基指数增强。','行业指数增强。','量化主动基金。'], method:['确定基准和股票池。','生成预期收益。','输入风险和成本模型。','设置跟踪误差及暴露约束。','监控主动收益和实现TE。'], pitfalls:'为了压低跟踪误差加入过多约束，会让组合接近基准并削弱Alpha。'},
+      '市场中性选股': {essence:'市场中性组合通过多空仓位压低市场、行业和风格暴露，保留个股相对收益。总敞口、借券和融资风险仍然需要单独管理。', formula:'max_w αᵀw−λwᵀΣw\ns.t. 1ᵀw≈0, Xᵀw≈0', applications:['股票统计套利。','因子纯收益组合。','相对价值交易。'], method:['建立可卖空股票池。','生成多空预期收益。','控制市场和风格暴露。','加入借券与流动性成本。','监控Gross、Net和逼空风险。'], pitfalls:'净敞口接近零仍可能拥有较高总敞口和共同平仓风险。'},
+      '建立可信样本外结果': {essence:'用严格时间切分让每个预测只使用当时已知数据。样本外结果应保留完整连续时间段，并覆盖不同波动和流动性状态。', formula:'Prediction_{t+1}=Model(Data_{≤t})', applications:['比较机器学习模型。','判断研究结果是否可上线。'], method:['固定训练、验证和测试时间。','设置标签隔离区。','逐期保存真实预测。','只在验证集调参。','最终测试集只评估一次。'], pitfalls:'不断查看测试结果并修改模型，会让样本外结果逐渐失去独立性。'},
+      '评估状态变化下的稳定性': {essence:'把样本外表现按牛熊、波动、流动性和宏观状态分组，观察模型优势是否集中在少数环境，并检查状态切换时的风险。', formula:'Metric_s = Metric(Predictions | State=s)', applications:['决定模型权重和适用市场。','设计状态风控。'], method:['事前定义状态变量。','使用当时可得状态。','分组计算预测和交易指标。','检查样本量与置信区间。','分析状态切换。'], pitfalls:'事后按收益表现挑选状态，会把结果重新拟合到历史。'},
+      '判断模型能否上线': {essence:'上线判断覆盖预测增量、组合净收益、风险暴露、容量、稳定性和运行成本。模型需要在统一组合规则下胜过简单基线。', formula:'IncrementalNetValue = NetMetric_model−NetMetric_baseline', applications:['模型准入评审。','分配线上资金。','决定保留或停用模型。'], method:['锁定样本外预测。','使用统一权重规则。','加入真实成本和限制。','比较简单基线。','完成压力测试与运行检查。'], pitfalls:'单看预测准确率或样本外夏普率，会忽略容量、交易集中和模型维护成本。'},
+      '把价格转换为统一波动率报价': {essence:'使用同一计价模型把不同执行价和期限的期权价格反解成隐含波动率，方便比较微笑与期限结构。', formula:'σ_imp = BS⁻¹(Price;F,K,T,r)', applications:['构建隐含波动率曲面。','比较期权相对贵贱。','计算希腊字母。'], method:['清洗可成交报价。','校准远期、利率和分红。','按期权逐点求根。','检查价格重建误差。','标记低Vega报价。'], pitfalls:'隐含波动率依赖定价输入，远期或分红估计偏差会被误认为曲面形状。'},
+      '生成连续到期曲面': {essence:'在执行价和期限之间平滑离散报价，使任意标准点都能获得一致IV。期限方向使用总方差更容易维持日历无套利。', formula:'w(k,T)=σ²_imp(k,T)T', applications:['非标准期限定价。','组合风险重估。','计算曲面希腊字母。'], method:['逐期限拟合微笑。','建立统一货币度网格。','沿期限插值总方差。','检查蝶式和日历套利。','跨日期平滑参数。'], pitfalls:'平滑过强会忽略事件期限，平滑过弱会让曲面随报价噪声跳动。'},
+      '用标的对冲方向风险': {essence:'按组合净Delta建立反向标的仓位，抵消期权价格对标的小幅变化。对冲数量要包含合约方向、数量和乘数。', formula:'Shares = −Σ_j Position_j×Multiplier_j×Delta_j', applications:['期权做市。','波动率套利。','结构化产品风险管理。'], method:['按最新曲面计算Delta。','汇总到标的层。','计算反向标的数量。','按阈值或时间再平衡。','分解对冲PnL和成本。'], pitfalls:'Delta只覆盖局部一阶风险，跳跃、Gamma和曲面变化仍会造成对冲误差。'},
+      '决定Delta对冲频率': {essence:'高Gamma、临近到期和高波动环境需要更密切地控制Delta漂移，但频繁交易会增加价差和冲击。频率应由风险阈值和成本共同决定。', formula:'Rehedge when |NetDelta|>Limit\nTotalLoss≈HedgeError+Cost', applications:['期权做市再平衡。','离散对冲策略设计。'], method:['估计Gamma与价格波动。','设置Delta风险限额。','模拟多种触发规则。','加入成交成本。','比较尾部误差和平均成本。'], pitfalls:'固定时间间隔无法适应波动变化，极端跳跃也无法通过提高常规频率完全消除。'},
+      '使用ES和压力测试补充VaR': {essence:'VaR给出损失分位点，ES描述超过分位点后的平均损失，压力测试直接评估指定危机情景。三者结合能同时看到阈值、严重度和结构冲击。', formula:'ES_α=E[L|L≥VaR_α]', applications:['套利策略风险限额。','组合尾部报告。','保证金和现金规划。'], method:['计算历史或模型VaR。','估计对应ES。','加入历史和假设压力情景。','模拟流动性和相关变化。','回测预测与实际损失。'], pitfalls:'使用短历史估计高置信度ES会产生较大误差，压力情景也需要定期更新。'},
+      '制定去杠杆和保证金预案': {essence:'根据价格、波动、相关、点差和保证金冲击，估算不同阶段的现金需求与可减仓规模，提前确定减仓顺序。', formula:'LiquidityBuffer ≥ MarginCall + TradingCost + CashOutflow', applications:['杠杆套利风险管理。','危机现金规划。','融资方集中管理。'], method:['列出融资和保证金条款。','设计多档危机情景。','估算现金缺口。','按流动性制定减仓顺序。','设置触发阈值和责任人。'], pitfalls:'仅按最终损失准备资金，会忽略期间追加保证金和无法立即成交造成的现金压力。'},
+      '建立执行绩效报告': {essence:'以决策价、到达价或中间价为基准，按订单、股票、时段和订单方式统计实施缺口，并分解价差、冲击、延迟与未成交成本。', formula:'IS = Side×(FillPrice−DecisionPrice)+MissCost+Fees', applications:['交易团队绩效评估。','成本模型校准。','研究Alpha净值还原。'], method:['保存决策和订单时间戳。','确定一致基准。','处理部分成交与未成交。','按成本来源分解。','与预估成本比较。'], pitfalls:'只统计已成交订单会系统性遗漏机会成本，也会让被动订单表现看起来过好。'},
+      '选择限价单或市价单': {essence:'市价或主动限价单提高成交概率并支付价差，被动限价单争取价差但承担排队和逆向选择。选择取决于Alpha寿命和未成交代价。', formula:'UseActive if ExpectedAlphaDecay > SpreadSaving−AdverseSelection', applications:['高频信号执行。','做市库存调整。','大额订单紧急成交。'], method:['估计Alpha半衰期。','预测队列成交率。','估计成交后Markout。','比较主动与被动期望成本。','按盘口状态动态切换。'], pitfalls:'静态使用被动订单会在信息较强时错失成交，并集中获得不利成交。'},
+      '决定拆单速度': {essence:'快速执行减少价格风险和机会成本，同时提高市场冲击。慢速执行降低参与率，也延长信号暴露时间，最优速度取决于订单规模、流动性和Alpha衰减。', formula:'TotalCost(v)=Impact(v)+TimingRisk(v)+MissCost(v)', applications:['大额母单执行。','容量管理。','最优执行算法。'], method:['估计订单占ADV比例。','预测冲击曲线。','估计价格风险和Alpha衰减。','求解执行轨迹。','根据实时成交更新。'], pitfalls:'只最小化冲击会让订单执行过慢，信号消失后的机会成本可能更高。'},
+      '评估做市和被动执行': {essence:'结合队列位置、成交概率、价差收入与成交后Markout，评估被动报价的真实期望收益。', formula:'ExpectedPnL = FillProb×(SpreadCapture−Markout−Fees)', applications:['做市策略评估。','被动执行规则选择。','报价档位优化。'], method:['重建逐笔订单簿。','估计队列位置。','模拟部分成交。','计算多期限Markout。','与真实成交率校准。'], pitfalls:'触价即成交的回测假设会高估成交率，也会漏掉队列前方挂单。'},
+      '校准成本模型': {essence:'用真实订单和成交数据估计价差、冲击、延迟及机会成本，让回测和优化器使用的成本更接近实际。', formula:'Cost_i = c₁Spread_i|Q| + c₂σ_i√(Q/V_i)|Q| + Fees', applications:['组合优化换手惩罚。','策略容量评估。','执行算法比较。'], method:['整理订单全流程数据。','选择基准价格。','按流动性与参与率分桶。','拟合并验证成本参数。','定期检查状态漂移。'], pitfalls:'从表现较好的成交样本拟合，会低估未成交和困难订单的真实成本。'}
+    };
+
+    function normalizeApplicationTitle(text) {
+      return String(text || '').replace(/[。；;，,]+$/g, '').trim();
+    }
+
+    function createApplicationNode(parent, text, index) {
+      const title = normalizeApplicationTitle(text);
+      const detail = applicationDetails[title] || {};
+      return {
+        id:`${parent.id}-application-${index + 1}`,
+        title,
+        subtitle:detail.subtitle || '场景、计算与落地',
+        essence:detail.essence || `${title}是“${parent.title}”在研究或交易中的一个落地场景。使用时需要把输入数据、计算口径、风险限制和验证标准写清楚，才能从概念转成稳定流程。`,
+        formula:detail.formula || parent.formula || '应用结果 = 输入数据 × 模型关系 + 约束调整',
+        applications:detail.applications || [`在“${parent.title}”相关研究中执行这一任务。`,`把结果接入组合、风险或交易决策。`],
+        method:detail.method || [...(parent.method || []).slice(0, 4), '保存输入、输出和异常记录，并用样本外结果检验。'],
+        pitfalls:detail.pitfalls || `“${title}”需要沿用“${parent.title}”的数据时间、单位和风险口径。只看计算结果，忽略输入质量和真实约束，会让应用效果失真。`,
+        source:parent.source,
+        applicationOf:parent.id,
+        parent:parent.parent,
+        group:parent.group,
+        category:parent.category,
+        related:[]
+      };
+    }
+
+    const applicationNodes = {};
+    allSubtopics.forEach(parent => {
+      applicationNodes[parent.id] = (parent.applications || []).map((text, index) => createApplicationNode(parent, text, index));
+    });
+    const allApplicationNodes = Object.values(applicationNodes).flat();
+
+    const topicById = new Map(allTopics.map(t => [t.id, t]));
+    const subtopicById = new Map(allSubtopics.map(t => [t.id, t]));
+    const applicationById = new Map(allApplicationNodes.map(t => [t.id, t]));
+    const groupById = new Map(groups.map(g => [g.id, g]));
+    const rootDefault = {
+      id:'quant', title:'从一张图开始', summary:'选择任意节点，右侧会展示它解决的问题、关键公式和实际用法。搜索结果会自动展开所在主题。',
+      essence:'量化研究的共同任务，是把经济假设或市场行为写成可检验的信号，再把信号映射为仓位，同时控制风险与交易成本。',
+      formula:'净收益 = 预测收益 − 风险成本 − 交易成本',
+      applications:['因子回答收益差异来自哪些可重复特征。','模型回答变量如何共同变化，以及不确定性如何传播。','策略回答预测怎样转成仓位、成交和风险预算。'],
+      method:['提出清楚且可证伪的假设。','保持数据时间戳和样本外验证严格。','把成本、容量和尾部放进最终判断。'],
+      pitfalls:'公式精致并不保证策略有效。数据质量、交易规则和状态变化往往决定真实结果。',
+      related:['factor-exposure','barra','multifactor-stock']
+    };
+
+    const svg = document.getElementById('knowledgeGraph');
+    const stage = document.getElementById('graphStage');
+    const emptyState = document.getElementById('graphEmpty');
+    const NS = 'http://www.w3.org/2000/svg';
+    let selectedGroup = 'factor-foundation';
+    let selectedTopic = null;
+    let selectedSubtopic = null;
+    let selectedApplication = null;
+    let activeFilter = 'all';
+    let searchTerm = '';
+    let view = { x: 0, y: 0, w: 2200, h: 2080 };
+    let dragging = false;
+    let dragStart = null;
+
+    function svgEl(tag, attrs={}) {
+      const el = document.createElementNS(NS, tag);
+      Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k, v));
+      return el;
+    }
+
+    function roundedNode(parent, node, x, y, width, height, kind, category, subtitle='') {
+      const g = svgEl('g', { class:`node ${kind} ${category || ''}`, transform:`translate(${x},${y})`, 'data-id':node.id, role:'button', 'aria-label':node.title });
+      const rect = svgEl('rect', { x:0, y:0, width, height, rx:18 });
+      const title = svgEl('text', { x:width/2, y:subtitle ? height/2-4 : height/2+6, 'text-anchor':'middle' });
+      title.textContent = node.title;
+      g.append(rect, title);
+      if (subtitle) {
+        const sub = svgEl('text', { x:width/2, y:height/2+21, 'text-anchor':'middle', class:'node-sub' });
+        sub.textContent = subtitle;
+        g.append(sub);
+      }
+      g.addEventListener('click', ev => { ev.stopPropagation(); handleNodeClick(kind, node); });
+      g.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') handleNodeClick(kind, node); });
+      parent.appendChild(g);
+      return { g, x, y, width, height, cx:x+width/2, cy:y+height/2 };
+    }
+
+    function addEdge(parent, a, b, className='edge', shape='elbow') {
+      const startY = a.y + a.height;
+      const endY = b.y;
+      const midY = startY + Math.max(28, (endY - startY) * .5);
+      const d = shape === 'curve'
+        ? `M ${a.cx} ${startY} C ${a.cx} ${midY}, ${b.cx} ${midY}, ${b.cx} ${endY}`
+        : `M ${a.cx} ${startY} L ${a.cx} ${midY} L ${b.cx} ${midY} L ${b.cx} ${endY}`;
+      const path = svgEl('path', { class:className, d });
+      parent.appendChild(path);
+    }
+
+    function categoryVisible(category) { return activeFilter === 'all' || activeFilter === category; }
+
+    function renderGraph() {
+      svg.innerHTML = '';
+      svg.setAttribute('viewBox', `${view.x} ${view.y} ${view.w} ${view.h}`);
+      const edgesLayer = svgEl('g');
+      const nodesLayer = svgEl('g');
+      svg.append(edgesLayer, nodesLayer);
+
+      const root = roundedNode(nodesLayer, {id:'quant-root',title:'量化投资'}, 950, 55, 300, 92, 'root', '', '');
+      const catPositions = { factor:210, model:950, strategy:1690 };
+      const categoryBoxes = {};
+      Object.entries(categories).forEach(([id,cat]) => {
+        categoryBoxes[id] = roundedNode(nodesLayer, {id,title:cat.title}, catPositions[id], 235, 300, 90, 'category', id, cat.subtitle);
+        addEdge(edgesLayer, root, categoryBoxes[id], 'edge trunk-edge', 'curve');
+      });
+
+      const groupsByCat = { factor:[], model:[], strategy:[] };
+      groups.forEach(g => groupsByCat[g.category].push(g));
+      const groupBoxes = {};
+      Object.entries(groupsByCat).forEach(([cat, list]) => {
+        const base = catPositions[cat] - 75;
+        const topY = 440;
+        const rows = Math.ceil(list.length / 2);
+        const busX = catPositions[cat] + 150;
+        const busStartY = categoryBoxes[cat].y + categoryBoxes[cat].height;
+        const busEndY = topY + (rows - 1) * 140 + 41;
+        edgesLayer.appendChild(svgEl('path', { class:'edge branch-edge', d:`M ${busX} ${busStartY} L ${busX} ${busEndY}` }));
+        list.forEach((group, idx) => {
+          const col = idx % 2;
+          const row = Math.floor(idx / 2);
+          const x = base + col * 245;
+          const y = 440 + row * 140;
+          groupBoxes[group.id] = roundedNode(nodesLayer, group, x, y, 210, 82, 'group', cat, group.subtitle);
+          edgesLayer.appendChild(svgEl('path', { class:'edge branch-edge', d:`M ${busX} ${groupBoxes[group.id].cy} L ${groupBoxes[group.id].cx} ${groupBoxes[group.id].cy}` }));
+          if (group.id === selectedGroup) groupBoxes[group.id].g.classList.add('selected');
+        });
+      });
+
+      const selected = groupById.get(selectedGroup);
+      let expandedTopics = selected ? allTopics.filter(t => t.group === selectedGroup) : [];
+      if (searchTerm) {
+        expandedTopics = allTopics.filter(matchesSearch);
+      }
+
+      const topicBoxes = {};
+      if (expandedTopics.length) {
+        const zone = svgEl('rect', { class:'topic-zone', x:55, y:835, width:2090, height:390, rx:24 });
+        const zoneLabel = svgEl('text', { class:'topic-zone-label', x:82, y:866 });
+        zoneLabel.textContent = searchTerm ? `搜索结果 · ${expandedTopics.length} 个节点` : `${selected?.title || '专题'} · 点击知识点查看完整内容`;
+        nodesLayer.append(zone, zoneLabel);
+        const guideSource = searchTerm ? categoryBoxes[expandedTopics[0]?.category] : groupBoxes[selectedGroup];
+        if (guideSource) {
+          const guideTarget = { x:1070, y:835, width:0, height:0, cx:1070, cy:835 };
+          addEdge(edgesLayer, guideSource, guideTarget, 'edge topic-edge', 'elbow');
+        }
+      }
+      expandedTopics.slice(0, 18).forEach((topic, idx) => {
+        const col = idx % 6;
+        const row = Math.floor(idx / 6);
+        const x = 90 + col * 350;
+        const y = 875 + row * 125;
+        topicBoxes[topic.id] = roundedNode(nodesLayer, topic, x, y, 300, 88, 'topic', topic.category, topic.subtitle);
+        if (selectedTopic === topic.id) topicBoxes[topic.id].g.classList.add('selected');
+        if (searchTerm && matchesSearch(topic)) topicBoxes[topic.id].g.classList.add('match');
+      });
+
+      const drillParent = selectedTopic ? topicById.get(selectedTopic) : null;
+      const drillChildren = drillParent ? (subtopics[drillParent.id] || []) : [];
+      if (drillChildren.length && !searchTerm) {
+        const rows = Math.ceil(drillChildren.length / 5);
+        const zoneY = 1265;
+        const zoneHeight = 70 + rows * 112;
+        const zone = svgEl('rect', { class:'topic-zone', x:55, y:zoneY, width:2090, height:zoneHeight, rx:24 });
+        const zoneLabel = svgEl('text', { class:'topic-zone-label', x:82, y:zoneY + 32 });
+        zoneLabel.textContent = `${drillParent.title} · 进一步拆解 · ${drillChildren.length} 个节点`;
+        nodesLayer.append(zone, zoneLabel);
+        const parentBox = topicBoxes[drillParent.id];
+        if (parentBox) {
+          const guideTarget = { x:1070, y:zoneY, width:0, height:0, cx:1070, cy:zoneY };
+          addEdge(edgesLayer, parentBox, guideTarget, 'edge subtopic-edge', 'elbow');
+        }
+        drillChildren.forEach((child, idx) => {
+          const col = idx % 5;
+          const row = Math.floor(idx / 5);
+          const x = 85 + col * 414;
+          const y = zoneY + 54 + row * 112;
+          const box = roundedNode(nodesLayer, child, x, y, 355, 82, 'subtopic', child.category, child.subtitle);
+          if (selectedSubtopic === child.id) box.g.classList.add('selected');
+        });
+      }
+
+      const applicationParent = selectedSubtopic ? subtopicById.get(selectedSubtopic) : null;
+      const applicationChildren = applicationParent ? (applicationNodes[applicationParent.id] || []) : [];
+      if (applicationChildren.length && !searchTerm) {
+        const drillRows = Math.ceil(drillChildren.length / 5);
+        const zoneY = 1265 + 70 + drillRows * 112 + 34;
+        const rows = Math.ceil(applicationChildren.length / 4);
+        const zoneHeight = 70 + rows * 112;
+        const zone = svgEl('rect', { class:'topic-zone', x:55, y:zoneY, width:2090, height:zoneHeight, rx:24 });
+        const zoneLabel = svgEl('text', { class:'topic-zone-label', x:82, y:zoneY + 32 });
+        zoneLabel.textContent = `${applicationParent.title} · 具体运用 · ${applicationChildren.length} 个节点`;
+        nodesLayer.append(zone, zoneLabel);
+        const parentElement = nodesLayer.querySelector(`[data-id="${applicationParent.id}"]`);
+        if (parentElement) {
+          const transform = parentElement.getAttribute('transform').match(/translate\(([^,]+),([^\)]+)\)/);
+          if (transform) {
+            const parentBox = {x:Number(transform[1]), y:Number(transform[2]), width:355, height:82, cx:Number(transform[1])+177.5, cy:Number(transform[2])+41};
+            const guideTarget = { x:1070, y:zoneY, width:0, height:0, cx:1070, cy:zoneY };
+            addEdge(edgesLayer, parentBox, guideTarget, 'edge application-edge', 'elbow');
+          }
+        }
+        applicationChildren.forEach((child, idx) => {
+          const col = idx % 4;
+          const row = Math.floor(idx / 4);
+          const x = 90 + col * 515;
+          const y = zoneY + 54 + row * 112;
+          const box = roundedNode(nodesLayer, child, x, y, 450, 82, 'application', child.category, child.subtitle);
+          if (selectedApplication === child.id) box.g.classList.add('selected');
+        });
+      }
+
+      if (activeFilter !== 'all') {
+        svg.querySelectorAll('.node').forEach(node => {
+          if (node.classList.contains('root')) return;
+          if (!node.classList.contains(activeFilter)) node.classList.add('dimmed');
+        });
+      }
+
+      const count = searchTerm ? expandedTopics.length : 1;
+      emptyState.classList.toggle('visible', count === 0);
+    }
+
+    function matchesSearch(topic) {
+      const q = searchTerm.toLowerCase().trim();
+      if (!q) return true;
+      const group = groupById.get(topic.group);
+      const children = subtopics[topic.id] || [];
+      const childText = children.flatMap(child => {
+        const uses = applicationNodes[child.id] || [];
+        return [child.title, child.subtitle, child.essence, child.formula, ...(child.applications || []), ...(child.method || []), ...uses.flatMap(use => [use.title, use.essence, use.formula, ...(use.method || [])])];
+      });
+      const haystack = [topic.title, topic.subtitle, topic.essence, topic.formula, group?.title, ...topic.applications, ...topic.method, ...childText].join(' ').toLowerCase();
+      return haystack.includes(q) && categoryVisible(topic.category);
+    }
+
+    function handleNodeClick(kind, node) {
+      if (kind === 'root') {
+        selectedTopic = null;
+        selectedSubtopic = null;
+        selectedApplication = null;
+        renderGraph();
+        showDetail(rootDefault);
+      } else if (kind === 'category') {
+        selectedTopic = null;
+        selectedSubtopic = null;
+        selectedApplication = null;
+        activeFilter = node.id;
+        document.querySelectorAll('.filter').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.filter === activeFilter)));
+        const first = groups.find(g => g.category === node.id);
+        if (first) selectedGroup = first.id;
+        renderGraph();
+        showCategoryDetail(node.id);
+      } else if (kind === 'group') {
+        selectedGroup = node.id;
+        selectedTopic = null;
+        selectedSubtopic = null;
+        selectedApplication = null;
+        searchTerm = '';
+        document.getElementById('searchInput').value = '';
+        renderGraph();
+        showGroupDetail(node);
+      } else if (kind === 'subtopic') {
+        selectedGroup = node.group;
+        selectedTopic = node.parent;
+        selectedSubtopic = node.id;
+        selectedApplication = null;
+        renderGraph();
+        showDetail(node);
+      } else if (kind === 'application') {
+        selectedGroup = node.group;
+        selectedTopic = node.parent;
+        selectedSubtopic = node.applicationOf;
+        selectedApplication = node.id;
+        renderGraph();
+        showDetail(node);
+      } else {
+        selectedGroup = node.group;
+        selectedTopic = node.id;
+        selectedSubtopic = null;
+        selectedApplication = null;
+        searchTerm = '';
+        document.getElementById('searchInput').value = '';
+        renderGraph();
+        showDetail(node);
+      }
+    }
+
+    function setList(id, items) {
+      const list = document.getElementById(id);
+      list.innerHTML = '';
+      items.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        list.appendChild(li);
+      });
+    }
+
+    function setDeepDive(items) {
+      const section = document.getElementById('deepDiveSection');
+      const wrap = document.getElementById('detailDeepDive');
+      wrap.innerHTML = '';
+      section.hidden = !items?.length;
+      (items || []).forEach(item => {
+        const card = document.createElement('article');
+        card.className = 'deep-item';
+        const title = document.createElement('strong');
+        title.textContent = item.title;
+        const copy = document.createElement('p');
+        copy.textContent = item.text;
+        card.append(title, copy);
+        if (item.formula) {
+          const formula = document.createElement('code');
+          formula.textContent = item.formula;
+          card.appendChild(formula);
+        }
+        wrap.appendChild(card);
+      });
+    }
+
+    function showDetail(node) {
+      const group = node.group ? groupById.get(node.group) : null;
+      const cat = node.category ? categories[node.category] : null;
+      const parent = node.parent ? topicById.get(node.parent) : null;
+      const applicationParent = node.applicationOf ? subtopicById.get(node.applicationOf) : null;
+      document.getElementById('detailPath').textContent = parent
+        ? `${cat.title} / ${group.title} / ${parent.title}${applicationParent ? ` / ${applicationParent.title}` : ''}`
+        : group ? `${cat.title} / ${group.title}` : '量化投资';
+      document.getElementById('detailDot').style.background = cat ? cat.color : 'var(--accent)';
+      document.getElementById('detailTitle').textContent = node.title;
+      document.getElementById('detailSummary').textContent = node.subtitle || node.summary || '';
+      document.getElementById('detailEssence').textContent = node.essence;
+      document.getElementById('detailFormula').textContent = node.formula || '这个节点以概念关系为主。';
+      document.getElementById('formulaSection').hidden = !node.formula;
+      const source = document.getElementById('detailSource');
+      source.hidden = !node.source;
+      source.textContent = node.source || '';
+      setDeepDive(node.deepDive);
+      document.getElementById('applicationsHeading').textContent = node.applicationOf ? '使用场景' : '具体运用';
+      document.getElementById('methodHeading').textContent = node.applicationOf ? '落地步骤' : '研究步骤';
+      setList('detailApplications', node.applications || []);
+      setList('detailMethod', node.method || []);
+      const checklistSection = document.getElementById('checklistSection');
+      checklistSection.hidden = !node.checklist?.length;
+      setList('detailChecklist', node.checklist || []);
+      document.getElementById('detailPitfalls').textContent = node.pitfalls || '使用时需要结合数据口径和市场制度。';
+      const interviewSection = document.getElementById('interviewSection');
+      interviewSection.hidden = !node.interview;
+      document.getElementById('detailInterview').textContent = node.interview || '';
+      const related = document.getElementById('detailRelated');
+      related.innerHTML = '';
+      const relatedIds = node.applicationOf && !(node.related || []).length
+        ? [node.applicationOf, ...(applicationNodes[node.applicationOf] || []).filter(item => item.id !== node.id).slice(0, 4).map(item => item.id)]
+        : node.parent && !(node.related || []).length
+        ? [node.parent, ...(subtopics[node.parent] || []).filter(item => item.id !== node.id).slice(0, 5).map(item => item.id)]
+        : (node.related || []);
+      relatedIds.forEach(id => {
+        const target = topicById.get(id) || subtopicById.get(id) || applicationById.get(id);
+        if (!target) return;
+        const btn = document.createElement('button');
+        btn.className = 'chip';
+        btn.type = 'button';
+        btn.textContent = target.title;
+        btn.addEventListener('click', () => {
+          selectedGroup = target.group;
+          selectedTopic = target.parent || target.id;
+          selectedSubtopic = target.applicationOf || (target.parent ? target.id : null);
+          selectedApplication = target.applicationOf ? target.id : null;
+          searchTerm = '';
+          document.getElementById('searchInput').value = '';
+          renderGraph();
+          showDetail(target);
+          document.getElementById('detailCard').scrollIntoView({behavior:'smooth', block:'start'});
+        });
+        related.appendChild(btn);
+      });
+    }
+
+    function showGroupDetail(group) {
+      const groupTopics = allTopics.filter(t => t.group === group.id);
+      const cat = categories[group.category];
+      showDetail({
+        title:group.title, subtitle:group.subtitle, category:group.category, group:group.id,
+        essence:`这一主题包含 ${groupTopics.length} 个知识节点。选择下方节点，可以查看公式、使用方法和风险。`,
+        formula:'研究价值 = 可解释性 × 样本外稳定性 × 可交易性',
+        applications:groupTopics.slice(0,4).map(t => t.title),
+        method:['先理解每个节点解决的问题。','再看公式中的变量和假设。','随后用真实数据检验，并加入交易成本。'],
+        pitfalls:'同一概念在不同市场和数据频率下会有不同口径，研究时需要保持定义一致。',
+        related:groupTopics.slice(0,6).map(t => t.id)
+      });
+      document.getElementById('detailPath').textContent = `${cat.title} / ${group.title}`;
+    }
+
+    function showCategoryDetail(category) {
+      const cat = categories[category];
+      const categoryGroups = groups.filter(g => g.category === category);
+      const copy = {
+        factor:'因子把可观测特征和未来收益、风险联系起来。研究重点是信息来源、稳定性、衰减、相关性和交易成本。',
+        model:'模型用数学结构描述收益、风险和状态变化。评价模型时，我更看重假设是否清楚、参数是否稳定，以及样本外误差。',
+        strategy:'策略把信号转成仓位和成交。真正结果来自预测优势、风险控制、容量和执行成本的共同作用。'
+      };
+      showDetail({
+        title:cat.title, subtitle:cat.subtitle, category,
+        essence:copy[category],
+        formula:category === 'strategy' ? '净收益 = 毛收益 − 交易成本 − 融资成本' : '观测数据 = 可解释部分 + 随机扰动',
+        applications:categoryGroups.map(g => g.title),
+        method:['选择一个主题展开。','从核心机制理解公式。','用样本外和真实成本验证。'],
+        pitfalls:'知识节点之间高度关联，单独使用某个指标容易忽略风险传导。',
+        related:categoryGroups.flatMap(g => allTopics.filter(t => t.group === g.id).slice(0,1).map(t => t.id))
+      });
+    }
+
+    document.querySelectorAll('.filter').forEach(button => {
+      button.addEventListener('click', () => {
+        activeFilter = button.dataset.filter;
+        selectedTopic = null;
+        selectedSubtopic = null;
+        selectedApplication = null;
+        document.querySelectorAll('.filter').forEach(b => b.setAttribute('aria-pressed', String(b === button)));
+        if (activeFilter !== 'all') {
+          const first = groups.find(g => g.category === activeFilter);
+          if (first && groupById.get(selectedGroup)?.category !== activeFilter) selectedGroup = first.id;
+        }
+        renderGraph();
+      });
+    });
+
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', () => {
+      searchTerm = searchInput.value.trim();
+      selectedTopic = null;
+      selectedSubtopic = null;
+      selectedApplication = null;
+      const firstMatch = allTopics.find(matchesSearch);
+      if (firstMatch) selectedGroup = firstMatch.group;
+      renderGraph();
+      if (firstMatch) showDetail(firstMatch);
+    });
+    document.getElementById('clearSearch').addEventListener('click', () => {
+      searchInput.value = '';
+      searchTerm = '';
+      selectedApplication = null;
+      renderGraph();
+    });
+
+    function applyView() {
+      svg.setAttribute('viewBox', `${view.x} ${view.y} ${view.w} ${view.h}`);
+    }
+    function zoom(factor) {
+      const cx = view.x + view.w / 2;
+      const cy = view.y + view.h / 2;
+      view.w = Math.max(950, Math.min(3400, view.w * factor));
+      view.h = view.w * 2080 / 2200;
+      view.x = cx - view.w / 2;
+      view.y = cy - view.h / 2;
+      applyView();
+    }
+    document.getElementById('zoomIn').addEventListener('click', () => zoom(.82));
+    document.getElementById('zoomOut').addEventListener('click', () => zoom(1.22));
+    document.getElementById('resetView').addEventListener('click', () => { view={x:0,y:0,w:2200,h:2080}; applyView(); });
+    stage.addEventListener('wheel', ev => { ev.preventDefault(); zoom(ev.deltaY > 0 ? 1.1 : .9); }, {passive:false});
+    stage.addEventListener('pointerdown', ev => {
+      if (ev.target.closest('.node')) return;
+      dragging = true;
+      dragStart = { px:ev.clientX, py:ev.clientY, x:view.x, y:view.y };
+      stage.classList.add('is-dragging');
+      stage.setPointerCapture(ev.pointerId);
+    });
+    stage.addEventListener('pointermove', ev => {
+      if (!dragging) return;
+      const scaleX = view.w / stage.clientWidth;
+      const scaleY = view.h / stage.clientHeight;
+      view.x = dragStart.x - (ev.clientX-dragStart.px)*scaleX;
+      view.y = dragStart.y - (ev.clientY-dragStart.py)*scaleY;
+      applyView();
+    });
+    stage.addEventListener('pointerup', ev => {
+      dragging = false;
+      stage.classList.remove('is-dragging');
+      if (stage.hasPointerCapture(ev.pointerId)) stage.releasePointerCapture(ev.pointerId);
+    });
+
+    document.getElementById('topicCount').textContent = allTopics.length + allSubtopics.length + allApplicationNodes.length;
+    document.getElementById('formulaCount').textContent = allTopics.filter(t => t.formula).length + allSubtopics.filter(t => t.formula).length + allApplicationNodes.filter(t => t.formula).length;
+    document.getElementById('sourceCount').textContent = sources.length;
+    const sourcesGrid = document.getElementById('sourcesGrid');
+    sources.forEach(source => {
+      const a = document.createElement('a');
+      a.className = 'source';
+      a.href = source.url;
+      a.target = '_blank';
+      a.rel = 'noreferrer';
+      a.innerHTML = `<strong>${source.title}</strong><span>${source.meta}</span>`;
+      sourcesGrid.appendChild(a);
+    });
+
+    renderGraph();
+    showDetail(rootDefault);
+  </script>
+</body>
+</html>

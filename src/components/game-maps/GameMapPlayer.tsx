@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { LogOut } from "lucide-react";
+import { LogOut, Network as NetworkIcon } from "lucide-react";
 import { getLevelConfig, GAME_MAP_LEVELS } from "./game-data";
 import { DIALOGUE_DATA } from "./dialogue-data";
 import { QUIZ_DATA } from "./quiz-data";
@@ -171,6 +171,8 @@ export function GameMapPlayer({
   const [showTour, setShowTour] = useState(false);
   const [showWallCastleTour, setShowWallCastleTour] = useState(false);
   const [showWallCastleWelcome, setShowWallCastleWelcome] = useState(false);
+  const [showKnowledgeMap, setShowKnowledgeMap] = useState(false);
+  const [knowledgeMapError, setKnowledgeMapError] = useState(false);
   // Agent unlock popup state
   const [showAgentUnlock, setShowAgentUnlock] = useState(false);
   const [unlockedAgentId, setUnlockedAgentId] = useState<string | null>(null);
@@ -1640,6 +1642,18 @@ if (levelId === 7) return "available"; // 临时开放，测试K线图学习
             </h2>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                setKnowledgeMapError(false);
+                setShowKnowledgeMap(true);
+              }}
+              aria-label="量化知识图谱"
+              title="量化知识图谱"
+              className="h-10 px-3 rounded-xl bg-[#EFF6FF] flex items-center gap-1.5 text-[#1D4ED8] hover:bg-[#DBEAFE] transition-all duration-200 text-xs font-semibold"
+            >
+              <NetworkIcon className="w-4 h-4" />
+              知识图谱
+            </button>
             <span className="text-xs font-bold text-[#D97706]">
               🪙 {progress.coins}
             </span>
@@ -1898,6 +1912,56 @@ if (levelId === 7) return "available"; // 临时开放，测试K线图学习
                 </button>
               );
             })}
+          </div>
+        )}
+
+        {/* 量化知识图谱全屏弹层 */}
+        {showKnowledgeMap && (
+          <div className="absolute inset-0 z-[200] flex flex-col bg-[#0F172A] animate-in fade-in duration-200">
+            {/* 顶部栏 */}
+            <div className="flex items-center justify-between px-4 py-3 bg-[#1E293B] border-b border-[#334155]">
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <NetworkIcon className="w-5 h-5 text-[#60A5FA]" />
+                量化知识图谱
+              </h2>
+              <button
+                onClick={() => setShowKnowledgeMap(false)}
+                className="h-9 px-4 rounded-lg bg-[#334155] text-white text-sm font-medium hover:bg-[#475569] transition-all duration-200 flex items-center gap-1.5"
+              >
+                ← 返回游戏
+              </button>
+            </div>
+            {/* iframe 主体 */}
+            <div className="flex-1 relative overflow-hidden bg-[#0F172A]">
+              {knowledgeMapError ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-[#94A3B8] gap-3">
+                  <div className="text-5xl">⚠️</div>
+                  <p className="text-sm font-medium">知识图谱加载失败，请重新打开</p>
+                  <button
+                    onClick={() => {
+                      setKnowledgeMapError(false);
+                      // 强制重新加载 iframe
+                      const iframe = document.getElementById("knowledge-map-iframe") as HTMLIFrameElement | null;
+                      if (iframe) {
+                        iframe.src = iframe.src;
+                      }
+                    }}
+                    className="mt-2 px-4 py-2 rounded-lg bg-[#1D4ED8] text-white text-sm font-medium hover:bg-[#1E40AF] transition-all"
+                  >
+                    重新加载
+                  </button>
+                </div>
+              ) : null}
+              <iframe
+                id="knowledge-map-iframe"
+                src="/quant-knowledge-map/index.html"
+                title="量化知识图谱"
+                className={`w-full h-full border-0 ${knowledgeMapError ? "opacity-0" : "opacity-100"} transition-opacity duration-300`}
+                onLoad={() => setKnowledgeMapError(false)}
+                onError={() => setKnowledgeMapError(true)}
+                style={{ overscrollBehavior: "contain" }}
+              />
+            </div>
           </div>
         )}
       </div>
