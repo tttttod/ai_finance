@@ -1813,7 +1813,7 @@ export function GameMapPlayer({
               className="absolute pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-500"
               style={{
                 left: "50%",
-                top: "15%",
+                top: "22%",
                 transform: "translate(-50%, -100%)",
               }}
             >
