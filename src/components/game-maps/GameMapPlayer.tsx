@@ -129,7 +129,6 @@ const WORLD_LOCATIONS: WorldLocation[] = [
   { id: 12, locationId: "wall-castle", name: "华尔堡", subtitle: "Wall Castle", x: 50, y: 23, type: "submap", mapId: "wallCastleMap" },
   { id: 13, locationId: "hotspot-volcano", name: "热点火山与追涨火箭", subtitle: "Hotspot Volcano & Rocket", x: 77, y: 33, type: "game", gameId: "hotspot-volcano" },
   { id: 14, locationId: "review-lighthouse", name: "复盘灯塔", subtitle: "Review Lighthouse", x: 17, y: 74, type: "game", gameId: "review-lighthouse" },
-  { id: 15, locationId: "bull-bear-parliament", name: "多空议会厅", subtitle: "Bull-Bear Parliament", x: 32, y: 6, type: "game", gameId: "bull-bear-parliament" },
 ];
 
 // ===== Props =====
@@ -171,6 +170,7 @@ export function GameMapPlayer({
   const [wallCastleLoaded, setWallCastleLoaded] = useState(false);
   const [showTour, setShowTour] = useState(false);
   const [showWallCastleTour, setShowWallCastleTour] = useState(false);
+  const [showWallCastleWelcome, setShowWallCastleWelcome] = useState(false);
   // Agent unlock popup state
   const [showAgentUnlock, setShowAgentUnlock] = useState(false);
   const [unlockedAgentId, setUnlockedAgentId] = useState<string | null>(null);
@@ -199,6 +199,20 @@ export function GameMapPlayer({
   useEffect(() => {
     saveTraderRoadProgress(progress);
   }, [progress]);
+
+  // 首次进入华尔堡 submap 时显示欢迎弹窗
+  useEffect(() => {
+    if (view === "submap" && activeSubmapId === "wallCastleMap" && wallCastleLoaded) {
+      const hasSeen = localStorage.getItem("tpti_wallcastle_welcome_seen");
+      if (!hasSeen) {
+        // 稍等地图加载完再弹，避免闪烁
+        const timer = setTimeout(() => {
+          setShowWallCastleWelcome(true);
+        }, 400);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [view, activeSubmapId, wallCastleLoaded]);
 
   const addCoins = useCallback(
     (amount: number) => {
@@ -934,28 +948,6 @@ if (levelId === 7) return "available"; // 临时开放，测试K线图学习
           </div>
         );
       }
-      if (activeGameId === "bull-bear-parliament") {
-        return (
-          <div className="flex flex-col h-full">
-            <div className="flex items-center gap-2 mb-3 px-1">
-              <span className="text-lg">🏛️</span>
-              <h3 className="text-sm font-bold text-[#1E293B]">多空议会：热搜开庭</h3>
-            </div>
-            <div className="flex-1 min-h-0">
-              <ParliamentGame
-                addCoins={addCoins}
-                onBack={() => {
-                  setView("world");
-                  setActiveGameId(null);
-                }}
-                onComplete={() => {
-                  addCoins(30);
-                }}
-              />
-            </div>
-          </div>
-        );
-      }
       // 华尔堡入口：多空议会厅
       if (activeGameId === "wallcastle-parliament") {
         return (
@@ -1163,6 +1155,18 @@ if (levelId === 7) return "available"; // 临时开放，测试K线图学习
               }}
             />
           )}
+          {config.type === "parliament" && (
+            <ParliamentGame
+              addCoins={addCoins}
+              onBack={() => {
+                returnAfterGameComplete();
+              }}
+              onComplete={() => {
+                handleLevelComplete(activeLevelId);
+                returnAfterGameComplete();
+              }}
+            />
+          )}
         </div>
       </div>
     );
@@ -1280,6 +1284,104 @@ if (levelId === 7) return "available"; // 临时开放，测试K线图学习
 
     return (
       <div className="relative w-full h-full overflow-y-auto bg-[#1a1a2e]" key={wallCastleRefreshKey}>
+        {/* 华尔堡欢迎弹窗 */}
+        {showWallCastleWelcome && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => {
+                localStorage.setItem("tpti_wallcastle_welcome_seen", "1");
+                setShowWallCastleWelcome(false);
+              }}
+            />
+            <div
+              className="relative w-full max-w-sm rounded-2xl p-6 shadow-2xl overflow-hidden"
+              style={{
+                background: "linear-gradient(160deg, #1E293B 0%, #0F172A 100%)",
+                border: "1px solid rgba(250,204,21,0.25)",
+                boxShadow: "0 0 60px rgba(250,204,21,0.15), inset 0 1px 0 rgba(255,255,255,0.05)",
+              }}
+            >
+              {/* 顶部金色光晕 */}
+              <div
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-20 opacity-40"
+                style={{
+                  background: "radial-gradient(ellipse at top, rgba(250,204,21,0.4) 0%, transparent 70%)",
+                }}
+              />
+
+              {/* 标题 */}
+              <div className="relative text-center mb-5">
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <div
+                    className="w-8 h-[1px]"
+                    style={{ background: "linear-gradient(to right, transparent, rgba(250,204,21,0.5))" }}
+                  />
+                  <span className="text-xl">🏰</span>
+                  <div
+                    className="w-8 h-[1px]"
+                    style={{ background: "linear-gradient(to left, transparent, rgba(250,204,21,0.5))" }}
+                  />
+                </div>
+                <h2
+                  className="text-xl font-bold tracking-wider"
+                  style={{
+                    color: "#FCD34D",
+                    fontFamily: "serif",
+                    textShadow: "0 0 20px rgba(250,204,21,0.4)",
+                  }}
+                >
+                  欢迎来到华尔堡
+                </h2>
+              </div>
+
+              {/* 正文 */}
+              <div className="relative space-y-3 text-sm leading-relaxed">
+                <p className="text-[#E2E8F0]">
+                  当你睁开眼睛，熟悉的世界已经消失。
+                </p>
+                <p className="text-[#94A3B8]">
+                  迷雾笼罩着古老城堡，紧闭的大门上浮现出一行发光的文字：
+                </p>
+                <div
+                  className="px-4 py-3 rounded-lg text-center"
+                  style={{
+                    background: "rgba(250,204,21,0.08)",
+                    border: "1px dashed rgba(250,204,21,0.3)",
+                    color: "#FCD34D",
+                    fontFamily: "serif",
+                  }}
+                >
+                  「旅人，你意外坠入了华尔堡。这里的出口受到魔法封印，通往现实世界的钥匙藏在接下来的关卡中。」
+                </div>
+                <p className="text-[#94A3B8]">
+                  你需要完成每场试炼，收集散落的通行印记。全部印记集齐时，华尔堡的最终之门才会开启。
+                </p>
+                <p className="text-[#64748B] italic text-xs">
+                  远处传来沉重的钟声，第一扇门缓缓打开……
+                </p>
+              </div>
+
+              {/* 按钮 */}
+              <button
+                onClick={() => {
+                  localStorage.setItem("tpti_wallcastle_welcome_seen", "1");
+                  setShowWallCastleWelcome(false);
+                  // 进入第一关：多空议会厅
+                  handleSubLevelClick("parliament-hall");
+                }}
+                className="relative mt-6 w-full py-3 rounded-xl font-bold text-sm text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
+                style={{
+                  background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)",
+                  boxShadow: "0 4px 20px rgba(245,158,11,0.35)",
+                }}
+              >
+                进入第一关
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="relative w-full max-w-md mx-auto">
           <img
             src="/wall-castle-map.png"
