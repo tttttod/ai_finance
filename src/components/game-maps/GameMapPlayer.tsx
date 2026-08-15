@@ -18,6 +18,7 @@ import SentimentGame from "./SentimentGame";
 import FundamentalGame from "./FundamentalGame";
 import RiskGame from "./RiskGame";
 import TechnicalGame from "./TechnicalGame";
+import ParliamentGame from "./ParliamentGame";
 import {
   loadTraderRoadProgress,
   saveTraderRoadProgress,
@@ -128,6 +129,7 @@ const WORLD_LOCATIONS: WorldLocation[] = [
   { id: 12, locationId: "wall-castle", name: "华尔堡", subtitle: "Wall Castle", x: 50, y: 23, type: "submap", mapId: "wallCastleMap" },
   { id: 13, locationId: "hotspot-volcano", name: "热点火山与追涨火箭", subtitle: "Hotspot Volcano & Rocket", x: 77, y: 33, type: "game", gameId: "hotspot-volcano" },
   { id: 14, locationId: "review-lighthouse", name: "复盘灯塔", subtitle: "Review Lighthouse", x: 17, y: 74, type: "game", gameId: "review-lighthouse" },
+  { id: 15, locationId: "bull-bear-parliament", name: "多空议会厅", subtitle: "Bull-Bear Parliament", x: 32, y: 6, type: "game", gameId: "bull-bear-parliament" },
 ];
 
 // ===== Props =====
@@ -929,6 +931,28 @@ if (levelId === 7) return "available"; // 临时开放，测试K线图学习
             >
               返回世界地图
             </button>
+          </div>
+        );
+      }
+      if (activeGameId === "bull-bear-parliament") {
+        return (
+          <div className="flex flex-col h-full">
+            <div className="flex items-center gap-2 mb-3 px-1">
+              <span className="text-lg">🏛️</span>
+              <h3 className="text-sm font-bold text-[#1E293B]">多空议会：热搜开庭</h3>
+            </div>
+            <div className="flex-1 min-h-0">
+              <ParliamentGame
+                addCoins={addCoins}
+                onBack={() => {
+                  setView("world");
+                  setActiveGameId(null);
+                }}
+                onComplete={() => {
+                  addCoins(30);
+                }}
+              />
+            </div>
           </div>
         );
       }

@@ -4,7 +4,7 @@ import { BRAIN_DATA } from "./brain-data";
 import { MINIGAME_DATA } from "./minigame-data";
 
 // ===== Level type definitions =====
-export type GameMapLevelType = "dialogue" | "quiz" | "brain" | "minigame" | "learning" | "quiz_choice" | "sentiment" | "fundamental" | "risk" | "candlestick";
+export type GameMapLevelType = "dialogue" | "quiz" | "brain" | "minigame" | "learning" | "quiz_choice" | "sentiment" | "fundamental" | "risk" | "candlestick" | "parliament";
 
 export interface GameMapLevel {
   id: number;
