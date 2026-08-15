@@ -172,6 +172,7 @@ export function GameMapPlayer({
   const [showTour, setShowTour] = useState(false);
   const [showWallCastleTour, setShowWallCastleTour] = useState(false);
   const [showWallCastleWelcome, setShowWallCastleWelcome] = useState(false);
+  const [hasSeenWallCastleWelcome, setHasSeenWallCastleWelcome] = useState(false);
   const [showKnowledgeMap, setShowKnowledgeMap] = useState(false);
   const [knowledgeMapKey, setKnowledgeMapKey] = useState(0);
   const [knowledgeMapError, setKnowledgeMapError] = useState(false);
@@ -205,17 +206,18 @@ export function GameMapPlayer({
     saveTraderRoadProgress(progress);
   }, [progress]);
 
-  // 每次进入华尔堡 submap 时显示欢迎弹窗
+  // 仅在首次进入华尔堡 submap 时显示欢迎弹窗
   useEffect(() => {
-    if (view === "submap" && activeSubmapId === "wallCastleMap") {
+    if (view === "submap" && activeSubmapId === "wallCastleMap" && !hasSeenWallCastleWelcome) {
       const timer = setTimeout(() => {
         setShowWallCastleWelcome(true);
+        setHasSeenWallCastleWelcome(true);
       }, 300);
       return () => clearTimeout(timer);
     } else {
       setShowWallCastleWelcome(false);
     }
-  }, [view, activeSubmapId]);
+  }, [view, activeSubmapId, hasSeenWallCastleWelcome]);
 
   const addCoins = useCallback(
     (amount: number) => {
