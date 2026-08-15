@@ -1026,7 +1026,9 @@ export function GameMapPlayer({
           }}
           onComplete={() => {
             setIsKnowledgeEntrance(false);
+            setActiveLevelId(null);
             handleLevelComplete(1);
+            setView("world");
             // 触发华尔堡引导
             setTimeout(() => setShowWallCastleTour(true), 500);
           }}
