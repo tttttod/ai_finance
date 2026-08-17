@@ -74,14 +74,14 @@ export function Level4DurationSniper({ data, onSubmit }: Level4Props) {
 
   return (
     <div className="min-h-screen pb-6" style={{ background: "linear-gradient(180deg, #0B0E14 0%, #111827 100%)" }}>
-      <GameHeader levelId="level4" title="Duration Sniper" />
+      <GameHeader levelId="level4" title="久期狙击 Duration Sniper" />
 
       <div className="px-4 md:px-6 space-y-4">
         {phase === "info" && (
           <>
             {/* Bond cards */}
             <div>
-              <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">AVAILABLE BONDS</div>
+              <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">可选债券 AVAILABLE BONDS</div>
               <div className="space-y-2">
                 {bonds.map((bond) => (
                   <div key={bond.id} className="px-4 py-3 rounded-lg border border-[#1E293B] bg-[#0F1117]">
@@ -93,11 +93,11 @@ export function Level4DurationSniper({ data, onSubmit }: Level4Props) {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <span className="text-[10px] font-mono text-[#475569]">DURATION</span>
+                        <span className="text-[10px] font-mono text-[#475569]">久期 DURATION</span>
                         <div className="text-sm font-mono font-bold text-[#8B5CF6]">{bond.duration}</div>
                       </div>
                       <div>
-                        <span className="text-[10px] font-mono text-[#475569]">YIELD</span>
+                        <span className="text-[10px] font-mono text-[#475569]">收益率 YIELD</span>
                         <div className="text-sm font-mono font-bold text-[#3B82F6]">{bond.yield.toFixed(2)}%</div>
                       </div>
                     </div>
@@ -108,12 +108,12 @@ export function Level4DurationSniper({ data, onSubmit }: Level4Props) {
 
             {/* Formula hint */}
             <div className="px-4 py-3 rounded-lg border border-[#F59E0B]/20 bg-[#F59E0B]/5">
-              <div className="text-[10px] font-mono text-[#F59E0B] tracking-wider mb-1">KEY FORMULA</div>
+              <div className="text-[10px] font-mono text-[#F59E0B] tracking-wider mb-1">核心公式 KEY FORMULA</div>
               <div className="text-xs font-mono text-[#CBD5E1]">
                 ΔP/P ≈ -Duration × ΔYield
               </div>
               <div className="text-[10px] text-[#64748B] mt-1">
-                Higher duration = greater price sensitivity to yield changes
+                久期越高 = 价格对收益率变化越敏感
               </div>
             </div>
 
@@ -125,7 +125,7 @@ export function Level4DurationSniper({ data, onSubmit }: Level4Props) {
                 boxShadow: "0 0 20px rgba(239, 68, 68, 0.3)",
               }}
             >
-              TRIGGER MARKET EVENT
+              触发市场事件 TRIGGER EVENT
             </button>
           </>
         )}
@@ -135,15 +135,15 @@ export function Level4DurationSniper({ data, onSubmit }: Level4Props) {
             {/* Shock alert */}
             <div className="px-4 py-4 rounded-lg border border-[#EF4444]/40 bg-[#EF4444]/10 text-center animate-pulse">
               <div className="text-2xl mb-2">⚠️</div>
-              <div className="text-sm font-bold text-[#EF4444]">MARKET SHOCK DETECTED</div>
+              <div className="text-sm font-bold text-[#EF4444]">市场冲击 MARKET SHOCK</div>
               <div className="text-lg font-mono font-bold text-[#E2E8F0] mt-1">
-                Yield +{shockBp}bp
+                收益率 +{shockBp}bp
               </div>
             </div>
 
             {/* Timer */}
             <div className="text-center">
-              <div className="text-[10px] font-mono text-[#475569] mb-1">TIME REMAINING</div>
+              <div className="text-[10px] font-mono text-[#475569] mb-1">剩余时间 TIME LEFT</div>
               <div className={`text-3xl font-mono font-bold ${timeLeft <= 5 ? "text-[#EF4444]" : timeLeft <= 10 ? "text-[#F59E0B]" : "text-[#E2E8F0]"}`}>
                 {timeLeft}s
               </div>
@@ -152,9 +152,9 @@ export function Level4DurationSniper({ data, onSubmit }: Level4Props) {
             {/* Question */}
             <div className="text-center">
               <div className="text-sm font-bold text-[#E2E8F0] mb-1">
-                Which bond&apos;s price drops the MOST?
+                哪只债券价格跌幅最大？
               </div>
-              <div className="text-[10px] text-[#64748B]">Select the correct answer quickly!</div>
+              <div className="text-[10px] text-[#64748B]">快速选择正确答案！</div>
             </div>
 
             {/* Bond selection */}
@@ -188,13 +188,13 @@ export function Level4DurationSniper({ data, onSubmit }: Level4Props) {
                         }}>
                           {bond.name}
                         </div>
-                        <div className="text-[10px] font-mono text-[#475569]">Duration: {bond.duration}</div>
+                        <div className="text-[10px] font-mono text-[#475569]">久期: {bond.duration}</div>
                       </div>
                       {showCorrectness && isCorrect && (
-                        <span className="text-xs font-bold text-[#10B981]">✓ CORRECT</span>
+                        <span className="text-xs font-bold text-[#10B981]">✓ 正确</span>
                       )}
                       {showCorrectness && isSelected && !isCorrect && (
-                        <span className="text-xs font-bold text-[#EF4444]">✗ WRONG</span>
+                        <span className="text-xs font-bold text-[#EF4444]">✗ 错误</span>
                       )}
                     </div>
                   </button>
@@ -205,7 +205,7 @@ export function Level4DurationSniper({ data, onSubmit }: Level4Props) {
             {/* Show calculation after result */}
             {showResult && (
               <div className="px-4 py-3 rounded-lg border border-[#1E293B] bg-[#0F1117]">
-                <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">PRICE CHANGE CALCULATION</div>
+                <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">价格变化计算 PRICE CHANGE</div>
                 <div className="space-y-2">
                   {bondResults.map((b) => (
                     <div key={b.id} className="flex items-center justify-between">

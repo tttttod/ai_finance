@@ -11,10 +11,10 @@ interface Level2Props {
 }
 
 const SHAPE_OPTIONS: { value: CurveShape; label: string; desc: string }[] = [
-  { value: "steepening", label: "Steepening", desc: "Long-end rates rising faster than short-end" },
-  { value: "flattening", label: "Flattening", desc: "Short-end rates rising faster than long-end" },
-  { value: "bull_steepening", label: "Bull Steepening", desc: "Rates falling, short-end falling faster" },
-  { value: "bear_flattening", label: "Bear Flattening", desc: "Rates rising, short-end rising faster" },
+  { value: "steepening", label: "变陡 Steepening", desc: "长端利率上升快于短端" },
+  { value: "flattening", label: "变平 Flattening", desc: "短端利率上升快于长端" },
+  { value: "bull_steepening", label: "牛陡 Bull Steepening", desc: "利率下行，短端下行更快" },
+  { value: "bear_flattening", label: "熊平 Bear Flattening", desc: "利率上行，短端上行更快" },
 ];
 
 export function Level2YieldCurve({ data, onSubmit }: Level2Props) {
@@ -31,12 +31,12 @@ export function Level2YieldCurve({ data, onSubmit }: Level2Props) {
 
   return (
     <div className="min-h-screen pb-6" style={{ background: "linear-gradient(180deg, #0B0E14 0%, #111827 100%)" }}>
-      <GameHeader levelId="level2" title="Yield Curve Lab" />
+      <GameHeader levelId="level2" title="收益率曲线 Yield Curve" />
 
       <div className="px-4 md:px-6 space-y-4">
         {/* Yield curve chart */}
         <div>
-          <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">GOVERNMENT BOND YIELD CURVE</div>
+          <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">国债收益率曲线 GOV YIELD CURVE</div>
           <div className="rounded-lg border border-[#1E293B] bg-[#0F1117] p-4">
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
@@ -62,7 +62,7 @@ export function Level2YieldCurve({ data, onSubmit }: Level2Props) {
                     fontSize: "12px",
                   }}
                   labelStyle={{ color: "#64748B" }}
-                  formatter={(value: number) => [`${value.toFixed(2)}%`, "Yield"]}
+                  formatter={(value: number) => [`${value.toFixed(2)}%`, "收益率 Yield"]}
                 />
                 <Area
                   type="monotone"
@@ -91,7 +91,7 @@ export function Level2YieldCurve({ data, onSubmit }: Level2Props) {
         {/* Shape question */}
         <div>
           <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">
-            IDENTIFY: Current yield curve regime?
+            判断：当前收益率曲线形态？ Curve Regime?
           </div>
           <div className="space-y-2">
             {SHAPE_OPTIONS.map((opt) => (
@@ -108,7 +108,7 @@ export function Level2YieldCurve({ data, onSubmit }: Level2Props) {
         {/* Yield prediction */}
         <div>
           <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">
-            PREDICT: 10Y Treasury yield in 1 month? (Current: {current10Y.toFixed(2)}%)
+            预测：1个月后10Y国债收益率？ (当前: {current10Y.toFixed(2)}%)
           </div>
           <div className="flex items-center gap-3">
             <input
@@ -134,7 +134,7 @@ export function Level2YieldCurve({ data, onSubmit }: Level2Props) {
         <SubmitButton
           onClick={() => shape && onSubmit(shape, yieldPred ? parseFloat(yieldPred) : current10Y)}
           disabled={!shape}
-          label="CONFIRM ANALYSIS"
+          label="确认分析 CONFIRM"
         />
       </div>
     </div>

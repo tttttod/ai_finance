@@ -123,7 +123,7 @@ export function BrainTrainingArena({ onBack, onLaunchGame }: BrainTrainingArenaP
         {/* 背景地图图片 */}
         <div className="absolute inset-0">
           <img
-            src="/brain-training-map.jpeg"
+            src="/brain-training-map.jpg"
             alt="脑力训练场地图"
             className="w-full h-full object-cover"
             draggable={false}

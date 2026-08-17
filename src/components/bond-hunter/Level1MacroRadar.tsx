@@ -9,83 +9,57 @@ interface Level1Props {
   onSubmit: (prediction: RateDirection) => void;
 }
 
-const RATE_OPTIONS: { value: RateDirection; label: string; desc: string }[] = [
-  { value: "sharp_up", label: "Sharp Increase", desc: "Rates rise significantly (>20bp)" },
-  { value: "slight_up", label: "Slight Increase", desc: "Rates edge higher (5-20bp)" },
-  { value: "unchanged", label: "Basically Unchanged", desc: "Rates stay within 5bp range" },
-  { value: "slight_down", label: "Slight Decrease", desc: "Rates drift lower (5-20bp)" },
-  { value: "sharp_down", label: "Sharp Decrease", desc: "Rates fall significantly (>20bp)" },
-];
-
-const MACRO_ITEMS = [
-  { key: "gdp" as const, label: "GDP Growth", unit: "%", fmt: (v: number) => v.toFixed(1) },
-  { key: "cpi" as const, label: "CPI", unit: "%", fmt: (v: number) => v.toFixed(1) },
-  { key: "ppi" as const, label: "PPI", unit: "%", fmt: (v: number) => v.toFixed(1) },
-  { key: "pmi" as const, label: "PMI", unit: "", fmt: (v: number) => v.toFixed(1) },
-  { key: "m2" as const, label: "M2 Growth", unit: "%", fmt: (v: number) => v.toFixed(1) },
-  { key: "socialFinancing" as const, label: "Social Financing", unit: "%", fmt: (v: number) => v.toFixed(1) },
-  { key: "interbankRate" as const, label: "Interbank Rate", unit: "%", fmt: (v: number) => v.toFixed(2) },
-  { key: "treasury10Y" as const, label: "10Y Treasury", unit: "%", fmt: (v: number) => v.toFixed(2) },
+const RATE_OPTIONS: { value: RateDirection; label: string }[] = [
+  { value: "sharp_up", label: "大幅上升 Sharp Up" },
+  { value: "slight_up", label: "小幅上升 Slight Up" },
+  { value: "unchanged", label: "基本不变 Unchanged" },
+  { value: "slight_down", label: "小幅下降 Slight Down" },
+  { value: "sharp_down", label: "大幅下降 Sharp Down" },
 ];
 
 export function Level1MacroRadar({ data, onSubmit }: Level1Props) {
   const [prediction, setPrediction] = useState<RateDirection | null>(null);
-  const { macro, news } = data;
-
-  const getColor = (key: string, value: number): string => {
-    if (key === "pmi") return value >= 50 ? "#10B981" : "#EF4444";
-    if (key === "cpi") return value > 2.5 ? "#EF4444" : value > 1.5 ? "#F59E0B" : "#10B981";
-    if (key === "treasury10Y") return "#3B82F6";
-    return "#E2E8F0";
-  };
+  const { macroData, news, rateDirection } = data;
 
   return (
     <div className="min-h-screen pb-6" style={{ background: "linear-gradient(180deg, #0B0E14 0%, #111827 100%)" }}>
-      <GameHeader levelId="level1" title="Macro Radar" />
+      <GameHeader levelId="level1" title="宏观雷达 Macro Radar" />
 
       <div className="px-4 md:px-6 space-y-4">
-        {/* Policy banner */}
-        <div className="px-4 py-3 rounded-lg border border-[#3B82F6]/30 bg-[#3B82F6]/5">
-          <div className="text-[10px] font-mono text-[#3B82F6] tracking-wider mb-1">CENTRAL BANK POLICY</div>
-          <div className="text-sm font-medium text-[#E2E8F0]">{macro.policy}</div>
-        </div>
-
         {/* Macro data grid */}
-        <div>
-          <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">ECONOMIC INDICATORS</div>
-          <div className="grid grid-cols-2 gap-2">
-            {MACRO_ITEMS.map((item) => {
-              const value = macro[item.key];
-              return (
-                <DataCard
-                  key={item.key}
-                  label={item.label}
-                  value={item.fmt(value)}
-                  unit={item.unit}
-                  color={getColor(item.key, value)}
-                  large={item.key === "treasury10Y"}
-                />
-              );
-            })}
-          </div>
+        <div className="grid grid-cols-3 gap-2">
+          <DataCard label="GDP 增长" value={`${macroData.gdpGrowth}%`} color={macroData.gdpGrowth > 0 ? "#10B981" : "#EF4444"} />
+          <DataCard label="CPI 通胀" value={`${macroData.cpi}%`} color={macroData.cpi > 2 ? "#EF4444" : "#10B981"} />
+          <DataCard label="PPI" value={`${macroData.ppi}%`} color={macroData.ppi > 0 ? "#F59E0B" : "#10B981"} />
+          <DataCard label="PMI" value={macroData.pmi.toString()} color={macroData.pmi > 50 ? "#10B981" : "#EF4444"} />
+          <DataCard label="M2 增速" value={`${macroData.m2Growth}%`} color="#3B82F6" />
+          <DataCard label="社融 Social Fin" value={`+${macroData.socialFin}B`} color="#8B5CF6" />
+          <DataCard label="央行政策 Policy" value={macroData.policyRate} color="#F59E0B" />
+          <DataCard label="银行间利率" value={`${macroData.interbankRate}%`} color="#06B6D4" />
+          <DataCard label="10Y 国债" value={`${macroData.treasury10Y}%`} color="#3B82F6" />
         </div>
 
-        {/* News feed */}
+        {/* News section */}
         <div>
-          <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">MARKET INTELLIGENCE</div>
+          <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">
+            市场新闻 MARKET NEWS
+          </div>
           <div className="space-y-2">
-            {news.map((n) => (
-              <div
-                key={n.id}
-                className="px-3 py-2.5 rounded-lg border border-[#1E293B] bg-[#0F1117] flex items-start gap-3"
-              >
-                <div
-                  className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
-                  style={{
-                    backgroundColor: n.impact === "bullish" ? "#10B981" : n.impact === "bearish" ? "#EF4444" : "#F59E0B",
-                  }}
-                />
-                <span className="text-xs text-[#CBD5E1] leading-relaxed">{n.text}</span>
+            {news.map((item, i) => (
+              <div key={i} className="px-4 py-3 rounded-lg border border-[#1E293B] bg-[#0F1117]">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#3B82F6]/10 text-[#3B82F6]">
+                    {item.source}
+                  </span>
+                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                    item.signal === "bullish" ? "bg-[#10B981]/10 text-[#10B981]" :
+                    item.signal === "bearish" ? "bg-[#EF4444]/10 text-[#EF4444]" :
+                    "bg-[#F59E0B]/10 text-[#F59E0B]"
+                  }`}>
+                    {item.signal === "bullish" ? "利好" : item.signal === "bearish" ? "利空" : "中性"}
+                  </span>
+                </div>
+                <div className="text-xs text-[#CBD5E1] leading-relaxed">{item.headline}</div>
               </div>
             ))}
           </div>
@@ -94,7 +68,7 @@ export function Level1MacroRadar({ data, onSubmit }: Level1Props) {
         {/* Prediction */}
         <div>
           <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">
-            PREDICT: Interest Rate Direction (Next 3 Months)
+            判断：未来3个月利率方向 Rate Direction?
           </div>
           <div className="space-y-2">
             {RATE_OPTIONS.map((opt) => (
@@ -111,7 +85,7 @@ export function Level1MacroRadar({ data, onSubmit }: Level1Props) {
         <SubmitButton
           onClick={() => prediction && onSubmit(prediction)}
           disabled={!prediction}
-          label="CONFIRM PREDICTION"
+          label="确认判断 CONFIRM"
         />
       </div>
     </div>

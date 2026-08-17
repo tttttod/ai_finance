@@ -21,16 +21,16 @@ export function Level5CreditDetective({ data, onSubmit }: Level5Props) {
   const creditSpread = (bond.ytm - 2.0).toFixed(0);
 
   const analysisItems = [
-    { label: "Leverage Ratio", value: `${leverage}%`, color: parseFloat(leverage) > 80 ? "#EF4444" : parseFloat(leverage) > 60 ? "#F59E0B" : "#10B981", status: parseFloat(leverage) > 80 ? "HIGH" : parseFloat(leverage) > 60 ? "MODERATE" : "LOW" },
-    { label: "Interest Coverage", value: `${interestCoverage}x`, color: parseFloat(interestCoverage) < 2 ? "#EF4444" : parseFloat(interestCoverage) < 4 ? "#F59E0B" : "#10B981", status: parseFloat(interestCoverage) < 2 ? "WEAK" : parseFloat(interestCoverage) < 4 ? "ADEQUATE" : "STRONG" },
-    { label: "Cash Flow / Interest", value: `${cashFlowRatio}x`, color: parseFloat(cashFlowRatio) < 1.5 ? "#EF4444" : parseFloat(cashFlowRatio) < 2.5 ? "#F59E0B" : "#10B981", status: parseFloat(cashFlowRatio) < 1.5 ? "TIGHT" : parseFloat(cashFlowRatio) < 2.5 ? "MODERATE" : "COMFORTABLE" },
-    { label: "Net Debt", value: `¥${netDebt}B`, color: netDebt > 100 ? "#EF4444" : "#F59E0B", status: netDebt > 100 ? "ELEVATED" : "MANAGEABLE" },
-    { label: "Credit Spread", value: `${creditSpread}bp`, color: parseFloat(creditSpread) > 200 ? "#EF4444" : parseFloat(creditSpread) > 100 ? "#F59E0B" : "#10B981", status: parseFloat(creditSpread) > 200 ? "WIDE" : parseFloat(creditSpread) > 100 ? "MODERATE" : "TIGHT" },
+    { label: "杠杆率 Leverage", value: `${leverage}%`, color: parseFloat(leverage) > 80 ? "#EF4444" : parseFloat(leverage) > 60 ? "#F59E0B" : "#10B981", status: parseFloat(leverage) > 80 ? "高 HIGH" : parseFloat(leverage) > 60 ? "中 MOD" : "低 LOW" },
+    { label: "利息覆盖 Coverage", value: `${interestCoverage}x`, color: parseFloat(interestCoverage) < 2 ? "#EF4444" : parseFloat(interestCoverage) < 4 ? "#F59E0B" : "#10B981", status: parseFloat(interestCoverage) < 2 ? "弱 WEAK" : parseFloat(interestCoverage) < 4 ? "一般 OK" : "强 STRONG" },
+    { label: "现金流/利息 CF Ratio", value: `${cashFlowRatio}x`, color: parseFloat(cashFlowRatio) < 1.5 ? "#EF4444" : parseFloat(cashFlowRatio) < 2.5 ? "#F59E0B" : "#10B981", status: parseFloat(cashFlowRatio) < 1.5 ? "紧张 TIGHT" : parseFloat(cashFlowRatio) < 2.5 ? "适中 MOD" : "充裕 OK" },
+    { label: "净债务 Net Debt", value: `¥${netDebt}B`, color: netDebt > 100 ? "#EF4444" : "#F59E0B", status: netDebt > 100 ? "偏高 HIGH" : "可控 OK" },
+    { label: "信用利差 Spread", value: `${creditSpread}bp`, color: parseFloat(creditSpread) > 200 ? "#EF4444" : parseFloat(creditSpread) > 100 ? "#F59E0B" : "#10B981", status: parseFloat(creditSpread) > 200 ? "宽 WIDE" : parseFloat(creditSpread) > 100 ? "适中 MOD" : "窄 TIGHT" },
   ];
 
   return (
     <div className="min-h-screen pb-6" style={{ background: "linear-gradient(180deg, #0B0E14 0%, #111827 100%)" }}>
-      <GameHeader levelId="level5" title="Credit Detective" />
+      <GameHeader levelId="level5" title="信用侦探 Credit Detective" />
 
       <div className="px-4 md:px-6 space-y-4">
         {/* Company header */}
@@ -38,33 +38,33 @@ export function Level5CreditDetective({ data, onSubmit }: Level5Props) {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm font-bold text-[#E2E8F0]">{companyName}</div>
-              <div className="text-[10px] font-mono text-[#475569]">Corporate Bond: {bond.name}</div>
+              <div className="text-[10px] font-mono text-[#475569]">信用债: {bond.name}</div>
             </div>
             <div className="text-right">
               <div className="text-xs font-mono font-bold text-[#F59E0B]">{bond.rating}</div>
-              <div className="text-[10px] font-mono text-[#475569]">RATING</div>
+              <div className="text-[10px] font-mono text-[#475569]">评级 RATING</div>
             </div>
           </div>
         </div>
 
         {/* Bond details */}
         <div className="grid grid-cols-2 gap-2">
-          <DataCard label="COUPON" value={`${bond.couponRate.toFixed(2)}%`} color="#F59E0B" />
-          <DataCard label="YTM" value={`${bond.ytm.toFixed(2)}%`} color="#3B82F6" />
-          <DataCard label="MATURITY" value={`${bond.remainingYears}Y`} />
-          <DataCard label="MARKET PRICE" value={`¥${bond.marketPrice.toFixed(2)}`} color={bond.marketPrice >= 100 ? "#10B981" : "#EF4444"} />
+          <DataCard label="票息 COUPON" value={`${bond.couponRate.toFixed(2)}%`} color="#F59E0B" />
+          <DataCard label="到期收益率 YTM" value={`${bond.ytm.toFixed(2)}%`} color="#3B82F6" />
+          <DataCard label="剩余期限 MATURITY" value={`${bond.remainingYears}年`} />
+          <DataCard label="市场价格 PRICE" value={`¥${bond.marketPrice.toFixed(2)}`} color={bond.marketPrice >= 100 ? "#10B981" : "#EF4444"} />
         </div>
 
         {/* Financials */}
         <div>
-          <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">COMPANY FUNDAMENTALS</div>
+          <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">公司基本面 FUNDAMENTALS</div>
           <div className="grid grid-cols-3 gap-2">
-            <DataCard label="REV GROWTH" value={`${financials.revenueGrowth}%`} color={financials.revenueGrowth > 0 ? "#10B981" : "#EF4444"} />
-            <DataCard label="EBITDA MARGIN" value={`${financials.ebitdaMargin}%`} />
-            <DataCard label="TOTAL DEBT" value={`¥${financials.totalDebt}B`} color="#EF4444" />
-            <DataCard label="CASH" value={`¥${financials.cash}B`} color="#10B981" />
-            <DataCard label="INT. EXPENSE" value={`¥${financials.interestExpense}B`} />
-            <DataCard label="OP. CASHFLOW" value={`¥${financials.operatingCashFlow}B`} color={financials.operatingCashFlow > financials.interestExpense ? "#10B981" : "#EF4444"} />
+            <DataCard label="营收增长 REV" value={`${financials.revenueGrowth}%`} color={financials.revenueGrowth > 0 ? "#10B981" : "#EF4444"} />
+            <DataCard label="EBITDA利润率" value={`${financials.ebitdaMargin}%`} />
+            <DataCard label="总债务 DEBT" value={`¥${financials.totalDebt}B`} color="#EF4444" />
+            <DataCard label="现金 CASH" value={`¥${financials.cash}B`} color="#10B981" />
+            <DataCard label="利息支出 INT" value={`¥${financials.interestExpense}B`} />
+            <DataCard label="经营现金流 OCF" value={`¥${financials.operatingCashFlow}B`} color={financials.operatingCashFlow > financials.interestExpense ? "#10B981" : "#EF4444"} />
           </div>
         </div>
 
@@ -73,7 +73,7 @@ export function Level5CreditDetective({ data, onSubmit }: Level5Props) {
           onClick={() => setShowAnalysis(!showAnalysis)}
           className="w-full py-2.5 rounded-lg border border-[#3B82F6]/30 bg-[#3B82F6]/5 text-xs font-mono font-bold text-[#3B82F6] transition-all hover:bg-[#3B82F6]/10"
         >
-          {showAnalysis ? "HIDE" : "SHOW"} CREDIT ANALYSIS
+          {showAnalysis ? "收起" : "展开"} 信用分析 CREDIT ANALYSIS
         </button>
 
         {showAnalysis && (
@@ -97,16 +97,17 @@ export function Level5CreditDetective({ data, onSubmit }: Level5Props) {
 
         {/* News */}
         <div className="px-4 py-3 rounded-lg border border-[#F59E0B]/20 bg-[#F59E0B]/5">
-          <div className="text-[10px] font-mono text-[#F59E0B] tracking-wider mb-1">LATEST NEWS</div>
+          <div className="text-[10px] font-mono text-[#F59E0B] tracking-wider mb-1">最新消息 LATEST NEWS</div>
           <div className="text-xs text-[#CBD5E1]">{news}</div>
         </div>
 
         {/* Decision */}
         <div>
-          <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">YOUR DECISION</div>
+          <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">你的决策 YOUR DECISION</div>
           <div className="grid grid-cols-3 gap-2">
             {(["BUY", "HOLD", "SELL"] as const).map((d) => {
               const colors = { BUY: "#10B981", HOLD: "#F59E0B", SELL: "#EF4444" };
+              const labels = { BUY: "买入 BUY", HOLD: "持有 HOLD", SELL: "卖出 SELL" };
               const isSelected = decision === d;
               return (
                 <button
@@ -122,7 +123,7 @@ export function Level5CreditDetective({ data, onSubmit }: Level5Props) {
                     boxShadow: `0 0 12px ${colors[d]}20`,
                   } : { color: "#94A3B8" }}
                 >
-                  {d}
+                  {labels[d]}
                 </button>
               );
             })}
@@ -132,7 +133,7 @@ export function Level5CreditDetective({ data, onSubmit }: Level5Props) {
         <SubmitButton
           onClick={() => decision && onSubmit(decision)}
           disabled={!decision}
-          label="CONFIRM DECISION"
+          label="确认决策 CONFIRM"
         />
       </div>
     </div>
