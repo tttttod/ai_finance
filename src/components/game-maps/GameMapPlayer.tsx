@@ -953,11 +953,6 @@ export function GameMapPlayer({
         return (
           <BrainTrainingArena
             onBack={() => { setView("world"); setActiveGameId(null); }}
-            onLaunchGame={(gameId) => {
-              // TODO: 后续为每个小游戏实现独立组件
-              // 目前先显示提示
-              alert(`即将开启：${gameId}`);
-            }}
           />
         );
       }

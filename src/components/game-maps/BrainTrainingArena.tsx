@@ -89,17 +89,15 @@ const BRAIN_LEVELS: BrainTrainingLevel[] = [
 
 interface BrainTrainingArenaProps {
   onBack: () => void;
-  onLaunchGame: (gameId: string) => void;
 }
 
-export function BrainTrainingArena({ onBack, onLaunchGame }: BrainTrainingArenaProps) {
+export function BrainTrainingArena({ onBack }: BrainTrainingArenaProps) {
   const [hoveredLevel, setHoveredLevel] = useState<string | null>(null);
   const [activeGame, setActiveGame] = useState<string | null>(null);
 
   const handleLevelClick = (level: BrainTrainingLevel) => {
     if (!level.unlocked) return;
     setActiveGame(level.id);
-    onLaunchGame(level.id);
   };
 
   const handleBackFromGame = () => {
