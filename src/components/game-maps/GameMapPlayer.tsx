@@ -1663,7 +1663,11 @@ export function GameMapPlayer({
                 ? activeSubmapId === "wallCastleMap" ? "华尔堡" : "地图"
                 : view === "feature"
                 ? activeFeatureId === "city-ranking" ? "城市排名塔" : "功能"
-                : `第${activeLevelId}关`}
+                : activeGameId === "bond-hunter"
+                ? "固收挑战 Fixed Income"
+                : activeLevelId
+                ? `第${activeLevelId}关`
+                : ""}
             </h2>
           </div>
           <div className="flex items-center gap-3">
