@@ -19,7 +19,7 @@ const RATE_OPTIONS: { value: RateDirection; label: string }[] = [
 
 export function Level1MacroRadar({ data, onSubmit }: Level1Props) {
   const [prediction, setPrediction] = useState<RateDirection | null>(null);
-  const { macroData, news, rateDirection } = data;
+  const { macro, news } = data;
 
   return (
     <div className="min-h-screen pb-6" style={{ background: "linear-gradient(180deg, #0B0E14 0%, #111827 100%)" }}>
@@ -28,15 +28,15 @@ export function Level1MacroRadar({ data, onSubmit }: Level1Props) {
       <div className="px-4 md:px-6 space-y-4">
         {/* Macro data grid */}
         <div className="grid grid-cols-3 gap-2">
-          <DataCard label="GDP 增长" value={`${macroData.gdpGrowth}%`} color={macroData.gdpGrowth > 0 ? "#10B981" : "#EF4444"} />
-          <DataCard label="CPI 通胀" value={`${macroData.cpi}%`} color={macroData.cpi > 2 ? "#EF4444" : "#10B981"} />
-          <DataCard label="PPI" value={`${macroData.ppi}%`} color={macroData.ppi > 0 ? "#F59E0B" : "#10B981"} />
-          <DataCard label="PMI" value={macroData.pmi.toString()} color={macroData.pmi > 50 ? "#10B981" : "#EF4444"} />
-          <DataCard label="M2 增速" value={`${macroData.m2Growth}%`} color="#3B82F6" />
-          <DataCard label="社融 Social Fin" value={`+${macroData.socialFin}B`} color="#8B5CF6" />
-          <DataCard label="央行政策 Policy" value={macroData.policyRate} color="#F59E0B" />
-          <DataCard label="银行间利率" value={`${macroData.interbankRate}%`} color="#06B6D4" />
-          <DataCard label="10Y 国债" value={`${macroData.treasury10Y}%`} color="#3B82F6" />
+          <DataCard label="GDP 增长" value={`${macro.gdp}%`} color={macro.gdp > 5 ? "#10B981" : "#F59E0B"} />
+          <DataCard label="CPI 通胀" value={`${macro.cpi}%`} color={macro.cpi > 2 ? "#EF4444" : "#10B981"} />
+          <DataCard label="PPI" value={`${macro.ppi}%`} color={macro.ppi > 0 ? "#F59E0B" : "#10B981"} />
+          <DataCard label="PMI" value={macro.pmi.toString()} color={macro.pmi > 50 ? "#10B981" : "#EF4444"} />
+          <DataCard label="M2 增速" value={`${macro.m2}%`} color="#3B82F6" />
+          <DataCard label="社融 Social Fin" value={`${macro.socialFinancing}%`} color="#8B5CF6" />
+          <DataCard label="央行政策 Policy" value={macro.policy} color="#F59E0B" />
+          <DataCard label="银行间利率" value={`${macro.interbankRate}%`} color="#06B6D4" />
+          <DataCard label="10Y 国债" value={`${macro.treasury10Y}%`} color="#3B82F6" />
         </div>
 
         {/* News section */}
@@ -45,21 +45,18 @@ export function Level1MacroRadar({ data, onSubmit }: Level1Props) {
             市场新闻 MARKET NEWS
           </div>
           <div className="space-y-2">
-            {news.map((item, i) => (
-              <div key={i} className="px-4 py-3 rounded-lg border border-[#1E293B] bg-[#0F1117]">
+            {news.map((item) => (
+              <div key={item.id} className="px-4 py-3 rounded-lg border border-[#1E293B] bg-[#0F1117]">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#3B82F6]/10 text-[#3B82F6]">
-                    {item.source}
-                  </span>
                   <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
-                    item.signal === "bullish" ? "bg-[#10B981]/10 text-[#10B981]" :
-                    item.signal === "bearish" ? "bg-[#EF4444]/10 text-[#EF4444]" :
+                    item.impact === "bullish" ? "bg-[#10B981]/10 text-[#10B981]" :
+                    item.impact === "bearish" ? "bg-[#EF4444]/10 text-[#EF4444]" :
                     "bg-[#F59E0B]/10 text-[#F59E0B]"
                   }`}>
-                    {item.signal === "bullish" ? "利好" : item.signal === "bearish" ? "利空" : "中性"}
+                    {item.impact === "bullish" ? "利好" : item.impact === "bearish" ? "利空" : "中性"}
                   </span>
                 </div>
-                <div className="text-xs text-[#CBD5E1] leading-relaxed">{item.headline}</div>
+                <div className="text-xs text-[#CBD5E1] leading-relaxed">{item.text}</div>
               </div>
             ))}
           </div>
@@ -85,7 +82,7 @@ export function Level1MacroRadar({ data, onSubmit }: Level1Props) {
         <SubmitButton
           onClick={() => prediction && onSubmit(prediction)}
           disabled={!prediction}
-          label="确认判断 CONFIRM"
+          label="提交 SUBMIT"
         />
       </div>
     </div>

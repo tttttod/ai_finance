@@ -41,14 +41,14 @@ export function GameHeader({ levelId, title }: GameHeaderProps) {
           </div>
           <div>
             <div className="text-[10px] font-mono text-[#475569] tracking-wider">
-              LEVEL {String(levelNum).padStart(2, "0")} / {String(totalLevels).padStart(2, "0")}
+              关卡 LEVEL {String(levelNum).padStart(2, "0")} / {String(totalLevels).padStart(2, "0")}
             </div>
             <div className="text-sm font-bold text-[#E2E8F0]">{title}</div>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
-          <span className="text-[10px] font-mono text-[#475569]">LIVE</span>
+          <span className="text-[10px] font-mono text-[#475569]">实时 LIVE</span>
         </div>
       </div>
     </div>
@@ -122,7 +122,7 @@ export function SubmitButton({ onClick, disabled, label }: {
         boxShadow: disabled ? "none" : "0 0 20px rgba(59, 130, 246, 0.2)",
       }}
     >
-      {label || "SUBMIT"}
+      {label || "提交 SUBMIT"}
     </button>
   );
 }

@@ -161,36 +161,36 @@ export function calcPortfolioResult(
 
 // ===== Market Generation =====
 const POLICY_STATES = [
-  "Easing bias strengthened",
-  "Maintaining accommodative stance",
-  "Neutral with tightening bias",
-  "Gradual tightening cycle",
-  "Emergency easing measures",
+  "宽松倾向增强 Easing bias strengthened",
+  "维持宽松立场 Maintaining accommodative stance",
+  "中性偏紧 Neutral with tightening bias",
+  "渐进紧缩周期 Gradual tightening cycle",
+  "紧急宽松措施 Emergency easing measures",
 ];
 
 const NEWS_POOL_BULLISH = [
-  "Economic growth slowed for two consecutive quarters",
-  "Inflation persistently below market expectations",
-  "Central bank signals accommodative policy shift",
-  "Global demand weakness weighs on exports",
-  "Real estate sector continues to contract",
-  "Consumer confidence index hits 12-month low",
+  "经济增长连续两个季度放缓 Economic growth slowed for two consecutive quarters",
+  "通胀持续低于市场预期 Inflation persistently below market expectations",
+  "央行释放宽松政策信号 Central bank signals accommodative policy shift",
+  "全球需求疲弱拖累出口 Global demand weakness weighs on exports",
+  "房地产行业持续收缩 Real estate sector continues to contract",
+  "消费者信心指数创12个月新低 Consumer confidence index hits 12-month low",
 ];
 
 const NEWS_POOL_BEARISH = [
-  "Manufacturing PMI rebounds above expansion threshold",
-  "CPI rises faster than expected, inflation concerns grow",
-  "Central bank maintains hawkish rhetoric on rates",
-  "Credit growth accelerates, leverage risks rising",
-  "Infrastructure spending drives economic recovery",
-  "Employment data exceeds all forecasts",
+  "制造业PMI重返扩张区间 Manufacturing PMI rebounds above expansion threshold",
+  "CPI超预期上行，通胀担忧升温 CPI rises faster than expected, inflation concerns grow",
+  "央行维持鹰派利率表态 Central bank maintains hawkish rhetoric on rates",
+  "信贷增速加快，杠杆风险上升 Credit growth accelerates, leverage risks rising",
+  "基建投资发力推动经济复苏 Infrastructure spending drives economic recovery",
+  "就业数据全面超预期 Employment data exceeds all forecasts",
 ];
 
 const NEWS_POOL_NEUTRAL = [
-  "Trade surplus narrows but remains positive",
-  "Interbank rates stable around policy rate",
-  "Government bond issuance proceeds smoothly",
-  "Foreign capital flows remain balanced",
+  "贸易顺差收窄但维持正值 Trade surplus narrows but remains positive",
+  "银行间利率围绕政策利率波动 Interbank rates stable around policy rate",
+  "国债发行平稳推进 Government bond issuance proceeds smoothly",
+  "外资流入流出基本平衡 Foreign capital flows remain balanced",
 ];
 
 function generateMacroNews(impact: "bullish" | "bearish" | "neutral"): MacroNews[] {
@@ -214,7 +214,7 @@ export function generateLevel1Data(): Level1Data {
       pmi: round(rand(47.0, 49.5), 1),
       m2: round(rand(7.5, 9.5), 1),
       socialFinancing: round(rand(2.5, 4.0), 1),
-      policy: pick(["Easing bias strengthened", "Cut RRR by 25bp", "Cut policy rate by 10bp"]),
+      policy: pick(["宽松倾向增强 Easing bias strengthened", "降准25bp Cut RRR by 25bp", "政策利率下调10bp Cut policy rate by 10bp"]),
       interbankRate: round(rand(1.5, 2.0), 2),
       treasury10Y: round(rand(1.8, 2.2), 2),
     };
@@ -228,7 +228,7 @@ export function generateLevel1Data(): Level1Data {
       pmi: round(rand(50.5, 52.0), 1),
       m2: round(rand(5.5, 7.0), 1),
       socialFinancing: round(rand(1.0, 2.5), 1),
-      policy: pick(["Gradual tightening cycle", "Raised policy rate by 10bp", "Reducing liquidity injection"]),
+      policy: pick(["渐进紧缩周期 Gradual tightening cycle", "政策利率上调10bp Raised policy rate by 10bp", "减少流动性投放 Reducing liquidity injection"]),
       interbankRate: round(rand(2.5, 3.5), 2),
       treasury10Y: round(rand(2.5, 3.2), 2),
     };
@@ -242,7 +242,7 @@ export function generateLevel1Data(): Level1Data {
       pmi: round(rand(49.5, 50.5), 1),
       m2: round(rand(6.5, 8.0), 1),
       socialFinancing: round(rand(2.0, 3.5), 1),
-      policy: pick(["Maintaining accommodative stance", "Neutral stance maintained"]),
+      policy: pick(["维持宽松立场 Maintaining accommodative stance", "维持中性立场 Neutral stance maintained"]),
       interbankRate: round(rand(1.8, 2.5), 2),
       treasury10Y: round(rand(2.0, 2.5), 2),
     };
@@ -303,21 +303,21 @@ export function generateLevel4Data(): Level4Data {
   const bonds: DurationBond[] = [
     {
       id: "A",
-      name: "1Y Government Bond",
+      name: "1年期国债 1Y Gov",
       duration: round(rand(0.8, 1.0), 1),
       yield: round(rand(1.2, 1.6), 2),
       price: 100,
     },
     {
       id: "B",
-      name: "5Y Government Bond",
+      name: "5年期国债 5Y Gov",
       duration: round(rand(4.0, 4.8), 1),
       yield: round(rand(1.5, 1.9), 2),
       price: 100,
     },
     {
       id: "C",
-      name: "10Y Government Bond",
+      name: "10年期国债 10Y Gov",
       duration: round(rand(7.5, 8.5), 1),
       yield: round(rand(1.8, 2.3), 2),
       price: 100,
@@ -331,7 +331,7 @@ export function generateLevel4Data(): Level4Data {
 export function generateLevel5Data(): Level5Data {
   const companies = [
     {
-      companyName: "Star River Real Estate",
+      companyName: "星河地产 Star River Real Estate",
       bond: { name: "XH2029", rating: "AA", couponRate: 4.50, remainingYears: 3.2, marketPrice: 101.20, ytm: 4.05 } as CreditBond,
       financials: {
         revenueGrowth: -8,
@@ -341,11 +341,11 @@ export function generateLevel5Data(): Level5Data {
         interestExpense: 8,
         operatingCashFlow: 10,
       } as CompanyFinancials,
-      news: "Star River Real Estate sales declined for three consecutive quarters",
+      news: "星河地产销售额连续三个季度下降 Star River Real Estate sales declined for three consecutive quarters",
       correctDecision: "SELL" as const,
     },
     {
-      companyName: "Dragon Tech Industries",
+      companyName: "龙腾科技 Dragon Tech Industries",
       bond: { name: "DT2028", rating: "AA+", couponRate: 3.80, remainingYears: 4.1, marketPrice: 99.50, ytm: 3.95 } as CreditBond,
       financials: {
         revenueGrowth: 15,
@@ -355,11 +355,11 @@ export function generateLevel5Data(): Level5Data {
         interestExpense: 3,
         operatingCashFlow: 20,
       } as CompanyFinancials,
-      news: "Dragon Tech secures major government contract, revenue outlook upgraded",
+      news: "龙腾科技获政府重大合同，收入展望上调 Dragon Tech secures major government contract, revenue outlook upgraded",
       correctDecision: "BUY" as const,
     },
     {
-      companyName: "Phoenix Energy Group",
+      companyName: "凤鸣能源 Phoenix Energy Group",
       bond: { name: "PH2030", rating: "A+", couponRate: 4.20, remainingYears: 5.5, marketPrice: 100.80, ytm: 4.00 } as CreditBond,
       financials: {
         revenueGrowth: 3,
@@ -369,7 +369,7 @@ export function generateLevel5Data(): Level5Data {
         interestExpense: 5,
         operatingCashFlow: 15,
       } as CompanyFinancials,
-      news: "Phoenix Energy maintains stable operations amid energy transition",
+      news: "凤鸣能源在能源转型中维持稳健运营 Phoenix Energy maintains stable operations amid energy transition",
       correctDecision: "HOLD" as const,
     },
   ];
@@ -405,32 +405,32 @@ export function generateLevel8Data(): MarketScenario {
   const scenarios: MarketScenario[] = [
     {
       type: "A",
-      name: "Central Bank Rate Cut",
-      description: "The central bank unexpectedly cuts the policy rate by 25bp. Markets rally as liquidity floods the system.",
+      name: "央行降息 Central Bank Rate Cut",
+      description: "央行意外下调政策利率25bp。市场大涨，流动性充裕。The central bank unexpectedly cuts the policy rate by 25bp. Markets rally as liquidity floods the system.",
       yieldChange: -40,
       spreadChange: -15,
       decisionRequired: false,
     },
     {
       type: "B",
-      name: "Inflation Rebound",
-      description: "CPI surges above 3%, triggering rate hike fears. Long-duration assets face severe selling pressure.",
+      name: "通胀反弹 Inflation Rebound",
+      description: "CPI飙升至3%以上，加息恐慌蔓延。长久期资产遭遇严重抛售。CPI surges above 3%, triggering rate hike fears. Long-duration assets face severe selling pressure.",
       yieldChange: 50,
       spreadChange: 10,
       decisionRequired: false,
     },
     {
       type: "C",
-      name: "Economic Recession",
-      description: "GDP growth turns negative. Government bonds rally but credit spreads widen sharply as default fears rise.",
+      name: "经济衰退 Economic Recession",
+      description: "GDP增速转负。国债大涨，但违约恐慌导致信用利差急剧走阔。GDP growth turns negative. Government bonds rally but credit spreads widen sharply as default fears rise.",
       yieldChange: -50,
       spreadChange: 100,
       decisionRequired: false,
     },
     {
       type: "D",
-      name: "Credit Crisis",
-      description: "A major corporate default triggers panic in credit markets. AA bond prices plummet as spreads explode.",
+      name: "信用危机 Credit Crisis",
+      description: "大型国企违约引发信用市场恐慌。AA级债券价格暴跌，利差飙升。A major corporate default triggers panic in credit markets. AA bond prices plummet as spreads explode.",
       yieldChange: 20,
       spreadChange: 190,
       decisionRequired: true,
@@ -438,8 +438,8 @@ export function generateLevel8Data(): MarketScenario {
     },
     {
       type: "E",
-      name: "Soft Landing",
-      description: "Economic data shows balanced growth. Mild yield decline and tightening credit spreads benefit all assets.",
+      name: "软着陆 Soft Landing",
+      description: "经济数据显示均衡增长。收益率温和下行，信用利差收窄，全资产受益。Economic data shows balanced growth. Mild yield decline and tightening credit spreads benefit all assets.",
       yieldChange: -10,
       spreadChange: -30,
       decisionRequired: false,
@@ -451,11 +451,11 @@ export function generateLevel8Data(): MarketScenario {
 
 // ===== Portfolio Assets =====
 export const PORTFOLIO_ASSETS: PortfolioAsset[] = [
-  { id: "gov_1y", name: "1Y Government", yield: 1.40, duration: 0.9, risk: "Low", maxAllocation: 40, rating: "GOV" },
-  { id: "gov_5y", name: "5Y Government", yield: 1.70, duration: 4.5, risk: "Low", maxAllocation: 40, rating: "GOV" },
-  { id: "gov_10y", name: "10Y Government", yield: 2.00, duration: 8.2, risk: "Medium", maxAllocation: 40, rating: "GOV" },
-  { id: "aaa_credit", name: "AAA Credit", yield: 2.80, duration: 3.5, risk: "Medium", maxAllocation: 40, rating: "AAA" },
-  { id: "aa_credit", name: "AA Credit", yield: 3.60, duration: 3.8, risk: "High", maxAllocation: 20, rating: "AA" },
+  { id: "gov_1y", name: "1年期国债 1Y Gov", yield: 1.40, duration: 0.9, risk: "Low", maxAllocation: 40, rating: "GOV" },
+  { id: "gov_5y", name: "5年期国债 5Y Gov", yield: 1.70, duration: 4.5, risk: "Low", maxAllocation: 40, rating: "GOV" },
+  { id: "gov_10y", name: "10年期国债 10Y Gov", yield: 2.00, duration: 8.2, risk: "Medium", maxAllocation: 40, rating: "GOV" },
+  { id: "aaa_credit", name: "AAA信用债 AAA Corp", yield: 2.80, duration: 3.5, risk: "Medium", maxAllocation: 40, rating: "AAA" },
+  { id: "aa_credit", name: "AA信用债 AA Corp", yield: 3.60, duration: 3.8, risk: "High", maxAllocation: 20, rating: "AA" },
 ];
 
 export const PORTFOLIO_CONSTRAINTS: PortfolioConstraints = {

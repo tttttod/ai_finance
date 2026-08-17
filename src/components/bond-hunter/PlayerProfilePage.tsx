@@ -7,10 +7,10 @@ interface PlayerProfilePageProps {
   onSubmit: (profile: PlayerProfile) => void;
 }
 
-const RISK_OPTIONS: { value: RiskPreference; label: string; desc: string; color: string }[] = [
-  { value: "conservative", label: "Conservative", desc: "Capital preservation first. Prefer short duration, high-grade bonds.", color: "#10B981" },
-  { value: "balanced", label: "Balanced", desc: "Seek yield with controlled risk. Moderate duration and credit exposure.", color: "#3B82F6" },
-  { value: "aggressive", label: "Aggressive", desc: "Maximize returns. Willing to take on duration and credit risk.", color: "#F59E0B" },
+const RISK_OPTIONS: { value: RiskPreference; label: string; labelCn: string; desc: string; descCn: string; color: string }[] = [
+  { value: "conservative", label: "Conservative", labelCn: "保守型", desc: "Capital preservation first. Prefer short duration, high-grade bonds.", descCn: "本金优先，偏好短久期、高等级债券", color: "#10B981" },
+  { value: "balanced", label: "Balanced", labelCn: "均衡型", desc: "Seek yield with controlled risk. Moderate duration and credit exposure.", descCn: "在风险可控下追求收益，适度久期和信用敞口", color: "#3B82F6" },
+  { value: "aggressive", label: "Aggressive", labelCn: "进取型", desc: "Maximize returns. Willing to take on duration and credit risk.", descCn: "追求最大化收益，愿意承担久期和信用风险", color: "#F59E0B" },
 ];
 
 export function PlayerProfilePage({ onSubmit }: PlayerProfilePageProps) {
@@ -38,10 +38,10 @@ export function PlayerProfilePage({ onSubmit }: PlayerProfilePageProps) {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#1E293B] bg-[#0F1117]/80 mb-4">
             <div className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] animate-pulse" />
-            <span className="text-[10px] font-mono text-[#64748B] tracking-wider">ANALYST REGISTRATION</span>
+            <span className="text-[10px] font-mono text-[#64748B] tracking-wider">分析师注册 ANALYST REGISTRATION</span>
           </div>
-          <h2 className="text-2xl font-bold text-[#E2E8F0] mb-1">Player Profile</h2>
-          <p className="text-xs text-[#64748B] font-mono">Step {step === "name" ? "1" : "2"} of 2</p>
+          <h2 className="text-2xl font-bold text-[#E2E8F0] mb-1">玩家档案 Player Profile</h2>
+          <p className="text-xs text-[#64748B] font-mono">步骤 {step === "name" ? "1" : "2"} / 2</p>
         </div>
 
         {/* Progress bar */}
@@ -57,14 +57,14 @@ export function PlayerProfilePage({ onSubmit }: PlayerProfilePageProps) {
             {/* Name input */}
             <div>
               <label className="block text-[11px] font-mono text-[#64748B] tracking-wider mb-2">
-                ANALYST NAME
+                分析师姓名 ANALYST NAME
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleNameNext()}
-                placeholder="Enter your name..."
+                placeholder="输入你的姓名..."
                 maxLength={20}
                 className="w-full px-4 py-3 rounded-lg bg-[#0F1117] border border-[#1E293B] text-[#E2E8F0] text-sm font-mono placeholder:text-[#334155] focus:outline-none focus:border-[#3B82F6] transition-colors"
                 autoFocus
@@ -79,14 +79,14 @@ export function PlayerProfilePage({ onSubmit }: PlayerProfilePageProps) {
                 background: name.trim().length >= 2 ? "linear-gradient(135deg, #3B82F6, #2563EB)" : "#1E293B",
               }}
             >
-              CONTINUE
+              继续 CONTINUE
             </button>
           </div>
         ) : (
           <div className="space-y-4">
             {/* Analyst ID */}
             <div className="px-4 py-3 rounded-lg bg-[#0F1117] border border-[#1E293B] mb-6">
-              <div className="text-[10px] font-mono text-[#475569] mb-1">ANALYST ID</div>
+              <div className="text-[10px] font-mono text-[#475569] mb-1">分析师编号 ANALYST ID</div>
               <div className="text-sm font-mono text-[#3B82F6]">{analystId}</div>
               <div className="text-[10px] font-mono text-[#475569] mt-1">{name}</div>
             </div>
@@ -94,7 +94,7 @@ export function PlayerProfilePage({ onSubmit }: PlayerProfilePageProps) {
             {/* Risk preference */}
             <div>
               <label className="block text-[11px] font-mono text-[#64748B] tracking-wider mb-3">
-                RISK PREFERENCE
+                风险偏好 RISK PREFERENCE
               </label>
               <div className="space-y-2">
                 {RISK_OPTIONS.map((opt) => (
@@ -122,9 +122,9 @@ export function PlayerProfilePage({ onSubmit }: PlayerProfilePageProps) {
                       />
                       <div>
                         <div className="text-sm font-bold" style={{ color: risk === opt.value ? opt.color : "#94A3B8" }}>
-                          {opt.label}
+                          {opt.labelCn} {opt.label}
                         </div>
-                        <div className="text-[11px] text-[#64748B] mt-0.5">{opt.desc}</div>
+                        <div className="text-[11px] text-[#64748B] mt-0.5">{opt.descCn}</div>
                       </div>
                     </div>
                   </button>
@@ -140,7 +140,7 @@ export function PlayerProfilePage({ onSubmit }: PlayerProfilePageProps) {
                 boxShadow: "0 0 20px rgba(59, 130, 246, 0.3)",
               }}
             >
-              BEGIN CHALLENGE
+              开始挑战 BEGIN CHALLENGE
             </button>
           </div>
         )}

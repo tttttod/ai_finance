@@ -11,13 +11,13 @@ interface ReportProps {
   onRestart: () => void;
 }
 
-const RATING_CONFIG: Record<string, { emoji: string; color: string; gradient: string }> = {
-  "FIXED INCOME MASTER": { emoji: "🏆", color: "#F59E0B", gradient: "linear-gradient(135deg, #F59E0B, #D97706)" },
-  "PORTFOLIO MANAGER": { emoji: "🥇", color: "#10B981", gradient: "linear-gradient(135deg, #10B981, #059669)" },
-  "SENIOR ANALYST": { emoji: "🥈", color: "#3B82F6", gradient: "linear-gradient(135deg, #3B82F6, #2563EB)" },
-  "FIXED INCOME ANALYST": { emoji: "📊", color: "#8B5CF6", gradient: "linear-gradient(135deg, #8B5CF6, #7C3AED)" },
-  "JUNIOR ANALYST": { emoji: "📚", color: "#06B6D4", gradient: "linear-gradient(135deg, #06B6D4, #0891B2)" },
-  "TRAINEE": { emoji: "🌱", color: "#64748B", gradient: "linear-gradient(135deg, #64748B, #475569)" },
+const RATING_CONFIG: Record<string, { emoji: string; color: string; gradient: string; cn: string }> = {
+  "FIXED INCOME MASTER": { emoji: "🏆", color: "#F59E0B", gradient: "linear-gradient(135deg, #F59E0B, #D97706)", cn: "固收大师" },
+  "PORTFOLIO MANAGER": { emoji: "🥇", color: "#10B981", gradient: "linear-gradient(135deg, #10B981, #059669)", cn: "组合经理" },
+  "SENIOR ANALYST": { emoji: "🥈", color: "#3B82F6", gradient: "linear-gradient(135deg, #3B82F6, #2563EB)", cn: "高级分析师" },
+  "FIXED INCOME ANALYST": { emoji: "📊", color: "#8B5CF6", gradient: "linear-gradient(135deg, #8B5CF6, #7C3AED)", cn: "固收分析师" },
+  "JUNIOR ANALYST": { emoji: "📚", color: "#06B6D4", gradient: "linear-gradient(135deg, #06B6D4, #0891B2)", cn: "初级分析师" },
+  "TRAINEE": { emoji: "🌱", color: "#64748B", gradient: "linear-gradient(135deg, #64748B, #475569)", cn: "实习生" },
 };
 
 export function PerformanceReport({ performance, state, onRestart }: ReportProps) {
@@ -39,21 +39,21 @@ export function PerformanceReport({ performance, state, onRestart }: ReportProps
   const playerName = state.player?.name || "Analyst";
 
   const radarData = [
-    { subject: "Return", value: Math.min(100, Math.max(0, 50 + performance.portfolioReturn * 5)) },
-    { subject: "Sharpe", value: Math.min(100, performance.sharpeRatio * 50) },
-    { subject: "Forecast", value: performance.forecastAccuracy },
-    { subject: "Speed", value: performance.decisionSpeed },
-    { subject: "Risk Mgmt", value: performance.riskManagement },
-    { subject: "Duration", value: performance.durationRisk === "Low" ? 90 : performance.durationRisk === "Medium" ? 60 : 30 },
+    { subject: "收益", value: Math.min(100, Math.max(0, 50 + performance.portfolioReturn * 5)) },
+    { subject: "夏普", value: Math.min(100, performance.sharpeRatio * 50) },
+    { subject: "预测", value: performance.forecastAccuracy },
+    { subject: "速度", value: performance.decisionSpeed },
+    { subject: "风控", value: performance.riskManagement },
+    { subject: "久期", value: performance.durationRisk === "Low" ? 90 : performance.durationRisk === "Medium" ? 60 : 30 },
   ];
 
   const metricsBar = [
-    { name: "Return", value: performance.portfolioReturn, fill: performance.portfolioReturn > 0 ? "#10B981" : "#EF4444" },
+    { name: "收益", value: performance.portfolioReturn, fill: performance.portfolioReturn > 0 ? "#10B981" : "#EF4444" },
     { name: "Alpha", value: performance.alpha, fill: performance.alpha > 0 ? "#10B981" : "#EF4444" },
-    { name: "Max DD", value: performance.maxDrawdown, fill: "#EF4444" },
-    { name: "Forecast", value: performance.forecastAccuracy * 0.1, fill: "#3B82F6" },
-    { name: "Speed", value: performance.decisionSpeed * 0.1, fill: "#8B5CF6" },
-    { name: "Risk", value: performance.riskManagement * 0.1, fill: "#F59E0B" },
+    { name: "回撤", value: performance.maxDrawdown, fill: "#EF4444" },
+    { name: "预测", value: performance.forecastAccuracy * 0.1, fill: "#3B82F6" },
+    { name: "速度", value: performance.decisionSpeed * 0.1, fill: "#8B5CF6" },
+    { name: "风控", value: performance.riskManagement * 0.1, fill: "#F59E0B" },
   ];
 
   return (
@@ -62,7 +62,7 @@ export function PerformanceReport({ performance, state, onRestart }: ReportProps
         {/* Rating reveal */}
         <div className={`text-center transition-all duration-700 ${animStep >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
           <div className="text-4xl mb-2">{ratingConf.emoji}</div>
-          <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-1">YOUR RATING</div>
+          <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-1">你的评级 YOUR RATING</div>
           <h2
             className="text-xl font-black tracking-tight"
             style={{
@@ -71,17 +71,17 @@ export function PerformanceReport({ performance, state, onRestart }: ReportProps
               WebkitTextFillColor: "transparent",
             }}
           >
-            {performance.rating}
+            {ratingConf.cn} {performance.rating}
           </h2>
           <div className="text-xs text-[#64748B] mt-1">{playerName} | {state.player?.analystId}</div>
         </div>
 
         {/* Total score */}
         <div className={`text-center transition-all duration-700 ${animStep >= 1 ? "opacity-100 scale-100" : "opacity-0 scale-90"}`}>
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full border-2" style={{ borderColor: ratingConf.color }}>
+          <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full border-2`} style={{ borderColor: ratingConf.color }}>
             <div>
               <div className="text-2xl font-mono font-black" style={{ color: ratingConf.color }}>{performance.totalScore}</div>
-              <div className="text-[8px] font-mono text-[#475569]">SCORE</div>
+              <div className="text-[8px] font-mono text-[#475569]">总分 SCORE</div>
             </div>
           </div>
         </div>
@@ -89,17 +89,17 @@ export function PerformanceReport({ performance, state, onRestart }: ReportProps
         {/* Key metrics */}
         <div className={`grid grid-cols-3 gap-2 transition-all duration-700 ${animStep >= 2 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
           <div className="px-3 py-3 rounded-lg bg-[#0F1117] border border-[#1E293B] text-center">
-            <div className="text-[10px] font-mono text-[#475569]">RETURN</div>
+            <div className="text-[10px] font-mono text-[#475569]">收益率 RETURN</div>
             <div className="text-lg font-mono font-bold" style={{ color: performance.portfolioReturn >= 0 ? "#10B981" : "#EF4444" }}>
               {performance.portfolioReturn >= 0 ? "+" : ""}{performance.portfolioReturn}%
             </div>
           </div>
           <div className="px-3 py-3 rounded-lg bg-[#0F1117] border border-[#1E293B] text-center">
-            <div className="text-[10px] font-mono text-[#475569]">SHARPE</div>
+            <div className="text-[10px] font-mono text-[#475569]">夏普 SHARPE</div>
             <div className="text-lg font-mono font-bold text-[#3B82F6]">{performance.sharpeRatio.toFixed(2)}</div>
           </div>
           <div className="px-3 py-3 rounded-lg bg-[#0F1117] border border-[#1E293B] text-center">
-            <div className="text-[10px] font-mono text-[#475569]">ALPHA</div>
+            <div className="text-[10px] font-mono text-[#475569]">超额 ALPHA</div>
             <div className="text-lg font-mono font-bold" style={{ color: performance.alpha >= 0 ? "#10B981" : "#EF4444" }}>
               {performance.alpha >= 0 ? "+" : ""}{performance.alpha}%
             </div>
@@ -110,23 +110,23 @@ export function PerformanceReport({ performance, state, onRestart }: ReportProps
         <div className={`space-y-2 transition-all duration-700 ${animStep >= 2 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
           <div className="grid grid-cols-2 gap-2">
             <div className="px-3 py-2.5 rounded-lg bg-[#0F1117] border border-[#1E293B]">
-              <div className="text-[10px] font-mono text-[#475569]">BENCHMARK</div>
+              <div className="text-[10px] font-mono text-[#475569]">基准 BENCHMARK</div>
               <div className="text-sm font-mono font-bold text-[#94A3B8]">{performance.benchmarkReturn >= 0 ? "+" : ""}{performance.benchmarkReturn}%</div>
             </div>
             <div className="px-3 py-2.5 rounded-lg bg-[#0F1117] border border-[#1E293B]">
-              <div className="text-[10px] font-mono text-[#475569]">MAX DRAWDOWN</div>
+              <div className="text-[10px] font-mono text-[#475569]">最大回撤 MAX DD</div>
               <div className="text-sm font-mono font-bold text-[#EF4444]">{performance.maxDrawdown}%</div>
             </div>
             <div className="px-3 py-2.5 rounded-lg bg-[#0F1117] border border-[#1E293B]">
-              <div className="text-[10px] font-mono text-[#475569]">DURATION RISK</div>
+              <div className="text-[10px] font-mono text-[#475569]">久期风险 DURATION</div>
               <div className="text-sm font-mono font-bold" style={{ color: performance.durationRisk === "Low" ? "#10B981" : performance.durationRisk === "Medium" ? "#F59E0B" : "#EF4444" }}>
-                {performance.durationRisk}
+                {performance.durationRisk === "Low" ? "低" : performance.durationRisk === "Medium" ? "中" : "高"} {performance.durationRisk}
               </div>
             </div>
             <div className="px-3 py-2.5 rounded-lg bg-[#0F1117] border border-[#1E293B]">
-              <div className="text-[10px] font-mono text-[#475569]">CREDIT RISK</div>
+              <div className="text-[10px] font-mono text-[#475569]">信用风险 CREDIT</div>
               <div className="text-sm font-mono font-bold" style={{ color: performance.creditRisk === "Low" ? "#10B981" : performance.creditRisk === "Medium" ? "#F59E0B" : "#EF4444" }}>
-                {performance.creditRisk}
+                {performance.creditRisk === "Low" ? "低" : performance.creditRisk === "Medium" ? "中" : "高"} {performance.creditRisk}
               </div>
             </div>
           </div>
@@ -134,7 +134,7 @@ export function PerformanceReport({ performance, state, onRestart }: ReportProps
 
         {/* Performance scores */}
         <div className={`transition-all duration-700 ${animStep >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
-          <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">PERFORMANCE BREAKDOWN</div>
+          <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">能力拆解 BREAKDOWN</div>
           <div className="rounded-lg border border-[#1E293B] bg-[#0F1117] p-3">
             <ResponsiveContainer width="100%" height={180}>
               <RadarChart data={radarData}>
@@ -157,9 +157,9 @@ export function PerformanceReport({ performance, state, onRestart }: ReportProps
         <div className={`transition-all duration-700 ${animStep >= 3 ? "opacity-100" : "opacity-0"}`}>
           <div className="space-y-2">
             {[
-              { label: "Forecast Accuracy", value: performance.forecastAccuracy, color: "#3B82F6" },
-              { label: "Decision Speed", value: performance.decisionSpeed, color: "#8B5CF6" },
-              { label: "Risk Management", value: performance.riskManagement, color: "#F59E0B" },
+              { label: "预测准确率 Forecast", value: performance.forecastAccuracy, color: "#3B82F6" },
+              { label: "决策速度 Speed", value: performance.decisionSpeed, color: "#8B5CF6" },
+              { label: "风险管理 Risk Mgmt", value: performance.riskManagement, color: "#F59E0B" },
             ].map((item) => (
               <div key={item.label}>
                 <div className="flex items-center justify-between mb-1">
@@ -179,15 +179,15 @@ export function PerformanceReport({ performance, state, onRestart }: ReportProps
 
         {/* Leaderboard */}
         <div className={`transition-all duration-700 ${animStep >= 4 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
-          <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">LEADERBOARD</div>
+          <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">排行榜 LEADERBOARD</div>
           <div className="rounded-lg border border-[#1E293B] bg-[#0F1117] overflow-hidden">
             {/* Header */}
             <div className="grid grid-cols-12 gap-1 px-3 py-2 border-b border-[#1E293B]">
               <span className="col-span-1 text-[9px] font-mono text-[#475569]">#</span>
-              <span className="col-span-5 text-[9px] font-mono text-[#475569]">ANALYST</span>
-              <span className="col-span-2 text-[9px] font-mono text-[#475569] text-right">RETURN</span>
-              <span className="col-span-2 text-[9px] font-mono text-[#475569] text-right">SHARPE</span>
-              <span className="col-span-2 text-[9px] font-mono text-[#475569] text-right">SCORE</span>
+              <span className="col-span-5 text-[9px] font-mono text-[#475569]">分析师</span>
+              <span className="col-span-2 text-[9px] font-mono text-[#475569] text-right">收益</span>
+              <span className="col-span-2 text-[9px] font-mono text-[#475569] text-right">夏普</span>
+              <span className="col-span-2 text-[9px] font-mono text-[#475569] text-right">总分</span>
             </div>
             {/* Rows */}
             {leaderboard.slice(0, 10).map((entry, i) => {
@@ -201,7 +201,7 @@ export function PerformanceReport({ performance, state, onRestart }: ReportProps
                     {entry.rank}
                   </span>
                   <span className={`col-span-5 text-[10px] font-medium truncate ${isPlayer ? "text-[#3B82F6]" : "text-[#E2E8F0]"}`}>
-                    {entry.analyst} {isPlayer && "← YOU"}
+                    {entry.analyst} {isPlayer && "← 你"}
                   </span>
                   <span className="col-span-2 text-[10px] font-mono text-right" style={{ color: entry.returnPct >= 0 ? "#10B981" : "#EF4444" }}>
                     {entry.returnPct >= 0 ? "+" : ""}{entry.returnPct}%
@@ -227,14 +227,14 @@ export function PerformanceReport({ performance, state, onRestart }: ReportProps
             boxShadow: "0 0 20px rgba(59, 130, 246, 0.2)",
           }}
         >
-          PLAY AGAIN
+          再玩一次 PLAY AGAIN
         </button>
 
         {/* Disclaimer */}
         <div className="text-center pt-2">
           <p className="text-[9px] text-[#334155] leading-relaxed">
-            This is an educational simulation game. All data, company names, and market scenarios are fictional.
-            <br />Not financial advice. For educational and training purposes only.
+            本游戏为教育模拟用途，所有数据、公司名称和市场情景均为虚构。
+            <br />不构成投资建议，仅供教育和培训使用。
           </p>
         </div>
       </div>

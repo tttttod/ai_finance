@@ -11,46 +11,46 @@ interface CommitteeProps {
 const QUESTIONS = [
   {
     id: "rate",
-    title: "Rate Outlook",
-    question: "What is your view on interest rates over the next 3 months?",
+    title: "利率展望 Rate Outlook",
+    question: "你对未来3个月利率方向的判断是？",
     options: [
-      { value: "sharp_up", label: "Sharp Increase" },
-      { value: "slight_up", label: "Slight Increase" },
-      { value: "unchanged", label: "Unchanged" },
-      { value: "slight_down", label: "Slight Decrease" },
-      { value: "sharp_down", label: "Sharp Decrease" },
+      { value: "sharp_up", label: "大幅上升 Sharp Up" },
+      { value: "slight_up", label: "小幅上升 Slight Up" },
+      { value: "unchanged", label: "基本不变 Unchanged" },
+      { value: "slight_down", label: "小幅下降 Slight Down" },
+      { value: "sharp_down", label: "大幅下降 Sharp Down" },
     ],
   },
   {
     id: "asset",
-    title: "Best Asset Class",
-    question: "Which asset class offers the best risk-adjusted return currently?",
+    title: "最优资产 Best Asset",
+    question: "当前哪类资产的风险调整后收益最优？",
     options: [
-      { value: "short_gov", label: "Short Government Bonds" },
-      { value: "long_gov", label: "Long Government Bonds" },
-      { value: "aaa_credit", label: "AAA Corporate Bonds" },
-      { value: "aa_credit", label: "AA Corporate Bonds" },
-      { value: "cash", label: "Cash / Money Market" },
+      { value: "short_gov", label: "短期国债 Short Gov" },
+      { value: "long_gov", label: "长期国债 Long Gov" },
+      { value: "aaa_credit", label: "AAA信用债 AAA Corp" },
+      { value: "aa_credit", label: "AA信用债 AA Corp" },
+      { value: "cash", label: "现金/货币市场 Cash" },
     ],
   },
   {
     id: "duration",
-    title: "Duration Strategy",
-    question: "How should portfolio duration be adjusted?",
+    title: "久期策略 Duration",
+    question: "组合久期应如何调整？",
     options: [
-      { value: "increase", label: "Increase Duration" },
-      { value: "maintain", label: "Maintain Current" },
-      { value: "decrease", label: "Decrease Duration" },
+      { value: "increase", label: "拉长久期 Increase" },
+      { value: "maintain", label: "维持不变 Maintain" },
+      { value: "decrease", label: "缩短久期 Decrease" },
     ],
   },
   {
     id: "credit",
-    title: "Credit Strategy",
-    question: "How should credit bond allocation change?",
+    title: "信用策略 Credit",
+    question: "信用债配置应如何变化？",
     options: [
-      { value: "increase", label: "Increase Credit Exposure" },
-      { value: "maintain", label: "Maintain Current" },
-      { value: "decrease", label: "Decrease Credit Exposure" },
+      { value: "increase", label: "增加信用敞口 Increase" },
+      { value: "maintain", label: "维持不变 Maintain" },
+      { value: "decrease", label: "减少信用敞口 Decrease" },
     ],
   },
 ];
@@ -108,10 +108,10 @@ export function InvestmentCommittee({ onComplete }: CommitteeProps) {
       <div className="px-4 md:px-6 pt-4 pb-3">
         <div className="text-center mb-6">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#F59E0B]/30 bg-[#F59E0B]/5 mb-3">
-            <span className="text-[10px] font-mono text-[#F59E0B] tracking-wider">FINAL STAGE</span>
+            <span className="text-[10px] font-mono text-[#F59E0B] tracking-wider">最终关卡 FINAL STAGE</span>
           </div>
-          <h2 className="text-xl font-bold text-[#E2E8F0]">Investment Committee</h2>
-          <p className="text-xs text-[#64748B] mt-1">Present your final investment views</p>
+          <h2 className="text-xl font-bold text-[#E2E8F0]">投资委员会 Investment Committee</h2>
+          <p className="text-xs text-[#64748B] mt-1">陈述你的最终投资观点</p>
         </div>
 
         {/* Progress */}
@@ -131,7 +131,7 @@ export function InvestmentCommittee({ onComplete }: CommitteeProps) {
           <div>
             <div className="mb-2">
               <span className="text-[10px] font-mono text-[#F59E0B] tracking-wider">
-                QUESTION {step + 1} / {QUESTIONS.length}: {currentQ.title}
+                问题 {step + 1} / {QUESTIONS.length}: {currentQ.title}
               </span>
             </div>
             <div className="text-sm font-medium text-[#E2E8F0] mb-4">{currentQ.question}</div>
@@ -151,19 +151,19 @@ export function InvestmentCommittee({ onComplete }: CommitteeProps) {
           <div>
             <div className="mb-2">
               <span className="text-[10px] font-mono text-[#F59E0B] tracking-wider">
-                FINAL ALLOCATION
+                最终配置 FINAL ALLOCATION
               </span>
             </div>
             <div className="text-sm font-medium text-[#E2E8F0] mb-4">
-              Set your final portfolio allocation:
+              设定你的最终组合配置:
             </div>
 
             <div className="space-y-3 mb-4">
               {[
-                { id: "government", label: "Government Bonds", color: "#3B82F6" },
-                { id: "aaa", label: "AAA Corporate", color: "#10B981" },
-                { id: "aa", label: "AA Corporate", color: "#F59E0B" },
-                { id: "cash", label: "Cash", color: "#64748B" },
+                { id: "government", label: "利率债 Government", color: "#3B82F6" },
+                { id: "aaa", label: "AAA信用债 AAA Corp", color: "#10B981" },
+                { id: "aa", label: "AA信用债 AA Corp", color: "#F59E0B" },
+                { id: "cash", label: "现金 Cash", color: "#64748B" },
               ].map((item) => (
                 <div key={item.id}>
                   <div className="flex items-center justify-between mb-1">
@@ -190,13 +190,13 @@ export function InvestmentCommittee({ onComplete }: CommitteeProps) {
             </div>
 
             <div className={`text-center text-xs font-mono mb-4 ${totalAlloc === 100 ? "text-[#10B981]" : "text-[#EF4444]"}`}>
-              Total: {totalAlloc}% {totalAlloc !== 100 && `(must equal 100%)`}
+              合计: {totalAlloc}% {totalAlloc !== 100 && `(须等于100%)`}
             </div>
 
             <SubmitButton
               onClick={handleAllocationSubmit}
               disabled={totalAlloc !== 100}
-              label="SUBMIT TO COMMITTEE"
+              label="提交投委会 SUBMIT"
             />
           </div>
         )}

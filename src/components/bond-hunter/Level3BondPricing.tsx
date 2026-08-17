@@ -1,24 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import type { Level3Data } from "./types";
 import { GameHeader, SubmitButton } from "./GameUI";
 import { calcBondPrice, calcDuration, calcConvexity } from "./game-engine";
+import type { BondParams } from "./types";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 interface Level3Props {
-  data: Level3Data;
-  onComplete: (interactions: number) => void;
+  onComplete: (interactions: number, finalYield: number) => void;
 }
 
-export function Level3BondPricing({ data, onComplete }: Level3Props) {
-  const [coupon, setCoupon] = useState(data.defaultCoupon);
-  const [yieldRate, setYieldRate] = useState(data.defaultYield);
-  const [maturity, setMaturity] = useState(data.defaultMaturity);
+export function Level3BondPricing({ onComplete }: Level3Props) {
+  const [coupon, setCoupon] = useState(3.0);
+  const [yieldRate, setYieldRate] = useState(2.5);
+  const [maturity, setMaturity] = useState(5);
   const [interactions, setInteractions] = useState(0);
 
-  const price = calcBondPrice(100, coupon / 100, yieldRate / 100, maturity, 2);
-  const duration = calcDuration(100, coupon / 100, yieldRate / 100, maturity, 2);
-  const convexity = calcConvexity(100, coupon / 100, yieldRate / 100, maturity, 2);
+  const params: BondParams = { faceValue: 100, couponRate: coupon / 100, maturity, frequency: 2, yieldRate: yieldRate / 100 };
+  const price = calcBondPrice(params);
+  const duration = calcDuration(params);
+  const convexity = calcConvexity(params);
   const currentYield = (coupon / price * 100);
 
   const trackInteraction = () => setInteractions(prev => prev + 1);
@@ -26,9 +27,10 @@ export function Level3BondPricing({ data, onComplete }: Level3Props) {
   // Generate price-yield curve data
   const curveData = [];
   for (let y = 0.5; y <= 6; y += 0.25) {
+    const p: BondParams = { faceValue: 100, couponRate: coupon / 100, maturity, frequency: 2, yieldRate: y / 100 };
     curveData.push({
       yield: y,
-      price: calcBondPrice(100, coupon / 100, y / 100, maturity, 2),
+      price: calcBondPrice(p),
     });
   }
 
@@ -56,7 +58,7 @@ export function Level3BondPricing({ data, onComplete }: Level3Props) {
           </div>
           <div className="px-3 py-2.5 rounded-lg bg-[#0F1117] border border-[#1E293B]">
             <div className="text-[10px] font-mono text-[#475569]">YTM</div>
-            <div className="text-sm font-mono font-bold text-[#3B82F6]">{(yieldRate).toFixed(2)}%</div>
+            <div className="text-sm font-mono font-bold text-[#3B82F6]">{yieldRate.toFixed(2)}%</div>
           </div>
           <div className="px-3 py-2.5 rounded-lg bg-[#0F1117] border border-[#1E293B]">
             <div className="text-[10px] font-mono text-[#475569]">久期 Duration</div>
@@ -98,25 +100,18 @@ export function Level3BondPricing({ data, onComplete }: Level3Props) {
                   stroke="#3B82F6"
                   strokeWidth={2}
                   dot={false}
-                  activeDot={{ r: 4, fill: "#3B82F6" }}
                 />
               </LineChart>
             </ResponsiveContainer>
-          </div>
-          <div className="flex items-center justify-center gap-2 mt-2">
-            <span className="text-[10px] font-mono text-[#475569]">收益率↑ → 价格↓</span>
-            <span className="text-[10px] text-[#475569]">|</span>
-            <span className="text-[10px] font-mono text-[#475569]">收益率↓ → 价格↑</span>
           </div>
         </div>
 
         {/* Sliders */}
         <div className="space-y-4">
-          {/* Coupon slider */}
           <div>
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] font-mono text-[#475569]">票息 COUPON</span>
-              <span className="text-xs font-mono font-bold text-[#F59E0B]">{coupon.toFixed(2)}%</span>
+              <span className="text-[10px] font-mono font-bold text-[#F59E0B]">{coupon.toFixed(2)}%</span>
             </div>
             <input
               type="range"
@@ -125,51 +120,47 @@ export function Level3BondPricing({ data, onComplete }: Level3Props) {
               step={0.25}
               value={coupon}
               onChange={(e) => { setCoupon(parseFloat(e.target.value)); trackInteraction(); }}
-              className="w-full h-2 rounded-full appearance-none cursor-pointer"
+              className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
               style={{ background: `linear-gradient(to right, #F59E0B 0%, #F59E0B ${((coupon - 0.5) / 5.5) * 100}%, #1E293B ${((coupon - 0.5) / 5.5) * 100}%, #1E293B 100%)` }}
             />
           </div>
-
-          {/* Yield slider */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-mono text-[#475569]">市场收益率 YIELD</span>
-              <span className="text-xs font-mono font-bold text-[#3B82F6]">{yieldRate.toFixed(2)}%</span>
+              <span className="text-[10px] font-mono text-[#475569]">收益率 YIELD</span>
+              <span className="text-[10px] font-mono font-bold text-[#3B82F6]">{yieldRate.toFixed(2)}%</span>
             </div>
             <input
               type="range"
               min={0.5}
               max={6}
-              step={0.05}
+              step={0.25}
               value={yieldRate}
               onChange={(e) => { setYieldRate(parseFloat(e.target.value)); trackInteraction(); }}
-              className="w-full h-2 rounded-full appearance-none cursor-pointer"
+              className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
               style={{ background: `linear-gradient(to right, #3B82F6 0%, #3B82F6 ${((yieldRate - 0.5) / 5.5) * 100}%, #1E293B ${((yieldRate - 0.5) / 5.5) * 100}%, #1E293B 100%)` }}
             />
           </div>
-
-          {/* Maturity slider */}
           <div>
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] font-mono text-[#475569]">期限 MATURITY</span>
-              <span className="text-xs font-mono font-bold text-[#8B5CF6]">{maturity.toFixed(0)}年</span>
+              <span className="text-[10px] font-mono font-bold text-[#8B5CF6]">{maturity.toFixed(1)} 年</span>
             </div>
             <input
               type="range"
               min={1}
               max={30}
-              step={1}
+              step={0.5}
               value={maturity}
               onChange={(e) => { setMaturity(parseFloat(e.target.value)); trackInteraction(); }}
-              className="w-full h-2 rounded-full appearance-none cursor-pointer"
+              className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
               style={{ background: `linear-gradient(to right, #8B5CF6 0%, #8B5CF6 ${((maturity - 1) / 29) * 100}%, #1E293B ${((maturity - 1) / 29) * 100}%, #1E293B 100%)` }}
             />
           </div>
         </div>
 
         <SubmitButton
-          onClick={() => onComplete(interactions)}
-          label="完成实验 COMPLETE"
+          onClick={() => onComplete(interactions, yieldRate)}
+          label="完成 CONTINUE"
         />
       </div>
     </div>

@@ -302,12 +302,12 @@ export const INITIAL_GAME_STATE: GameState = {
 
 // Level info for navigation
 export const LEVEL_INFO: { id: string; title: string; subtitle: string; icon: string }[] = [
-  { id: "level1", title: "Macro Radar", subtitle: "Level 01", icon: "01" },
-  { id: "level2", title: "Yield Curve Lab", subtitle: "Level 02", icon: "02" },
-  { id: "level3", title: "Bond Pricing Lab", subtitle: "Level 03", icon: "03" },
-  { id: "level4", title: "Duration Sniper", subtitle: "Level 04", icon: "04" },
-  { id: "level5", title: "Credit Detective", subtitle: "Level 05", icon: "05" },
-  { id: "level6", title: "Spread Trading", subtitle: "Level 06", icon: "06" },
-  { id: "level7", title: "Portfolio Builder", subtitle: "Level 07", icon: "07" },
-  { id: "level8", title: "Market Shock", subtitle: "Level 08", icon: "08" },
+  { id: "level1", title: "宏观雷达 Macro Radar", subtitle: "关卡 01", icon: "01" },
+  { id: "level2", title: "收益率曲线 Yield Curve Lab", subtitle: "关卡 02", icon: "02" },
+  { id: "level3", title: "债券定价实验室 Bond Pricing Lab", subtitle: "关卡 03", icon: "03" },
+  { id: "level4", title: "久期狙击战 Duration Sniper", subtitle: "关卡 04", icon: "04" },
+  { id: "level5", title: "信用侦探 Credit Detective", subtitle: "关卡 05", icon: "05" },
+  { id: "level6", title: "利差交易 Spread Trading", subtitle: "关卡 06", icon: "06" },
+  { id: "level7", title: "组合构建 Portfolio Builder", subtitle: "关卡 07", icon: "07" },
+  { id: "level8", title: "市场冲击 Market Shock", subtitle: "关卡 08", icon: "08" },
 ];

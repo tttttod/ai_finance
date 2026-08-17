@@ -54,15 +54,27 @@ export function LandingPage({ onStart }: LandingPageProps) {
         {/* Terminal header */}
         <div className="flex items-center gap-2 mb-6 px-4 py-2 rounded border border-[#1E293B] bg-[#0F1117]/80">
           <div className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
-          <span className="text-[11px] font-mono text-[#64748B] tracking-wider">SYSTEM ONLINE</span>
+          <span className="text-[11px] font-mono text-[#64748B] tracking-wider">系统就绪 SYSTEM ONLINE</span>
           <div className="w-2 h-2 rounded-full bg-[#3B82F6] animate-pulse" style={{ animationDelay: "0.5s" }} />
         </div>
 
         {/* Title */}
         <h1
-          className={`text-4xl md:text-6xl font-black tracking-tighter text-center mb-2 ${glitch ? "translate-x-[2px]" : ""}`}
+          className={`text-3xl md:text-5xl font-black tracking-tighter text-center mb-1 ${glitch ? "translate-x-[2px]" : ""}`}
           style={{
             background: "linear-gradient(135deg, #E2E8F0 0%, #3B82F6 50%, #E2E8F0 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+            transition: "transform 0.05s",
+          }}
+        >
+          固定收益挑战
+        </h1>
+        <h1
+          className={`text-4xl md:text-6xl font-black tracking-tighter text-center mb-2 ${glitch ? "-translate-x-[2px]" : ""}`}
+          style={{
+            background: "linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #3B82F6 100%)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
             backgroundClip: "text",
@@ -85,16 +97,19 @@ export function LandingPage({ onStart }: LandingPageProps) {
         </h1>
 
         {/* Subtitle */}
-        <p className="text-[#64748B] text-sm md:text-base font-mono tracking-[0.3em] mb-12 text-center">
+        <p className="text-[#64748B] text-xs md:text-sm font-mono tracking-[0.3em] mb-12 text-center">
+          构建 &middot; 预测 &middot; 投资 &middot; 生存
+        </p>
+        <p className="text-[#475569] text-[10px] md:text-xs font-mono tracking-[0.2em] mb-12 text-center -mt-10">
           BUILD &middot; PREDICT &middot; INVEST &middot; SURVIVE
         </p>
 
         {/* Stats preview */}
         <div className="flex gap-6 mb-12">
           {[
-            { label: "LEVELS", value: "08" },
-            { label: "ASSETS", value: "05" },
-            { label: "SCENARIOS", value: "05" },
+            { label: "关卡", labelEn: "LEVELS", value: "08" },
+            { label: "资产", labelEn: "ASSETS", value: "05" },
+            { label: "情景", labelEn: "SCENARIOS", value: "05" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
               <div className="text-2xl font-mono font-bold text-[#E2E8F0]">{stat.value}</div>
@@ -112,7 +127,7 @@ export function LandingPage({ onStart }: LandingPageProps) {
             boxShadow: "0 0 30px rgba(59, 130, 246, 0.3), inset 0 1px 0 rgba(255,255,255,0.1)",
           }}
         >
-          <span className="relative z-10 text-white">START GAME</span>
+          <span className="relative z-10 text-white">开始游戏 START GAME</span>
           <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             style={{ background: "linear-gradient(135deg, #2563EB, #1D4ED8)" }}
           />
@@ -123,9 +138,9 @@ export function LandingPage({ onStart }: LandingPageProps) {
           <div className="flex items-center gap-3 text-[10px] font-mono text-[#475569]">
             <span>v2.0.24</span>
             <span className="w-1 h-1 rounded-full bg-[#475569]" />
-            <span>FIXED INCOME SIMULATION</span>
+            <span>固收模拟 FIXED INCOME SIMULATION</span>
             <span className="w-1 h-1 rounded-full bg-[#475569]" />
-            <span>EDUCATIONAL USE ONLY</span>
+            <span>仅供教育 EDUCATIONAL USE ONLY</span>
           </div>
         </div>
       </div>

@@ -71,7 +71,7 @@ export function Level8MarketShock({ scenario, portfolio, onSubmit }: Level8Props
 
   return (
     <div className="min-h-screen pb-6" style={{ background: "linear-gradient(180deg, #0B0E14 0%, #111827 100%)" }}>
-      <GameHeader levelId="level8" title="Market Shock" />
+      <GameHeader levelId="level8" title="市场危机 Market Shock" />
 
       <div className="px-4 md:px-6 space-y-4">
         {/* Phase: Intro */}
@@ -81,7 +81,7 @@ export function Level8MarketShock({ scenario, portfolio, onSubmit }: Level8Props
               ⚠️
             </div>
             <div className={`text-sm font-mono text-[#EF4444] tracking-wider transition-all duration-500 ${animStep >= 1 ? "opacity-100" : "opacity-0"}`}>
-              INCOMING MARKET EVENT
+              市场事件来袭 INCOMING EVENT
             </div>
             <div className={`mt-4 flex gap-1 transition-all duration-500 ${animStep >= 2 ? "opacity-100" : "opacity-0"}`}>
               {[0, 1, 2].map(i => (
@@ -104,22 +104,22 @@ export function Level8MarketShock({ scenario, portfolio, onSubmit }: Level8Props
               backgroundColor: `${color}08`,
             }}>
               <div className="text-3xl mb-2">{SCENARIO_ICONS[scenario.type]}</div>
-              <div className="text-sm font-bold text-[#E2E8F0] mb-1">Scenario {scenario.type}: {scenario.name}</div>
+              <div className="text-sm font-bold text-[#E2E8F0] mb-1">情景{scenario.type}: {scenario.name}</div>
               <div className="text-xs text-[#94A3B8] leading-relaxed">{scenario.description}</div>
             </div>
 
             {/* Market impact */}
             <div className="px-4 py-3 rounded-lg border border-[#1E293B] bg-[#0F1117]">
-              <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-3">MARKET IMPACT</div>
+              <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-3">市场影响 MARKET IMPACT</div>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-[#94A3B8]">10Y Yield Change</span>
+                  <span className="text-xs text-[#94A3B8]">10Y 收益率变化</span>
                   <span className="text-sm font-mono font-bold" style={{ color: scenario.yieldChange > 0 ? "#EF4444" : "#10B981" }}>
                     {scenario.yieldChange > 0 ? "+" : ""}{scenario.yieldChange}bp
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-[#94A3B8]">Credit Spread Change</span>
+                  <span className="text-xs text-[#94A3B8]">信用利差变化</span>
                   <span className="text-sm font-mono font-bold" style={{ color: scenario.spreadChange > 0 ? "#EF4444" : "#10B981" }}>
                     {scenario.spreadChange > 0 ? "+" : ""}{scenario.spreadChange}bp
                   </span>
@@ -132,23 +132,23 @@ export function Level8MarketShock({ scenario, portfolio, onSubmit }: Level8Props
               borderColor: overallImpact >= 0 ? "#10B98130" : "#EF444430",
               backgroundColor: overallImpact >= 0 ? "#10B98108" : "#EF444408",
             }}>
-              <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">PORTFOLIO P&L IMPACT</div>
+              <div className="text-[10px] font-mono text-[#475569] tracking-wider mb-2">组合盈亏 P&L IMPACT</div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-[#94A3B8]">Gov Bond Impact</span>
+                  <span className="text-xs text-[#94A3B8]">利率债影响</span>
                   <span className="text-xs font-mono font-bold" style={{ color: govImpact >= 0 ? "#10B981" : "#EF4444" }}>
                     {govImpact >= 0 ? "+" : ""}{govImpact.toFixed(2)}%
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-[#94A3B8]">Credit Bond Impact</span>
+                  <span className="text-xs text-[#94A3B8]">信用债影响</span>
                   <span className="text-xs font-mono font-bold" style={{ color: creditImpact >= 0 ? "#10B981" : "#EF4444" }}>
                     {creditImpact >= 0 ? "+" : ""}{creditImpact.toFixed(2)}%
                   </span>
                 </div>
                 <div className="h-px bg-[#1E293B]" />
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#E2E8F0]">Net Portfolio Impact</span>
+                  <span className="text-xs font-bold text-[#E2E8F0]">组合净影响</span>
                   <span className="text-lg font-mono font-bold" style={{ color: overallImpact >= 0 ? "#10B981" : "#EF4444" }}>
                     {overallImpact >= 0 ? "+" : ""}{overallImpact.toFixed(2)}%
                   </span>
@@ -160,14 +160,14 @@ export function Level8MarketShock({ scenario, portfolio, onSubmit }: Level8Props
             {phase === "decision" && (
               <>
                 <div className="px-4 py-3 rounded-lg border border-[#EF4444]/30 bg-[#EF4444]/5 text-center">
-                  <div className="text-sm font-bold text-[#EF4444] mb-1">ACTION REQUIRED</div>
-                  <div className="text-xs text-[#94A3B8]">Credit markets are in turmoil. What do you do with your AA credit positions?</div>
+                  <div className="text-sm font-bold text-[#EF4444] mb-1">需要决策 ACTION REQUIRED</div>
+                  <div className="text-xs text-[#94A3B8]">信用市场剧烈波动，你对AA信用债仓位如何操作？</div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
                   {(["BUY_THE_DIP", "HOLD", "SELL"] as const).map((d) => {
                     const colors = { BUY_THE_DIP: "#10B981", HOLD: "#F59E0B", SELL: "#EF4444" };
-                    const labels = { BUY_THE_DIP: "BUY DIP", HOLD: "HOLD", SELL: "SELL" };
+                    const labels = { BUY_THE_DIP: "抄底 BUY", HOLD: "持有 HOLD", SELL: "卖出 SELL" };
                     const isSelected = decision === d;
                     return (
                       <button
@@ -191,20 +191,22 @@ export function Level8MarketShock({ scenario, portfolio, onSubmit }: Level8Props
                 <SubmitButton
                   onClick={() => decision && onSubmit(decision)}
                   disabled={!decision}
-                  label="EXECUTE DECISION"
+                  label="执行决策 EXECUTE"
                 />
               </>
             )}
 
             {phase === "result" && !scenario.decisionRequired && (
-              <div className="text-center py-4">
-                <div className="text-xs font-mono text-[#475569]">Calculating final results...</div>
-                <div className="flex justify-center gap-1 mt-2">
-                  {[0, 1, 2].map(i => (
-                    <div key={i} className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] animate-pulse" style={{ animationDelay: `${i * 0.2}s` }} />
-                  ))}
+              <>
+                <div className="text-center py-4">
+                  <div className="text-xs font-mono text-[#475569]">正在计算最终结果...</div>
+                  <div className="flex justify-center gap-1 mt-2">
+                    {[0, 1, 2].map(i => (
+                      <div key={i} className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] animate-pulse" style={{ animationDelay: `${i * 0.2}s` }} />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </>
         )}
