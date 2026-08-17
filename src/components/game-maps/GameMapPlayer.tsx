@@ -1787,7 +1787,7 @@ export function GameMapPlayer({
                 </div>
               </div>
               <p className="text-sm text-[#475569] leading-relaxed">
-                「欢迎来到金融华尔界，<span className="font-semibold">tradeTI</span>。
+                「欢迎来到金融华尔界，<span className="font-semibold">TPTIer</span>。
               </p>
               <p className="text-sm text-[#475569] leading-relaxed mt-2">
                 跟我来，先去「金融知识入港口」完成开户。在这里你会学到基础的市场知识，掌握信息的真伪辨别。
