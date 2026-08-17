@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ArrowLeft, Star, Sparkles } from "lucide-react";
+import { SlidingPuzzle } from "./SlidingPuzzle";
 
 // ===== 关卡热点定义（百分比坐标） =====
 interface BrainTrainingLevel {
@@ -21,7 +22,7 @@ const BRAIN_LEVELS: BrainTrainingLevel[] = [
     id: "sliding-puzzle",
     name: "数字华容道",
     nameEn: "Number Sliding Puzzle",
-    icon: "🔢",
+    icon: "",
     x: 18,
     y: 22,
     color: "#D97706",
@@ -32,56 +33,56 @@ const BRAIN_LEVELS: BrainTrainingLevel[] = [
     id: "calcudoku",
     name: "数回挑战",
     nameEn: "Calcudoku Challenge",
-    icon: "🔢",
+    icon: "",
     x: 78,
     y: 22,
     color: "#3B82F6",
     description: "数字与运算的逻辑迷宫",
-    unlocked: true,
+    unlocked: false,
   },
   {
     id: "kongming-chess",
     name: "孔明棋",
     nameEn: "Kongming Chess",
-    icon: "♟️",
+    icon: "",
     x: 18,
     y: 48,
     color: "#8B5CF6",
     description: "跳跃消除，留下最后一子",
-    unlocked: true,
+    unlocked: false,
   },
   {
     id: "langtons-ant",
     name: "兰顿蚂蚁",
     nameEn: "Langton's Ant",
-    icon: "🐜",
+    icon: "",
     x: 78,
     y: 48,
     color: "#059669",
     description: "观察简单规则涌现的复杂图案",
-    unlocked: true,
+    unlocked: false,
   },
   {
     id: "six-color-maze",
     name: "六色迷盘",
     nameEn: "Six-Color Maze",
-    icon: "🌀",
+    icon: "",
     x: 22,
     y: 72,
     color: "#EC4899",
     description: "在彩色迷宫中找到出路",
-    unlocked: true,
+    unlocked: false,
   },
   {
     id: "jigsaw-puzzle",
     name: "拼图挑战",
     nameEn: "Jigsaw Puzzle",
-    icon: "🧩",
+    icon: "",
     x: 78,
     y: 72,
     color: "#F59E0B",
     description: "拼合碎片，还原完整画面",
-    unlocked: true,
+    unlocked: false,
   },
 ];
 
@@ -92,11 +93,22 @@ interface BrainTrainingArenaProps {
 
 export function BrainTrainingArena({ onBack, onLaunchGame }: BrainTrainingArenaProps) {
   const [hoveredLevel, setHoveredLevel] = useState<string | null>(null);
+  const [activeGame, setActiveGame] = useState<string | null>(null);
 
   const handleLevelClick = (level: BrainTrainingLevel) => {
     if (!level.unlocked) return;
+    setActiveGame(level.id);
     onLaunchGame(level.id);
   };
+
+  const handleBackFromGame = () => {
+    setActiveGame(null);
+  };
+
+  // 如果正在玩游戏，显示游戏组件
+  if (activeGame === "sliding-puzzle") {
+    return <SlidingPuzzle onBack={handleBackFromGame} />;
+  }
 
   return (
     <div className="flex flex-col h-full relative">
