@@ -20,6 +20,7 @@ import RiskGame from "./RiskGame";
 import TechnicalGame from "./TechnicalGame";
 import KnowledgeEntrance from "./KnowledgeEntrance";
 import ParliamentGame from "./ParliamentGame";
+import { BrainTrainingArena } from "./BrainTrainingArena";
 import {
   loadTraderRoadProgress,
   saveTraderRoadProgress,
@@ -474,11 +475,15 @@ export function GameMapPlayer({
         // 独立地点（非主线关卡）始终可点击；华尔堡需要完成金融知识入港口后才能进入
         const isIndependent = loc.type === "feature" || loc.type === "submap" || (loc.type === "game" && loc.gameId && !loc.gameId.startsWith("level-"));
         const isWallCastle = loc.type === "submap" && loc.locationId === "wall-castle";
-        const status = isWallCastle
-          ? (progress.completedLevels.includes(1) ? "available" : "locked")
-          : isIndependent
-            ? "available"
-            : getLevelStatus(loc.legacyLevelId ?? 0);
+        // 模型沼泽（固收挑战游戏）始终可点击，不受主线进度限制
+        const isModelSwamp = loc.locationId === "model-swamp";
+        const status = isModelSwamp
+          ? "available"
+          : isWallCastle
+            ? (progress.completedLevels.includes(1) ? "available" : "locked")
+            : isIndependent
+              ? "available"
+              : getLevelStatus(loc.legacyLevelId ?? 0);
         const isHovered = hoveredWorldLoc === loc.id;
         const isClicked = clickedWorldLoc === loc.id;
         const isAvailable = status === "available" || status === "completed";
@@ -946,22 +951,14 @@ export function GameMapPlayer({
       }
       if (activeGameId === "brain-training") {
         return (
-          <div className="flex flex-col h-full">
-            <div className="flex items-center gap-2 mb-3 px-1">
-              <span className="text-lg">🧠</span>
-              <h3 className="text-sm font-bold text-[#1E293B]">脑力训练场</h3>
-            </div>
-            <div className="flex-1 min-h-0 flex items-center justify-center">
-              <p className="text-sm text-[#64748B]">脑力训练游戏即将开放</p>
-            </div>
-            <button
-              onClick={() => { setView("world"); setActiveGameId(null); }}
-              className="mt-4 mx-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all"
-              style={{ background: "linear-gradient(135deg, #D97706, #F59E0B)" }}
-            >
-              返回世界地图
-            </button>
-          </div>
+          <BrainTrainingArena
+            onBack={() => { setView("world"); setActiveGameId(null); }}
+            onLaunchGame={(gameId) => {
+              // TODO: 后续为每个小游戏实现独立组件
+              // 目前先显示提示
+              alert(`即将开启：${gameId}`);
+            }}
+          />
         );
       }
       if (activeGameId === "review-lighthouse") {
