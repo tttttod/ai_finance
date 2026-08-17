@@ -2,7 +2,7 @@ import type { DialogueLevelData } from "./game-data";
 
 export const DIALOGUE_DATA: Record<number, DialogueLevelData> = {
   1: {
-    sceneImage: "/dialogue-scene-level1.webp",
+    sceneImage: "/data-black-market.png",
     opening:
       "你准备进入第一场 K 线交易，却发现同一只股票出现三张走势完全不同的图。\n\nData Agent 坐在行情修复台前，等你找出能用于交易的数据。\n\n虚构股票「岚海科技」昨天收盘价为 30 元。公司今天执行每十股转增五股，除权参考价变为 20 元。\n\n三张图摆在面前：一张暴跌，一张突破，一张平稳。差异来自复权错误、行情延迟和成交量缺失。",
     nodes: [
