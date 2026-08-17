@@ -920,7 +920,7 @@ export function GameMapPlayer({
       }
       if (activeGameId === "bond-hunter") {
         return (
-          <div className="h-full w-full overflow-hidden rounded-lg" style={{ background: "#0B0E14" }}>
+          <div className="h-full w-full overflow-y-auto rounded-lg" style={{ background: "#0B0E14" }}>
             <BondHunterGame />
           </div>
         );
