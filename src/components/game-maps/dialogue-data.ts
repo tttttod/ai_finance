@@ -118,7 +118,7 @@ export const DIALOGUE_DATA: Record<number, DialogueLevelData> = {
       "你带着错误行情进入交易。\n\nData Agent 摇头：\n「三张图里有一张是对的，你没选到它。」\n\nLead Agent：\n「别灰心，下次先看数据再决策。」",
   },
   2: {
-    sceneImage: "/dialogue-scene-level2.webp",
+    sceneImage: "/market-storm.png",
     opening:
       "地下交易大厅使用暗蓝色灯光。中央指数屏幕不断闪红，窗外落着大雨。\n\nMarket Agent 坐在远处的桌边倒茶。\n\nLead Agent 神情期待，身体靠近交易屏幕。\n\nLead Agent：\n「沧海指数跌了 4.8%，我们的青禾零售只跌了 0.8%。它明显比市场强，我觉得这是机会。」\n\nData Agent 神情平静，低头检查行情记录。\n\nData Agent：\n「价格已经核对，行情更新时间正常。青禾零售确实只跌了 0.8%。」\n\nLead Agent 看向角落，眉毛微微抬起。\n\nLead Agent：\n「警报都快把屋顶震掉了，他怎么还在喝茶？」\n\nData Agent 轻推眼镜：\n「警报正常，茶也正常。」\n\nMarket Agent 抬起一侧眉毛，目光从茶杯移向玩家。\n\nMarket Agent：\n「一只股票表现较强，只能说明它今天表现较强。想判断能否出手，先看看窗外是什么天气。」",
     nodes: [
