@@ -41,6 +41,17 @@ const BRAIN_LEVELS: BrainTrainingLevel[] = [
     description: "移动数字方块，按顺序排列",
     unlocked: true,
   },
+  {
+    id: "kongming-chess",
+    name: "孔明棋",
+    nameEn: "Kongming Chess",
+    icon: "",
+    x: 18,
+    y: 48,
+    color: "#8B5CF6",
+    description: "跳跃消除，留下最后一子",
+    unlocked: true,
+  },
 
   {
     id: "langtons-ant",
@@ -97,6 +108,10 @@ export function BrainTrainingArena({ onBack }: BrainTrainingArenaProps) {
   // 如果正在玩游戏，显示游戏组件
   if (activeGame === "sliding-puzzle") {
     return <SlidingPuzzle onBack={handleBackFromGame} />;
+  }
+
+  if (activeGame === "kongming-chess") {
+    return <PegSolitaire onBack={handleBackFromGame} />;
   }
 
   if (activeGame === "kongming-chess") {
