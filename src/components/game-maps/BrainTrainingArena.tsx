@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ArrowLeft, Star, Sparkles } from "lucide-react";
 import { SlidingPuzzle } from "./SlidingPuzzle";
+import { PegSolitaire } from "./PegSolitaire";
 
 // ===== 关卡热点定义（百分比坐标） =====
 interface BrainTrainingLevel {
@@ -49,7 +50,7 @@ const BRAIN_LEVELS: BrainTrainingLevel[] = [
     y: 48,
     color: "#8B5CF6",
     description: "跳跃消除，留下最后一子",
-    unlocked: false,
+    unlocked: true,
   },
   {
     id: "langtons-ant",
@@ -108,6 +109,10 @@ export function BrainTrainingArena({ onBack, onLaunchGame }: BrainTrainingArenaP
   // 如果正在玩游戏，显示游戏组件
   if (activeGame === "sliding-puzzle") {
     return <SlidingPuzzle onBack={handleBackFromGame} />;
+  }
+
+  if (activeGame === "kongming-chess") {
+    return <PegSolitaire onBack={handleBackFromGame} />;
   }
 
   return (
