@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ArrowLeft, Star, Sparkles } from "lucide-react";
 import { PegSolitaire } from "./PegSolitaire";
+import { SlidingPuzzle } from "./SlidingPuzzle";
 
 // ===== 关卡热点定义（百分比坐标） =====
 interface BrainTrainingLevel {
@@ -30,16 +31,17 @@ const BRAIN_LEVELS: BrainTrainingLevel[] = [
     unlocked: false,
   },
   {
-    id: "kongming-chess",
-    name: "孔明棋",
-    nameEn: "Kongming Chess",
+    id: "sliding-puzzle",
+    name: "数字华容道",
+    nameEn: "Number Sliding Puzzle",
     icon: "",
     x: 18,
-    y: 48,
-    color: "#8B5CF6",
-    description: "跳跃消除，留下最后一子",
+    y: 22,
+    color: "#D97706",
+    description: "移动数字方块，按顺序排列",
     unlocked: true,
   },
+
   {
     id: "langtons-ant",
     name: "兰顿蚂蚁",
@@ -93,6 +95,10 @@ export function BrainTrainingArena({ onBack }: BrainTrainingArenaProps) {
   };
 
   // 如果正在玩游戏，显示游戏组件
+  if (activeGame === "sliding-puzzle") {
+    return <SlidingPuzzle onBack={handleBackFromGame} />;
+  }
+
   if (activeGame === "kongming-chess") {
     return <PegSolitaire onBack={handleBackFromGame} />;
   }
