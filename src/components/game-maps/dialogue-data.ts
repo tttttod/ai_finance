@@ -262,6 +262,7 @@ export const DIALOGUE_DATA: Record<number, DialogueLevelData> = {
       "【第三天：市场再次下跌】\n\n屏幕重新变红，警报声再次响起。\n\n青禾零售下跌 5.4%，亏损数字出现在账户中央。\n\nLead Agent 的笑容消失，视线向下。\n\nLead Agent：\n「昨天的上涨，让我以为风暴已经过去了。」\n\nData Agent 神情失望，目光停在持仓金额上。\n\nData Agent：\n「持仓提高后，今天的损失也被放大了。」\n\nMarket Agent 眉头下压，轻轻摇头。\n\nMarket Agent：\n「一天的反弹改变不了市场仍在摇晃。你用更大的持仓，押了一次过早的判断。」\n\n---\n\n触发结局：「逆风开满帆」\n\nMarket Agent 拒绝加入。",
   },
   3: {
+    sceneImage: "/policy-secret-letter.png",
     opening:
       "玩家正在团队办公室看盘，手机弹出政策通知。\n\n中央屏幕上的冷链板块快速上涨，鲜达生活接近涨停。\n\nLead Agent 神情兴奋，身体靠近行情屏幕：\n「政策刚发布，冷链板块已经涨了 7%。鲜达生活快涨停了，我们要不要跟上？」\n\nMarket Agent 神情平静，双手抱在胸前：\n「市场已经读完标题，正文读到哪一页还不好说。」\n\nData Agent 打开政策文件，轻推眼镜：\n「文件签章有效，发布时间是今天上午九点。原文共有六页，群聊里只转发了第一页。」\n\nLead Agent 的笑容收住了一些：\n「六页？我刚才只看见了'支持冷链发展'。」\n\n办公室侧门打开，里面是一间堆满文件的档案室。\n\nIndustry Agent 坐在文件堆后，手中拿着政策原文。他神情平静，抬眼看向玩家：\n「标题负责把人叫进来，第四页才告诉你钱准备给谁。」",
 
