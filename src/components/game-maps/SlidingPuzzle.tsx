@@ -215,6 +215,9 @@ export function SlidingPuzzle({ onBack }: SlidingPuzzleProps) {
         setRecords(JSON.parse(savedRecords));
       } catch (e) {}
     }
+
+    // 首次进入时自动显示难度选择
+    setShowDifficultySelect(true);
   }, []);
 
   // 保存最佳成绩
@@ -569,7 +572,7 @@ export function SlidingPuzzle({ onBack }: SlidingPuzzleProps) {
 
   // 难度选择
   const renderDifficultySelect = () => {
-    if (!showDifficultySelect && gameState === "idle") return null;
+    if (!showDifficultySelect) return null;
 
     return (
       <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -581,13 +584,7 @@ export function SlidingPuzzle({ onBack }: SlidingPuzzleProps) {
               return (
                 <button
                   key={diff}
-                  onClick={() => {
-                    setDifficulty(diff);
-                    setShowDifficultySelect(false);
-                    if (gameState === "idle" || gameState === "completed") {
-                      startGame();
-                    }
-                  }}
+                  onClick={() => setDifficulty(diff)}
                   className={`w-full p-4 rounded-xl border-2 transition-all ${
                     difficulty === diff ? "border-[#8B5CF6] bg-[#F5F3FF]" : "border-[#E2E8F0] hover:border-[#8B5CF6]/50"
                   }`}
@@ -608,12 +605,23 @@ export function SlidingPuzzle({ onBack }: SlidingPuzzleProps) {
               );
             })}
           </div>
-          <button
-            onClick={() => setShowDifficultySelect(false)}
-            className="w-full mt-4 py-2 text-sm text-[#64748B] hover:text-[#1E293B]"
-          >
-            取消
-          </button>
+          <div className="flex gap-3 mt-4">
+            <button
+              onClick={() => setShowDifficultySelect(false)}
+              className="flex-1 py-3 bg-[#F1F5F9] text-[#475569] font-bold rounded-lg hover:bg-[#E2E8F0] transition-all"
+            >
+              回到上一步
+            </button>
+            <button
+              onClick={() => {
+                setShowDifficultySelect(false);
+                startGame();
+              }}
+              className="flex-1 py-3 bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] text-white font-bold rounded-lg hover:shadow-lg transition-all"
+            >
+              开始游戏
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -711,7 +719,7 @@ export function SlidingPuzzle({ onBack }: SlidingPuzzleProps) {
       <div className="relative z-10 px-4 py-3 space-y-2">
         {gameState === "idle" ? (
           <button
-            onClick={startGame}
+            onClick={() => setShowDifficultySelect(true)}
             className="w-full py-3 bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] text-white font-bold rounded-lg hover:shadow-lg transition-all flex items-center justify-center gap-2"
           >
             <Play className="w-5 h-5" />
