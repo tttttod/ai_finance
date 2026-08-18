@@ -1692,6 +1692,64 @@ export function GameMapPlayer({
           {view === "world" && renderWorldMap()}
           {view === "zone" && renderZoneMap()}
           {view === "game" && renderGame()}
+          {/* 华尔堡全部通关提示 */}
+          {showWallCastleCompleteTip && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
+              <div
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                onClick={() => setShowWallCastleCompleteTip(false)}
+              />
+              <div
+                className="relative w-full max-w-sm rounded-2xl p-6 shadow-2xl overflow-hidden animate-bounce-in"
+                style={{
+                  background: "linear-gradient(160deg, #1E293B 0%, #0F172A 100%)",
+                  border: "1px solid rgba(59,130,246,0.25)",
+                  boxShadow: "0 0 60px rgba(59,130,246,0.15), inset 0 1px 0 rgba(255,255,255,0.05)",
+                }}
+              >
+                <div
+                  className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-20 opacity-40"
+                  style={{
+                    background: "radial-gradient(ellipse at top, rgba(59,130,246,0.4) 0%, transparent 70%)",
+                  }}
+                />
+                <div className="relative text-center mb-5">
+                  <div className="flex items-center justify-center gap-3 mb-2">
+                    <div className="w-8 h-[1px]" style={{background: "linear-gradient(to right, transparent, rgba(59,130,246,0.5))"}} />
+                    <span className="text-2xl">🏰</span>
+                    <div className="w-8 h-[1px]" style={{background: "linear-gradient(to right, rgba(59,130,246,0.5), transparent)"}} />
+                  </div>
+                  <h3 className="text-lg font-bold text-white">华尔堡通关！</h3>
+                </div>
+                <div className="relative space-y-3 mb-6">
+                  <div className="flex items-center justify-center gap-1 text-sm text-blue-200">
+                    <span>✅ 数据黑市</span>
+                    <span className="text-gray-500">·</span>
+                    <span>✅ 市场风暴</span>
+                    <span className="text-gray-500">·</span>
+                    <span>✅ 政策密函</span>
+                  </div>
+                  <p className="text-sm text-gray-300 text-center leading-relaxed">
+                    三枚试炼之印已全部点亮！
+                    <br />
+                    前方的<strong className="text-blue-300">信息迷雾群岛</strong>已为你开放。
+                    <br />
+                    继续前进吧，TPTIer！
+                  </p>
+                </div>
+                <button
+                  onClick={() => { setShowWallCastleCompleteTip(false); setView("world"); setActiveGameId(null); }}
+                  className="relative w-full py-2.5 rounded-xl text-sm font-medium text-white transition-all duration-200 hover:scale-[1.02]"
+                  style={{
+                    background: "linear-gradient(135deg, #3B82F6, #2563EB)",
+                    boxShadow: "0 4px 20px rgba(59,130,246,0.3)",
+                  }}
+                >
+                  前往信息迷雾群岛
+                </button>
+              </div>
+            </div>
+          )}
           {view === "submap" && renderWallCastleMap()}
           {view === "feature" && renderFeatureView()}
         </div>
