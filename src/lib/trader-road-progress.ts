@@ -270,8 +270,8 @@ export const TRADER_PATH: TraderPathItem[] = [
   {
     step: 9,
     locationId: "hotspot-volcano",
-    title: "热点火山与追涨火箭",
-    subtitle: "待开放",
+    title: "金融 Quiz 营",
+    subtitle: "轻松体验",
     icon: "/icons/trader-road/hotspot-volcano.webp",
     unlockAgents: [],
   },
@@ -279,7 +279,7 @@ export const TRADER_PATH: TraderPathItem[] = [
     step: 10,
     locationId: "review-lighthouse",
     title: "复盘灯塔",
-    subtitle: "待开放",
+    subtitle: "轻松体验",
     icon: "/icons/trader-road/review-lighthouse.jpg",
     unlockAgents: [],
   },
@@ -771,9 +771,11 @@ export function getTraderRoadLevelsWithStatus(
   return TRADER_PATH
     .filter((item) => !item.isPrologue) // 排除序章
     .map((item) => {
-      // "待开放" 条目永远锁定，不受进度影响
+      // "待开放" 条目永远锁定，"轻松体验" 条目永远可用，不受进度影响
       const status = item.subtitle === "待开放"
         ? "locked" as TraderRoadLevelStatus
+        : item.subtitle === "轻松体验"
+        ? "available" as TraderRoadLevelStatus
         : getTraderRoadLevelStatus(progress, item.step);
       return {
         id: item.step, // step 1-10 作为 UI 兼容 id

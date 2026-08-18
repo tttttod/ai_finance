@@ -129,7 +129,7 @@ const WORLD_LOCATIONS: WorldLocation[] = [
   { id: 10, locationId: "brain-training-arena", name: "脑力训练场", subtitle: "Brain Training Arena", x: 85, y: 46, type: "game", gameId: "brain-training" },
   { id: 11, locationId: "finance-quiz-camp", name: "金融 Quiz 营", subtitle: "Financial Quiz Camp", x: 54, y: 86, type: "game", gameId: "finance-quiz" },
   { id: 12, locationId: "wall-castle", name: "华尔堡", subtitle: "Wall Castle", x: 50, y: 23, type: "submap", mapId: "wallCastleMap" },
-  { id: 13, locationId: "hotspot-volcano", name: "热点火山与追涨火箭", subtitle: "Hotspot Volcano & Rocket", x: 77, y: 33, type: "game", gameId: "hotspot-volcano" },
+  { id: 13, locationId: "hotspot-volcano", name: "金融 Quiz 营", subtitle: "Financial Quiz Camp", x: 77, y: 33, type: "game", gameId: "hotspot-volcano" },
   { id: 14, locationId: "review-lighthouse", name: "复盘灯塔", subtitle: "Review Lighthouse", x: 17, y: 74, type: "game", gameId: "review-lighthouse" },
 ];
 
