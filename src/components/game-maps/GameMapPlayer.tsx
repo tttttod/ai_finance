@@ -183,6 +183,7 @@ export function GameMapPlayer({
   const [isKnowledgeEntrance, setIsKnowledgeEntrance] = useState(false);
   const [unlockedAgentId, setUnlockedAgentId] = useState<string | null>(null);
   const [nextLevelTip, setNextLevelTip] = useState<string | null>(null);
+  const [showNextLevelTip, setShowNextLevelTip] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [tourVisited, setTourVisited] = useState(false);
   const [wallCastleRefreshKey, setWallCastleRefreshKey] = useState(0);
@@ -297,7 +298,8 @@ export function GameMapPlayer({
         setNextLevelTip("K线图学习");
       }
 
-      // 设置下一关提示
+      // 设置下一关提示（仅当没有 Agent 解锁弹窗时显示独立提示）
+      const hasAgentUnlock = [1, 5, 6].includes(levelId);
       const nextLevelMap: Record<number, string> = {
         4: "财报考古遗迹",
         5: "模型沼泽",
@@ -308,6 +310,9 @@ export function GameMapPlayer({
       };
       if (nextLevelMap[levelId]) {
         setNextLevelTip(nextLevelMap[levelId]);
+        if (!hasAgentUnlock) {
+          setShowNextLevelTip(true);
+        }
       }
     },
     [progress, onLevelComplete]
@@ -1980,6 +1985,7 @@ export function GameMapPlayer({
                       setShowAgentUnlock(false);
                       setUnlockedAgentId(null);
                       setNextLevelTip(null);
+                      setShowNextLevelTip(false);
                     }}
                     className="w-full px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-medium text-sm shadow-md hover:shadow-lg transition-shadow"
                   >
