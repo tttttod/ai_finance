@@ -3,10 +3,14 @@
  *
  * Priority: Supabase (if SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are set)
  * Fallback: local .cache/market-snapshot.json
+ *
+ * 安全说明：本模块仅在服务端使用，严禁在浏览器端 import。
+ * 所有环境变量（TUSHARE_TOKEN / SUPABASE_SERVICE_ROLE_KEY / ADIN_*）绝不能
+ * 以 NEXT_PUBLIC_ 前缀暴露给浏览器。
  */
 
 import type { MiniMarketSnapshot } from "./market-types";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -14,11 +18,16 @@ const CACHE_DIR = path.join(process.cwd(), ".cache");
 const SNAPSHOT_FILE = path.join(CACHE_DIR, "market-snapshot.json");
 const STOCK_BASIC_FILE = path.join(CACHE_DIR, "stock-basic.json");
 
-function getSupabase() {
+// 服务端启动时记录一次配置状态（不输出任何密钥值，仅 true/false）
+const LOG_PREFIX = "[market-store]";
+
+function getSupabase(): SupabaseClient | null {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return null;
-  return createClient(url, key);
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 }
 
 function ensureCacheDir() {
@@ -27,36 +36,32 @@ function ensureCacheDir() {
   }
 }
 
-// ---- Snapshot ----
+export type EnvDiagnostic = {
+  tushareConfigured: boolean;
+  supabaseConfigured: boolean;
+  adminSecretConfigured: boolean;
+  missing: string[];
+};
 
-export async function getLatestMarketSnapshot(): Promise<MiniMarketSnapshot | null> {
-  const sb = getSupabase();
-  if (sb) {
-    try {
-      const { data, error } = await sb
-        .from("market_snapshots")
-        .select("snapshot_data")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
-      if (!error && data?.snapshot_data) {
-        return data.snapshot_data as MiniMarketSnapshot;
-      }
-    } catch {
-      // fall through to file
-    }
-  }
+/**
+ * 返回服务端环境变量配置诊断。只返回布尔和缺失变量名，绝不返回变量值。
+ */
+export function getEnvDiagnostic(): EnvDiagnostic {
+  const missing: string[] = [];
+  const tushareConfigured = !!process.env.TUSHARE_TOKEN;
+  const supabaseUrl = !!process.env.SUPABASE_URL;
+  const supabaseKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseConfigured = supabaseUrl && supabaseKey;
+  const adminSecretConfigured = !!(
+    process.env.ADMIN_REFRESH_SECRET || process.env.ADMIN_SECRET
+  );
 
-  // File fallback
-  try {
-    if (fs.existsSync(SNAPSHOT_FILE)) {
-      const raw = fs.readFileSync(SNAPSHOT_FILE, "utf-8");
-      return JSON.parse(raw) as MiniMarketSnapshot;
-    }
-  } catch {
-    // ignore
-  }
-  return null;
+  if (!tushareConfigured) missing.push("TUSHARE_TOKEN");
+  if (!supabaseUrl) missing.push("SUPABASE_URL");
+  if (!supabaseKey) missing.push("SUPABASE_SERVICE_ROLE_KEY");
+  if (!adminSecretConfigured) missing.push("ADMIN_REFRESH_SECRET");
+
+  return { tushareConfigured, supabaseConfigured, adminSecretConfigured, missing };
 }
 
 /**
@@ -75,31 +80,146 @@ export function isTushareConfigured(): boolean {
   return !!process.env.TUSHARE_TOKEN;
 }
 
-export async function saveMarketSnapshot(
-  snapshot: MiniMarketSnapshot,
-): Promise<void> {
+/**
+ * 获取 admin 刷新接口的 secret（兼容 ADMIN_REFRESH_SECRET 与 ADMIN_SECRET）。
+ */
+export function getAdminSecret(): string | undefined {
+  return process.env.ADMIN_REFRESH_SECRET || process.env.ADMIN_SECRET;
+}
+
+function isRealSnapshot(s: MiniMarketSnapshot | null | undefined): boolean {
+  if (!s) return false;
+  // 归一化：旧值 "cache" 视为真实数据
+  return s.source === "tushare" || s.source === "cache" || (s as { source?: string }).source === "database";
+}
+
+// ---- Snapshot ----
+
+/**
+ * 读取最近一次真实行情快照。
+ * 兼容两种历史表名：market_snapshots（docs/database.sql）与 market_snapshot_cache（supabase/schema.sql）。
+ * 只返回真实快照（source=tushare/cache/database），mock 快照会被忽略。
+ */
+export async function getLatestMarketSnapshot(): Promise<MiniMarketSnapshot | null> {
   const sb = getSupabase();
   if (sb) {
+    // 1) 优先新表 market_snapshots
     try {
-      await sb.from("market_snapshots").insert({
-        snapshot_date: snapshot.snapshotDate,
-        trade_date: snapshot.tradeDate,
-        source: snapshot.source,
-        stale: snapshot.stale,
-        snapshot_data: snapshot,
-      });
-      return;
-    } catch {
-      // fall through to file
+      const { data, error } = await sb
+        .from("market_snapshots")
+        .select("snapshot_data")
+        .order("fetched_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!error && data?.snapshot_data) {
+        const snap = data.snapshot_data as MiniMarketSnapshot;
+        if (isRealSnapshot(snap)) {
+          return { ...snap, persistedTo: "supabase" };
+        }
+      }
+    } catch (err) {
+      console.warn(`${LOG_PREFIX} query market_snapshots failed:`, err instanceof Error ? err.message : err);
+    }
+
+    // 2) 兼容旧表 market_snapshot_cache
+    try {
+      const { data, error } = await sb
+        .from("market_snapshot_cache")
+        .select("snapshot_data")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!error && data?.snapshot_data) {
+        const snap = data.snapshot_data as MiniMarketSnapshot;
+        if (isRealSnapshot(snap)) {
+          return { ...snap, persistedTo: "supabase" };
+        }
+      } else if (error) {
+        console.warn(`${LOG_PREFIX} query market_snapshot_cache failed:`, error.message);
+      }
+    } catch (err) {
+      console.warn(`${LOG_PREFIX} query market_snapshot_cache failed:`, err instanceof Error ? err.message : err);
     }
   }
 
-  // File fallback
+  // 3) File fallback
+  try {
+    if (fs.existsSync(SNAPSHOT_FILE)) {
+      const raw = fs.readFileSync(SNAPSHOT_FILE, "utf-8");
+      const snap = JSON.parse(raw) as MiniMarketSnapshot;
+      if (isRealSnapshot(snap)) {
+        return { ...snap, persistedTo: "file" };
+      }
+    }
+  } catch (err) {
+    console.warn(`${LOG_PREFIX} read file snapshot failed:`, err instanceof Error ? err.message : err);
+  }
+  return null;
+}
+
+export type SaveSnapshotResult = {
+  storage: "supabase" | "file";
+  table?: string;
+  tradeDate?: string;
+  fetchedAt?: string;
+};
+
+/**
+ * 保存真实行情快照。写入 Supabase 失败时回退本地文件。
+ * 绝不删除或覆盖已有真实快照 —— 新快照是 INSERT，旧快照作为历史保留。
+ */
+export async function saveMarketSnapshot(
+  snapshot: MiniMarketSnapshot,
+): Promise<SaveSnapshotResult> {
+  const sb = getSupabase();
+  if (sb) {
+    // 1) 新表 market_snapshots
+    try {
+      const { error } = await sb.from("market_snapshots").insert({
+        snapshot_date: snapshot.snapshotDate,
+        trade_date: snapshot.tradeDate,
+        source: "tushare",
+        stale: false,
+        snapshot_data: snapshot,
+      });
+      if (!error) {
+        return { storage: "supabase", table: "market_snapshots", tradeDate: snapshot.tradeDate, fetchedAt: snapshot.fetchedAt };
+      }
+      console.warn(`${LOG_PREFIX} insert market_snapshots failed:`, error.message);
+    } catch (err) {
+      console.warn(`${LOG_PREFIX} insert market_snapshots threw:`, err instanceof Error ? err.message : err);
+    }
+
+    // 2) 兼容旧表 market_snapshot_cache（upsert by snapshot_date）
+    try {
+      const nowIso = new Date().toISOString();
+      const { error } = await sb.from("market_snapshot_cache").upsert(
+        {
+          snapshot_date: snapshot.snapshotDate,
+          snapshot_data: snapshot,
+          source: "tushare",
+          updated_at: nowIso,
+        },
+        { onConflict: "snapshot_date" },
+      );
+      if (!error) {
+        return { storage: "supabase", table: "market_snapshot_cache", tradeDate: snapshot.tradeDate, fetchedAt: snapshot.fetchedAt };
+      }
+      console.warn(`${LOG_PREFIX} upsert market_snapshot_cache failed:`, error.message);
+    } catch (err) {
+      console.warn(`${LOG_PREFIX} upsert market_snapshot_cache threw:`, err instanceof Error ? err.message : err);
+    }
+  }
+
+  // 3) File fallback
   ensureCacheDir();
   fs.writeFileSync(SNAPSHOT_FILE, JSON.stringify(snapshot, null, 2), "utf-8");
+  return { storage: "file", tradeDate: snapshot.tradeDate, fetchedAt: snapshot.fetchedAt };
 }
 
 // ---- Stock basic cache ----
+// 注意：docs/database.sql 把 market_aux_cache 的 JSON 列命名为 data，
+// 而历史代码使用 cache_data。这里同时兼容两种列名。
 
 export async function getLatestStockBasicCache(): Promise<unknown[] | null> {
   const sb = getSupabase();
@@ -107,19 +227,23 @@ export async function getLatestStockBasicCache(): Promise<unknown[] | null> {
     try {
       const { data, error } = await sb
         .from("market_aux_cache")
-        .select("cache_data, updated_at")
+        .select("cache_data, data, updated_at")
         .eq("cache_key", "stock_basic")
-        .single();
-      if (!error && data?.cache_data) {
-        // Check if older than 7 days
-        const updated = new Date(data.updated_at);
-        const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-        if (updated.getTime() > sevenDaysAgo) {
-          return data.cache_data as unknown[];
+        .maybeSingle();
+      if (!error && data) {
+        const rows = (data.cache_data ?? data.data) as unknown[] | null;
+        if (rows && Array.isArray(rows)) {
+          const updated = new Date((data.updated_at as string) ?? Date.now());
+          const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+          if (updated.getTime() > sevenDaysAgo) {
+            return rows;
+          }
         }
+      } else if (error) {
+        console.warn(`${LOG_PREFIX} query market_aux_cache failed:`, error.message);
       }
-    } catch {
-      // fall through
+    } catch (err) {
+      console.warn(`${LOG_PREFIX} query market_aux_cache threw:`, err instanceof Error ? err.message : err);
     }
   }
 
@@ -128,11 +252,10 @@ export async function getLatestStockBasicCache(): Promise<unknown[] | null> {
     if (fs.existsSync(STOCK_BASIC_FILE)) {
       const raw = fs.readFileSync(STOCK_BASIC_FILE, "utf-8");
       const parsed = JSON.parse(raw);
-      // Check age
       if (parsed._cachedAt) {
         const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
         if (new Date(parsed._cachedAt).getTime() > sevenDaysAgo) {
-          return parsed.rows;
+          return parsed.rows as unknown[];
         }
       }
     }
@@ -145,9 +268,9 @@ export async function getLatestStockBasicCache(): Promise<unknown[] | null> {
 export async function saveStockBasicCache(rows: unknown[]): Promise<void> {
   const sb = getSupabase();
   if (sb) {
+    // 优先写 cache_data 列；若列不存在则回退 data 列
     try {
-      // Upsert
-      await sb.from("market_aux_cache").upsert(
+      const { error } = await sb.from("market_aux_cache").upsert(
         {
           cache_key: "stock_basic",
           cache_data: rows,
@@ -155,9 +278,25 @@ export async function saveStockBasicCache(rows: unknown[]): Promise<void> {
         },
         { onConflict: "cache_key" },
       );
-      return;
-    } catch {
-      // fall through
+      if (!error) return;
+      console.warn(`${LOG_PREFIX} upsert market_aux_cache.cache_data failed:`, error.message);
+    } catch (err) {
+      console.warn(`${LOG_PREFIX} upsert market_aux_cache.cache_data threw:`, err instanceof Error ? err.message : err);
+    }
+
+    try {
+      const { error } = await sb.from("market_aux_cache").upsert(
+        {
+          cache_key: "stock_basic",
+          data: rows,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "cache_key" },
+      );
+      if (!error) return;
+      console.warn(`${LOG_PREFIX} upsert market_aux_cache.data failed:`, error.message);
+    } catch (err) {
+      console.warn(`${LOG_PREFIX} upsert market_aux_cache.data threw:`, err instanceof Error ? err.message : err);
     }
   }
 

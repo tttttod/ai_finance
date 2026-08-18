@@ -1,89 +1,37 @@
 import { NextResponse } from "next/server";
-import { getLatestMarketSnapshot, isSupabaseConfigured, isTushareConfigured } from "@/lib/data/market-snapshot-store";
-import { isTradingTime, isSnapshotStale } from "@/lib/data/market-refresh-policy";
-import { buildMarketSnapshotFromTushare } from "@/lib/data/market-snapshot-builder";
-import { saveMarketSnapshot } from "@/lib/data/market-snapshot-store";
-import { mockMarketData, mockRecommendedTargets } from "@/lib/mini-mock";
-import type { MiniMarketSnapshot } from "@/lib/data/market-types";
+import { getMarketSnapshotForRequest } from "@/lib/data/market-snapshot-service";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * GET /api/market-snapshot
+ *
+ * 首页「今日市场」唯一行情来源。普通用户只读 Supabase 缓存：
+ *  - 有真实快照：直接返回（可能 isStale），不阻塞
+ *  - 无任何真实快照：若 TUSHARE_TOKEN 已配置则同步首次初始化
+ *  - 交易时间内快照过期：fire-and-forget 后台刷新
+ *  - 仅在无 token / 初始化失败且无历史快照时返回 mock（isDemo=true）
+ *
+ * 本接口响应不包含任何内部配置（token、secret、是否配置等）。
+ */
 export async function GET() {
-  let snapshot = await getLatestMarketSnapshot();
-
-  // Auto-refresh during trading hours if snapshot is stale
-  const trading = isTradingTime();
-  const stale = snapshot ? isSnapshotStale(snapshot.fetchedAt) : true;
-
-  if (trading && stale && isTushareConfigured()) {
-    try {
-      // Fire-and-forget refresh (don't block the response)
-      const refreshPromise = (async () => {
-        const fresh = await buildMarketSnapshotFromTushare();
-        await saveMarketSnapshot(fresh);
-      })();
-      // Don't await - let it run in background
-      refreshPromise.catch((err) => {
-        console.error("[market-snapshot] Background refresh failed:", err);
-      });
-    } catch (err) {
-      console.error("[market-snapshot] Failed to trigger background refresh:", err);
-    }
-  }
-
-  if (snapshot) {
-    // Add data quality info
-    const dataQuality = {
-      indices: snapshot.indices?.length > 0 ? "tushare" : "mock",
-      hotSectors: snapshot.hotSectors?.length > 0 ? "tushare" : "mock",
-      activeStocks: snapshot.activeStocks?.length > 0 ? "tushare" : "mock",
-      recommendedTargets: snapshot.recommendedTargets?.length > 0 ? "tushare" : "mock",
-    };
-
+  try {
+    const { response, meta } = await getMarketSnapshotForRequest();
     return NextResponse.json({
       success: true,
-      data: {
-        ...snapshot,
-        dataQuality,
-        hasRealData: snapshot.source === "tushare",
-        supabaseConfigured: isSupabaseConfigured(),
-        tushareConfigured: isTushareConfigured(),
-        isTradingTime: trading,
-        autoRefreshTriggered: trading && stale && isTushareConfigured(),
+      data: response,
+      // meta 仅给前端做轻量行为判断（是否刚刚首次初始化、后台是否在刷新），
+      // 不含任何敏感配置
+      meta: {
+        initialInit: meta.initialInit,
+        backgroundRefresh: meta.backgroundRefresh,
       },
     });
+  } catch (err) {
+    console.error("[market-snapshot] unhandled error:", err instanceof Error ? err.message : err);
+    return NextResponse.json(
+      { success: false, error: "市场数据暂时不可用，请稍后重试" },
+      { status: 500 },
+    );
   }
-
-  // Fallback to mock data if no snapshot exists
-  const fallback: MiniMarketSnapshot = {
-    snapshotDate: new Date().toISOString().split("T")[0].replace(/-/g, ""),
-    tradeDate: new Date().toISOString().split("T")[0].replace(/-/g, ""),
-    fetchedAt: new Date().toISOString(),
-    source: "mock",
-    stale: false,
-    summary: mockMarketData.summary,
-    indices: mockMarketData.indices,
-    hotSectors: mockMarketData.hotSectors,
-    activeStocks: mockMarketData.activeStocks,
-    recommendedTargets: mockRecommendedTargets,
-    events: mockMarketData.events as { time: string; title: string; impact: "positive" | "negative" | "neutral" }[],
-  };
-
-  return NextResponse.json({
-    success: true,
-    data: {
-      ...fallback,
-      dataQuality: {
-        indices: "mock",
-        hotSectors: "mock",
-        activeStocks: "mock",
-        recommendedTargets: "mock",
-      },
-      hasRealData: false,
-      supabaseConfigured: isSupabaseConfigured(),
-      tushareConfigured: isTushareConfigured(),
-      isTradingTime: trading,
-      autoRefreshTriggered: false,
-    },
-  });
 }

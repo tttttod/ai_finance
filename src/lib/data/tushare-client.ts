@@ -17,7 +17,34 @@ interface TushareRawResponse {
 }
 
 /**
+ * Tushare 调用错误，附带错误码，方便上层分类处理（不泄露 token）。
+ */
+export class TushareError extends Error {
+  code:
+    | "TOKEN_MISSING"
+    | "AUTH_FAILED"
+    | "HTTP_ERROR"
+    | "API_ERROR"
+    | "NETWORK_ERROR";
+  status?: number;
+  tushareCode?: number;
+
+  constructor(
+    message: string,
+    code: TushareError["code"],
+    opts?: { status?: number; tushareCode?: number },
+  ) {
+    super(message);
+    this.name = "TushareError";
+    this.code = code;
+    this.status = opts?.status;
+    this.tushareCode = opts?.tushareCode;
+  }
+}
+
+/**
  * Call a single Tushare API endpoint and return rows as objects.
+ * @throws {TushareError}
  */
 export async function callTushare<T>(
   apiName: string,
@@ -26,7 +53,10 @@ export async function callTushare<T>(
 ): Promise<T[]> {
   const token = process.env.TUSHARE_TOKEN;
   if (!token) {
-    throw new Error("TUSHARE_TOKEN is not configured");
+    throw new TushareError(
+      "TUSHARE_TOKEN is not configured",
+      "TOKEN_MISSING",
+    );
   }
 
   const body = {
@@ -36,23 +66,48 @@ export async function callTushare<T>(
     fields,
   };
 
-  const res = await fetch(TUSHARE_BASE_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  let res: Response;
+  try {
+    res = await fetch(TUSHARE_BASE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    throw new TushareError(
+      `Tushare network error (api=${apiName}): ${err instanceof Error ? err.message : "unknown"}`,
+      "NETWORK_ERROR",
+    );
+  }
 
   if (!res.ok) {
-    throw new Error(
+    // 401/403 视为鉴权失败
+    if (res.status === 401 || res.status === 403) {
+      throw new TushareError(
+        `Tushare auth failed: HTTP ${res.status} (api=${apiName})`,
+        "AUTH_FAILED",
+        { status: res.status },
+      );
+    }
+    throw new TushareError(
       `Tushare HTTP error: ${res.status} ${res.statusText} (api=${apiName})`,
+      "HTTP_ERROR",
+      { status: res.status },
     );
   }
 
   const json: TushareRawResponse = await res.json();
 
   if (json.code !== 0) {
-    throw new Error(
-      `Tushare API error: code=${json.code}, msg=${json.msg} (api=${apiName})`,
+    const msg = json.msg || "unknown";
+    // Tushare 常见 token 失效错误码：40001/40002/40003 等
+    const authFailed =
+      /token|权限|auth|permission|account/i.test(msg) ||
+      [40001, 40002, 40003, 40200, 40201, 40202, 40203].includes(json.code);
+    throw new TushareError(
+      `Tushare API error: code=${json.code}, msg=${msg} (api=${apiName})`,
+      authFailed ? "AUTH_FAILED" : "API_ERROR",
+      { tushareCode: json.code },
     );
   }
 

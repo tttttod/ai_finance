@@ -2,7 +2,7 @@
 
 > **工作流规则**：所有功能改动必须先更新本 Spec 文档，经确认后再按 Spec 修改代码。
 > 最后更新：2026-08-15
-> 本次变更：修复「模型沼泽」在世界地图中被锁定无法打开的问题，固收挑战游戏不受主线进度限制
+> 本次变更：修复生产环境首页「今日市场」真实行情链路，首次部署自动初始化、刷新失败保留旧快照、前端仅展示用户友好文案
 
 ---
 
@@ -560,7 +560,93 @@ data: [DONE]
 
 情绪标签仅作内容归类，不构成投资建议。
 
-### 4.6 `POST /api/chat` AI 研究对话（增强版）
+### 4.6 `GET /api/market-snapshot` 首页「今日市场」真实行情快照
+
+**用途**：首页（冒险 Tab）「今日市场」模块的唯一行情数据来源。普通用户请求只读 Supabase 缓存，不直接打 Tushare。
+
+**数据链路（固定优先级）**：
+
+```
+Supabase 最近一次真实快照（含稍旧） > Tushare 实时刷新（写入 Supabase） > 本地文件快照 > mock 演示数据
+```
+
+**核心规则**：
+
+1. **首次部署自动初始化，不受交易时间限制**：
+   - 读取 Supabase（兼容历史表名 `market_snapshots` 与 `market_snapshot_cache`）。
+   - 若无任何真实快照，且 `TUSHARE_TOKEN` 已配置，则立即执行一次真实行情初始化（同步等待，返回真实数据）。
+   - 非交易时间、周末/节假日同样会用最近一个交易日数据初始化（由 builder 内部 `resolveTradeDate` 向前回溯最多 7 个自然日）。
+2. **已有真实快照优先返回**：命中后立即返回，不阻塞用户。
+3. **过期后台刷新**：仅在 A 股交易时间内（北京时间 9:30-11:30、13:00-15:00）且快照超过刷新间隔（30 分钟）时，触发 fire-and-forget 后台刷新；带进程内刷新锁（60 秒），避免高并发下重复调用 Tushare。
+4. **刷新失败保留旧数据**：后台/首次刷新失败时，绝不清空或覆盖已有的真实快照，继续返回旧快照并标记 `isStale: true`；只有数据库和文件都没有真实快照时才回退 mock。
+5. **Mock 兜底**：仅当 `TUSHARE_TOKEN` 未配置或初始化失败且无任何历史真实快照时返回 mock，`isDemo: true`。
+
+**服务端环境变量（仅服务端，禁止 `NEXT_PUBLIC_` 前缀）**：
+
+| 变量 | 必需 | 说明 |
+|------|------|------|
+| `TUSHARE_TOKEN` | 真实行情必需 | Tushare API token，仅服务端读取 |
+| `SUPABASE_URL` | 持久化缓存必需 | Supabase 项目 URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | 持久化缓存必需 | Supabase 服务端 role key |
+| `ADMIN_REFRESH_SECRET` | 手动刷新必需 | `POST /api/admin/refresh-market` 鉴权 secret（兼容 `ADMIN_SECRET`） |
+
+任一字段缺失，服务端日志输出明确的缺失项名称（不打印值），不向浏览器泄露。
+
+**响应格式**：
+```json
+{
+  "success": true,
+  "data": {
+    "snapshotDate": "YYYYMMDD",
+    "tradeDate": "YYYYMMDD",
+    "fetchedAt": "ISO 时间",
+    "updatedAt": "ISO 时间（=fetchedAt）",
+    "source": "tushare" | "database" | "file" | "mock",
+    "isStale": false,
+    "isDemo": false,
+    "summary": "...",
+    "indices": [],
+    "hotSectors": [],
+    "activeStocks": [],
+    "recommendedTargets": [],
+    "events": []
+  }
+}
+```
+
+- `source`：
+  - `"tushare"` — 本次请求实时拉取（首次初始化或手动刷新）。
+  - `"database"` — 来自 Supabase 的历史真实快照。
+  - `"file"` — Supabase 不可用时的本地文件快照。
+  - `"mock"` — 演示数据兜底。
+- `isDemo === true` 仅当 source 为 `mock`。
+- 响应不返回 `tushareConfigured` / `supabaseConfigured` 等内部配置字段到浏览器。
+
+**前端展示规则**（`src/app/page.tsx` 冒险 Tab）：
+- 真实数据：正常显示「今日市场」，来源标签「实时行情」/「缓存行情」。
+- 历史真实快照且 `isStale`：显示「数据更新时间：HH:MM」+ 弱提示「行情更新中」，不切 mock。
+- Mock（`isDemo`）：小标签「演示数据」+ 用户友好文案「真实市场数据暂时不可用，当前展示演示数据。」，**不暴露** `TUSHARE_TOKEN`、`/api/admin/refresh-market`、`Supabase`、`ADMIN_SECRET` 等任何内部信息。
+
+### 4.7 `POST /api/admin/refresh-market` 手动刷新真实行情（运维工具）
+
+- **鉴权**：必须携带请求头 `x-admin-secret`，值等于服务端环境变量 `ADMIN_REFRESH_SECRET`（兼容 `ADMIN_SECRET`）；未配置或不匹配返回 `401`。
+- **行为**：忽略缓存，强制从 Tushare 构建最新快照并写入 Supabase；成功后返回 `{ success, data: { tradeDate, fetchedAt, source, savedTo, record } }`。
+- **失败分类（HTTP 500，明确错误码）**：
+  - `TUSHARE_TOKEN_MISSING` — 未配置 token
+  - `TUSHARE_AUTH_FAILED` — token 无效/鉴权失败（Tushare code != 0）
+  - `TUSHARE_REQUEST_FAILED` — Tushare HTTP/网络错误
+  - `SUPABASE_NOT_CONFIGURED` — Supabase 未配置（仍会写入本地文件兜底）
+  - `SUPABASE_WRITE_FAILED` — 数据库写入失败
+  - `NO_TRADE_DATA` — 回溯 7 天仍无法取到交易日数据
+- **不删除旧数据**：刷新失败不触碰已存在的真实快照。
+
+### 4.8 `POST /api/cron/refresh-market` 定时刷新（可选）
+
+- 供外部 cron / 平台定时任务调用，A 股交易日盘前/盘中/盘后触发均可；非交易时间调用会取最近交易日数据。
+- 若配置了 `CRON_REFRESH_SECRET` 则需 `x-cron-secret` 匹配，否则放行（建议在网关层限流）。
+- 复用同一刷新逻辑，带刷新锁防重入。
+
+### 4.9 `POST /api/chat` AI 研究对话（增强版）
 
 **请求格式：**
 ```json
@@ -814,6 +900,7 @@ NewsFeed                              // 信息面数据
 | 2026-08-15 | 第四页「时讯 · 交流社区」支持本地发帖：作者身份格式为「{TPTI 人格名} · {自定义用户名}」，用户帖子存于 `localStorage.forum_user_posts` 并置顶；自定义用户名存于 `localStorage.forum_username`，未测评时人格名为「未测评型」，未设用户名时回退 `player_{client-id 短码}` |
 | 2026-08-15 | 修复「模型沼泽」在世界地图中被锁定无法打开的问题：世界地图渲染逻辑中，`model-swamp` 地点的 status 始终设为 `available`，不再受主线关卡顺序解锁限制（固收挑战游戏为独立玩法，可随时进入） |
 | 2026-08-15 | 移除「任务」Tab 交易之路地图底部的两个开发调试按钮（「测试：解锁 Lead Agent」「测试：重置交易之路进度」），进度改由正常关卡解锁与 localStorage 管理 |
+| 2026-08-15 | 修复生产环境首页「今日市场」行情链路：Supabase 无快照时首次访问自动初始化（不受交易时间限制）；新增进程内刷新锁（60s）防并发重复打 Tushare；Tushare 刷新失败时保留并返回历史真实快照（isStale），仅在无任何真实快照时才回退 mock；统一 source 语义为 tushare/database/file/mock；服务端输出环境变量缺失与链路诊断日志（不打印密钥）；前端 mock 文案改为用户友好提示，不再暴露 TUSHARE_TOKEN / /api/admin/refresh-market 等内部信息；/api/admin/refresh-market 返回明确错误码与写入记录；兼容历史表名 market_snapshots 与 market_snapshot_cache，新增 supabase/migrations 行情快照表 SQL |
 
 ---
 

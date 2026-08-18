@@ -32,7 +32,7 @@ import {
   SURVEY_QUESTIONS,
   GlobalNewsEvent,
 } from "@/lib/mini-types";
-import type { MiniMarketSnapshot, MiniRecommendedTarget } from "@/lib/data/market-types";
+import type { MarketSnapshotResponse, MiniRecommendedTarget } from "@/lib/data/market-types";
 import type { StockResearchContext } from "@/lib/data/stock-context-types";
 import {
   generateAgentResponse,
@@ -1550,7 +1550,7 @@ function ModelTab() {
           {predictionResult.dataQuality.source !== "tushare" && (
             <div className="bg-amber-50 rounded-lg p-3 border border-amber-100">
               <p className="text-[10px] text-amber-700">
-                当前数据来源为演示数据，未接入实时行情。请配置 TUSHARE_TOKEN 后重试。
+                真实行情暂时不可用，当前预测基于演示数据，结果仅供参考。
               </p>
             </div>
           )}
@@ -2556,7 +2556,7 @@ type AdventurePanelId = "tasks" | "targets" | "signals" | "summary" | null;
 function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboardingGuide }: { tradeTIResult: TradeTIState | null; onFillResearch: (target: RecommendedTarget) => void; onGoToResearch: () => void; onShowOnboardingGuide?: () => void }) {
   const [researchTabGameLevel, setResearchTabGameLevel] = useState<number | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
-  const [marketSnapshot, setMarketSnapshot] = useState<MiniMarketSnapshot | null>(null);
+  const [marketSnapshot, setMarketSnapshot] = useState<MarketSnapshotResponse | null>(null);
   const [snapshotLoading, setSnapshotLoading] = useState(true);
   const [snapshotError, setSnapshotError] = useState<string | null>(null);
   const [level1Open, setLevel1Open] = useState(false);
@@ -2624,7 +2624,7 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
   // Fetch market snapshot with auto-refresh during trading hours
   useEffect(() => {
     let cancelled = false;
-    let refreshTimer: NodeJS.Timeout | null = null;
+    let refreshTimer: ReturnType<typeof setTimeout> | null = null;
 
     const fetchSnapshot = (showLoading = true) => {
       if (showLoading) setSnapshotLoading(true);
@@ -2633,10 +2633,9 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
         .then((json) => {
           if (cancelled) return;
           if (json?.success && json.data) {
-            setMarketSnapshot(json.data);
-            // If in trading hours and auto-refresh was triggered, schedule next refresh
-            if (json.data.isTradingTime && json.data.autoRefreshTriggered) {
-              // Refresh every 30 minutes during trading hours
+            setMarketSnapshot(json.data as MarketSnapshotResponse);
+            // 交易时间内，后台正在刷新则 30 分钟后再来拉一次最新快照
+            if (json.data.isTradingTime || json.meta?.backgroundRefresh) {
               refreshTimer = setTimeout(() => {
                 if (!cancelled) fetchSnapshot(false);
               }, 30 * 60 * 1000);
@@ -2791,20 +2790,32 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
             </div>
           </div>
           {/* 数据来源标识 */}
-          <div className="flex items-center gap-1">
-            {marketSnapshot?.source === "tushare" && !marketSnapshot?.stale && (
-              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
-                实时行情
-              </span>
-            )}
-            {marketSnapshot?.source === "cache" && (
-              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
-                缓存行情
-              </span>
-            )}
-            {marketSnapshot?.source === "mock" && (
-              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
-                演示数据
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex items-center gap-1">
+              {marketSnapshot && !marketSnapshot.isDemo && (
+                <span
+                  className={`text-[9px] px-1.5 py-0.5 rounded-full border ${
+                    marketSnapshot.source === "tushare" && !marketSnapshot.isStale
+                      ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+                      : "bg-amber-50 text-amber-600 border-amber-200"
+                  }`}
+                >
+                  {marketSnapshot.source === "tushare" && !marketSnapshot.isStale
+                    ? "实时行情"
+                    : marketSnapshot.isStale
+                    ? "行情更新中"
+                    : "缓存行情"}
+                </span>
+              )}
+              {marketSnapshot?.isDemo && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                  演示数据
+                </span>
+              )}
+            </div>
+            {marketSnapshot && !marketSnapshot.isDemo && marketSnapshot.updatedAt && (
+              <span className="text-[9px] text-slate-400">
+                更新于 {new Date(marketSnapshot.updatedAt).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", hour12: false })}
               </span>
             )}
           </div>
@@ -2823,10 +2834,10 @@ function MarketTab({ tradeTIResult, onFillResearch, onGoToResearch, onShowOnboar
         </div>
         {snapshotLoading && <div className="animate-pulse h-3 bg-slate-100 rounded w-1/2 mt-2" />}
         {snapshotError && <p className="text-[10px] text-amber-500 mt-1">{snapshotError}</p>}
-        {/* 演示数据提示 */}
-        {marketSnapshot?.source === "mock" && (
+        {/* 演示数据提示（仅用户友好文案，不暴露任何内部配置/接口信息） */}
+        {marketSnapshot?.isDemo && (
           <p className="text-[9px] text-slate-400 mt-2 text-center">
-            当前暂无真实行情快照，请配置 TUSHARE_TOKEN 并调用 /api/admin/refresh-market 刷新数据
+            真实市场数据暂时不可用，当前展示演示数据。
           </p>
         )}
       </div>

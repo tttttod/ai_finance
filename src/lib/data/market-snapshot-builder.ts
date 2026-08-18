@@ -5,6 +5,7 @@
 
 import {
   callTushare,
+  TushareError,
   type TushareDailyRow,
   type TushareDailyBasicRow,
   type TushareIndexDailyRow,
@@ -13,7 +14,6 @@ import {
 import {
   getLatestStockBasicCache,
   saveStockBasicCache,
-  getLatestMarketSnapshot,
 } from "./market-snapshot-store";
 import type {
   MiniMarketSnapshot,
@@ -281,97 +281,86 @@ function buildSummary(
 }
 
 /**
- * Main entry: build a complete market snapshot from Tushare.
- * If any step fails, tries to return the previous snapshot marked stale.
- * If no previous snapshot, falls back to mock data.
+ * 从 Tushare 构建一份完整的真实行情快照。
+ *
+ * 重要策略：
+ * - 本函数**不回退到 mock**，也不读取旧快照。失败时直接抛出错误，由上层
+ *   （market-snapshot 服务 / admin 路由）决定是返回旧真实快照还是 mock。
+ * - 非交易时间/周末/节假日同样可用：内部 resolveTradeDate 会向前回溯最多 7 天，
+ *   取最近一个有数据的交易日。
+ *
+ * @throws {TushareError | Error}
  */
 export async function buildMarketSnapshotFromTushare(
   hintDate?: string,
 ): Promise<MiniMarketSnapshot> {
-  try {
-    // 1. Resolve trade date
-    const tradeDate = await resolveTradeDate(hintDate);
-    if (!tradeDate) {
-      throw new Error("Cannot resolve trade date after 7-day fallback");
-    }
-
-    // 2. Fetch stock basic (with cache)
-    let stockBasic = (await getLatestStockBasicCache()) as TushareStockBasic[] | null;
-    if (!stockBasic) {
-      stockBasic = await callTushare<TushareStockBasic>(
-        "stock_basic",
-        { exchange: "", list_status: "L" },
-        "ts_code,symbol,name,industry,market,list_date,is_hs",
-      );
-      await saveStockBasicCache(stockBasic);
-    }
-
-    // 3. Fetch daily + daily_basic in parallel
-    const [daily, dailyBasic] = await Promise.all([
-      callTushare<TushareDailyRow>(
-        "daily",
-        { trade_date: tradeDate },
-        "ts_code,trade_date,open,high,low,close,pre_close,change,pct_chg,vol,amount",
-      ),
-      callTushare<TushareDailyBasicRow>(
-        "daily_basic",
-        { trade_date: tradeDate },
-        "ts_code,trade_date,pe,pe_ttm,pb,total_mv,circ_mv,turnover_rate,volume_ratio",
-      ),
-    ]);
-
-    // 4. Fetch indices
-    const indices = await fetchIndices(tradeDate);
-
-    // 5. Build derived data
-    const hotSectors = buildHotSectors(daily, stockBasic);
-    const activeStocks = buildActiveStocks(daily, stockBasic, dailyBasic);
-    const recommendedTargets = buildRecommendedTargets(
-      activeStocks,
-      hotSectors,
-      stockBasic,
-      dailyBasic,
-    );
-    const summary = buildSummary(indices, hotSectors, activeStocks, tradeDate);
-
-    const snapshotDate = todayYyyyMmDd();
-    const snapshot: MiniMarketSnapshot = {
-      snapshotDate,
-      tradeDate,
-      fetchedAt: new Date().toISOString(),
-      source: "tushare",
-      stale: false,
-      summary,
-      indices: indices.length > 0 ? indices : mockMarketData.indices,
-      hotSectors: hotSectors.length > 0 ? hotSectors : mockMarketData.hotSectors,
-      activeStocks: activeStocks.length > 0 ? activeStocks : mockMarketData.activeStocks,
-      recommendedTargets:
-        recommendedTargets.length > 0 ? recommendedTargets : mockRecommendedTargets,
-      events: mockMarketData.events as { time: string; title: string; impact: "positive" | "negative" | "neutral" }[],
-    };
-
-    return snapshot;
-  } catch (err) {
-    // Try returning old snapshot as stale
-    console.error("[market-snapshot-builder] Build failed:", err instanceof Error ? err.message : err);
-    const old = await getLatestMarketSnapshot();
-    if (old) {
-      return { ...old, stale: true, fetchedAt: old.fetchedAt };
-    }
-
-    // Final fallback: mock
-    return {
-      snapshotDate: todayYyyyMmDd(),
-      tradeDate: todayYyyyMmDd(),
-      fetchedAt: new Date().toISOString(),
-      source: "mock",
-      stale: false,
-      summary: mockMarketData.summary,
-      indices: mockMarketData.indices,
-      hotSectors: mockMarketData.hotSectors,
-      activeStocks: mockMarketData.activeStocks,
-      recommendedTargets: mockRecommendedTargets,
-      events: mockMarketData.events as { time: string; title: string; impact: "positive" | "negative" | "neutral" }[],
-    };
+  // 1. Resolve trade date
+  const tradeDate = await resolveTradeDate(hintDate);
+  if (!tradeDate) {
+    throw new Error("NO_TRADE_DATA: cannot resolve trade date after 7-day fallback");
   }
+
+  // 2. Fetch stock basic (with cache)
+  let stockBasic = (await getLatestStockBasicCache()) as TushareStockBasic[] | null;
+  if (!stockBasic) {
+    stockBasic = await callTushare<TushareStockBasic>(
+      "stock_basic",
+      { exchange: "", list_status: "L" },
+      "ts_code,symbol,name,industry,market,list_date,is_hs",
+    );
+    if (stockBasic.length === 0) {
+      throw new TushareError("stock_basic returned empty rows", "API_ERROR");
+    }
+    await saveStockBasicCache(stockBasic);
+  }
+
+  // 3. Fetch daily + daily_basic in parallel
+  const [daily, dailyBasic] = await Promise.all([
+    callTushare<TushareDailyRow>(
+      "daily",
+      { trade_date: tradeDate },
+      "ts_code,trade_date,open,high,low,close,pre_close,change,pct_chg,vol,amount",
+    ),
+    callTushare<TushareDailyBasicRow>(
+      "daily_basic",
+      { trade_date: tradeDate },
+      "ts_code,trade_date,pe,pe_ttm,pb,total_mv,circ_mv,turnover_rate,volume_ratio",
+    ),
+  ]);
+
+  if (daily.length === 0) {
+    throw new Error(`NO_TRADE_DATA: daily returned empty for trade_date=${tradeDate}`);
+  }
+
+  // 4. Fetch indices
+  const indices = await fetchIndices(tradeDate);
+
+  // 5. Build derived data
+  const hotSectors = buildHotSectors(daily, stockBasic);
+  const activeStocks = buildActiveStocks(daily, stockBasic, dailyBasic);
+  const recommendedTargets = buildRecommendedTargets(
+    activeStocks,
+    hotSectors,
+    stockBasic,
+    dailyBasic,
+  );
+  const summary = buildSummary(indices, hotSectors, activeStocks, tradeDate);
+
+  const snapshotDate = todayYyyyMmDd();
+  const snapshot: MiniMarketSnapshot = {
+    snapshotDate,
+    tradeDate,
+    fetchedAt: new Date().toISOString(),
+    source: "tushare",
+    stale: false,
+    summary,
+    indices: indices.length > 0 ? indices : mockMarketData.indices,
+    hotSectors: hotSectors.length > 0 ? hotSectors : mockMarketData.hotSectors,
+    activeStocks: activeStocks.length > 0 ? activeStocks : mockMarketData.activeStocks,
+    recommendedTargets:
+      recommendedTargets.length > 0 ? recommendedTargets : mockRecommendedTargets,
+    events: mockMarketData.events as { time: string; title: string; impact: "positive" | "negative" | "neutral" }[],
+  };
+
+  return snapshot;
 }

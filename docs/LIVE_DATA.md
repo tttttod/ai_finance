@@ -6,10 +6,21 @@ This document describes how to configure and use live market data from Tushare.
 
 The platform uses a **"backend refresh, frontend read cache"** pattern:
 
-- **Tushare API is only called by `POST /api/admin/refresh-market`**
-- User pages only read from `GET /api/market-snapshot` (cached data)
-- AI chat (`/api/chat`) reads the latest snapshot, never calls Tushare
-- Browser-side code never sees the Tushare token
+- **Tushare API is only called server-side**, by `POST /api/admin/refresh-market`,
+  `POST /api/cron/refresh-market`, or by the auto-init/background-refresh logic
+  inside `GET /api/market-snapshot`.
+- **First deploy auto-init (new)**: if Supabase / file cache has no real snapshot
+  at all and `TUSHARE_TOKEN` is configured, the first user request triggers a
+  real fetch **synchronously** (regardless of trading hours / weekends / holidays —
+  Tushare builder walks back up to 7 days to find the latest trade date). No
+  manual call to `refresh-market` is required for production to show real data.
+- After first init, user pages only read Supabase / file cache; during trading
+  hours a stale snapshot triggers a **background (fire-and-forget) refresh**,
+  guarded by an in-process 60-second lock to avoid hammering Tushare under traffic.
+- If a refresh fails, the previous real snapshot is **kept and returned** with
+  `isStale: true`. Mock data is used only when there is no real snapshot AND
+  Tushare is unavailable / unconfigured.
+- Browser-side code never sees the Tushare token or any service-role key.
 
 ```
 ┌─────────────────┐     ┌──────────────────────┐     ┌─────────────┐
@@ -22,7 +33,7 @@ The platform uses a **"backend refresh, frontend read cache"** pattern:
                           │  Supabase / File  │
                           │  (snapshot cache) │
                           └────────┬─────────┘
-                                   │ reads
+                                   │ reads / first-init / background refresh
                     ┌──────────────┼──────────────┐
                     ▼              ▼              ▼
             GET /api/       GET /api/       POST /api/
@@ -59,7 +70,15 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 ### 2. Create Database Tables (Optional, for Supabase)
 
-Run the SQL in `docs/database.sql` in your Supabase SQL Editor.
+Run the latest migration in Supabase SQL editor:
+
+- `supabase/migrations/20260815_market_snapshot_cache.sql` (canonical, idempotent)
+
+The migration creates `market_snapshots` (append-only history), `market_aux_cache`
+(stock_basic cache, with both `cache_data` and legacy `data` columns), and the
+legacy `market_snapshot_cache` table for backward compatibility. The server
+code auto-detects which tables exist and writes to all compatible targets, so
+upgrades from older schemas do not require data migration.
 
 If Supabase is not configured, the system falls back to file-based cache in `.cache/` directory.
 
@@ -100,8 +119,11 @@ Or use Coze scheduled workflow / external cron service.
 ### User Page Load
 1. Browser calls `GET /api/market-snapshot`
 2. Server reads latest snapshot from Supabase / file cache
-3. If no snapshot exists, returns mock data with `source: "mock"`
-4. **No Tushare API call is made**
+3. If a real snapshot exists, it is returned immediately (with `isStale` flag when older than 30 min)
+4. If no real snapshot exists AND `TUSHARE_TOKEN` is configured, server performs a **synchronous first-time init** from Tushare (works outside trading hours), persists it, then returns the real snapshot
+5. If the real snapshot is stale AND currently within A-share trading hours, a **background refresh** is triggered (in-process 60s lock); the current response still returns the old snapshot marked `isStale: true`
+6. Refresh failures never delete/downgrade existing real snapshots
+7. Only when there is no real snapshot AND Tushare is unavailable/unconfigured does the API return mock data (`source: "mock", isDemo: true`)
 
 ### AI Chat
 1. Browser sends message to `POST /api/chat`
