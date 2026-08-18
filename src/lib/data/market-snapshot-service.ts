@@ -254,7 +254,7 @@ export async function getMarketSnapshotForRequest(): Promise<{
   if (isTushareConfigured()) {
     const outcome = await refreshMarketSnapshot();
     if (outcome.ok) {
-      // 从持久化层读取完整快照返回；justFetched 仅影响 source 标签为 "tushare"
+      // 优先从持久化层读取完整快照返回
       const saved = await getLatestMarketSnapshot();
       if (saved) {
         const realSnapshot: MiniMarketSnapshot = { ...saved, stale: false };
@@ -265,10 +265,12 @@ export async function getMarketSnapshotForRequest(): Promise<{
         };
       }
     }
-    // 初始化失败：记录日志，回退 mock
+    // 初始化失败：记录明确日志，回退 mock
     console.warn(LOG_PREFIX, "first-time init failed, fallback to mock", {
       errorCode: outcome.errorCode,
       errorMessage: outcome.errorMessage,
+      tushareConfigured: isTushareConfigured(),
+      supabaseConfigured: isSupabaseConfigured(),
     });
   } else {
     console.warn(

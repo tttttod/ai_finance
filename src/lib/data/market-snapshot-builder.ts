@@ -41,16 +41,50 @@ function todayYyyyMmDd(): string {
 }
 
 /**
- * Try to find the most recent trade date by probing daily data.
- * Falls back up to 7 days.
+ * 解析最近一个交易日。
+ *
+ * 优先使用 trade_cal（交易日历）一次性拉取最近 15 天，定位 is_open=1 的最近一天，
+ * 避免每日串行探测 daily 多次（冷启动时能省掉 5-8 次 HTTP 往返，显著降低 Serverless 超时风险）。
+ * 若 trade_cal 不可用（积分不足等），退化为逐日探测 daily。
  */
 async function resolveTradeDate(
   hintDate?: string,
 ): Promise<string | null> {
-  const start = hintDate || todayYyyyMmDd();
-  for (let offset = 0; offset <= 7; offset++) {
+  const today = hintDate || todayYyyyMmDd();
+  const start = (() => {
     const d = new Date(
-      `${start.slice(0, 4)}-${start.slice(4, 6)}-${start.slice(6, 8)}`,
+      `${today.slice(0, 4)}-${today.slice(4, 6)}-${today.slice(6, 8)}`,
+    );
+    d.setDate(d.getDate() - 20);
+    return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+  })();
+
+  // 1) trade_cal 优先
+  try {
+    const cal = await callTushare<{ cal_date: string; is_open: number }>(
+      "trade_cal",
+      { exchange: "SSE", start_date: start, end_date: today },
+      "cal_date,is_open",
+    );
+    if (cal.length > 0) {
+      // 接口按 cal_date 升序；取倒序第一个 is_open=1 且 <= today
+      for (let i = cal.length - 1; i >= 0; i--) {
+        if (cal[i].is_open === 1 && cal[i].cal_date <= today) {
+          return cal[i].cal_date;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn(
+      "[market-builder] trade_cal unavailable, fallback to daily probe:",
+      err instanceof Error ? err.message : err,
+    );
+  }
+
+  // 2) 退化：逐日探测 daily
+  for (let offset = 0; offset <= 10; offset++) {
+    const d = new Date(
+      `${today.slice(0, 4)}-${today.slice(4, 6)}-${today.slice(6, 8)}`,
     );
     d.setDate(d.getDate() - offset);
     const tradeDate = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
@@ -69,26 +103,30 @@ async function resolveTradeDate(
 }
 
 async function fetchIndices(tradeDate: string): Promise<MiniMarketIndex[]> {
-  const results: MiniMarketIndex[] = [];
-  for (const idx of INDEX_CODES) {
-    try {
-      const rows = await callTushare<TushareIndexDailyRow>(
+  // 并行拉取 4 个指数，减少冷启动串行耗时
+  const settled = await Promise.allSettled(
+    INDEX_CODES.map((idx) =>
+      callTushare<TushareIndexDailyRow>(
         "index_daily",
         { ts_code: idx.ts_code, trade_date: tradeDate },
         "ts_code,trade_date,close,change,pct_chg,vol,amount",
-      );
-      if (rows.length > 0) {
-        const r = rows[0];
-        results.push({
-          name: idx.name,
-          code: idx.ts_code,
-          price: r.close,
-          change: r.pct_chg,
-          volume: Math.round(r.amount / 1000), // 千元 -> 万元(近似)
-        });
-      }
-    } catch {
-      // skip this index
+      ).then((rows) => ({ idx, rows })),
+    ),
+  );
+
+  const results: MiniMarketIndex[] = [];
+  for (const s of settled) {
+    if (s.status !== "fulfilled") continue;
+    const { idx, rows } = s.value;
+    if (rows.length > 0) {
+      const r = rows[0];
+      results.push({
+        name: idx.name,
+        code: idx.ts_code,
+        price: r.close,
+        change: r.pct_chg,
+        volume: Math.round(r.amount / 1000),
+      });
     }
   }
   return results;

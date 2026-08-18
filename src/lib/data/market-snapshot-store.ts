@@ -14,12 +14,33 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import * as fs from "fs";
 import * as path from "path";
 
-const CACHE_DIR = path.join(process.cwd(), ".cache");
-const SNAPSHOT_FILE = path.join(CACHE_DIR, "market-snapshot.json");
-const STOCK_BASIC_FILE = path.join(CACHE_DIR, "stock-basic.json");
-
 // 服务端启动时记录一次配置状态（不输出任何密钥值，仅 true/false）
 const LOG_PREFIX = "[market-store]";
+
+/**
+ * 三级持久化（按优先级）：
+ *  1. 进程内存（warm 实例零开销命中，Serverless 同一实例内复用）
+ *  2. /tmp（生产环境唯一保证可写的目录；容器/函数重启后失效但可兜底）
+ *  3. 项目 .cache（本地/dev 环境持久化，生产只读时写入会失败被忽略）
+ * 4. Supabase（如已配置）
+ */
+let memorySnapshot: MiniMarketSnapshot | null = null;
+let memoryStockBasic: { rows: unknown[]; cachedAt: number } | null = null;
+
+// 生产环境（Vercel/Serverless 等）唯一可靠可写目录是 /tmp
+const TMP_DIR = "/tmp";
+const CACHE_DIR = (() => {
+  // 优先使用 /tmp（生产可写），其次项目内 .cache（dev 环境）
+  try {
+    fs.mkdirSync(path.join(TMP_DIR, ".coze-market-cache"), { recursive: true });
+    fs.accessSync(TMP_DIR, fs.constants.W_OK);
+    return path.join(TMP_DIR, ".coze-market-cache");
+  } catch {
+    return path.join(process.cwd(), ".cache");
+  }
+})();
+const SNAPSHOT_FILE = path.join(CACHE_DIR, "market-snapshot.json");
+const STOCK_BASIC_FILE = path.join(CACHE_DIR, "stock-basic.json");
 
 function getSupabase(): SupabaseClient | null {
   const url = process.env.SUPABASE_URL;
@@ -31,8 +52,12 @@ function getSupabase(): SupabaseClient | null {
 }
 
 function ensureCacheDir() {
-  if (!fs.existsSync(CACHE_DIR)) {
-    fs.mkdirSync(CACHE_DIR, { recursive: true });
+  try {
+    if (!fs.existsSync(CACHE_DIR)) {
+      fs.mkdirSync(CACHE_DIR, { recursive: true });
+    }
+  } catch (err) {
+    console.warn(`${LOG_PREFIX} cannot create cache dir ${CACHE_DIR}:`, err instanceof Error ? err.message : err);
   }
 }
 
@@ -101,6 +126,11 @@ function isRealSnapshot(s: MiniMarketSnapshot | null | undefined): boolean {
  * 只返回真实快照（source=tushare/cache/database），mock 快照会被忽略。
  */
 export async function getLatestMarketSnapshot(): Promise<MiniMarketSnapshot | null> {
+  // 1) 内存优先（warm 实例内最快）
+  if (memorySnapshot && isRealSnapshot(memorySnapshot)) {
+    return memorySnapshot;
+  }
+
   const sb = getSupabase();
   if (sb) {
     // 1) 优先新表 market_snapshots
@@ -114,7 +144,8 @@ export async function getLatestMarketSnapshot(): Promise<MiniMarketSnapshot | nu
       if (!error && data?.snapshot_data) {
         const snap = data.snapshot_data as MiniMarketSnapshot;
         if (isRealSnapshot(snap)) {
-          return { ...snap, persistedTo: "supabase" };
+          memorySnapshot = { ...snap, persistedTo: "supabase" };
+          return memorySnapshot;
         }
       }
     } catch (err) {
@@ -132,7 +163,8 @@ export async function getLatestMarketSnapshot(): Promise<MiniMarketSnapshot | nu
       if (!error && data?.snapshot_data) {
         const snap = data.snapshot_data as MiniMarketSnapshot;
         if (isRealSnapshot(snap)) {
-          return { ...snap, persistedTo: "supabase" };
+          memorySnapshot = { ...snap, persistedTo: "supabase" };
+          return memorySnapshot;
         }
       } else if (error) {
         console.warn(`${LOG_PREFIX} query market_snapshot_cache failed:`, error.message);
@@ -142,13 +174,14 @@ export async function getLatestMarketSnapshot(): Promise<MiniMarketSnapshot | nu
     }
   }
 
-  // 3) File fallback
+  // 3) File fallback (使用 /tmp 优先的 CACHE_DIR)
   try {
     if (fs.existsSync(SNAPSHOT_FILE)) {
       const raw = fs.readFileSync(SNAPSHOT_FILE, "utf-8");
       const snap = JSON.parse(raw) as MiniMarketSnapshot;
       if (isRealSnapshot(snap)) {
-        return { ...snap, persistedTo: "file" };
+        memorySnapshot = { ...snap, persistedTo: "file" };
+        return memorySnapshot;
       }
     }
   } catch (err) {
@@ -158,7 +191,7 @@ export async function getLatestMarketSnapshot(): Promise<MiniMarketSnapshot | nu
 }
 
 export type SaveSnapshotResult = {
-  storage: "supabase" | "file";
+  storage: "supabase" | "file" | "memory";
   table?: string;
   tradeDate?: string;
   fetchedAt?: string;
@@ -167,10 +200,14 @@ export type SaveSnapshotResult = {
 /**
  * 保存真实行情快照。写入 Supabase 失败时回退本地文件。
  * 绝不删除或覆盖已有真实快照 —— 新快照是 INSERT，旧快照作为历史保留。
+ * 同时写入进程内存，warm 实例后续零开销命中。
  */
 export async function saveMarketSnapshot(
   snapshot: MiniMarketSnapshot,
 ): Promise<SaveSnapshotResult> {
+  // 始终先更新内存缓存
+  memorySnapshot = { ...snapshot, persistedTo: memorySnapshot?.persistedTo };
+
   const sb = getSupabase();
   if (sb) {
     // 1) 新表 market_snapshots
@@ -183,6 +220,7 @@ export async function saveMarketSnapshot(
         snapshot_data: snapshot,
       });
       if (!error) {
+        memorySnapshot = { ...snapshot, persistedTo: "supabase" };
         return { storage: "supabase", table: "market_snapshots", tradeDate: snapshot.tradeDate, fetchedAt: snapshot.fetchedAt };
       }
       console.warn(`${LOG_PREFIX} insert market_snapshots failed:`, error.message);
@@ -203,6 +241,7 @@ export async function saveMarketSnapshot(
         { onConflict: "snapshot_date" },
       );
       if (!error) {
+        memorySnapshot = { ...snapshot, persistedTo: "supabase" };
         return { storage: "supabase", table: "market_snapshot_cache", tradeDate: snapshot.tradeDate, fetchedAt: snapshot.fetchedAt };
       }
       console.warn(`${LOG_PREFIX} upsert market_snapshot_cache failed:`, error.message);
@@ -211,10 +250,17 @@ export async function saveMarketSnapshot(
     }
   }
 
-  // 3) File fallback
-  ensureCacheDir();
-  fs.writeFileSync(SNAPSHOT_FILE, JSON.stringify(snapshot, null, 2), "utf-8");
-  return { storage: "file", tradeDate: snapshot.tradeDate, fetchedAt: snapshot.fetchedAt };
+  // 3) File fallback (优先 /tmp，生产可写)
+  try {
+    ensureCacheDir();
+    fs.writeFileSync(SNAPSHOT_FILE, JSON.stringify(snapshot, null, 2), "utf-8");
+    memorySnapshot = { ...snapshot, persistedTo: "file" };
+    return { storage: "file", tradeDate: snapshot.tradeDate, fetchedAt: snapshot.fetchedAt };
+  } catch (err) {
+    console.warn(`${LOG_PREFIX} write file snapshot failed (will rely on memory cache):`, err instanceof Error ? err.message : err);
+    // 文件也写失败时，内存仍有本次快照，至少当前实例可复用
+    return { storage: "memory", tradeDate: snapshot.tradeDate, fetchedAt: snapshot.fetchedAt };
+  }
 }
 
 // ---- Stock basic cache ----
@@ -222,6 +268,14 @@ export async function saveMarketSnapshot(
 // 而历史代码使用 cache_data。这里同时兼容两种列名。
 
 export async function getLatestStockBasicCache(): Promise<unknown[] | null> {
+  // 内存优先
+  if (memoryStockBasic) {
+    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    if (memoryStockBasic.cachedAt > sevenDaysAgo) {
+      return memoryStockBasic.rows;
+    }
+  }
+
   const sb = getSupabase();
   if (sb) {
     try {
@@ -236,6 +290,7 @@ export async function getLatestStockBasicCache(): Promise<unknown[] | null> {
           const updated = new Date((data.updated_at as string) ?? Date.now());
           const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
           if (updated.getTime() > sevenDaysAgo) {
+            memoryStockBasic = { rows, cachedAt: updated.getTime() };
             return rows;
           }
         }
@@ -255,6 +310,7 @@ export async function getLatestStockBasicCache(): Promise<unknown[] | null> {
       if (parsed._cachedAt) {
         const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
         if (new Date(parsed._cachedAt).getTime() > sevenDaysAgo) {
+          memoryStockBasic = { rows: parsed.rows, cachedAt: new Date(parsed._cachedAt).getTime() };
           return parsed.rows as unknown[];
         }
       }
@@ -266,6 +322,9 @@ export async function getLatestStockBasicCache(): Promise<unknown[] | null> {
 }
 
 export async function saveStockBasicCache(rows: unknown[]): Promise<void> {
+  // 始终更新内存
+  memoryStockBasic = { rows, cachedAt: Date.now() };
+
   const sb = getSupabase();
   if (sb) {
     // 优先写 cache_data 列；若列不存在则回退 data 列
@@ -301,10 +360,14 @@ export async function saveStockBasicCache(rows: unknown[]): Promise<void> {
   }
 
   // File fallback
-  ensureCacheDir();
-  fs.writeFileSync(
-    STOCK_BASIC_FILE,
-    JSON.stringify({ _cachedAt: new Date().toISOString(), rows }, null, 2),
-    "utf-8",
-  );
+  try {
+    ensureCacheDir();
+    fs.writeFileSync(
+      STOCK_BASIC_FILE,
+      JSON.stringify({ _cachedAt: new Date().toISOString(), rows }, null, 2),
+      "utf-8",
+    );
+  } catch (err) {
+    console.warn(`${LOG_PREFIX} write stock_basic file failed:`, err instanceof Error ? err.message : err);
+  }
 }

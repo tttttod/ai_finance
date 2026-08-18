@@ -68,14 +68,29 @@ export async function callTushare<T>(
 
   let res: Response;
   try {
-    res = await fetch(TUSHARE_BASE_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    // 单次 Tushare 请求超时 8 秒，避免 Serverless 函数整体超时被截断
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    try {
+      res = await fetch(TUSHARE_BASE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
   } catch (err) {
+    const message = err instanceof Error ? err.message : "unknown";
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw new TushareError(
+        `Tushare request timeout (api=${apiName})`,
+        "NETWORK_ERROR",
+      );
+    }
     throw new TushareError(
-      `Tushare network error (api=${apiName}): ${err instanceof Error ? err.message : "unknown"}`,
+      `Tushare network error (api=${apiName}): ${message}`,
       "NETWORK_ERROR",
     );
   }

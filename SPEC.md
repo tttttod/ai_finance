@@ -901,6 +901,7 @@ NewsFeed                              // 信息面数据
 | 2026-08-15 | 修复「模型沼泽」在世界地图中被锁定无法打开的问题：世界地图渲染逻辑中，`model-swamp` 地点的 status 始终设为 `available`，不再受主线关卡顺序解锁限制（固收挑战游戏为独立玩法，可随时进入） |
 | 2026-08-15 | 移除「任务」Tab 交易之路地图底部的两个开发调试按钮（「测试：解锁 Lead Agent」「测试：重置交易之路进度」），进度改由正常关卡解锁与 localStorage 管理 |
 | 2026-08-15 | 修复生产环境首页「今日市场」行情链路：Supabase 无快照时首次访问自动初始化（不受交易时间限制）；新增进程内刷新锁（60s）防并发重复打 Tushare；Tushare 刷新失败时保留并返回历史真实快照（isStale），仅在无任何真实快照时才回退 mock；统一 source 语义为 tushare/database/file/mock；服务端输出环境变量缺失与链路诊断日志（不打印密钥）；前端 mock 文案改为用户友好提示，不再暴露 TUSHARE_TOKEN / /api/admin/refresh-market 等内部信息；/api/admin/refresh-market 返回明确错误码与写入记录；兼容历史表名 market_snapshots 与 market_snapshot_cache，新增 supabase/migrations 行情快照表 SQL |
+| 2026-08-18 | 修复生产环境（无 Supabase 配置 + Serverless 只读/临时磁盘）冷启动回退 mock：新增三级缓存（进程内存 → /tmp/.coze-market-cache → Supabase），warm 实例内存命中、跨重启用 /tmp 兜底；Tushare 单次请求加 8s AbortController 超时；resolveTradeDate 优先一次性调用 trade_cal 定位最近交易日（失败再逐日探测），指数查询改并行，冷启动链路从最多 ~15 次串行 HTTP 降到 ~4 次，显著降低 Serverless 超时概率；文件写失败时内存仍保留本次快照，保证当前实例不回退 mock |
 
 ---
 
