@@ -1611,6 +1611,9 @@ export function GameMapPlayer({
               </div>
             ))}
           </div>
+          <div className="mt-2 mb-1 text-[10px] text-center text-[#94A3B8] bg-[#FFFBEB] border border-[#FDE68A] rounded-lg py-2 px-3">
+            🟡 当前排名为虚拟展示，尚未接入真实数据
+          </div>
           <button
             onClick={() => setView("world")}
             className="mt-4 w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all"
