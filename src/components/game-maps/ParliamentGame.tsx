@@ -251,7 +251,7 @@ function AgentBubble({
       color: "#6366F1",
       bg: "#EEF2FF",
       border: "#C7D2FE",
-      img: "/agent-lead.png",
+      img: "/lead_agent.png",
     },
     sentiment: {
       name: "Sentiment Agent",
