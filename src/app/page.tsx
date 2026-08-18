@@ -52,7 +52,6 @@ import type { PersonalityStoryline, StoryTask } from "@/lib/storylines";
 import {
   loadTraderRoadProgress,
   saveTraderRoadProgress,
-  completeTraderRoadLevel,
   getDefaultTraderRoadProgress,
   isTraderRoadAgentUnlocked,
   getTraderRoadLevelsWithStatus,
@@ -914,34 +913,6 @@ function ResearchTab({
                 </div>
               );
             })}
-          </div>
-          {/* 开发调试按钮 */}
-          <div className="flex gap-2 mt-2 pt-2 border-t border-amber-200/40">
-            <button
-              onClick={() => {
-                // 先触发解锁动画，再更新进度
-                const leadAgent = AGENT_TEAM.find((a) => a.role === "lead");
-                if (leadAgent) {
-                  setUnlockingAgent(leadAgent);
-                }
-                completeTraderRoadLevel(1);
-                reloadProgress();
-              }}
-              className="flex-1 py-1 text-[8px] font-medium text-amber-600 bg-amber-100/50 border border-amber-200/40 rounded-lg hover:bg-amber-200/50 transition-colors"
-            >
-              ⚙️ 测试：解锁 Lead Agent
-            </button>
-            <button
-              onClick={() => {
-                if (typeof window !== "undefined") {
-                  localStorage.removeItem("tradeti_game_progress");
-                }
-                setTraderRoadProgress(getDefaultTraderRoadProgress());
-              }}
-              className="flex-1 py-1 text-[8px] font-medium text-amber-500 bg-amber-100/30 border border-amber-200/30 rounded-lg hover:bg-amber-200/40 transition-colors"
-            >
-              🔄 测试：重置交易之路进度
-            </button>
           </div>
         </div>
       </div>

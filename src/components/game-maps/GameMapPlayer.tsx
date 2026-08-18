@@ -1271,7 +1271,6 @@ export function GameMapPlayer({
           )}
           {config.type === "parliament" && (
             <ParliamentGame
-              addCoins={addCoins}
               onBack={() => {
                 returnAfterGameComplete();
               }}
