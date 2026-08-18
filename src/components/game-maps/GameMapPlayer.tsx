@@ -334,6 +334,9 @@ export function GameMapPlayer({
       if (levelId === 10 && !progress.unlockedAgents.includes("manager")) {
         setUnlockedAgentId("manager");
         setShowAgentUnlock(true);
+        // 最终关，清除下一关指引
+        setNextLevelTip(null);
+        setShowNextLevelTip(false);
       }
 
       // 设置下一关提示（所有关卡都记录，有 Agent 解锁弹窗的等弹窗关闭后显示）
@@ -2008,6 +2011,14 @@ export function GameMapPlayer({
                   <div className="text-4xl mb-3">🎉</div>
                   <h3 className="text-lg font-bold text-gray-900 mb-2">Agent 解锁！</h3>
                   <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 mb-4">
+                    <img
+                      src={agent.image}
+                      alt={agent.name}
+                      className="w-24 h-24 mx-auto mb-3 rounded-full object-cover border-4 border-white shadow-lg"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                      }}
+                    />
                     <p className="text-sm font-bold text-gray-900">{agent.name}</p>
                     <p className="text-xs text-gray-600 mt-1">{agent.title}</p>
                   </div>
