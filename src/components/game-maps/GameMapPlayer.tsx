@@ -191,10 +191,12 @@ export function GameMapPlayer({
   // Agent 信息映射（用于解锁弹窗）
   const agentInfoMap: Record<string, { name: string; title: string; image: string }> = {
     data: { name: "数据分析师", title: "Data Analyst", image: "/data_agent.png" },
+    fundamental: { name: "基本面分析师", title: "Fundamental Analyst", image: "/agent-fundamental.png" },
     valuation: { name: "估值分析师", title: "Valuation Analyst", image: "/valuation_agent.png" },
+    technical: { name: "技术分析师", title: "Technical Analyst", image: "/agent-technical.png" },
+    sentiment: { name: "情绪分析师", title: "Sentiment Analyst", image: "/agent-sentiment.png" },
     bull: { name: "看多分析师", title: "Bull Analyst", image: "/bull_agent.png" },
     bear: { name: "看空分析师", title: "Bear Analyst", image: "/bear_agent.png" },
-    technical: { name: "技术分析师", title: "Technical Analyst", image: "/agent-technical.png" },
   };
 
   // Check if first visit - ONLY after map is loaded
@@ -283,22 +285,38 @@ export function GameMapPlayer({
         setShowAgentUnlock(true);
       }
 
-      // 财报考古遗迹通关后，显示 Agent 解锁弹窗（即使已通关也显示，确保不遗漏）
+      // 信息迷雾群岛通关后，显示 Fundamental Agent 解锁弹窗
+      if (levelId === 4 && !progress.unlockedAgents.includes("fundamental")) {
+        setUnlockedAgentId("fundamental");
+        setShowAgentUnlock(true);
+      }
+
+      // 财报考古遗迹通关后，显示 Agent 解锁弹窗
       if (levelId === 5 && !progress.unlockedAgents.includes("valuation")) {
         setUnlockedAgentId("valuation");
         setShowAgentUnlock(true);
-        setNextLevelTip("模型沼泽");
       }
 
       // 模型沼泽通关后，显示 Technical Agent 解锁弹窗
       if (levelId === 6 && !progress.unlockedAgents.includes("technical")) {
         setUnlockedAgentId("technical");
         setShowAgentUnlock(true);
-        setNextLevelTip("K线图学习");
       }
 
-      // 设置下一关提示（仅当没有 Agent 解锁弹窗时显示独立提示）
-      const hasAgentUnlock = [1, 5, 6].includes(levelId);
+      // K线图学习通关后，显示 Sentiment Agent 解锁弹窗
+      if (levelId === 7 && !progress.unlockedAgents.includes("sentiment")) {
+        setUnlockedAgentId("sentiment");
+        setShowAgentUnlock(true);
+      }
+
+      // 市场天气谷 / 证据岔路口通关后，显示 Bull & Bear Agent 解锁弹窗
+      if ((levelId === 8 || levelId === 9) && !progress.unlockedAgents.includes("bull")) {
+        setUnlockedAgentId("bull");
+        setShowAgentUnlock(true);
+      }
+
+      // 设置下一关提示（所有关卡都记录，有 Agent 解锁弹窗的等弹窗关闭后显示）
+      const hasAgentUnlock = [1, 4, 5, 6, 7, 8, 9].includes(levelId);
       const nextLevelMap: Record<number, string> = {
         4: "财报考古遗迹",
         5: "模型沼泽",
@@ -1973,18 +1991,17 @@ export function GameMapPlayer({
                     <p className="text-sm font-bold text-gray-900">{agent.name}</p>
                     <p className="text-xs text-gray-600 mt-1">{agent.title}</p>
                   </div>
-                  {nextLevelTip && (
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mb-4">
-                      <p className="text-xs text-emerald-700 font-medium">下一关已解锁 🔓</p>
-                      <p className="text-sm font-bold text-emerald-800 mt-0.5">{nextLevelTip}</p>
-                    </div>
-                  )}
                   <button
                     onClick={() => {
                       setShowAgentUnlock(false);
                       setUnlockedAgentId(null);
-                      setNextLevelTip(null);
-                      setShowNextLevelTip(false);
+                      // 如果有下一关指引，关闭 Agent 弹窗后显示指引弹窗
+                      if (nextLevelTip) {
+                        setShowNextLevelTip(true);
+                      } else {
+                        setNextLevelTip(null);
+                        setShowNextLevelTip(false);
+                      }
                     }}
                     className="w-full px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-medium text-sm shadow-md hover:shadow-lg transition-shadow"
                   >
@@ -1995,6 +2012,29 @@ export function GameMapPlayer({
             </div>
           );
         })()}
+
+        {/* 下一关指引弹窗（独立展示，在 Agent 解锁弹窗关闭后出现） */}
+        {showNextLevelTip && nextLevelTip && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-[300px] w-full mx-4 animate-in fade-in zoom-in duration-300 text-center">
+              <div className="text-4xl mb-3">🗺️</div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">下一关已解锁！</h3>
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4">
+                <p className="text-xs text-emerald-700 font-medium">🔓 新区域开放</p>
+                <p className="text-base font-bold text-emerald-800 mt-1">{nextLevelTip}</p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowNextLevelTip(false);
+                  setNextLevelTip(null);
+                }}
+                className="w-full px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-medium text-sm shadow-md hover:shadow-lg transition-shadow"
+              >
+                出发！
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Zone nav bar (zone view) */}
         {view === "zone" && (
