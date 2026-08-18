@@ -174,6 +174,7 @@ export function GameMapPlayer({
   const [showWallCastleTour, setShowWallCastleTour] = useState(false);
   const [showWallCastleWelcome, setShowWallCastleWelcome] = useState(false);
   const [hasSeenWallCastleWelcome, setHasSeenWallCastleWelcome] = useState(false);
+  const [showWallCastleCompleteTip, setShowWallCastleCompleteTip] = useState(false);
   const [showKnowledgeMap, setShowKnowledgeMap] = useState(false);
   const [knowledgeMapKey, setKnowledgeMapKey] = useState(0);
   const [knowledgeMapError, setKnowledgeMapError] = useState(false);
@@ -871,6 +872,12 @@ export function GameMapPlayer({
       const newProgress = completeWallCastleSubLevel(subLevelId);
       saveWallCastleProgress(newProgress);
       setWallCastleRefreshKey((k) => k + 1);
+      // 检查是否所有3个子关卡都完成了
+      const allSubLevels: string[] = ["data-black-market", "market-storm", "policy-letter"];
+      const allCompleted = allSubLevels.every(s => newProgress.completedSubLevels.includes(s as any));
+      if (allCompleted) {
+        setShowWallCastleCompleteTip(true);
+      }
       setView("submap");
       setActiveLevelId(null);
       setActiveGameId(null);
