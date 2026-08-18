@@ -192,6 +192,7 @@ export function GameMapPlayer({
     valuation: { name: "估值分析师", title: "Valuation Analyst", image: "/valuation_agent.png" },
     bull: { name: "看多分析师", title: "Bull Analyst", image: "/bull_agent.png" },
     bear: { name: "看空分析师", title: "Bear Analyst", image: "/bear_agent.png" },
+    technical: { name: "技术分析师", title: "Technical Analyst", image: "/agent-technical.png" },
   };
 
   // Check if first visit - ONLY after map is loaded
@@ -283,6 +284,12 @@ export function GameMapPlayer({
       // 财报考古遗迹通关后，显示 Agent 解锁弹窗（即使已通关也显示，确保不遗漏）
       if (levelId === 5 && !progress.unlockedAgents.includes("valuation")) {
         setUnlockedAgentId("valuation");
+        setShowAgentUnlock(true);
+      }
+
+      // 模型沼泽通关后，显示 Technical Agent 解锁弹窗
+      if (levelId === 6 && !progress.unlockedAgents.includes("technical")) {
+        setUnlockedAgentId("technical");
         setShowAgentUnlock(true);
       }
     },
@@ -928,7 +935,7 @@ export function GameMapPlayer({
       if (activeGameId === "bond-hunter") {
         return (
           <div className="h-full w-full overflow-y-auto rounded-lg" style={{ background: "#0B0E14" }}>
-            <BondHunterGame />
+            <BondHunterGame onComplete={(score: number) => { handleLevelComplete(6); }} />
           </div>
         );
       }

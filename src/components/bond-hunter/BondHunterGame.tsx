@@ -30,7 +30,11 @@ const LEVEL_ORDER: GamePage[] = [
   "committee", "report",
 ];
 
-export function BondHunterGame() {
+interface BondHunterGameProps {
+  onComplete?: (score: number) => void;
+}
+
+export function BondHunterGame({ onComplete }: BondHunterGameProps) {
   const [state, setState] = useState<GameState>(() => {
     const saved = loadGameState();
     return saved || { ...INITIAL_GAME_STATE, startTime: Date.now() };
@@ -194,6 +198,10 @@ export function BondHunterGame() {
           sharpe: perf.sharpeRatio,
           score: perf.totalScore,
         });
+      }
+      // 通关回调
+      if (onComplete && perf.totalScore >= 40) {
+        setTimeout(() => onComplete(perf.totalScore), 500);
       }
       return finalState;
     });
