@@ -197,8 +197,8 @@ export default function RiskGame({ onBack, onComplete }: RiskGameProps) {
   // ============== 最终风险知识复盘页 ==============
   if (showDebriefPage) {
     return (
-      <main className="min-h-[100dvh] bg-[#1b252d] p-3 text-[#1e2930]">
-        <div className="mx-auto max-w-md">
+      <main className="min-h-[100dvh] bg-[#1b252d] px-3 pb-[max(12px,env(safe-area-inset-bottom))] pt-[max(12px,env(safe-area-inset-top))] text-[#1e2930]">
+        <div className="mx-auto w-full max-w-md lg:max-w-lg">
           <div className="rounded-[24px] border-2 border-[#47545f] bg-[#e9ece5] p-4 shadow-2xl">
             <div className="text-center">
               <div className="text-5xl">🛡️</div>
@@ -267,8 +267,8 @@ export default function RiskGame({ onBack, onComplete }: RiskGameProps) {
   // ============== 游戏结束页面 ==============
   if (gameOver) {
     return (
-      <main className="h-[100dvh] overflow-hidden bg-[#1b252d] p-3 text-[#1e2930]">
-        <div className="mx-auto flex h-full w-full max-w-md flex-col items-center justify-center">
+      <main className="min-h-[100dvh] bg-[#1b252d] px-3 pb-[max(12px,env(safe-area-inset-bottom))] pt-[max(12px,env(safe-area-inset-top))] text-[#1e2930]">
+        <div className="mx-auto flex min-h-[calc(100dvh-24px)] w-full max-w-md flex-col items-center justify-center">
           <div className="text-5xl">💔</div>
           <p className="mt-2 text-[10px] font-black tracking-[0.16em] text-[#cf5a47]">
             RISK SCAN FAILED
@@ -293,8 +293,8 @@ export default function RiskGame({ onBack, onComplete }: RiskGameProps) {
 
   // ============== 主游戏界面 ==============
   return (
-    <main className="h-[100dvh] overflow-hidden bg-[#1b252d] p-3 text-[#1e2930]">
-      <div className="mx-auto flex h-full w-full max-w-md flex-col gap-2">
+    <main className="min-h-[100dvh] bg-[#1b252d] px-3 pb-[max(12px,env(safe-area-inset-bottom))] pt-[max(12px,env(safe-area-inset-top))] text-[#1e2930]">
+      <div className="mx-auto flex min-h-[calc(100dvh-24px)] w-full max-w-md flex-col gap-2 lg:max-w-lg">
         {/* 游戏头部 */}
         <header className="shrink-0 rounded-[20px] border border-[#47545f] bg-[#1b252d] px-3 py-2.5 shadow-lg">
           <div className="flex items-center justify-between gap-3">
@@ -373,13 +373,11 @@ export default function RiskGame({ onBack, onComplete }: RiskGameProps) {
 
         {/* 主游戏区域 */}
         <section
-          className={`flex-1 rounded-[24px] border-2 border-[#47545f] bg-[#e9ece5] p-3 text-[#1e2930] shadow-2xl ${
-            round === 1 ? "min-h-[560px]" : round === 2 ? "min-h-[600px]" : "min-h-[640px]"
-          }`}
+          className="rounded-[24px] border-2 border-[#47545f] bg-[#e9ece5] p-3 text-[#1e2930] shadow-2xl sm:p-4"
         >
           {/* ROUND 1 */}
           {round === 1 && (
-            <div className="flex h-full flex-col">
+            <div className="flex flex-col">
               <div className="flex shrink-0 items-start justify-between gap-3">
                 <div>
                   <p className="text-[8px] font-black tracking-[0.16em] text-[#7e6d2d]">
@@ -402,7 +400,7 @@ export default function RiskGame({ onBack, onComplete }: RiskGameProps) {
                 </p>
               </div>
 
-              <div className="relative mt-2 min-h-0 flex-1 overflow-hidden rounded-[18px] border-2 border-[#b9beb5] bg-[#fdfdf9] p-3 shadow-inner">
+              <div className="relative mt-2 rounded-[18px] border-2 border-[#b9beb5] bg-[#fdfdf9] p-3 shadow-inner">
                 <div className="flex items-center justify-between border-b border-dashed border-[#c8ccc4] pb-2">
                   <div>
                     <p className="text-[8px] font-bold tracking-[0.15em] text-[#89908a]">
@@ -588,7 +586,7 @@ export default function RiskGame({ onBack, onComplete }: RiskGameProps) {
 
           {/* ROUND 2 */}
           {round === 2 && (
-            <div className="flex h-full flex-col">
+            <div className="flex flex-col">
               <div className="shrink-0">
                 <div className="flex items-center justify-between">
                   <div>
@@ -636,7 +634,7 @@ export default function RiskGame({ onBack, onComplete }: RiskGameProps) {
                 哪个风险最直接放大同一次价格波动？
               </p>
 
-              <div className="mt-2 grid min-h-0 flex-1 grid-rows-3 gap-2">
+              <div className="mt-2 grid gap-2">
                 {[
                   {
                     id: "concentration" as Round2Choice,
@@ -722,7 +720,7 @@ export default function RiskGame({ onBack, onComplete }: RiskGameProps) {
 
           {/* ROUND 3 */}
           {round === 3 && (
-            <div className="flex h-full flex-col">
+            <div className="flex flex-col">
               <div className="flex shrink-0 items-start justify-between gap-2">
                 <div>
                   <p className="text-[8px] font-black tracking-[0.16em] text-[#37734b]">
@@ -800,7 +798,7 @@ export default function RiskGame({ onBack, onComplete }: RiskGameProps) {
                 请选择真正能降低风险暴露的动作：
               </p>
 
-              <div className="mt-1.5 grid min-h-0 flex-1 grid-cols-2 gap-2.5">
+              <div className="mt-1.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                 {repairChoices.map((choice) => {
                   const selected = repairSelected.includes(choice.id);
                   const fixed =
@@ -883,7 +881,7 @@ export default function RiskGame({ onBack, onComplete }: RiskGameProps) {
           )}
         </section>
 
-        <p className="shrink-0 text-center text-[8px] font-bold text-[#778895]">
+        <p className="shrink-0 pb-1 pt-1 text-center text-[8px] font-bold text-[#778895]">
           训练案例用于学习风险识别，不构成投资建议。
         </p>
       </div>
