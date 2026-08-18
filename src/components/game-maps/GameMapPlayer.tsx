@@ -522,11 +522,7 @@ export function GameMapPlayer({
         // 独立地点（非主线关卡）始终可点击；华尔堡需要完成金融知识入港口后才能进入
         const isIndependent = loc.type === "feature" || loc.type === "submap" || (loc.type === "game" && loc.gameId && !loc.gameId.startsWith("level-"));
         const isWallCastle = loc.type === "submap" && loc.locationId === "wall-castle";
-        // 模型沼泽（固收挑战游戏）始终可点击，不受主线进度限制
-        const isModelSwamp = loc.locationId === "model-swamp";
-        const status = isModelSwamp
-          ? "available"
-          : isWallCastle
+        const status = isWallCastle
             ? (progress.completedLevels.includes(1) ? "available" : "locked")
             : isIndependent
               ? "available"
