@@ -281,7 +281,6 @@ export function GameMapPlayer({
       if (levelId === 1 && !progress.unlockedAgents.includes("data")) {
         setUnlockedAgentId("data");
         setShowAgentUnlock(true);
-        setNextLevelTip("市场风暴");
       }
 
       // 财报考古遗迹通关后，显示 Agent 解锁弹窗（即使已通关也显示，确保不遗漏）
