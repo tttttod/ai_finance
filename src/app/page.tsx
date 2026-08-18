@@ -601,6 +601,7 @@ function ResearchTab({
   const [activeGameLevel, setActiveGameLevel] = useState<number | null>(null);
   const [activeLocationId, setActiveLocationId] = useState<string | null>(null);
   const [unlockingAgent, setUnlockingAgent] = useState<AgentInfo | null>(null);
+  const [pendingAgentRoles, setPendingAgentRoles] = useState<string[]>([]);
   const [started, setStarted] = useState(false);
   const [target, setTarget] = useState("");
   const [style, setStyle] = useState<InvestmentStyle>(defaultStyle);
@@ -1097,6 +1098,7 @@ function ResearchTab({
             reloadProgress();
             const level = TRADER_ROAD_LEVELS.find((l) => l.id === levelId);
             if (level && level.unlockAgents.length > 0) {
+              setPendingAgentRoles([...level.unlockAgents]);
               const agentRole = level.unlockAgents[0];
               const agentInfo = AGENT_TEAM.find((a) => a.role === agentRole);
               if (agentInfo) {
@@ -1111,7 +1113,18 @@ function ResearchTab({
       {unlockingAgent && (
         <AgentUnlockAnimation
           agent={unlockingAgent}
-          onComplete={() => setUnlockingAgent(null)}
+          onComplete={() => {
+            setUnlockingAgent(null);
+            // 检查是否有下一个待解锁 Agent
+            if (pendingAgentRoles.length > 1) {
+              const nextRoles = pendingAgentRoles.slice(1);
+              setPendingAgentRoles(nextRoles);
+              const nextAgent = AGENT_TEAM.find((a) => a.role === nextRoles[0]);
+              if (nextAgent) {
+                setTimeout(() => setUnlockingAgent(nextAgent), 500);
+              }
+            }
+          }}
         />
       )}
     </div>
