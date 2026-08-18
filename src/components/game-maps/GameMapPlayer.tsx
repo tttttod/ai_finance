@@ -197,6 +197,8 @@ export function GameMapPlayer({
     sentiment: { name: "情绪分析师", title: "Sentiment Analyst", image: "/agent-sentiment.png" },
     bull: { name: "看多分析师", title: "Bull Analyst", image: "/bull_agent.png" },
     bear: { name: "看空分析师", title: "Bear Analyst", image: "/bear_agent.png" },
+    risk: { name: "风险官", title: "Risk Officer", image: "/risk-agent.PNG" },
+    manager: { name: "研究经理", title: "Research Manager", image: "/agent-manager.png" },
   };
 
   // Check if first visit - ONLY after map is loaded
@@ -315,8 +317,14 @@ export function GameMapPlayer({
         setShowAgentUnlock(true);
       }
 
+      // 风险护盾桥通关后，显示 Risk Officer 解锁弹窗（最终关）
+      if (levelId === 10 && !progress.unlockedAgents.includes("risk")) {
+        setUnlockedAgentId("risk");
+        setShowAgentUnlock(true);
+      }
+
       // 设置下一关提示（所有关卡都记录，有 Agent 解锁弹窗的等弹窗关闭后显示）
-      const hasAgentUnlock = [1, 4, 5, 6, 7, 8, 9].includes(levelId);
+      const hasAgentUnlock = [1, 4, 5, 6, 7, 8, 9, 10].includes(levelId);
       const nextLevelMap: Record<number, string> = {
         4: "财报考古遗迹",
         5: "模型沼泽",
