@@ -184,6 +184,7 @@ export function GameMapPlayer({
   const [unlockedAgentId, setUnlockedAgentId] = useState<string | null>(null);
   const [nextLevelTip, setNextLevelTip] = useState<string | null>(null);
   const [showNextLevelTip, setShowNextLevelTip] = useState(false);
+  const [pendingAgentQueue, setPendingAgentQueue] = useState<string[]>([]);
   const [showWelcome, setShowWelcome] = useState(false);
   const [tourVisited, setTourVisited] = useState(false);
   const [wallCastleRefreshKey, setWallCastleRefreshKey] = useState(0);
@@ -311,15 +312,27 @@ export function GameMapPlayer({
         setShowAgentUnlock(true);
       }
 
-      // 市场天气谷 / 证据岔路口通关后，显示 Bull & Bear Agent 解锁弹窗
-      if ((levelId === 8 || levelId === 9) && !progress.unlockedAgents.includes("bull")) {
-        setUnlockedAgentId("bull");
+      // 市场天气谷通关后，依次显示 Bull → Bear Agent 解锁弹窗
+      if (levelId === 8) {
+        const agents: string[] = [];
+        if (!progress.unlockedAgents.includes("bull")) agents.push("bull");
+        if (!progress.unlockedAgents.includes("bear")) agents.push("bear");
+        if (agents.length > 0) {
+          setPendingAgentQueue(agents.slice(1));
+          setUnlockedAgentId(agents[0]);
+          setShowAgentUnlock(true);
+        }
+      }
+
+      // 证据岔路口通关后，显示 Risk Officer 解锁弹窗
+      if (levelId === 9 && !progress.unlockedAgents.includes("risk")) {
+        setUnlockedAgentId("risk");
         setShowAgentUnlock(true);
       }
 
-      // 风险护盾桥通关后，显示 Risk Officer 解锁弹窗（最终关）
-      if (levelId === 10 && !progress.unlockedAgents.includes("risk")) {
-        setUnlockedAgentId("risk");
+      // 风险护盾桥通关后，显示 Research Manager 解锁弹窗（最终关）
+      if (levelId === 10 && !progress.unlockedAgents.includes("manager")) {
+        setUnlockedAgentId("manager");
         setShowAgentUnlock(true);
       }
 
@@ -2002,8 +2015,14 @@ export function GameMapPlayer({
                     onClick={() => {
                       setShowAgentUnlock(false);
                       setUnlockedAgentId(null);
-                      // 如果有下一关指引，关闭 Agent 弹窗后显示指引弹窗
-                      if (nextLevelTip) {
+                      // 检查是否有待解锁的 Agent（如 Bull → Bear 连续弹窗）
+                      if (pendingAgentQueue.length > 0) {
+                        const next = pendingAgentQueue[0];
+                        setPendingAgentQueue(pendingAgentQueue.slice(1));
+                        setUnlockedAgentId(next);
+                        setTimeout(() => setShowAgentUnlock(true), 300);
+                      } else if (nextLevelTip) {
+                        // 如果有下一关指引，关闭 Agent 弹窗后显示指引弹窗
                         setShowNextLevelTip(true);
                       } else {
                         setNextLevelTip(null);
