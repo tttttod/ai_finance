@@ -182,6 +182,7 @@ export function GameMapPlayer({
   const [showAgentUnlock, setShowAgentUnlock] = useState(false);
   const [isKnowledgeEntrance, setIsKnowledgeEntrance] = useState(false);
   const [unlockedAgentId, setUnlockedAgentId] = useState<string | null>(null);
+  const [nextLevelTip, setNextLevelTip] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
   const [tourVisited, setTourVisited] = useState(false);
   const [wallCastleRefreshKey, setWallCastleRefreshKey] = useState(0);
@@ -279,18 +280,34 @@ export function GameMapPlayer({
       if (levelId === 1 && !progress.unlockedAgents.includes("data")) {
         setUnlockedAgentId("data");
         setShowAgentUnlock(true);
+        setNextLevelTip("市场风暴");
       }
 
       // 财报考古遗迹通关后，显示 Agent 解锁弹窗（即使已通关也显示，确保不遗漏）
       if (levelId === 5 && !progress.unlockedAgents.includes("valuation")) {
         setUnlockedAgentId("valuation");
         setShowAgentUnlock(true);
+        setNextLevelTip("模型沼泽");
       }
 
       // 模型沼泽通关后，显示 Technical Agent 解锁弹窗
       if (levelId === 6 && !progress.unlockedAgents.includes("technical")) {
         setUnlockedAgentId("technical");
         setShowAgentUnlock(true);
+        setNextLevelTip("K线图学习");
+      }
+
+      // 设置下一关提示
+      const nextLevelMap: Record<number, string> = {
+        4: "财报考古遗迹",
+        5: "模型沼泽",
+        6: "K线图学习",
+        7: "市场天气谷",
+        8: "证据岔路口",
+        9: "风险护盾桥",
+      };
+      if (nextLevelMap[levelId]) {
+        setNextLevelTip(nextLevelMap[levelId]);
       }
     },
     [progress, onLevelComplete]
@@ -1952,10 +1969,17 @@ export function GameMapPlayer({
                     <p className="text-sm font-bold text-gray-900">{agent.name}</p>
                     <p className="text-xs text-gray-600 mt-1">{agent.title}</p>
                   </div>
+                  {nextLevelTip && (
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mb-4">
+                      <p className="text-xs text-emerald-700 font-medium">下一关已解锁 🔓</p>
+                      <p className="text-sm font-bold text-emerald-800 mt-0.5">{nextLevelTip}</p>
+                    </div>
+                  )}
                   <button
                     onClick={() => {
                       setShowAgentUnlock(false);
                       setUnlockedAgentId(null);
+                      setNextLevelTip(null);
                     }}
                     className="w-full px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-medium text-sm shadow-md hover:shadow-lg transition-shadow"
                   >
