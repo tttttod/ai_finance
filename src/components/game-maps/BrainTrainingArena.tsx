@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, Star, Sparkles } from "lucide-react";
+import { ArrowLeft, Star, Sparkles, Lock } from "lucide-react";
 import { PegSolitaire } from "./PegSolitaire";
 import { SlidingPuzzle } from "./SlidingPuzzle";
 
@@ -166,41 +166,54 @@ export function BrainTrainingArena({ onBack }: BrainTrainingArenaProps) {
                 transform: "translate(-50%, -50%)",
               }}
             >
-              {/* 脉冲光效 */}
-              <div
-                className="absolute inset-0 rounded-full animate-ping opacity-30"
-                style={{
-                  width: "48px",
-                  height: "48px",
-                  left: "-12px",
-                  top: "-12px",
-                  backgroundColor: level.color,
-                  animationDuration: "2s",
-                }}
-              />
+              {/* 脉冲光效 - 仅解锁关卡 */}
+              {level.unlocked && (
+                <div
+                  className="absolute inset-0 rounded-full animate-ping opacity-30"
+                  style={{
+                    width: "48px",
+                    height: "48px",
+                    left: "-12px",
+                    top: "-12px",
+                    backgroundColor: level.color,
+                    animationDuration: "2s",
+                  }}
+                />
+              )}
 
               {/* 热点按钮 */}
               <button
                 onClick={() => handleLevelClick(level)}
                 onMouseEnter={() => setHoveredLevel(level.id)}
                 onMouseLeave={() => setHoveredLevel(null)}
-                className="relative flex flex-col items-center gap-1 group cursor-pointer"
-                style={{ transform: isHovered ? "scale(1.15)" : "scale(1)", transition: "transform 0.2s ease-out" }}
+                className="relative flex flex-col items-center gap-1 group"
+                style={{
+                  transform: isHovered ? "scale(1.15)" : "scale(1)",
+                  transition: "transform 0.2s ease-out",
+                  cursor: level.unlocked ? "pointer" : "default",
+                }}
               >
                 {/* 图标圆圈 */}
                 <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center shadow-lg border-2 border-white/80"
-                  style={{ backgroundColor: level.color }}
+                  className="w-6 h-6 rounded-full flex items-center justify-center shadow-lg border-2 border-white/80 relative"
+                  style={{
+                    backgroundColor: level.unlocked ? level.color : "#94A3B8",
+                    filter: level.unlocked ? "none" : "grayscale(0.6)",
+                  }}
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-white" />
+                  {level.unlocked ? (
+                    <Sparkles className="w-3.5 h-3.5 text-white" />
+                  ) : (
+                    <Lock className="w-3 h-3 text-white/80" />
+                  )}
                 </div>
 
                 {/* 标签 */}
                 <div
                   className="px-2 py-0.5 rounded-md text-[10px] font-bold whitespace-nowrap shadow-md border border-white/60"
                   style={{
-                    backgroundColor: isHovered ? level.color : "rgba(255,255,255,0.92)",
-                    color: isHovered ? "#fff" : "#1E293B",
+                    backgroundColor: isHovered ? (level.unlocked ? level.color : "#94A3B8") : "rgba(255,255,255,0.92)",
+                    color: isHovered ? "#fff" : (level.unlocked ? "#1E293B" : "#94A3B8"),
                     transition: "all 0.2s ease",
                   }}
                 >
@@ -227,12 +240,19 @@ export function BrainTrainingArena({ onBack }: BrainTrainingArenaProps) {
                   </div>
                   <p className="text-[11px] text-white/70 leading-relaxed">{level.description}</p>
                   <div className="mt-2 flex items-center gap-1">
-                    <div
-                      className="px-2 py-0.5 rounded text-[10px] font-bold text-white"
-                      style={{ backgroundColor: level.color }}
-                    >
-                      点击开始
-                    </div>
+                    {level.unlocked ? (
+                      <div
+                        className="px-2 py-0.5 rounded text-[10px] font-bold text-white"
+                        style={{ backgroundColor: level.color }}
+                      >
+                        点击开始
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold text-[#94A3B8] bg-[#1E293B] border border-[#334155]">
+                        <Lock className="w-2.5 h-2.5" />
+                        未解锁
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
