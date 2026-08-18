@@ -1372,6 +1372,7 @@ Technical Agent 拒绝加入。
 白色图表室的灯光变暗。Technical Agent 回到桌台后，Valuation Agent 收起观察报告。`
   },
   4: {
+    sceneImage: "/info-mist-archipelago.png",
     opening: "深夜，办公室只亮着一盏台灯。\nLead Agent 将一叠财报放在你面前：\n\n\"这是星辉科技最新的季度报告，营收涨了，利润跌了，现金流方向变了。\n数字会撒谎，但勾稽关系不会。\n今晚，你的任务是——把这份财报的真相审出来。\"\n\nFundamental Agent 从阴影中走出来，推了推眼镜：\n\n\"每一行数字背后都有故事。跟我来。\"",
     nodes: [
       {
